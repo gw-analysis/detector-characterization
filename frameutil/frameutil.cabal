@@ -27,9 +27,12 @@ executable loadFrameData
 
    ,Chart
    ,Chart-cairo
+   ,Chart-gtk
    ,colour
    ,data-default-class
    ,hmatrix
    ,lens
   
-  ghc-options:  -lFrame  -O2
+  ghc-options:   -O2
+ -- -lFrame
+  extra-libraries: Frame
