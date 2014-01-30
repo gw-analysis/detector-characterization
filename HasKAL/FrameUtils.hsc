@@ -1,34 +1,38 @@
 ----------------------------------------------------------------------
--- Frame 関連ツール
--- hsc2hsを使ってFFIバインディングを行う。
-----------------------------------------------------------------------
+-- Modules for handling Frame formated file
 --
--- compiling
--- for making module
--- hsc2hs HasKAL_FrameUtils.hsc -I/opt/lscsoft/libframe-8.20/include
--- ghc -c HasKAL_FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
+-- frame library :
+-- http://lappweb.in2p3.fr/virgo/FrameL/
+----------------------------------------------------------------------
 
--- for ghci
--- ghci HasKAL_FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
 
--- let xs :: [CFloat]
--- xs = [1..163840]
--- let sampleRate :: CDouble
--- sampleRate = 16384
--- let dt :: CDouble
--- dt = 10
--- let
--- let experiment_Name  :: String
---    experiment_Name = "K1"
--- let head_Name :: String
---    head_Name = "K-V"
--- let frametype_Name  :: String
---    frametype_Name = "FrFull"
--- let channel_Name :: String
--- channel_Name = "Channel_Name"
--- let framefile_Name :: String
--- framefile_Name = "test-1065803961-10.gwf"
+{-
+compiling
+##for making module
+hsc2hs HasKAL.FrameUtils.hsc -I/opt/lscsoft/libframe-8.20/include
+ghc -c HasKAL.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
 
+##for ghci
+ghci HasKAL.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
+
+let xs :: [CFloat]
+xs = [1..163840]
+let sampleRate :: CDouble
+sampleRate = 16384
+let dt :: CDouble
+dt = 10
+let
+let experiment_Name  :: String
+    experiment_Name = "K1"
+let head_Name :: String
+    head_Name = "K-V"
+let frametype_Name  :: String
+    frametype_Name = "FrFull"
+let channel_Name :: String
+channel_Name = "Channel_Name"
+let framefile_Name :: String
+framefile_Name = "test-1065803961-10.gwf"
+-}
 
 {-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 {-# LANGUAGE EmptyDataDecls #-}
