@@ -16,6 +16,7 @@ library
   exposed-modules:     HasKAL_FrameUtils
   build-depends:       base ==4.*
   build-tools:         hsc2hs
+  ghc-options:  -O2
 
 executable loadFrameData
   hs-source-dirs:      exe-src/
@@ -31,4 +32,4 @@ executable loadFrameData
    ,hmatrix
    ,lens
   
-  ghc-options:  -lFrame  
+  ghc-options:  -lFrame  -O2
