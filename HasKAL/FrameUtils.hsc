@@ -34,7 +34,7 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE GADTs #-}
 
-module FrameUtils
+module HasKAL.FrameUtils
     (writeFrame
     , addChannel
     , readFrame

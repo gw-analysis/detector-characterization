@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+
 
 {-
 
@@ -24,7 +24,7 @@ scatter_plot_2d "kleineWelle triggers" "triggered event" 10 (640,480) dat2d
 
 
 
-module PlotUtils
+module HasKAL.PlotUtils
     (scatter_plot_2d
     ,scatter_plot_2d_png
     ,scatter_plot_3d
@@ -126,28 +126,28 @@ Helper function
 
 -}
 
-logPSDAxis = loga_labelf .~ (mags . fromLogValue) $ def
-mags :: Double -> String
-mags  k
-    | k < 0      = '-' : mags (-k)
-    | k >= 1e9   = (k/1e9)  `with` "G"
-    | k >= 1e6   = (k/1e6)  `with` "M"
-    | k >= 1e4   = (k/1e3)  `with` "K"
-    | k >= 1     = k        `with` " "
-    | k >= 1e-3  = (k*1e3)  `with` "m"
-    | k >= 1e-6  = (k*1e6)  `with` "µ"
-    | k >= 1e-9  = (k*1e9)  `with` "n"
-    | k >= 1e-12 = (k*1e12) `with` "p"
-    | otherwise  = printf "%g s" k
-    where with (t :: Double) (u :: String)
-              | t >= 1e9  = printf "%.4g %s" t u
-              | t >= 1e6  = printf "%.0f %s" t u
-              | t >= 1e5  = printf "%.0f %s" t u
-              | t >= 1e4  = printf "%.0f %s" t u
-              | t >= 1e3  = printf "%.0f %s" t u
-              | t >= 1e2  = printf "%.0f %s" t u
-              | t >= 1e1  = printf "%.0f %s" t u
-              | otherwise = printf "%.0f %s" t u
+-- logPSDAxis = loga_labelf .~ (mags . fromLogValue) $ def
+-- mags :: Double -> String
+-- mags  k
+--     | k < 0      = '-' : mags (-k)
+--     | k >= 1e9   = (k/1e9)  `with` "G"
+--     | k >= 1e6   = (k/1e6)  `with` "M"
+--     | k >= 1e4   = (k/1e3)  `with` "K"
+--     | k >= 1     = k        `with` " "
+--     | k >= 1e-3  = (k*1e3)  `with` "m"
+--     | k >= 1e-6  = (k*1e6)  `with` "µ"
+--     | k >= 1e-9  = (k*1e9)  `with` "n"
+--     | k >= 1e-12 = (k*1e12) `with` "p"
+--     | otherwise  = printf "%g s" k
+--     where with (t :: Double) (u :: String)
+--               | t >= 1e9  = printf "%.4g %s" t u
+--               | t >= 1e6  = printf "%.0f %s" t u
+--               | t >= 1e5  = printf "%.0f %s" t u
+--               | t >= 1e4  = printf "%.0f %s" t u
+--               | t >= 1e3  = printf "%.0f %s" t u
+--               | t >= 1e2  = printf "%.0f %s" t u
+--               | t >= 1e1  = printf "%.0f %s" t u
+--               | otherwise = printf "%.0f %s" t u
 
-fromLogValue (LogValue v) = v
+-- fromLogValue (LogValue v) = v
 
