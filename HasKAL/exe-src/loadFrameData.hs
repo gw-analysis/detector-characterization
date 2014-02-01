@@ -50,7 +50,7 @@ main = do
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
-import HasKAL_FrameUtils
+import HasKAL.FrameUtils.FrameUtils
 
 {- For fft -}
 import Numeric.GSL.Fourier
