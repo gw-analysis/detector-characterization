@@ -97,25 +97,25 @@ main = do
       layout    = layout_plots .~ [toPlot plotLines]
                   $ layout_title .~ "Magnetic field at the KAGRA site"
                   $ layout_title_style . font_size .~ 20
-                  $ layout_x_axis . laxis_title .~ "frequency[Hz]" 
-                  $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 20 
+                  $ layout_x_axis . laxis_title .~ "frequency[Hz]"
+                  $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 20
                   $ layout_x_axis . laxis_title_style . font_size .~ 20
-                  $ layout_y_axis . laxis_title .~ "spectrum[T/Hz]" 
+                  $ layout_y_axis . laxis_title .~ "spectrum[T/Hz]"
                   $ layout_y_axis . laxis_title_style . font_size .~ 20
                   $ layout_y_axis . laxis_style . axis_label_style . font_size .~ 20
                   $ layout_y_axis . laxis_generate .~ autoScaledLogAxis logPSDAxis
-                  $ layout_legend .~ Just (legend_label_style . font_size .~ 20 $ def)       
+                  $ layout_legend .~ Just (legend_label_style . font_size .~ 20 $ def)
                   $ def
-      values = [[(LogValue x, LogValue y)|(x,y)<- zip fvec (map sqrt powerspectrum)]]          
+      values = [[(LogValue x, LogValue y)|(x,y)<- zip fvec (map sqrt powerspectrum)]]
 
 --  renderableToWindow (toRenderable layout) 640 480
   renderableToPNGFile (toRenderable layout) 640 480  "test_magnetic.png"
 
 
 
-{- 
+{-
 
-Helper function 
+Helper function
 
 -}
 
