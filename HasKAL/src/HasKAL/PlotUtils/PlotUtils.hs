@@ -5,7 +5,7 @@
 example:
 
 :m System.Random
-:l HasKAL_PlotUtils.hs
+:l HasKAL..PlotUtils.PlotUtils.hs
 let vals3d = take 20 $ randomRs (-2,27) $ mkStdGen 1 :: [Double]
 let valz3d = take 20 $ randomRs (-2,27) $ mkStdGen 1 :: [Double]
 let dat3d = zip3 [1..20::Double] vals3d valz3d
@@ -14,7 +14,7 @@ scatter_plot_3d "kleineWelle triggers" "triggered event" 10 (640,480) dat3d
 
 
 :m System.Random
-:l HasKAL_PlotUtils.hs
+:l HasKAL.PlotUtils.PlotUtils.hs
 let vals2d = take 20 $ randomRs (-2,27) $ mkStdGen 1 :: [Double]
 let dat2d = zip [1..20::Double] vals2d
 scatter_plot_2d_png "kleineWelle triggers" "triggered event" 10 "example2d.png" dat2d
@@ -25,7 +25,7 @@ scatter_plot_2d "kleineWelle triggers" "triggered event" 10 (640,480) dat2d
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module HasKAL.PlotUtils
+module HasKAL.PlotUtils.PlotUtils
     (scatter_plot_2d
     ,scatter_plot_2d_png
     ,scatter_plot_3d

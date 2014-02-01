@@ -9,11 +9,11 @@
 {-
 compiling
 ##for making module
-hsc2hs HasKAL.FrameUtils.hsc -I/opt/lscsoft/libframe-8.20/include
-ghc -c HasKAL.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
+hsc2hs HasKAL.FrameUtils.FrameUtils.hsc -I/opt/lscsoft/libframe-8.20/include
+ghc -c HasKAL.FrameUtils.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
 
 ##for ghci
-ghci HasKAL.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
+ghci HasKAL.FrameUtils.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
 
 let xs :: [CFloat]
 xs = [1..163840]
@@ -38,7 +38,7 @@ framefile_Name = "test-1065803961-10.gwf"
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE GADTs #-}
 
-module HasKAL.FrameUtils
+module HasKAL.FrameUtils.FrameUtils
     (writeFrame
     , addChannel
     , readFrame

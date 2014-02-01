@@ -15,7 +15,7 @@ import Control.Monad -- forM
 import Text.Regex -- splitRegex, mkRegex
 
 import HasKAL.MonitorUtils.EXTKleineWelle as Monitor
-import HasKAL.PlotUtils as Plot
+import HasKAL.PlotUtils.PlotUtils as Plot
 
 
 hasKalGuiTop :: IO ()
