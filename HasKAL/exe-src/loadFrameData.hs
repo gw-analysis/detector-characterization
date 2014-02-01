@@ -1,5 +1,5 @@
 
-import HasKAL_FrameUtils
+import HasKAL.FrameUtils
 
 {- For fft -}
 import Numeric.GSL.Fourier

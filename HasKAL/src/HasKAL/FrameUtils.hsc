@@ -251,7 +251,8 @@ readFrame channel_Name framefile_Name = do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
-          return (CDoubleData (read (show array_vdata) :: [CDouble]))
+--          return (CDoubleData (read (show array_vdata) :: [CDouble]))
+          return (CDoubleData $ map realToFrac array_vdata)
         frvect_8r -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
           c_FrVectFree ptr_v
