@@ -27,10 +27,17 @@ executable loadFrameData
 
    ,Chart
    ,Chart-cairo
+   ,Chart-gtk
    ,colour
    ,data-default-class
    ,hmatrix
    ,lens
   
+<<<<<<< HEAD:HasKAL/HasKAL.cabal
   ghc-options:    -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
+=======
+  ghc-options:   -O2
+ -- -lFrame
+  extra-libraries: Frame
+>>>>>>> d4e5feb416a2dd90a8eaea8f75e11df8ba6e06fd:frameutil/frameutil.cabal

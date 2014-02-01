@@ -1,7 +1,8 @@
 detector-characterization
 =========================
 
-Tools for gravitational wave detector characterization.
+HasKAL : Tools for gravitational wave detector characterization.
+HasKAL stands for "Haskell-based KAGRA Analysis Library"
 
 Frameutil requires the Frame Library http://lappweb.in2p3.fr/virgo/FrameL/ .
 You can install the Frame Library as follows.
