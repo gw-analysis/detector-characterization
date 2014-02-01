@@ -1,6 +1,6 @@
 <<<<<<< HEAD:HasKAL/exe-src/loadFrameData.hs
 
-import HasKAL.FrameUtils
+import HasKAL.FrameUtils.FrameUtils
 
 {- For fft -}
 import Numeric.GSL.Fourier
