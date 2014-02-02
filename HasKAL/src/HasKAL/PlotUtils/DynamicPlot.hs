@@ -2,7 +2,7 @@
 
 
 
---module HasKAL.PlotUtils.DynamicPlot where
+module HasKAL.PlotUtils.DynamicPlot where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Animate
@@ -153,14 +153,6 @@ plotfft bits = Line $ [ (double2Float freqBin / dscale * fromIntegral x, double2
 main :: IO ()
 main = do
   let sourcelist = take 441000 $ randomRs (2, 20) $ mkStdGen 1 :: [Double]
---      sourcelen = 441000 :: Int
---  ptr_source <- mallocArray sourcelen :: IO(Ptr Double)
---  pokeArray ptr_source sourcelist
---  ptr_source <- withArray sourcelist
---    $ \ptr_source' -> return ptr_source'
---  allocaArray bufSize $ \buf -> do
---    win <- newIORef $ array (0, 0) []
---    animateIO (InWindow "Spectrum" (1024,600) (0,0)) black (loop ptr_source buf win)
   withArray sourcelist $ \ptrs -> do
     allocaArray bufSize $ \buf -> do
       win <- newIORef $ array (0, 0) []
