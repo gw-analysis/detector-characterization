@@ -13,11 +13,10 @@ import Data.Array.CArray
 import GHC.Float ( double2Float )
 import Foreign.ForeignPtr
 import System.Random
-import Foreign ( allocaArray,
-                 Storable, Ptr,
-                 withArray, copyArray)
+import Foreign (Storable)
 import Foreign.Marshal.Array
 import Foreign.Ptr
+
 -- setting parameters
 nfft, bufSize, rate :: Int
 nfft =  1024
