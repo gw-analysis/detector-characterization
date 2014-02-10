@@ -21,8 +21,6 @@ if (rc) {
 }
 
 //-- Connect to server --
-//const char* server = "ldas-pcdev1.ligo.caltech.edu";
-//int           port = 31200;
 daq_t daqd;
 rc = daq_connect(&daqd, server, port, nds_v2);
 if (rc) {
@@ -30,13 +28,6 @@ if (rc) {
     return 2;
 }
 
-//-- Specify channels --
-//const char* channel[4] = {
-//    "H1:DMT-STRAIN",
-//    "L1:DMT-STRAIN",
-//    "V1:h16384Hz",
-//    0
-//};
 
 int i;
 for (i=0; i<4; i++) {
