@@ -47,7 +47,14 @@ cabal-version:       >=1.8
 
 library
   -- Modules exported by the library.
-  exposed-modules:     HasKAL.ExternalUtils.Lwtprint, HasKAL.FrameUtils.FrameUtils, HasKAL.GUI_Utils.GUI_Utils, HasKAL.MonitorUtils.EXTKleineWelle, HasKAL.PlotUtils.DynamicPlot, HasKAL.PlotUtils.PlotUtils, HasKAL.SpectrumUtils.SpectrumUtils
+  exposed-modules:     
+    HasKAL.ExternalUtils.Lwtprint,
+    HasKAL.FrameUtils.FrameUtils,
+    HasKAL.GUI_Utils.GUI_Utils, 
+    HasKAL.MonitorUtils.EXTKleineWelle, 
+    HasKAL.PlotUtils.DynamicPlot,
+    HasKAL.PlotUtils.PlotUtils,
+    HasKAL.SpectrumUtils.SpectrumUtils
 
   -- Modules included in this library but not exported.
   -- other-modules:
