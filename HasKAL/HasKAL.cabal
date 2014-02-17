@@ -92,7 +92,7 @@ executable loadFrameData
     base ==4.6.*
    ,HasKAL
 
-   ,Chart >= 1.2
+   ,Chart >= 1.1
    ,Chart-cairo
    ,Chart-gtk
    ,colour
