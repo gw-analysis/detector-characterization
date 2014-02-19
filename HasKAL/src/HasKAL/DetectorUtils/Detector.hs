@@ -1,7 +1,5 @@
 module HasKAL.DetectorUtils.Detector
-  (
-    Detector
-  ) where
+where
 
 data Detector = LIGO | VIRGO | KAGRA
 
