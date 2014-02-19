@@ -3,12 +3,13 @@ module HasKAL.SpectrumUtils.DetectorSensitivity
   ) where
 
 import Numeric.LinearAlgebra
+import HasKAL.DetectorUtils.Detector
 
-ifonoisepsd :: String -> Vector Double -> Vector Double
-ifonoisepsd ifo fin
-  | ifo == "LIGO" = aligoPsd fin
-  | ifo == "KAGRA" = kagraPsd fin
-  | ifo == "VIRGO" = advirgoPsd fin
+ifonoisepsd :: Detector -> Vector Double -> Vector Double
+ifonoisepsd ifo fin = case ifo of
+  LIGO  -> aligoPsd fin
+  KAGRA -> kagraPsd fin
+  VIRGO -> advirgoPsd fin
 
 
 aligoPsd :: Vector Double -> Vector Double
