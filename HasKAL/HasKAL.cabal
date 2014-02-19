@@ -47,14 +47,16 @@ cabal-version:       >=1.8
 
 library
   -- Modules exported by the library.
-  exposed-modules:     
+  exposed-modules:
+    HasKAL.DetectorUtils.Detector,
     HasKAL.ExternalUtils.Lwtprint,
     HasKAL.FrameUtils.FrameUtils,
-    HasKAL.GUI_Utils.GUI_Utils, 
-    HasKAL.MonitorUtils.EXTKleineWelle, 
+    HasKAL.GUI_Utils.GUI_Utils,
+    HasKAL.MonitorUtils.EXTKleineWelle,
     HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.SpectrumUtils.SpectrumUtils
+    HasKAL.SpectrumUtils.DetectorSensitivity
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -62,18 +64,18 @@ library
   -- Other library packages from which modules are imported.
   build-depends:
        base >=4.6,
-       process >=1.1, 
-       gtk >=0.12, 
-       regex-compat >=0.95, 
+       process >=1.1,
+       gtk >=0.12,
+       regex-compat >=0.95,
        gloss >=1.8,
-       fft >=0.1, 
+       fft >=0.1,
        carray >=0.1,
-       random >=1.0, 
-       Chart >=1.1, 
-       Chart-gtk >=1.1, 
-       Chart-cairo >=1.1, 
-       colour >=2.3, 
-       data-default-class >=0.0, 
+       random >=1.0,
+       Chart >=1.1,
+       Chart-gtk >=1.1,
+       Chart-cairo >=1.1,
+       colour >=2.3,
+       data-default-class >=0.0,
        lens >=3.10,
        hmatrix >=0.15
 

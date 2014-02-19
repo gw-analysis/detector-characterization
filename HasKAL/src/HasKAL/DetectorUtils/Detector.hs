@@ -1,4 +1,4 @@
-module DetectorUtils
+module HasKAL.DetectorUtils.Detector
   (
     Detector
   ) where
