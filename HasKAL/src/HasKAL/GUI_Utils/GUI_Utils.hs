@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/02/28 15:52:12
+  * Last Modified: 2014/02/28 17:28:25
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -102,7 +102,7 @@ hasKalGuiGlitch activeSubSystemlabels = do
   let kwListFile = "gwffilelist.txt"
 
   {--  Read file of channel list  --}
-  glitchChannels <- forM activeSubSystemlabels $ \lambda -> hGetContents =<< openFile ("./ChList/channelList" ++ lambda ++ ".txt") ReadMode --glitchIFile
+  glitchChannels <- forM activeSubSystemlabels $ \lambda -> hGetContents =<< openFile ("../ChList/channelList" ++ lambda ++ ".txt") ReadMode --glitchIFile
 
   {--  for lwtprint  --}
   let kwChannelLabels = [ "ifo", "peak_time", "peak_time_ns", "start_time", "start_time_ns", "duration", "search", "central_freq", "channel", "amplitude", "snr", "confidence", "chisq", "chisq_dof", "bandwidth", "event_id", "process_id", "table" ]
@@ -145,12 +145,12 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchFsampleEntry <- entryNew
   glitchClose <- buttonNewWithLabel "Close"
   glitchExecute <- buttonNewWithLabel "Execute"
-  entrySetText glitchGpsEntry "970014976"
-  entrySetText glitchObsEntry "128"
+  entrySetText glitchGpsEntry "1066392016"
+  entrySetText glitchObsEntry "300"
   entrySetText glitchStrideEntry "16"
   entrySetText glitchSignificanceEntry "2.0"
   entrySetText glitchThresholdEntry "3.0"
-  entrySetText glitchFsampleEntry "4096"
+  entrySetText glitchFsampleEntry "256"
 
   {--  Set Parameters of the objects  --}
   set glitchWindow [ windowTitle := "Glitch Monitor",
