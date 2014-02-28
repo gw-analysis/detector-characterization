@@ -1,13 +1,9 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-<<<<<<< HEAD
-  * Last Modified: 2014/02/28 15:22:09
-=======
-  * Last Modified: 2014/02/20 20:03:31
->>>>>>> aa497d7097463cfe95294e23f44fdddab1b2d291
+  * Last Modified: 2014/02/28 15:52:12
   ******************************************************************-}
---test
+
 module HasKAL.GUI_Utils.GUI_Utils
   (hasKalGuiTop
    --,hasKalGuiGlitch
