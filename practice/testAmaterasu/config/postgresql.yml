@@ -1,0 +1,24 @@
+Default: &defaults
+  user: testAmaterasu
+  password: testAmaterasu
+  host: localhost
+  port: 5432
+  database: testAmaterasu
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  database: testAmaterasu_test
+  <<: *defaults
+
+Staging:
+  database: testAmaterasu_staging
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: testAmaterasu_production
+  poolsize: 100
+  <<: *defaults

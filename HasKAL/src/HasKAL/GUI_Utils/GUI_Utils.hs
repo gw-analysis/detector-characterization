@@ -1,7 +1,11 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
+<<<<<<< HEAD
   * Last Modified: 2014/02/28 15:22:09
+=======
+  * Last Modified: 2014/02/20 20:03:31
+>>>>>>> aa497d7097463cfe95294e23f44fdddab1b2d291
   ******************************************************************-}
 --test
 module HasKAL.GUI_Utils.GUI_Utils
@@ -13,6 +17,8 @@ import Graphics.UI.Gtk
 import System.IO -- openFile
 import Control.Monad -- forM
 import Text.Regex -- splitRegex, mkRegex
+
+import System.IO.Unsafe -- unsafePerformIO
 
 import HasKAL.MonitorUtils.EXTKleineWelle as Monitor
 import HasKAL.PlotUtils.PlotUtils as Plot
@@ -55,26 +61,17 @@ hasKalGuiTop = do
   boxPackStartDefaults topMonitorVbox topExitVbox -- create small vbox
   boxPackStartDefaults topExitVbox topExitButton -- insert exit button in vbox
 
-  {--  Select Glitch Monitor --}
+   {--  Select Glitch Monitor --}
   onClicked (topMonitorButtons !! 0) $ do
-    putStr =<< buttonGetLabel (topMonitorButtons !! 0)
-    putStrLn " Monitor: New window open."
-
-    topSubSystemFlag <- mapM toggleButtonGetActive topSubSystemCheckButtons
-    let topActiveNum = [idxNum | idxNum <- [0..topNumOfSubSystems-1], (topSubSystemFlag !! idxNum) == True]
-    topActiveLabels <- forM topActiveNum $ \lambda -> do
-      topActiveLabel <- buttonGetLabel (topSubSystemCheckButtons !! lambda)
-      return topActiveLabel
-
+    putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 0))
+    let topActiveLabels = getActiveLabels topSubSystemCheckButtons
     hasKalGuiGlitch topActiveLabels
   {--  Select Line Monitor --}
   onClicked (topMonitorButtons !! 1) $ do
-    putStr =<< buttonGetLabel (topMonitorButtons !! 1)
-    putStrLn " Monitor: Not implemented yet." 
+    putStrLn =<< fmap (++ " Monitor: Not implemented yet.") (buttonGetLabel (topMonitorButtons !! 1))
   {--  Select Gaussianity Monitor --}
   onClicked (topMonitorButtons !! 2) $ do
-    putStr =<< buttonGetLabel (topMonitorButtons !! 2)
-    putStrLn " Monitor: Not implemented yet." 
+    putStrLn =<< fmap (++ " Monitor: Not implemented yet.") (buttonGetLabel (topMonitorButtons !! 2))
   {--  Select Exit  --}
   onClicked topExitButton $ do
     putStrLn "Exit"
@@ -84,6 +81,14 @@ hasKalGuiTop = do
   onDestroy topWindow mainQuit
   widgetShowAll topWindow
   mainGUI
+
+
+getActiveLabels :: [CheckButton] -> [String]
+getActiveLabels [] = []
+getActiveLabels (x:xs) = 
+  case unsafePerformIO (toggleButtonGetActive x) of 
+    True -> (unsafePerformIO (buttonGetLabel x)):(getActiveLabels xs)
+    False -> getActiveLabels xs
 
 
 -- Called in hasKalGuiStarup
@@ -101,12 +106,7 @@ hasKalGuiGlitch activeSubSystemlabels = do
   let kwListFile = "gwffilelist.txt"
 
   {--  Read file of channel list  --}
-  let glitchNumOfSubSystems = length activeSubSystemlabels
-  glitchChannels <- forM [0..glitchNumOfSubSystems-1] $ \lambda -> do
-    let glitchFilename = "./ChList/channelList" ++ (activeSubSystemlabels !! lambda)
-    glitchIFile <- openFile (glitchFilename ++ ".txt") ReadMode
-    glitchChannel <- hGetContents glitchIFile
-    return glitchChannel
+  glitchChannels <- forM activeSubSystemlabels $ \lambda -> hGetContents =<< openFile ("./ChList/channelList" ++ lambda ++ ".txt") ReadMode --glitchIFile
 
   {--  for lwtprint  --}
   let kwChannelLabels = [ "ifo", "peak_time", "peak_time_ns", "start_time", "start_time_ns", "duration", "search", "central_freq", "channel", "amplitude", "snr", "confidence", "chisq", "chisq_dof", "bandwidth", "event_id", "process_id", "table" ]
@@ -204,17 +204,18 @@ hasKalGuiGlitch activeSubSystemlabels = do
     widgetDestroy glitchWindow
   onClicked glitchExecute $ do
     putStrLn "Execute"
-    glitchChannelFlag <- mapM toggleButtonGetActive glitchChannelCButtons
-    let glitchActiveNum = [idxNum | idxNum <- [0..glitchNumOfChannel-1], (glitchChannelFlag !! idxNum) == True]
-    glitchActiveLabels <- forM glitchActiveNum $ \lambda -> do
-      glitchActiveLabel <- buttonGetLabel (glitchChannelCButtons !! lambda)
-      return glitchActiveLabel
-
-    kwChannelFlag <- mapM toggleButtonGetActive kwChannelCButtons
-    let kwActiveNum = [idxNum | idxNum <- [0..kwNumOfChannel-1], (kwChannelFlag !! idxNum) == True]
-    kwActiveLabels <- forM kwActiveNum $ \lambda -> do
-      kwActiveLabel <- buttonGetLabel (kwChannelCButtons !! lambda)
-      return kwActiveLabel
+    -- glitchChannelFlag <- mapM toggleButtonGetActive glitchChannelCButtons
+    -- let glitchActiveNum = [idxNum | idxNum <- [0..glitchNumOfChannel-1], (glitchChannelFlag !! idxNum) == True]
+    -- glitchActiveLabels <- forM glitchActiveNum $ \lambda -> do
+    --   glitchActiveLabel <- buttonGetLabel (glitchChannelCButtons !! lambda)
+    --   return glitchActiveLabel
+    let glitchActiveLabels = getActiveLabels glitchChannelCButtons
+    -- kwChannelFlag <- mapM toggleButtonGetActive kwChannelCButtons
+    -- let kwActiveNum = [idxNum | idxNum <- [0..kwNumOfChannel-1], (kwChannelFlag !! idxNum) == True]
+    -- kwActiveLabels <- forM kwActiveNum $ \lambda -> do
+    --   kwActiveLabel <- buttonGetLabel (kwChannelCButtons !! lambda)
+    --   return kwActiveLabel
+    let kwActiveLabels = getActiveLabels kwChannelCButtons
 
     s_temp <- entryGetText glitchGpsEntry
     let kwGpsTime = read s_temp :: Int
@@ -243,13 +244,10 @@ hasKalGuiGlitch activeSubSystemlabels = do
     let lwtColmunNum = length kwActiveLabels
     putStrLn "Run Plot tool"
     if lwtColmunNum == 2
-      then forM [0..(length glitchActiveLabels)-1] $ \lambda -> do
-             Plot.scatter_plot_2d "TITLE 2" "HOGEHOGE" 10.0 (640,480) (convert_StoDT2L (lwtOutput !! lambda))
+      then forM lwtOutput $ \lambda -> Plot.scatter_plot_2d "TITLE 2" "HOGEHOGE" 10.0 (640,480) (convert_StoDT2L lambda)
       else if lwtColmunNum == 3
-        then forM [0..(length glitchActiveLabels)-1] $ \lambda -> do
-               Plot.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L (lwtOutput !! lambda))
-        else forM [0] $ \lambda -> do
-               putStrLn "Required 2 or 3 columns\n"
+        then forM lwtOutput $ \lambda -> Plot.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L lambda)
+        else mapM putStrLn ["Required 2 or 3 columns\n"]
     putStrLn "Close Glitch Monitor\n"
     widgetDestroy glitchWindow
   {--  Exit Process  --}
