@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/02/20 20:03:31
+  * Last Modified: 2014/02/28 15:52:12
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
