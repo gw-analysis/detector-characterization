@@ -42,7 +42,7 @@ time2gps :: String->DiffTime
 time2gps s = diffAbsoluteTime (taigiven s) taibase 
 
 {-
-*Main> :l gpsfunction.hs
+*Main> import HasKAL.TimeUtils.GPSfunction
 *Main> time2gps "2013-01-01 00:00:00 UTC"
 1041033616s
 *Main> time2gps "2012-12-31 18:00:00 CST"
