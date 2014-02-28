@@ -150,7 +150,7 @@ hasKalGuiGlitch activeSubSystemlabels = do
   entrySetText glitchStrideEntry "16"
   entrySetText glitchSignificanceEntry "2.0"
   entrySetText glitchThresholdEntry "3.0"
-  entrySetText glitchFsampleEntry "256"
+  entrySetText glitchFsampleEntry "1000"
 
   {--  Set Parameters of the objects  --}
   set glitchWindow [ windowTitle := "Glitch Monitor",
