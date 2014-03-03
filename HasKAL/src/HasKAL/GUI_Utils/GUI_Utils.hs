@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/02/28 17:28:25
+  * Last Modified: 2014/03/03 22:48:12
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -96,7 +96,6 @@ hasKalGuiGlitch activeSubSystemlabels = do
   let kwBasename = "KW_"
   let kwTransientDuration = 4.0
   let kwDecimateFactor = -1
-  let kwUnowen_1 = 16
   let kwUnowen_2 = 2
   let kwOptFilePref = "optKW_"
   let kwListFile = "gwffilelist.txt"
@@ -118,15 +117,17 @@ hasKalGuiGlitch activeSubSystemlabels = do
 
   {--  Create new object --}
   glitchWindow <- windowNew
-  glitchVBox <- vBoxNew True 10
-  glitchVBox2 <- vBoxNew True 10
-  glitchHBox0 <- hBoxNew True 10
-  glitchHBox <- hBoxNew True 10
-  glitchHBox2 <- hBoxNew True 10
-  glitchHBox3 <- hBoxNew True 10
-  glitchHBox4 <- hBoxNew True 10
-  glitchHBox5 <- hBoxNew True 10
-  glitchHBox6 <- hBoxNew True 10
+  glitchVBox <- vBoxNew True 5
+  glitchVBox2 <- vBoxNew True 5
+  glitchHBox0 <- hBoxNew True 5
+  glitchHBox <- hBoxNew True 5
+  glitchHBox2 <- hBoxNew True 5
+  glitchHBox3 <- hBoxNew True 5
+  glitchHBox4 <- hBoxNew True 5
+  glitchHBox5 <- hBoxNew True 5
+  glitchHBox6 <- hBoxNew True 5
+  glitchHBox7 <- hBoxNew True 5
+
 
   glitchChannelScroll <- scrolledWindowNew Nothing Nothing
   glitchChannelBBox <- vButtonBoxNew
@@ -136,13 +137,15 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchStrideEntryLable <- labelNewWithMnemonic "Stride"
   glitchSignificanceEntryLable <- labelNewWithMnemonic "Significance"
   glitchThresholdEntryLable <- labelNewWithMnemonic "Threshold"
-  glitchFsampleEntryLable <- labelNewWithMnemonic "Fsample"
+  glitchLowCutOffEntryLable <- labelNewWithMnemonic "LowCutOff [Hz]"
+  glitchHighCutOffEntryLable <- labelNewWithMnemonic "HighCutOff [Hz]"
   glitchGpsEntry <- entryNew
   glitchObsEntry <- entryNew
   glitchStrideEntry <- entryNew
   glitchSignificanceEntry <- entryNew
   glitchThresholdEntry <- entryNew
-  glitchFsampleEntry <- entryNew
+  glitchLowCutOffEntry <- entryNew
+  glitchHighCutOffEntry <- entryNew
   glitchClose <- buttonNewWithLabel "Close"
   glitchExecute <- buttonNewWithLabel "Execute"
   entrySetText glitchGpsEntry "1066392016"
@@ -150,7 +153,8 @@ hasKalGuiGlitch activeSubSystemlabels = do
   entrySetText glitchStrideEntry "16"
   entrySetText glitchSignificanceEntry "2.0"
   entrySetText glitchThresholdEntry "3.0"
-  entrySetText glitchFsampleEntry "1000"
+  entrySetText glitchLowCutOffEntry "10"
+  entrySetText glitchHighCutOffEntry "1000"
 
   {--  Set Parameters of the objects  --}
   set glitchWindow [ windowTitle := "Glitch Monitor",
@@ -182,8 +186,11 @@ hasKalGuiGlitch activeSubSystemlabels = do
   boxPackStartDefaults glitchHBox5 glitchThresholdEntryLable
   boxPackStartDefaults glitchHBox5 glitchThresholdEntry
   boxPackStartDefaults glitchVBox2 glitchHBox6
-  boxPackStartDefaults glitchHBox6 glitchFsampleEntryLable
-  boxPackStartDefaults glitchHBox6 glitchFsampleEntry
+  boxPackStartDefaults glitchHBox6 glitchLowCutOffEntryLable
+  boxPackStartDefaults glitchHBox6 glitchLowCutOffEntry
+  boxPackStartDefaults glitchVBox2 glitchHBox7
+  boxPackStartDefaults glitchHBox7 glitchHighCutOffEntryLable
+  boxPackStartDefaults glitchHBox7 glitchHighCutOffEntry
 
   mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
   scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
@@ -228,15 +235,18 @@ hasKalGuiGlitch activeSubSystemlabels = do
     s_temp <- entryGetText glitchThresholdEntry
     let kwThreshold = read s_temp :: Double
     putStrLn ("   Threshold: " ++ (show kwThreshold) )
-    s_temp <- entryGetText glitchFsampleEntry
-    let kwFsample = read s_temp :: Int
-    putStrLn ("   Fsample: " ++ (show kwFsample) )
+    s_temp <- entryGetText glitchLowCutOffEntry
+    let kwLowCutOff = read s_temp :: Int
+    putStrLn ("   LowCutOff: " ++ (show kwLowCutOff) )
+    s_temp <- entryGetText glitchHighCutOffEntry
+    let kwHighCutOff = read s_temp :: Int
+    putStrLn ("   HighCutOff: " ++ (show kwHighCutOff) )
     putStrLn "   Channels: "
     mapM_ putStrLn glitchActiveLabels
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
     putStrLn "Generate optM file for KleineWell"
-    lwtOutput <- Monitor.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor glitchActiveLabels kwUnowen_1 kwFsample kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
+    lwtOutput <- Monitor.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor glitchActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
     let lwtColmunNum = length kwActiveLabels
     putStrLn "Run Plot tool"
     if lwtColmunNum == 2
