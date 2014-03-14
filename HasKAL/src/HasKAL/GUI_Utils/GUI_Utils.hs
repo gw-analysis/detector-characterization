@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/03/03 22:48:12
+  * Last Modified: 2014/03/14 18:09:52
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -13,12 +13,13 @@ import Graphics.UI.Gtk
 import System.IO -- openFile
 import Control.Monad -- forM
 import Text.Regex -- splitRegex, mkRegex
+import Text.Printf -- printf
 
 import System.IO.Unsafe -- unsafePerformIO
 
 import HasKAL.MonitorUtils.EXTKleineWelle as Monitor
 import HasKAL.PlotUtils.PlotUtils as Plot
-
+import HasKAL.TimeUtils.GPSfunction as Time
 
 hasKalGuiTop :: IO ()
 hasKalGuiTop = do
@@ -79,14 +80,6 @@ hasKalGuiTop = do
   mainGUI
 
 
-getActiveLabels :: [CheckButton] -> [String]
-getActiveLabels [] = []
-getActiveLabels (x:xs) = 
-  case unsafePerformIO (toggleButtonGetActive x) of 
-    True -> (unsafePerformIO (buttonGetLabel x)):(getActiveLabels xs)
-    False -> getActiveLabels xs
-
-
 -- Called in hasKalGuiStarup
 hasKalGuiGlitch :: [String] -> IO ()
 hasKalGuiGlitch activeSubSystemlabels = do
@@ -121,6 +114,11 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchVBox2 <- vBoxNew True 5
   glitchHBox0 <- hBoxNew True 5
   glitchHBox <- hBoxNew True 5
+  glitchHBox00 <- hBoxNew True 5
+  glitchHBox1 <- hBoxNew True 5
+  glitchHBox11 <- hBoxNew True 5
+  glitchHBox12 <- hBoxNew True 5
+  glitchHBox13 <- hBoxNew True 5
   glitchHBox2 <- hBoxNew True 5
   glitchHBox3 <- hBoxNew True 5
   glitchHBox4 <- hBoxNew True 5
@@ -133,6 +131,14 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchChannelBBox <- vButtonBoxNew
   glitchChannelCButtons <- mapM checkButtonNewWithLabel glitchChannelLabels
   glitchGpsEntryLable <- labelNewWithMnemonic "GPS Time [s]"
+{--}
+  glitchYearEntryLable <- labelNewWithMnemonic "年"
+  glitchMonthEntryLable <- labelNewWithMnemonic "月"
+  glitchDayEntryLable <- labelNewWithMnemonic "日"
+  glitchHourEntryLable <- labelNewWithMnemonic "時"
+  glitchMinuteEntryLable <- labelNewWithMnemonic "分"
+  glitchSecondEntryLable <- labelNewWithMnemonic "秒 (JST)"
+{----}
   glitchObsEntryLable <- labelNewWithMnemonic "OBS Time [s]"
   glitchStrideEntryLable <- labelNewWithMnemonic "Stride"
   glitchSignificanceEntryLable <- labelNewWithMnemonic "Significance"
@@ -140,6 +146,14 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchLowCutOffEntryLable <- labelNewWithMnemonic "LowCutOff [Hz]"
   glitchHighCutOffEntryLable <- labelNewWithMnemonic "HighCutOff [Hz]"
   glitchGpsEntry <- entryNew
+{--}
+  glitchYearEntry <- entryNew
+  glitchMonthEntry <- entryNew
+  glitchDayEntry <- entryNew
+  glitchHourEntry <- entryNew
+  glitchMinuteEntry <- entryNew
+  glitchSecondEntry <- entryNew
+{----}
   glitchObsEntry <- entryNew
   glitchStrideEntry <- entryNew
   glitchSignificanceEntry <- entryNew
@@ -149,6 +163,14 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchClose <- buttonNewWithLabel "Close"
   glitchExecute <- buttonNewWithLabel "Execute"
   entrySetText glitchGpsEntry "1066392016"
+{--}
+  entrySetText glitchYearEntry "2013"
+  entrySetText glitchMonthEntry "10"
+  entrySetText glitchDayEntry "21"
+  entrySetText glitchHourEntry "21"
+  entrySetText glitchMinuteEntry "0"
+  entrySetText glitchSecondEntry "0"
+{----}
   entrySetText glitchObsEntry "300"
   entrySetText glitchStrideEntry "16"
   entrySetText glitchSignificanceEntry "2.0"
@@ -168,11 +190,36 @@ hasKalGuiGlitch activeSubSystemlabels = do
   {--  Arrange object in window  --}
   mapM (boxPackStartDefaults glitchChannelBBox) glitchChannelCButtons
   scrolledWindowAddWithViewport glitchChannelScroll glitchChannelBBox
-  boxPackStartDefaults glitchVBox glitchChannelScroll
+  boxPackStartDefaults glitchVBox glitchHBox00
+  boxPackStartDefaults glitchHBox00 glitchChannelScroll
+
+  mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
+  scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
+  boxPackStartDefaults glitchHBox00 kwChannelScroll
+
   boxPackStartDefaults glitchVBox glitchVBox2
   boxPackStartDefaults glitchVBox2 glitchHBox
-  boxPackStartDefaults glitchHBox glitchGpsEntryLable
-  boxPackStartDefaults glitchHBox glitchGpsEntry
+
+  -- boxPackStartDefaults glitchHBox glitchGpsEntryLable
+  -- boxPackStartDefaults glitchHBox glitchGpsEntry
+{--}
+  boxPackStartDefaults glitchVBox2 glitchHBox1
+  boxPackStartDefaults glitchHBox1 glitchYearEntryLable
+  boxPackStartDefaults glitchHBox1 glitchMonthEntryLable
+  boxPackStartDefaults glitchHBox1 glitchDayEntryLable
+  boxPackStartDefaults glitchVBox2 glitchHBox11
+  boxPackStartDefaults glitchHBox11 glitchYearEntry
+  boxPackStartDefaults glitchHBox11 glitchMonthEntry
+  boxPackStartDefaults glitchHBox11 glitchDayEntry
+  boxPackStartDefaults glitchVBox2 glitchHBox12
+  boxPackStartDefaults glitchHBox12 glitchHourEntryLable
+  boxPackStartDefaults glitchHBox12 glitchMinuteEntryLable
+  boxPackStartDefaults glitchHBox12 glitchSecondEntryLable
+  boxPackStartDefaults glitchVBox2 glitchHBox13
+  boxPackStartDefaults glitchHBox13 glitchHourEntry
+  boxPackStartDefaults glitchHBox13 glitchMinuteEntry
+  boxPackStartDefaults glitchHBox13 glitchSecondEntry
+{----}
   boxPackStartDefaults glitchVBox2 glitchHBox2
   boxPackStartDefaults glitchHBox2 glitchObsEntryLable
   boxPackStartDefaults glitchHBox2 glitchObsEntry
@@ -192,10 +239,6 @@ hasKalGuiGlitch activeSubSystemlabels = do
   boxPackStartDefaults glitchHBox7 glitchHighCutOffEntryLable
   boxPackStartDefaults glitchHBox7 glitchHighCutOffEntry
 
-  mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
-  scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
-  boxPackStartDefaults glitchVBox kwChannelScroll
-
   boxPackStartDefaults glitchVBox2 glitchHBox0
   boxPackStartDefaults glitchHBox0 glitchClose
   boxPackStartDefaults glitchHBox0 glitchExecute
@@ -207,19 +250,27 @@ hasKalGuiGlitch activeSubSystemlabels = do
     widgetDestroy glitchWindow
   onClicked glitchExecute $ do
     putStrLn "Execute"
-    -- glitchChannelFlag <- mapM toggleButtonGetActive glitchChannelCButtons
-    -- let glitchActiveNum = [idxNum | idxNum <- [0..glitchNumOfChannel-1], (glitchChannelFlag !! idxNum) == True]
-    -- glitchActiveLabels <- forM glitchActiveNum $ \lambda -> do
-    --   glitchActiveLabel <- buttonGetLabel (glitchChannelCButtons !! lambda)
-    --   return glitchActiveLabel
     let glitchActiveLabels = getActiveLabels glitchChannelCButtons
-    -- kwChannelFlag <- mapM toggleButtonGetActive kwChannelCButtons
-    -- let kwActiveNum = [idxNum | idxNum <- [0..kwNumOfChannel-1], (kwChannelFlag !! idxNum) == True]
-    -- kwActiveLabels <- forM kwActiveNum $ \lambda -> do
-    --   kwActiveLabel <- buttonGetLabel (kwChannelCButtons !! lambda)
-    --   return kwActiveLabel
     let kwActiveLabels = getActiveLabels kwChannelCButtons
-
+{--}
+    s_temp <- entryGetText glitchYearEntry
+    let kwYear = read s_temp :: Int
+    s_temp <- entryGetText glitchMonthEntry
+    let kwMonth = read s_temp :: Int
+    s_temp <- entryGetText glitchDayEntry
+    let kwDay = read s_temp :: Int
+    s_temp <- entryGetText glitchHourEntry
+    let kwHour = read s_temp :: Int
+    s_temp <- entryGetText glitchMinuteEntry
+    let kwMinute = read s_temp :: Int
+    s_temp <- entryGetText glitchSecondEntry
+    let kwSecond = read s_temp :: Int
+    putStrLn "hoge"
+    let glitchDateStr = i_date2s_date kwYear kwMonth kwDay kwHour kwMinute kwSecond
+    putStrLn ("   JST Time: " ++ glitchDateStr)
+    let hogeGPS = Time.time2gps glitchDateStr
+    putStrLn ("   GPS Time: " ++ hogeGPS)
+{----}
     s_temp <- entryGetText glitchGpsEntry
     let kwGpsTime = read s_temp :: Int
     putStrLn ("   GPS Time: " ++ (show kwGpsTime) )
@@ -262,6 +313,14 @@ hasKalGuiGlitch activeSubSystemlabels = do
   mainGUI
 
 
+getActiveLabels :: [CheckButton] -> [String]
+getActiveLabels [] = []
+getActiveLabels (x:xs) = 
+  case unsafePerformIO (toggleButtonGetActive x) of 
+    True -> (unsafePerformIO (buttonGetLabel x)):(getActiveLabels xs)
+    False -> getActiveLabels xs
+
+
 convert_StoD :: String -> Double
 convert_StoD = read
 
@@ -277,3 +336,12 @@ convert_StoDT2L stringData = map convert_LtoT2 (map (map convert_StoD) (map (spl
 convert_StoDT3L :: String -> [(Double, Double, Double)]
 convert_StoDT3L stringData = map convert_LtoT3 (map (map convert_StoD) (map (splitRegex (mkRegex ",")) (lines stringData) ) )
 
+i_date2s_date :: Int -> Int -> Int -> Int -> Int -> Int -> String
+i_date2s_date kwYear kwMonth kwDay kwHour kwMinute kwSecond =
+              (printf "%04d" kwYear :: String) ++ "-" ++ (printf "%02d" kwMonth :: String) ++ "-" ++ (printf "%02d" kwDay :: String) ++ " " ++ (printf "%02d" kwHour :: String) ++ ":" ++ (printf "%02d" kwMinute :: String) ++ ":" ++ (printf "%02d" kwSecond :: String) ++ " JST"
+
+-- fillZero :: Int -> Int -> String
+-- fillZero digit num = do
+--          let times = digit - (length $ show num)
+--          repe
+         

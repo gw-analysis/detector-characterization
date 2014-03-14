@@ -35,7 +35,7 @@ import System.Time
 {-# NOINLINE theLeapSecondTable #-}
 theLeapSecondTable :: LeapSecondTable
 theLeapSecondTable = parseTAIUTCDATFile $ unsafePerformIO $
-  readFile "tai-utc.dat"
+  readFile "./HasKAL/TimeUtils/tai-utc.dat"
 
 
 utcbase :: UTCTime
