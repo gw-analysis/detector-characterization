@@ -5,10 +5,10 @@
 
 //-- prototype
 int fir_filter_core(double*,  double*,  unsigned,  double[],  double[],  unsigned*,  unsigned);
-int fir_filter (double output[], double input[], unsigned inputlen, double fir_coeff[], unsigned filterlen);
+int fir_filter (double*, double*, unsigned, double[], unsigned);
 
 
-int fir_filter (double output[], double input[], unsigned inputlen, double fir_coeff[], unsigned filterlen){
+int fir_filter (double *output, double *input, unsigned inputlen, double fir_coeff[], unsigned filterlen){
 
     double fir_buffer[2*filterlen];
     unsigned temp;
