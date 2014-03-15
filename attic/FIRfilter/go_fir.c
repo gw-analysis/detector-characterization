@@ -10,7 +10,7 @@ unsigned fir_ix;
 unsigned temp;
 unsigned inputlen = 11;
 
-double fir_filter(double*, double*, unsigned, double[], double[], unsigned*, unsigned);
+int fir_filter_core(double*, double*, unsigned, double[], double[], unsigned*, unsigned);
 
 int main (void){
 
@@ -30,7 +30,7 @@ int main (void){
     fir_ix=0;
 
     //main part
-    fir_filter(y, x, inputlen, fir_coeff, fir_buffer, &fir_ix, FIR_LEN);
+    fir_filter_core(y, x, inputlen, fir_coeff, fir_buffer, &fir_ix, FIR_LEN);
 
     printf("Filter output is %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7], y[8], y[9], y[10], y[11]);
 

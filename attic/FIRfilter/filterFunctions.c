@@ -1,8 +1,37 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int fir_filter (double *output,  double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned length){
+//-- prototype
+int fir_filter_core(double*,  double*,  unsigned,  double[],  double[],  unsigned*,  unsigned);
+int fir_filter (double output[], double input[], unsigned inputlen, double fir_coeff[], unsigned filterlen);
+
+
+int fir_filter (double output[], double input[], unsigned inputlen, double fir_coeff[], unsigned filterlen){
+
+    double fir_buffer[2*filterlen];
+    unsigned temp;
+    unsigned fir_ix;
+
+    //-- initialize ring buffer
+    for (temp=0;temp<filterlen;temp++){
+        fir_buffer[temp]=0.0;
+        fir_buffer[temp+filterlen]=0.0;
+    }
+    //-- set input index
+    fir_ix = 0;
+
+    //-- main part
+    fir_filter_core(output,  input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen);
+
+
+    return 1;
+}
+
+
+
+int fir_filter_core (double *output,  double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned length){
 
     unsigned idx, oidx;
 
