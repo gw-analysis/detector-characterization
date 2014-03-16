@@ -1,14 +1,14 @@
 
 #include <stdio.h>
 
-# define FIR_LEN 5
+# define IIR_LEN 5
 double x[]={1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21};
 double y[]={0, 0, 0, 0, 0,  0,  0,  0,  0,  0,  0};
 unsigned inputlen = 11;
 
-unsigned filterlen = FIR_LEN;
-double num_coeff[FIR_LEN];
-double denom_coeff[FIR_LEN];
+unsigned filterlen = IIR_LEN;
+double num_coeff[IIR_LEN];
+double denom_coeff[IIR_LEN];
 
 
 int iir_filter (double*,  double*,  unsigned,  double[],  double[], unsigned);
