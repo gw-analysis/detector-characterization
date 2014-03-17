@@ -8,13 +8,8 @@ import Numeric.LinearAlgebra
 
 import HROOT hiding (eval)
 
-import qualified Control.Monad as M
-
-
 main = do
        fdata <- readFrame "Channel_Name" "test-1066392016-300.gwf"
---       print $ show $ take 20 (eval fdata)
-
        let sampleRate = 1000::Double
        let dat = subVector 1 15000 (fromList $ map realToFrac (eval fdata))
            fft_val = fft $ dat
@@ -24,14 +19,10 @@ main = do
            len_power2 = floor $ fromIntegral(len_power)/2
            powerspectrum = take len_power2  $ map (*scale_psd) power
 
---       print $ show  powerspectrum
-
        let sampleRate2 = sampleRate/2
            lstx = map (sampleRate2 *) $ toList (linspace len_power2 (0, 1::Double))
---           lstx = [0.0,0.1..2.0*pi]
 	   lsty = powerspectrum
 	   n = length lsty
-       --g1 <- newTGraph n lstx lsty
 
        tapp <- newTApplication "test" [0] ["test"]
        tcanvas <- newTCanvas "Graph1" "Graph2" 640 480
