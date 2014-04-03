@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "FilterUtils.h"
 //-- prototype
-int fir_filter_core(double*,  unsigned,  double[],  double[],  unsigned*,  unsigned, double*);
-int fir_filter (double*, unsigned, double[], unsigned,  double*);
-int iir_filter (double*,  unsigned,  double[],  double[], unsigned, double*);
-
+//int fir_filter_core(double*,  unsigned,  double[],  double[],  unsigned*,  unsigned, double*);
+//int fir_filter (double*, unsigned, double[], unsigned,  double*);
+//int iir_filter (double*,  unsigned,  double[],  double[], unsigned, double*);
+//
 
 
 int iir_filter (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double *output){
