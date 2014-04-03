@@ -4,13 +4,13 @@
 #include <string.h>
 
 //-- prototype
-int fir_filter_core(double*,  double*,  unsigned,  double[],  double[],  unsigned*,  unsigned);
-int fir_filter (double*, double*, unsigned, double[], unsigned);
-int iir_filter (double*,  double*,  unsigned,  double[],  double[], unsigned);
+int fir_filter_core(double*,  unsigned,  double[],  double[],  unsigned*,  unsigned, double*);
+int fir_filter (double*, unsigned, double[], unsigned,  double*);
+int iir_filter (double*,  unsigned,  double[],  double[], unsigned, double*);
 
 
 
-int iir_filter (double *output, double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen){
+int iir_filter (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double *output){
 
     unsigned inputidx, k;
     double y, Reg[filterlen];
@@ -44,7 +44,7 @@ int iir_filter (double *output, double *input, unsigned inputlen, double num_coe
 
 
 
-int fir_filter (double *output, double *input, unsigned inputlen, double fir_coeff[], unsigned filterlen){
+int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned filterlen, double *output){
 
     double fir_buffer[2*filterlen];
     unsigned temp;
@@ -59,7 +59,7 @@ int fir_filter (double *output, double *input, unsigned inputlen, double fir_coe
     fir_ix = 0;
 
     //-- main part
-    fir_filter_core(output,  input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen);
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
 
 
     return 1;
@@ -67,7 +67,7 @@ int fir_filter (double *output, double *input, unsigned inputlen, double fir_coe
 
 
 
-int fir_filter_core (double *output,  double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned length){
+int fir_filter_core (double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned length, double *output){
 
     unsigned idx, oidx;
 
