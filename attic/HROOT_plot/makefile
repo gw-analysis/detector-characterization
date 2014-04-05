@@ -10,7 +10,7 @@ OBJ2=loadFrame_HROOT.hs
 OBJ3=loadFrame_HROOT_spectrum.hs
 OBJ4=loadFrame_HROOT_adc.hs
 OBJ5=test_plot.hs
-OBJ6=
+OBJ6=test_plot2.hs
 OBJ7=
 OBJ8=
 OBJ9=
@@ -23,7 +23,7 @@ INCLINK=
 LIBLINK=-lstdc++ -lm -lFrame
 
 #TARGET=loadFrame_HROOT loadFrameData
-TARGET=loadFrame_HROOT_spectrum test_plot
+TARGET=loadFrame_HROOT_spectrum test_plot test_plot2
 #TARGET=loadFrameData
 all:$(TARGET)
 
@@ -45,6 +45,10 @@ loadFrame_HROOT_adc:${OBJ4}
 
 test_plot:${OBJ5}
 	$(CC) -O ${OBJ5} -o $@ ${INKLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
+
+test_plot2:${OBJ6}
+	$(CC) -O ${OBJ6} -o $@ ${INKLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
 clean:

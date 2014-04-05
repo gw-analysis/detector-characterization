@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module PlotUtilsHROOT
-       ( plot_spectrum ) where
+       ( plot_spectrum, plot_volt ) where
 
 import HasKAL.FrameUtils.FrameUtils
 
@@ -10,6 +10,8 @@ import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 
 import HROOT hiding (eval)
+
+
 
 plot_spectrum::String -> IO()
 plot_spectrum dataName = do
@@ -22,6 +24,8 @@ plot_spectrum dataName = do
                    scale_psd = 1/((fromIntegral len_power) * sampleRate)
 		   len_power2 = floor $ fromIntegral(len_power)/2
 		   powerspectrum = take len_power2  $ map (*scale_psd) power
+
+--	       print dat
 
 	       let sampleRate2 = sampleRate/2
 	           lstx = map (sampleRate2 *) $ toList (linspace len_power2 (0, 1::Double))
@@ -39,3 +43,24 @@ plot_spectrum dataName = do
 
 
 
+
+plot_volt::String -> IO()
+plot_volt dataName = do
+               fdata <- readFrame "Channel_Name" dataName
+
+	       let dat = map realToFrac (eval fdata)
+--	       print dat
+
+	       let lsty = take 3000 dat
+	       	   n = length lsty
+		   lstx = [1..3000]
+--	       print n
+
+               tapp <- newTApplication "1" [0] ["2"]
+               tcanvas <- newTCanvas "Graph1" "Graph2" 640 480
+               g1 <- newTGraph n lstx lsty
+
+               draw g1 "AC"
+               run tapp 1
+               delete g1
+               delete tapp
