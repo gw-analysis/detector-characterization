@@ -23,7 +23,7 @@ gwpsd dat nfft fs = do
               $ map (tuplify2 (constant 0 nfft)) (map (windowed (hanning nfft)) datlist)
       power =  map (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
       meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros nfft) power
-      scale_psd = 1/(fromIntegral nfft) * fs
+      scale_psd = 1/(fromIntegral nfft * fs)
   toList $ scale scale_psd meanpower
 
 
