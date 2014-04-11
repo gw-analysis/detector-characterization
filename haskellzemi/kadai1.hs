@@ -10,14 +10,14 @@ factorialguard n
  -- if文を用いた記法
 factorialif :: Int -> Int
 factorialif n = if n < 0
-                then error "why did you insert a Minos number?"
+                then error "why did you insert a minus number?"
                 else if n == 0
                      then 1
                      else n*factorialif (n - 1)
 
  -- case式を用いた方法
 factorialcase :: Int -> Int
-factorialcase n = case n < 0 of True -> error "Why did you insert a Minos number?"
+factorialcase n = case n < 0 of True -> error "Why did you insert a minus number?"
                                 False -> factorialfunc n
   where factorialfunc n = case n of 0 -> 1
                                     otherwise ->  n*factorialfunc (n - 1)
