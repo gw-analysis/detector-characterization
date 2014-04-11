@@ -3,7 +3,7 @@
  -- ガードを用いた記法
 factorialguard :: Int -> Int
 factorialguard n
-  | n < 0 = error "why did you insert a Minos number?"
+  | n < 0 = error "why did you insert a minus number?"
   | n == 0 = 1
   | otherwise = n * factorialguard (n - 1)
 
