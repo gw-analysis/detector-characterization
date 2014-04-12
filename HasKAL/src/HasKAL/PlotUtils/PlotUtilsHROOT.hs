@@ -21,9 +21,6 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 	   g1 <- newTGraph (length xdata) xdata ydata
 
-
-
-                
 	   draw g1 (checkPlotLine flagPlotLine)
 --	   draw g1 "AL*"
 
@@ -63,45 +60,23 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
 	   --}
 
 
+--hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine
 
 -- 細かいことはいいからplotしたい人向け
 plot::[Double] -> [Double] ->IO()
 plot xdata ydata = do
-
-	   tapp <- newTApplication "test" [0] ["test"]
-           tcanvas <- newTCanvas  "Test" "Plot" 640 480
-	   g1 <- newTGraph (length xdata) xdata ydata
-	   draw g1 "AL*"
-           run tapp 1
-	   delete g1
-	   delete tapp
+           hroot_core xdata ydata "" "" Linear LinePoint
 
 -- 時系列データをplotする
 -- 時系列なので、logスケールの引数はなし
 plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption ->IO()
 plot_st xdata ydata xLabel yLabel flagPlotLine = do
+           hroot_core xdata ydata "" "" Linear flagPlotLine
 
-	   tapp <- newTApplication "test" [0] ["test"]
-           tcanvas <- newTCanvas  "Test" "Plot" 640 480
-	   g1 <- newTGraph (length xdata) xdata ydata
-	   draw g1 (checkPlotLine flagPlotLine)
-           run tapp 1
-	   delete g1
-	   delete tapp
 -- log-logスケールでスペクトルをplotする
 plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption ->IO()
 plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine= do
-
-	   tapp <- newTApplication "test" [0] ["test"]
-           tcanvas <- newTCanvas  "Test" "Plot" 640 480
-	   g1 <- newTGraph (length xdata) xdata ydata
-
-           -- ここでlogにする HROOT-0.8を使って実装予定
-
-	   draw g1 (checkPlotLine flagPlotLine)
-           run tapp 1
-	   delete g1
-	   delete tapp
+           hroot_core xdata ydata "" "" flagLog flagPlotLine
 
 
 
