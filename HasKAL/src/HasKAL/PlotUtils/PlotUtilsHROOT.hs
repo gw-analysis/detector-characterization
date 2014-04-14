@@ -1,4 +1,3 @@
---module PlotUtilsHROOT(
 module HasKAL.PlotUtils.PlotUtilsHROOT(
        PlotTypeOption(Line, Point, LinePoint, PointLine, Dot),
        LogOption(Linear, LogX, LogY, LogXY),
@@ -19,14 +18,37 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
 
 	   tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
+
 	   g1 <- newTGraph (length xdata) xdata ydata
+
+--           g1 = setLineColor 2
+--          g1 = setLineWidth 2
+--           setMarkerColor g1 2
+
+
+           let checkPlotLine :: PlotTypeOption -> String
+               checkPlotLine flagPlotLine
+                       | flagPlotLine == Line      = "AL"
+                       | flagPlotLine == Point     = "AP*"
+                       | flagPlotLine == LinePoint = "AL*"
+                       | flagPlotLine == PointLine = "AL*"
+                       | flagPlotLine == Dot       = "AP"
+                       | otherwise                 = "AL"
 
 	   draw g1 (checkPlotLine flagPlotLine)
 --	   draw g1 "AL*"
 
+--           let y2 = [4, 3, 2, 1, 6]
+--	   g2 <- newTGraph (length xdata) xdata y2
+
+--           setLineColor g2 4
+--	   draw g2 "L"
+--           setLineColor g2 4
+
+
            -- let y2 = [4, 3, 2, 1, 6]
 	   -- g2 <- newTGraph (length xdata) xdata y2
-	   -- draw g2 "L"
+	   -- draw g2 "AL"
 
            -- 重ね書きはmapを使って実装予定
 
@@ -34,9 +56,7 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
 
 	   delete g1
 	   delete tapp
-
-
-
+           
 	   -- Label logスケールのためのフラグは今は捨てているが
 	   -- HROOT-0.8を使って実装予定
 	   -- label付け、logスケールへの変更の関数をきちんと把握できていないため
@@ -82,13 +102,6 @@ plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine= do
 
 
 
-checkPlotLine :: PlotTypeOption -> String
-checkPlotLine flagPlotLine
-        | flagPlotLine == Line      = "AL"
-        | flagPlotLine == Point     = "AP*"
-        | flagPlotLine == LinePoint = "AL*"
-        | flagPlotLine == PointLine = "AL*"
-        | flagPlotLine == Dot       = "AP"
-        | otherwise                 = "AL"
+
 
 
