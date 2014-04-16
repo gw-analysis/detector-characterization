@@ -1,6 +1,5 @@
 
-
-module SpectrumUtils (
+module HasKAL.SpectrumUtils.SpectrumUtils (
   gwpsd
 )
 where
