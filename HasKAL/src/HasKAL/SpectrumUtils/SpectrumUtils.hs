@@ -1,8 +1,7 @@
 
 
 module HasKAL.SpectrumUtils.SpectrumUtils (
-  gwpsd,
-  ngwpsd
+  gwpsd
 )
 where
 
@@ -27,14 +26,6 @@ gwpsd dat nfft fs = do
       scale_psd = 1/(fromIntegral nfft * fs)
   toList $ scale scale_psd meanpower
 
-ngwpsd :: [Double]-> Int -> Double -> [Double]
-ngwpsd dat nfft fs = do
-    let out = gwpsd dat nfft fs
-        len = length out :: double
-        normalization = len / sum out
-    scale normalization out
-
-applywindow = map (windowed (hanning nfft))
 
 zeros :: Int -> Vector Double
 zeros nzero = constant 0 nzero
