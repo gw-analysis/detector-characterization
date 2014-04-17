@@ -12,7 +12,7 @@ euclideanAlg x y
   | x < 0 = error "Why did you insert a minus number?"
   | y < 0 = error "Why did you insert a minus number?"
   | rem x y == 0 = y
-  | otherwise = euclideanAlg y (rem x y) 
+  | otherwise = euclideanAlg y (rem x y)
 
 -- 課題2.3:配列を平らにする
 listSmoother :: [[a]] -> [a]
