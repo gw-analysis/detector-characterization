@@ -2,6 +2,17 @@ module HasKAL.SpectrumUtils.DetectorSensitivity
   (ifonoisepsd
   ) where
 
+
+-- analytical expression of the design noise curves of aLIGO, adVirgo, KAGRA
+-- aLIGO:
+-- on a table in page 42 in the paper http://arxiv.org/abs/0903.0338
+-- adVirgo:
+-- eq. 6 in page 5 in the paper http://arxiv.org/abs/1202.4031
+-- KAGRA:
+-- eq. 5 in paper 4 in the paper http://arxiv.org/abs/1202.4031
+--
+--
+
 import Numeric.LinearAlgebra
 import HasKAL.DetectorUtils.Detector
 
