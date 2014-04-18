@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: rayleighMonTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/10 20:34:09
+  * Last Modified: 2014/04/17 21:26:10
   *******************************************-}
 
 import qualified System.IO as SIO

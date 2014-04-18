@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/02/28 17:13:59
+# Last Modified: 2014/04/18 16:22:18
 #******************************************#
 
 # compiler option
@@ -20,7 +20,7 @@ INFs = ./*.hi ./HasKAL/GUI_Utils/*.hi ./HasKAL/MonitorUtils/*.hi ./HasKAL/Extern
 all: ${TAR1}
 
 ${TAR1}: ${TAR1}.hs ./HasKAL/GUI_Utils/GUI_Utils.hs ./HasKAL/MonitorUtils/EXTKleineWelle.hs ./HasKAL/ExternalUtils/Lwtprint.hs
-	${HC} -o $@ $< -lstdc++
+	${HC} -o $@ $< -lstdc++ -lFrame
 
 clean:
 	rm -f ${TILs}

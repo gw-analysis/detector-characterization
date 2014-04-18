@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: RayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/10 21:16:51
+  * Last Modified: 2014/04/18 10:14:55
   *******************************************-}
 
 module HasKAL.MonitorUtils.RayleighMon(rayleighMon) where
@@ -26,20 +26,24 @@ rayleighMon dTNum strideNum fsample gwDataT = do
 
 
   -- sort each frequency bin
-  let gwSortDataF' = map quicksort gwDataF'
+  let gwSortDataF' = map quicksort gwDataF' :: [[Double]]
 
-  map (pickups pNum) gwSortDataF'  
+  -- return value
+  map (pickups pNum) gwSortDataF' :: [[Double]]
 
 
--- [h(t)] -> [ [h_1(t)], [h_2(t)], ..]
--- n: Chunk Size
+-- divide list xs into n point data
 dataSplit :: Int -> [Double] -> [[Double]]
 dataSplit n xs = [drop (n*(m-1)) (take (m*n) xs) | m <- [1..((length xs) `div` n)]]
+-- [h(t)] -> [ [h_1(t)], [h_2(t)], ..]
+-- n: Chunk Size
 
 
--- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
+-- transposed 2D list
 transposed :: [[Double]] -> [[Double]]
 transposed xxs = [ concat $ map ((drop (m-1)).(take m)) xxs | m <- [1..(length (head xxs))] ]
+-- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
+
 
 
 -- data sort
@@ -67,6 +71,7 @@ flip312 f = flip (flip.f)
 flip321 :: (a -> b -> c -> d) -> c -> b -> a -> d
 flip321 f = flip (flip.(flip f))
 
+-- n-th data pickup from List xs
 pickups :: [Int] -> [Double] -> [Double]
 pickups ns xs = concat [((drop (n-1)).(take n)) xs | n <- ns]
 
