@@ -7,7 +7,7 @@ import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 
 whiteningFilterFreqDomain :: Vector Double -> Double -> Vector Double -> Vector Double
-whiteningFilterFreqDomain psd fs dat = applyWhitening psd fs . ffted $ dat
+whiteningFilterFreqDomain psd fs dat = applyWhitening psd fs nfft . ffted $ dat
   where
     nfft :: Int
     nfft = length $ toList dat
@@ -21,12 +21,12 @@ whiteningFilterFreqDomain psd fs dat = applyWhitening psd fs . ffted $ dat
     applyWindow :: Int -> Vector Double -> Vector Double
     applyWindow n = windowed (hanning n)
 
-    applyWhitening :: Vector Double -> Double -> Vector (Complex Double) -> Vector Double
-    applyWhitening twosided_psd sampling_freq fftedDat =
+    applyWhitening :: Vector Double -> Double -> Int -> Vector (Complex Double) -> Vector Double
+    applyWhitening twosided_psd sampling_freq ndat fftedDat =
       fst . fromComplex $ ifft $ toComplex (whitenedRealPart,  whitenedImagPart)
       where
          whitenedRealPart =
-          divide (fst $ fromComplex fftedDat) (sqrt $ scale (fromIntegral nfft * sampling_freq) twosided_psd)
+          divide (fst $ fromComplex fftedDat) (sqrt $ scale (fromIntegral ndat * sampling_freq) twosided_psd)
          whitenedImagPart = snd $ fromComplex fftedDat;
 
 zeros :: Int -> Vector Double
