@@ -1,3 +1,36 @@
+
+{--
+
+----- To compile -----
+You need to create symbolic link to HasKAL.
+    ln -s ~/detector-characterization/HasKAL/src/HasKAL ./
+
+You need to create symbolic link to frame data.
+    ln -s ~/detector-characterization/test/sample-data/test-1066392016-300.gwf ./
+
+After these command, you can compile.
+If you have any trouble or error, let author(Hirotaka Yuzurihara) know please.
+
+--}
+
+{--
+----- sample code -----
+
+import HasKAL.FrameUtils.FrameUtils
+import HasKAL.PlotUtils.PlotUtilsHROOT
+--PlotUtilsHROOT.hs 
+--import FrameUtils
+import HROOT hiding (eval)
+
+main = do
+
+     let x = [0, 0.1..6.28]
+     let y = map sin x
+     plot_st x y "" "" Linear LinePoint
+
+--}
+
+
 module HasKAL.PlotUtils.PlotUtilsHROOT(
        PlotTypeOption(Line, Point, LinePoint, PointLine, Dot),
        LogOption(Linear, LogX, LogY, LogXY),
