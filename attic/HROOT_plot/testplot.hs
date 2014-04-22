@@ -1,8 +1,5 @@
-import HasKAL.FrameUtils.FrameUtils
 import HasKAL.PlotUtils.PlotUtilsHROOT
---PlotUtilsHROOT.hs 
---import FrameUtils
-import HROOT hiding (eval)
+import qualified HROOT as HROOT
 
 main = do
 
