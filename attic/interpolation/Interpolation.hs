@@ -75,6 +75,12 @@ interp xx yy interp_xx interpType = do
 
 d2cd :: [Double] -> [CDouble]
 d2cd [] = []
-d2cd (x:xs) = (realToFrac x :: CDouble) : d2cd xs
+--d2cd (x:xs) = (realToFrac x :: CDouble) : d2cd xs
+d2cd x = map realToFrac x
+
+
+
+
+
 
 
