@@ -7,9 +7,10 @@ module Interpolation
 
 import Bindings.Gsl.Interpolation
 import Foreign.Ptr (FunPtr, Ptr)
-import Foreign.C.Types(CSize, CInt, CDouble)
+import Foreign.C.Types(CSize, CDouble)
 import Foreign.Storable(peek)
 import Foreign.Marshal.Array
+import InterpolationType
 
 --type Interpolation = Ptr (Ptr gsl_interp_type)
 --main :: IO ()
@@ -28,9 +29,9 @@ import Foreign.Marshal.Array
 --
 --  let interp_x = x!!5+0.01
 
-data InterpolationType = Spline | Linear
+--data InterpType = Spline | Linear
 
-interp :: [Double] -> [Double] -> Double -> InterpolationType -> IO Double
+interp :: [Double] -> [Double] -> Double -> InterpType -> IO Double
 interp xx yy interp_xx interpType = do
   let x = d2cd xx
       y = d2cd yy
