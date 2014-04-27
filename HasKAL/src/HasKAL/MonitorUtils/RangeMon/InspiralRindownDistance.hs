@@ -16,8 +16,8 @@
  -- fromList [9422.840032902668]
 
  ---出典元
- -- snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
- -- snrRingdown:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
+ -- distInspiral,distInspiralCore:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
+ -- distRingdown,distRingdownCore:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
 
 
 module HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance
