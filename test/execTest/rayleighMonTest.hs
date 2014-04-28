@@ -1,14 +1,14 @@
 {-******************************************
   *     File Name: rayleighMonTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/17 21:26:10
+  * Last Modified: 2014/04/28 10:14:41
   *******************************************-}
 
 import qualified System.IO as SIO
 import qualified Foreign.C.Types as FCT
 
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
-import qualified HasKAL.MonitorUtils.RayleighMon as HMR
+import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMR
 
 main :: IO ()
 main = do
