@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module FIlterUtils
+module FilterUtils
 (
     whiteningFilterFreqDomain
 --  , whiteningFilterTimeDomain
@@ -98,6 +98,5 @@ reverseVCD = fromList . reverse . toList
 
 
 foreign import ccall unsafe "nr.h toeplz" c_nr_toeplz :: Ptr CFloat -> Ptr CFloat ->  Ptr CFloat -> Int -> IO()
-
 
 

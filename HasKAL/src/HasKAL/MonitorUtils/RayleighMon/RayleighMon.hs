@@ -1,10 +1,10 @@
 {-******************************************
   *     File Name: RayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/18 10:14:55
+  * Last Modified: 2014/04/28 10:13:20
   *******************************************-}
 
-module HasKAL.MonitorUtils.RayleighMon(rayleighMon) where
+module HasKAL.MonitorUtils.RayleighMon.RayleighMon(rayleighMon) where
 
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 

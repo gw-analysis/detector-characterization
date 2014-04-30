@@ -1,7 +1,7 @@
 
 
 
-module StrictMapping
+module StrictMapping.StrictMapping
 (mapM',
 forM'
 ) where

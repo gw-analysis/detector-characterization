@@ -1,10 +1,10 @@
 {-******************************************
   *     File Name: EXTKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/18 10:18:54
+  * Last Modified: 2014/04/28 10:12:52
   *******************************************-}
 
-module HasKAL.MonitorUtils.EXTKleineWelle
+module HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
   (execKleineWelle
    --,generateOptKW
    --,execKW

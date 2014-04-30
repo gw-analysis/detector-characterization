@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/18 16:20:58
+  * Last Modified: 2014/04/28 10:15:42
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -16,8 +16,8 @@ import qualified Text.Printf as TP -- printf
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
-import qualified HasKAL.MonitorUtils.EXTKleineWelle as HMK
-import qualified HasKAL.MonitorUtils.RayleighMon as HMR
+import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMK
+import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMR
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
