@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/28 10:15:42
+  * Last Modified: 2014/05/01 17:41:09
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -9,27 +9,36 @@ module HasKAL.GUI_Utils.GUI_Utils
   ) where
 
 import Graphics.UI.Gtk
-import qualified System.IO as SIO -- openFile
 import qualified Control.Monad as CM -- forM
+import qualified Numeric.LinearAlgebra as NLA -- data Vector, fromList, toList
+import qualified System.IO as SIO -- openFile
+import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 import qualified Text.Regex as TR -- splitRegex, mkRegex
 import qualified Text.Printf as TP -- printf
-import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
+import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
-import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMK
-import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMR
-import qualified HasKAL.TimeUtils.GPSfunction as HTG
+import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMKKW
+import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
+import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance as HMRIRD
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
+import qualified HasKAL.TimeUtils.GPSfunction as HTG
 
+{-- GUI main window
+-- test code
+main :: IO ()
+main = hasKalGuiTop
+-- arguments: Nothing
+-}
 hasKalGuiTop :: IO ()
 hasKalGuiTop = do
   initGUI
 
   {--  information  --}
-  let topSubSystemLabels = ["Test", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names (ハードコーディングで良いか？
+  let topSubSystemLabels = ["Test", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
   let topNumOfSubSystems = length topSubSystemLabels -- number of sub systems
-  let topMonitorLabels = ["Glitch", "Line", "Gaussianity"] -- monitor names (ハードコーディングで良いか？
+  let topMonitorLabels = ["Glitch", "Line", "Gaussianity", "RangeMon"] -- monitor names
 
   {--  Create new object --}
   topWindow <- windowNew -- main window
@@ -59,7 +68,7 @@ hasKalGuiTop = do
   boxPackStartDefaults topMonitorVbox topExitVbox -- create small vbox
   boxPackStartDefaults topExitVbox topExitButton -- insert exit button in vbox
 
-   {--  Select Glitch Monitor --}
+  {--  Select Glitch Monitor --}
   onClicked (topMonitorButtons !! 0) $ do
     putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 0))
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
@@ -72,9 +81,14 @@ hasKalGuiTop = do
     putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 2))
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
     hasKalGuiGaussianity topActiveLabels
+  {--  Select Range Monitor --}
+  onClicked (topMonitorButtons !! 3) $ do
+    putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 3))
+--    let topActiveLabels = getActiveLabels topSubSystemCheckButtons
+    hasKalGuiRangeMon
   {--  Select Exit  --}
   onClicked topExitButton $ do
-    putStrLn "Exit"
+    putStrLn "Exit HasKAL GUI"
     widgetDestroy topWindow
 
   {--  Exit Process  --}
@@ -84,7 +98,12 @@ hasKalGuiTop = do
 
 
 
-{- Glitch Monitors -}
+{- Glitch Monitors Window
+-- test code
+main :: IO ()
+main = hasKalGuiGlitch ["Test"]
+-- arguments: Subsystem_Name
+-}
 hasKalGuiGlitch :: [String] -> IO ()
 hasKalGuiGlitch activeSubSystemlabels = do
   initGUI
@@ -140,6 +159,12 @@ hasKalGuiGlitch activeSubSystemlabels = do
   mainGUI
 
 
+{- KleineWelle Window
+-- test code
+main = IO ()
+main = hasKalGuiKleineWelle "Channel_Name"
+-- arguments: channel_name
+-}
 hasKalGuiKleineWelle :: [String] -> IO ()
 hasKalGuiKleineWelle kleineWelleActiveLabels = do
   initGUI
@@ -191,12 +216,12 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   --kleineWelleChannelCButtons <- mapM checkButtonNewWithLabel kleineWelleChannelLabels
   kleineWelleGpsEntryLable <- labelNewWithMnemonic "GPS Time [s]"
 {--}
-  kleineWelleYearEntryLable <- labelNewWithMnemonic "年"
-  kleineWelleMonthEntryLable <- labelNewWithMnemonic "月"
-  kleineWelleDayEntryLable <- labelNewWithMnemonic "日"
-  kleineWelleHourEntryLable <- labelNewWithMnemonic "時"
-  kleineWelleMinuteEntryLable <- labelNewWithMnemonic "分"
-  kleineWelleSecondEntryLable <- labelNewWithMnemonic "秒 (JST)"
+  kleineWelleYearEntryLable <- labelNewWithMnemonic "Year"
+  kleineWelleMonthEntryLable <- labelNewWithMnemonic "Month"
+  kleineWelleDayEntryLable <- labelNewWithMnemonic "Day"
+  kleineWelleHourEntryLable <- labelNewWithMnemonic "Hour"
+  kleineWelleMinuteEntryLable <- labelNewWithMnemonic "Minute"
+  kleineWelleSecondEntryLable <- labelNewWithMnemonic "Second (JST)"
 {----}
   kleineWelleObsEntryLable <- labelNewWithMnemonic "OBS Time [s]"
   kleineWelleStrideEntryLable <- labelNewWithMnemonic "Stride"
@@ -305,7 +330,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
   {--  Execute --}
   onClicked kleineWelleClose $ do
-    putStrLn "Close KleineWelle Monitor\n"
+    putStrLn "Closed KleineWelle Monitor"
     widgetDestroy kleineWelleWindow
   onClicked kleineWelleExecute $ do
     putStrLn "Execute"
@@ -355,15 +380,15 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
     putStrLn "Generate optM file for KleineWelle"
-    lwtOutput <- HMK.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kleineWelleActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
+    lwtOutput <- HMKKW.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kleineWelleActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
     let lwtColmunNum = length kwActiveLabels
     putStrLn "Run Plot tool"
     if lwtColmunNum == 2
       then CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_2d "TITLE 2" "HOGEHOGE" 10.0 (640,480) (convert_StoDT2L lambda)
       else if lwtColmunNum == 3
         then CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L lambda)
-        else mapM putStrLn ["Required 2 or 3 columns\n"]
-    putStrLn "Close KleineWelle\n"
+        else mapM putStrLn ["Required 2 or 3 columns"]
+    putStrLn "Closed KleineWelle"
     widgetDestroy kleineWelleWindow
   {--  Exit Process  --}
   onDestroy kleineWelleWindow mainQuit
@@ -372,7 +397,12 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
 
 
-{-- Gaussianity Monitors --}
+{-- Gaussianity Monitors Window
+-- test code
+main = IO ()
+main = hasKalGuiGaussianity ["Test"]
+-- arguments: subsystem_name
+--}
 hasKalGuiGaussianity :: [String] -> IO ()
 hasKalGuiGaussianity activeSubSystemlabels = do
   initGUI
@@ -428,6 +458,13 @@ hasKalGuiGaussianity activeSubSystemlabels = do
   mainGUI
 
 
+
+{-- RayleighMon Window 
+-- test code
+main = IO ()
+main = hasKalGuiRayleighMon ["Channel_Name"]
+-- arguments: channel_name
+--}
 hasKalGuiRayleighMon :: [String] -> IO ()
 hasKalGuiRayleighMon activeChannelLabels = do
   initGUI  
@@ -447,12 +484,12 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxButtons <- hBoxNew True 5
 
 
-  rayleighMonYearEntryLable <- labelNewWithMnemonic "年"
-  rayleighMonMonthEntryLable <- labelNewWithMnemonic "月"
-  rayleighMonDayEntryLable <- labelNewWithMnemonic "日"
-  rayleighMonHourEntryLable <- labelNewWithMnemonic "時"
-  rayleighMonMinuteEntryLable <- labelNewWithMnemonic "分"
-  rayleighMonSecondEntryLable <- labelNewWithMnemonic "秒 (JST)"
+  rayleighMonYearEntryLable <- labelNewWithMnemonic "Year"
+  rayleighMonMonthEntryLable <- labelNewWithMnemonic "Month"
+  rayleighMonDayEntryLable <- labelNewWithMnemonic "Day"
+  rayleighMonHourEntryLable <- labelNewWithMnemonic "Hour"
+  rayleighMonMinuteEntryLable <- labelNewWithMnemonic "Minute"
+  rayleighMonSecondEntryLable <- labelNewWithMnemonic "Second (JST)"
   rayleighMonObsTimeEntryLable <- labelNewWithMnemonic "OBS Time [s]"
   rayleighMonSamplingEntryLable <- labelNewWithMnemonic "fsample [Hz]"
   rayleighMonStrideEntryLable <- labelNewWithMnemonic "Stride Num"
@@ -524,7 +561,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
   {--  Execute --}
   onClicked rayleighMonClose $ do
-    putStrLn "Close RayleighMon\n"
+    putStrLn "Closed RayleighMon"
     widgetDestroy rayleighMonWindow
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
@@ -557,17 +594,14 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("     stride: " ++ (show rmStride) )
 
     frData <- HFF.readFrame (activeChannelLabels !! 0) "../sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 + 1)]) ( (transposed $ HMR.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPR.LogXY HPPR.Line
+    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 + 1)]) ( (transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPR.LogXY HPPR.Line
     -- 横軸の値を直す(1秒スペクトルなので今は正しい)
 
     {-- 暫定的なファイル出力 --}
     oFile <- SIO.openFile "./GUI-RayleighMon_Result.txt" SIO.WriteMode
-    SIO.hPutStrLn oFile (convert_DLL2S $ HMR.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData)) )
+    SIO.hPutStrLn oFile (convert_DLL2S $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData)) )
     SIO.hClose oFile
     {--  ここまで、ファイル出力  --}
-
-
-
     widgetDestroy rayleighMonWindow
 
 
@@ -577,7 +611,394 @@ hasKalGuiRayleighMon activeChannelLabels = do
   mainGUI
 
 
+{-- Range Monitor Window
+-- test code
+main = IO ()
+main = hasKalGuiRangeMon
+-- arguments: Nothing
+--}
+hasKalGuiRangeMon :: IO ()
+hasKalGuiRangeMon = do
+  initGUI
 
+  {-- Create new object --}
+  rangeMonWindow <- windowNew
+  rangeMonVBox <- vBoxNew True 10
+  rangeMonVBox2 <- vBoxNew True 10
+
+  {-- Information --}
+  let rangeMonLabels = ["Inspiral", "Ringdown"]
+  
+  rangeMonButtons <- mapM buttonNewWithLabel rangeMonLabels
+  rangeMonCloseButton <- buttonNewWithLabel "Close"
+
+  {--  Set Parameters of the objects  --}
+  set rangeMonWindow [ windowTitle := "Range Monitor",
+                       windowDefaultWidth := 200,
+                       windowDefaultHeight := 300,
+                       containerChild := rangeMonVBox,
+                       containerBorderWidth := 20 ]
+
+  {--  Arrange object in window  --}
+  boxPackStartDefaults rangeMonVBox rangeMonVBox2
+  mapM (boxPackStartDefaults rangeMonVBox2) rangeMonButtons
+  boxPackStartDefaults rangeMonVBox2 rangeMonCloseButton
+
+  {--  Select Range Monitor  --}
+  onClicked (rangeMonButtons !! 0) $ do
+    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (rangeMonButtons !! 0))
+    hasKalGuiInspiralRange
+  onClicked (rangeMonButtons !! 1) $ do
+    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (rangeMonButtons !! 1))
+    hasKalGuiRingDownRange
+  onClicked rangeMonCloseButton $ do
+    putStrLn "Closed RangeMon Window"
+    widgetDestroy rangeMonWindow
+
+  {--  Exit Process  --}
+  onDestroy rangeMonWindow mainQuit
+  widgetShowAll rangeMonWindow
+  mainGUI
+   
+
+
+{--  Inspiral Range Window
+-- test code
+main = IO ()
+main = hasKalGuiInspiralRange
+-- arguments: Nothing
+--}
+hasKalGuiInspiralRange :: IO ()
+hasKalGuiInspiralRange = do
+  initGUI
+
+  {--  Create new object  --}
+  inspiralRangeWindow <- windowNew
+  inspiralRangeVBox <- vBoxNew True 5
+  inspiralRangeHBoxYear <- hBoxNew True 5
+  inspiralRangeHBoxMonth <- hBoxNew True 5
+  inspiralRangeHBoxDay <- hBoxNew True 5
+  inspiralRangeHBoxHour <- hBoxNew True 5
+  inspiralRangeHBoxMinute <- hBoxNew True 5
+  inspiralRangeHBoxSecond <- hBoxNew True 5
+  inspiralRangeHBoxObsTime <- hBoxNew True 5
+  inspiralRangeHBoxMass1 <- hBoxNew True 5
+  inspiralRangeHBoxMass2 <- hBoxNew True 5
+  inspiralRangeHBoxThreshold <- hBoxNew True 5
+  inspiralRangeHBoxButtons <- hBoxNew True 5
+
+  inspiralRangeYearEntryLabel <- labelNewWithMnemonic "Year"
+  inspiralRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
+  inspiralRangeDayEntryLabel <- labelNewWithMnemonic "Day"
+  inspiralRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
+  inspiralRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
+  inspiralRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
+  inspiralRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
+  inspiralRangeMass1EntryLabel <- labelNewWithMnemonic "mass_min [M_solar]"
+  inspiralRangeMass2EntryLabel <- labelNewWithMnemonic "mass_max [M_solar]"
+  inspiralRangeThresholdEntryLabel <- labelNewWithMnemonic "Threshold SNR"
+
+  inspiralRangeYearEntry <- entryNew
+  inspiralRangeMonthEntry <- entryNew
+  inspiralRangeDayEntry <- entryNew
+  inspiralRangeHourEntry <- entryNew
+  inspiralRangeMinuteEntry <- entryNew
+  inspiralRangeSecondEntry <- entryNew
+  inspiralRangeObsTimeEntry <- entryNew
+  inspiralRangeMass1Entry <- entryNew
+  inspiralRangeMass2Entry <- entryNew
+  inspiralRangeThresholdEntry <- entryNew
+
+  inspiralRangeClose <- buttonNewWithLabel "Close"
+  inspiralRangeExecute <- buttonNewWithLabel "Execute"
+
+  entrySetText inspiralRangeYearEntry "2013"
+  entrySetText inspiralRangeMonthEntry "10"
+  entrySetText inspiralRangeDayEntry "21"
+  entrySetText inspiralRangeHourEntry "21"
+  entrySetText inspiralRangeMinuteEntry "0"
+  entrySetText inspiralRangeSecondEntry "0"
+  entrySetText inspiralRangeObsTimeEntry "300"
+  entrySetText inspiralRangeMinuteEntry "0"
+  entrySetText inspiralRangeSecondEntry "0"
+  entrySetText inspiralRangeObsTimeEntry "300"
+  entrySetText inspiralRangeMass1Entry "1.0"
+  entrySetText inspiralRangeMass2Entry "300.0"
+  entrySetText inspiralRangeThresholdEntry "10.0"
+  
+  {--  Set Parameters of the objects  --}
+  set inspiralRangeWindow [ windowTitle := "Inspiral Range",
+                      windowDefaultWidth := 200,
+                      windowDefaultHeight := 450,
+                      containerChild := inspiralRangeVBox,
+                      containerBorderWidth := 20 ]
+
+  {--  Arrange object in window  --}
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxYear
+  boxPackStartDefaults inspiralRangeHBoxYear inspiralRangeYearEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxYear inspiralRangeYearEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMonth
+  boxPackStartDefaults inspiralRangeHBoxMonth inspiralRangeMonthEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxMonth inspiralRangeMonthEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxDay
+  boxPackStartDefaults inspiralRangeHBoxDay inspiralRangeDayEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxDay inspiralRangeDayEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxHour
+  boxPackStartDefaults inspiralRangeHBoxHour inspiralRangeHourEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxHour inspiralRangeHourEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMinute
+  boxPackStartDefaults inspiralRangeHBoxMinute inspiralRangeMinuteEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxMinute inspiralRangeMinuteEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxSecond
+  boxPackStartDefaults inspiralRangeHBoxSecond inspiralRangeSecondEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxSecond inspiralRangeSecondEntry
+
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxObsTime
+  boxPackStartDefaults inspiralRangeHBoxObsTime inspiralRangeObsTimeEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxObsTime inspiralRangeObsTimeEntry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass1
+  boxPackStartDefaults inspiralRangeHBoxMass1 inspiralRangeMass1EntryLabel
+  boxPackStartDefaults inspiralRangeHBoxMass1 inspiralRangeMass1Entry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass2
+  boxPackStartDefaults inspiralRangeHBoxMass2 inspiralRangeMass2EntryLabel
+  boxPackStartDefaults inspiralRangeHBoxMass2 inspiralRangeMass2Entry
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxThreshold
+  boxPackStartDefaults inspiralRangeHBoxThreshold inspiralRangeThresholdEntryLabel
+  boxPackStartDefaults inspiralRangeHBoxThreshold inspiralRangeThresholdEntry
+
+  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxButtons
+  boxPackStartDefaults inspiralRangeHBoxButtons inspiralRangeClose
+  boxPackStartDefaults inspiralRangeHBoxButtons inspiralRangeExecute
+
+  {--  Execute  --}
+  onClicked inspiralRangeClose $ do
+    putStrLn "Closed InspiralRange Window"
+    widgetDestroy inspiralRangeWindow
+  onClicked inspiralRangeExecute $ do
+    putStrLn "Execute"
+
+    s_temp <- entryGetText inspiralRangeYearEntry
+    let inspYear = read s_temp :: Int
+    s_temp <- entryGetText inspiralRangeMonthEntry
+    let inspMonth = read s_temp :: Int
+    s_temp <- entryGetText inspiralRangeDayEntry
+    let inspDay = read s_temp :: Int
+    s_temp <- entryGetText inspiralRangeHourEntry
+    let inspHour = read s_temp :: Int
+    s_temp <- entryGetText inspiralRangeMinuteEntry
+    let inspMinute = read s_temp :: Int
+    s_temp <- entryGetText inspiralRangeSecondEntry
+    let inspSecond = read s_temp :: Int
+
+    let inspiralRangeDateStr = iDate2sDate inspYear inspMonth inspDay inspHour inspMinute inspSecond
+    putStrLn ("   JST Time: " ++ inspiralRangeDateStr)
+    let hogeGPS = HTG.time2gps inspiralRangeDateStr
+    putStrLn ("   GPS Time: " ++ hogeGPS)
+    s_temp <- entryGetText inspiralRangeObsTimeEntry
+    let inspObsTime = read s_temp :: Int
+    putStrLn ("   Obs Time: " ++ (show inspObsTime) )
+    s_temp <- entryGetText inspiralRangeMass1Entry
+    let inspMass1 = read s_temp :: Double
+    putStrLn ("     Mass_1: " ++ (show inspMass1) )
+    s_temp <- entryGetText inspiralRangeMass2Entry
+    let inspMass2 = read s_temp :: Double
+    putStrLn ("     Mass_2: " ++ (show inspMass2) )
+    s_temp <- entryGetText inspiralRangeThresholdEntry
+    let inspThreshold = read s_temp :: Double
+    putStrLn ("   Thresold: " ++ (show inspThreshold) )
+    {-- Monitor tool --}
+    -- 複数要素のvectorを与えるとおかしいのでとりあえずforMで代用
+    inspDist <- CM.forM [inspMass1, inspMass1+2.0..inspMass2] $ \mass ->
+      return $ NLA.toList $ HMRIRD.distInspiral (NLA.fromList [mass]) (NLA.fromList [mass]) (NLA.fromList [inspThreshold]) HDD.KAGRA
+    HPPR.hroot_core (map (*2.0) [inspMass1,inspMass1+2.0..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPR.Linear HPPR.Line
+    {-- End of Monitor Tool --}
+    putStrLn "Closed InspiralRange Window"
+    widgetDestroy inspiralRangeWindow
+
+  {--  Exit Process  --}
+  onDestroy inspiralRangeWindow mainQuit
+  widgetShowAll inspiralRangeWindow
+  mainGUI
+
+
+
+
+{--  RingDown Range Window
+-- test code
+main = IO ()
+main = hasKalGuiRingDownRange
+-- arguments: Nothing
+--}
+hasKalGuiRingDownRange :: IO ()
+hasKalGuiRingDownRange = do
+  initGUI
+
+  {--  Create new object  --}
+  ringDownRangeWindow <- windowNew
+  ringDownRangeVBox <- vBoxNew True 5
+  ringDownRangeHBoxYear <- hBoxNew True 5
+  ringDownRangeHBoxMonth <- hBoxNew True 5
+  ringDownRangeHBoxDay <- hBoxNew True 5
+  ringDownRangeHBoxHour <- hBoxNew True 5
+  ringDownRangeHBoxMinute <- hBoxNew True 5
+  ringDownRangeHBoxSecond <- hBoxNew True 5
+  ringDownRangeHBoxObsTime <- hBoxNew True 5
+  ringDownRangeHBoxMass <- hBoxNew True 5
+  ringDownRangeHBoxKerrParam <- hBoxNew True 5
+  ringDownRangeHBoxMassDefect <- hBoxNew True 5
+  ringDownRangeHBoxIniPhase <- hBoxNew True 5
+  ringDownRangeHBoxThreshold <- hBoxNew True 5
+  ringDownRangeHBoxButtons <- hBoxNew True 5
+
+  ringDownRangeYearEntryLabel <- labelNewWithMnemonic "Year"
+  ringDownRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
+  ringDownRangeDayEntryLabel <- labelNewWithMnemonic "Day"
+  ringDownRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
+  ringDownRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
+  ringDownRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
+  ringDownRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
+  ringDownRangeMassEntryLabel <- labelNewWithMnemonic "mass [M_solar]"
+  ringDownRangeKerrParamEntryLabel <- labelNewWithMnemonic "Kerr parameter"
+  ringDownRangeMassDefectEntryLabel <- labelNewWithMnemonic "mass defect ratio"
+  ringDownRangeIniPhaseEntryLabel <- labelNewWithMnemonic "Initial Phase [rad]"
+  ringDownRangeThresholdEntryLabel <- labelNewWithMnemonic "Threshold SNR"
+
+  ringDownRangeYearEntry <- entryNew
+  ringDownRangeMonthEntry <- entryNew
+  ringDownRangeDayEntry <- entryNew
+  ringDownRangeHourEntry <- entryNew
+  ringDownRangeMinuteEntry <- entryNew
+  ringDownRangeSecondEntry <- entryNew
+  ringDownRangeObsTimeEntry <- entryNew
+  ringDownRangeMassEntry <- entryNew
+  ringDownRangeKerrParamEntry <- entryNew
+  ringDownRangeMassDefectEntry <- entryNew
+  ringDownRangeIniPhaseEntry <- entryNew
+  ringDownRangeThresholdEntry <- entryNew
+
+  ringDownRangeClose <- buttonNewWithLabel "Close"
+  ringDownRangeExecute <- buttonNewWithLabel "Execute"
+
+  entrySetText ringDownRangeYearEntry "2013"
+  entrySetText ringDownRangeMonthEntry "10"
+  entrySetText ringDownRangeDayEntry "21"
+  entrySetText ringDownRangeHourEntry "21"
+  entrySetText ringDownRangeMinuteEntry "0"
+  entrySetText ringDownRangeSecondEntry "0"
+  entrySetText ringDownRangeObsTimeEntry "300"
+  entrySetText ringDownRangeMinuteEntry "0"
+  entrySetText ringDownRangeSecondEntry "0"
+  entrySetText ringDownRangeObsTimeEntry "300"
+  entrySetText ringDownRangeMassEntry "10.0"
+  entrySetText ringDownRangeKerrParamEntry "0.98"
+  entrySetText ringDownRangeMassDefectEntry "0.03"
+  entrySetText ringDownRangeIniPhaseEntry "0.0"
+  entrySetText ringDownRangeThresholdEntry "10.0"
+  
+  {--  Set Parameters of the objects  --}
+  set ringDownRangeWindow [ windowTitle := "RingDown Range",
+                      windowDefaultWidth := 200,
+                      windowDefaultHeight := 450,
+                      containerChild := ringDownRangeVBox,
+                      containerBorderWidth := 20 ]
+
+  {--  Arrange object in window  --}
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxYear
+  boxPackStartDefaults ringDownRangeHBoxYear ringDownRangeYearEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxYear ringDownRangeYearEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMonth
+  boxPackStartDefaults ringDownRangeHBoxMonth ringDownRangeMonthEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxMonth ringDownRangeMonthEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxDay
+  boxPackStartDefaults ringDownRangeHBoxDay ringDownRangeDayEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxDay ringDownRangeDayEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxHour
+  boxPackStartDefaults ringDownRangeHBoxHour ringDownRangeHourEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxHour ringDownRangeHourEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMinute
+  boxPackStartDefaults ringDownRangeHBoxMinute ringDownRangeMinuteEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxMinute ringDownRangeMinuteEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxSecond
+  boxPackStartDefaults ringDownRangeHBoxSecond ringDownRangeSecondEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxSecond ringDownRangeSecondEntry
+
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxObsTime
+  boxPackStartDefaults ringDownRangeHBoxObsTime ringDownRangeObsTimeEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxObsTime ringDownRangeObsTimeEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass
+  boxPackStartDefaults ringDownRangeHBoxMass ringDownRangeMassEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxMass ringDownRangeMassEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxKerrParam
+  boxPackStartDefaults ringDownRangeHBoxKerrParam ringDownRangeKerrParamEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxKerrParam ringDownRangeKerrParamEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMassDefect
+  boxPackStartDefaults ringDownRangeHBoxMassDefect ringDownRangeMassDefectEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxMassDefect ringDownRangeMassDefectEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxIniPhase
+  boxPackStartDefaults ringDownRangeHBoxIniPhase ringDownRangeIniPhaseEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxIniPhase ringDownRangeIniPhaseEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxThreshold
+  boxPackStartDefaults ringDownRangeHBoxThreshold ringDownRangeThresholdEntryLabel
+  boxPackStartDefaults ringDownRangeHBoxThreshold ringDownRangeThresholdEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxButtons
+  boxPackStartDefaults ringDownRangeHBoxButtons ringDownRangeClose
+  boxPackStartDefaults ringDownRangeHBoxButtons ringDownRangeExecute
+
+  {--  Execute  --}
+  onClicked ringDownRangeClose $ do
+    putStrLn "Closed RingDownRange Window"
+    widgetDestroy ringDownRangeWindow
+  onClicked ringDownRangeExecute $ do
+    putStrLn "Execute"
+
+    s_temp <- entryGetText ringDownRangeYearEntry
+    let ringDYear = read s_temp :: Int
+    s_temp <- entryGetText ringDownRangeMonthEntry
+    let ringDMonth = read s_temp :: Int
+    s_temp <- entryGetText ringDownRangeDayEntry
+    let ringDDay = read s_temp :: Int
+    s_temp <- entryGetText ringDownRangeHourEntry
+    let ringDHour = read s_temp :: Int
+    s_temp <- entryGetText ringDownRangeMinuteEntry
+    let ringDMinute = read s_temp :: Int
+    s_temp <- entryGetText ringDownRangeSecondEntry
+    let ringDSecond = read s_temp :: Int
+
+    let ringDownRangeDateStr = iDate2sDate ringDYear ringDMonth ringDDay ringDHour ringDMinute ringDSecond
+    putStrLn ("   JST Time: " ++ ringDownRangeDateStr)
+    let hogeGPS = HTG.time2gps ringDownRangeDateStr
+    putStrLn ("   GPS Time: " ++ hogeGPS)
+    s_temp <- entryGetText ringDownRangeObsTimeEntry
+    let ringDObsTime = read s_temp :: Int
+    putStrLn ("   Obs Time: " ++ (show ringDObsTime) )
+    s_temp <- entryGetText ringDownRangeMassEntry
+    let ringDMass = read s_temp :: Double
+    putStrLn ("       Mass: " ++ (show ringDMass) )
+    s_temp <- entryGetText ringDownRangeKerrParamEntry
+    let ringDKerrParam = read s_temp :: Double
+    putStrLn (" Kerr Param: " ++ (show ringDKerrParam) )
+    s_temp <- entryGetText ringDownRangeMassDefectEntry
+    let ringDMassDefect = read s_temp :: Double
+    putStrLn ("Mass defect: " ++ (show ringDMassDefect) )
+    s_temp <- entryGetText ringDownRangeIniPhaseEntry
+    let ringDIniPhase = read s_temp :: Double
+    putStrLn ("  Ini Phase: " ++ (show ringDIniPhase) )
+    s_temp <- entryGetText ringDownRangeThresholdEntry
+    let ringDThreshold = read s_temp :: Double
+    putStrLn ("   Thresold: " ++ (show ringDThreshold) )
+    {-- Monitor tool --}
+    ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] $ \mass -> 
+      return $ NLA.toList $ HMRIRD.distRingdown (NLA.fromList [mass]) (NLA.fromList [ringDThreshold]) (NLA.fromList [ringDKerrParam]) (NLA.fromList [ringDMassDefect]) (NLA.fromList [ringDIniPhase]) HDD.KAGRA
+    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPR.Linear HPPR.Line
+   {-- End of Monitor Tool --}
+    putStrLn "Closed RingDownRange Window"
+    widgetDestroy ringDownRangeWindow
+
+
+  {--  Exit Process  --}
+  onDestroy ringDownRangeWindow mainQuit
+  widgetShowAll ringDownRangeWindow
+  mainGUI
 
 
 

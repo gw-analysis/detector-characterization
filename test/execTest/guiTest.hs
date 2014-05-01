@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: guiTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/18 16:13:13
+  * Last Modified: 2014/05/01 18:35:58
   ******************************************************************-}
 
 module Main (Main.main) where
@@ -12,3 +12,4 @@ main = do
      GUI.hasKalGuiTop
 
 
+     
