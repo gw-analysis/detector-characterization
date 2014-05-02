@@ -16,17 +16,16 @@ If you have any trouble or error, let author(Hirotaka Yuzurihara) know please.
 {--
 ----- sample code -----
 
-import HasKAL.FrameUtils.FrameUtils
 import HasKAL.PlotUtils.PlotUtilsHROOT
---PlotUtilsHROOT.hs 
---import FrameUtils
-import HROOT hiding (eval)
 
 main = do
 
-     let x = [0, 0.1..6.28]
-     let y = map sin x
-     plot_st x y "" "" Linear LinePoint
+     let x = [0.0, 0.1 .. 2*pi]
+     let y = map (sin) x
+
+     hroot_core x y "" "" Linear LinePoint
+     --plot x y
+     plot_st x y "" "" LinePoint
 
 --}
 
@@ -46,17 +45,32 @@ data PlotTypeOption = Line | Point | LinePoint | PointLine | Dot deriving Eq
 data LogOption = Linear | LogX | LogY | LogXY deriving Eq
 
 
-hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption ->IO()
-hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
+hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> IO()
+hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine = do
 
 	   tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 
 	   g1 <- newTGraph (length xdata) xdata ydata
 
---           g1 = setLineColor 2
---          g1 = setLineWidth 2
---           setMarkerColor g1 2
+           let checkLogX :: LogOption -> Int
+               checkLogX flagLog
+                       | flagLog == Linear = 0
+                       | flagLog == LogX   = 1
+                       | flagLog == LogY   = 0
+                       | flagLog == LogXY  = 1
+                       | otherwise         = 0
+
+           let checkLogY :: LogOption -> Int
+               checkLogY flagLog
+                       | flagLog == Linear = 0
+                       | flagLog == LogX   = 0
+                       | flagLog == LogY   = 1
+                       | flagLog == LogXY  = 1
+                       | otherwise         = 0
+
+           setLogx tcanvas (checkLogX flagLog)
+           setLogy tcanvas (checkLogY flagLog)
 
 
            let checkPlotLine :: PlotTypeOption -> String
@@ -68,50 +82,14 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine= do
                        | flagPlotLine == Dot       = "AP"
                        | otherwise                 = "AL"
 
+
 	   draw g1 (checkPlotLine flagPlotLine)
---	   draw g1 "AL*"
-
---           let y2 = [4, 3, 2, 1, 6]
---	   g2 <- newTGraph (length xdata) xdata y2
-
---           setLineColor g2 4
---	   draw g2 "L"
---           setLineColor g2 4
-
-
-           -- let y2 = [4, 3, 2, 1, 6]
-	   -- g2 <- newTGraph (length xdata) xdata y2
-	   -- draw g2 "AL"
-
-           -- 重ね書きはmapを使って実装予定
 
 	   run tapp 1
 
 	   delete g1
+           delete tcanvas
 	   delete tapp
-           
-	   -- Label logスケールのためのフラグは今は捨てているが
-	   -- HROOT-0.8を使って実装予定
-	   -- label付け、logスケールへの変更の関数をきちんと把握できていないため
-	   -- 下に書いた関数はまだ正しくない
-	   {--
-	   setXLabel 
-		| xLabel == "" = " "
-		| otherwise = xlabel
-
-           setXLabel
-		| xLabel == "" = " "
-		  | otherwise = xlabel
-
-           setLogX
-                | flagLogX == 1 = 1
-                | otherwise = 0
-
-           setLogX
-                | flagLogX == 1 = 1
-                | otherwise = 0
-	   --}
-
 
 --hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine
 
