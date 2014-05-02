@@ -4,13 +4,14 @@ CC=ghc
 
 OBJ1=testplot.hs HasKAL/PlotUtils/PlotUtilsHROOT.hs
 OBJ2=testplot2.hs HasKAL/PlotUtils/PlotUtilsHROOT.hs
+OBJ3=testplot3.hs HasKAL/PlotUtils/PlotUtilsHROOT.hs
 
 #INCLINK=-I/home/yuzu/src/libframe-8.20/include/
 #LIBLINK=-lstdc++ -lFrame -L/home/yuzu/src/libframe-8.20/include/
 LIBLINK=-lstdc++ -lm -lFrame
 
 #TARGET=testplot
-TARGET=testplot testplot2
+TARGET=testplot testplot2 testplot3
 
 all:$(TARGET)
 
@@ -20,6 +21,10 @@ testplot:${OBJ1}
 
 testplot2:${OBJ2}
 	$(CC) -O ${OBJ2} -o $@ ${INKLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
+
+testplot3:${OBJ3}
+	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
 clean:
