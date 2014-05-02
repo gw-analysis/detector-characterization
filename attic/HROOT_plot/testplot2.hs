@@ -21,8 +21,8 @@ main = do
      let lsty  = gwpsd dat (length dat) 1000
          lstxf = take (length lsty) [1,2..]
 
---     plot_sf lstx lsty "" "" LogXY Line
-     plot_st lstxt dat "" "" Line
+     plot_sf lstxf lsty "" "" LogXY Line
+--     plot_st lstxt dat "" "" Line
 
 
 

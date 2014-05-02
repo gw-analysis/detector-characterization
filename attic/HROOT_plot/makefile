@@ -2,8 +2,8 @@
 
 CC=ghc
 
-OBJ1=testplot.hs #HasKAL/PlotUtils/PlotUtilsHROOT.hs
-OBJ2=testplot2.hs #HasKAL/PlotUtils/PlotUtilsHROOT.hs
+OBJ1=testplot.hs HasKAL/PlotUtils/PlotUtilsHROOT.hs
+OBJ2=testplot2.hs HasKAL/PlotUtils/PlotUtilsHROOT.hs
 
 #INCLINK=-I/home/yuzu/src/libframe-8.20/include/
 #LIBLINK=-lstdc++ -lFrame -L/home/yuzu/src/libframe-8.20/include/

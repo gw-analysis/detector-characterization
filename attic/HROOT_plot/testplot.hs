@@ -1,16 +1,16 @@
 import HasKAL.PlotUtils.PlotUtilsHROOT
-import qualified HROOT as HROOT
+
+--import Control.Monad
+--import HROOT
 
 main = do
 
-     let a = [1,2,3,4,5]
-     let b = [5, 2, 3, 4, 5]
---     hroot_core a b "" "" Linear LinePoint
---     plot a b
-     plot_st a b "" "" LinePoint
 
+     let x = [0.0, 0.1 .. 2*pi]
+     let y = map (sin) x
 
+     plot_st x y "" "" Line
+--     plot_st x y "" "" LinePoint
 
-     -- let c = [10, 11, 12, 13, 14, 15, 16]
-     -- let d = [5, 2, 3, 4, 5, 5, 2]
-     -- hroot_core c d "" "" Linear LinePoint
+     --hroot_core x y "" "" Linear LinePoint
+     --plot x y
