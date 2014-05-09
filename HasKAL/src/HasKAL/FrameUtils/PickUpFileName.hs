@@ -1,5 +1,5 @@
 {-
-File name : pickup_filename.hs
+File name : PickUpFileName.hs
 Author : Mitsuhiro Asano
 -}
 
