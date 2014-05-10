@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/01 17:41:09
+  * Last Modified: 2014/05/02 21:34:11
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -34,6 +34,7 @@ main = hasKalGuiTop
 hasKalGuiTop :: IO ()
 hasKalGuiTop = do
   initGUI
+  putStrLn "Start HasKAL GUI"
 
   {--  information  --}
   let topSubSystemLabels = ["Test", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
@@ -70,21 +71,30 @@ hasKalGuiTop = do
 
   {--  Select Glitch Monitor --}
   onClicked (topMonitorButtons !! 0) $ do
-    putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 0))
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
-    hasKalGuiGlitch topActiveLabels
+    if length topActiveLabels == 0
+    then do hasKalGuiMessage "Error" "Not selected subsystem."
+    else do hasKalGuiGlitch topActiveLabels
+    widgetDestroy topWindow
+    hasKalGuiTop
   {--  Select Line Monitor --}
   onClicked (topMonitorButtons !! 1) $ do
-    putStrLn =<< fmap (++ " Monitor: Not implemented yet.") (buttonGetLabel (topMonitorButtons !! 1))
+    let topActiveLabels = getActiveLabels topSubSystemCheckButtons
+    if length topActiveLabels == 0
+    then hasKalGuiMessage "Error" "Not selected subsystem."
+    else hasKalGuiMessage "Error" "Not implemented yet."
+    widgetDestroy topWindow
+    hasKalGuiTop
   {--  Select Gaussianity Monitor --}
   onClicked (topMonitorButtons !! 2) $ do
-    putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 2))
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
-    hasKalGuiGaussianity topActiveLabels
+    if length topActiveLabels == 0
+    then hasKalGuiMessage "Error" "Not selected subsystem."
+    else hasKalGuiGaussianity topActiveLabels
+    widgetDestroy topWindow
+    hasKalGuiTop
   {--  Select Range Monitor --}
   onClicked (topMonitorButtons !! 3) $ do
-    putStrLn =<< fmap (++ " Monitor: New window open.") (buttonGetLabel (topMonitorButtons !! 3))
---    let topActiveLabels = getActiveLabels topSubSystemCheckButtons
     hasKalGuiRangeMon
   {--  Select Exit  --}
   onClicked topExitButton $ do
@@ -107,6 +117,7 @@ main = hasKalGuiGlitch ["Test"]
 hasKalGuiGlitch :: [String] -> IO ()
 hasKalGuiGlitch activeSubSystemlabels = do
   initGUI
+  putStrLn "Open Glitch Monitors Window"
 
   {--  Create new object --}
   glitchWindow <- windowNew
@@ -145,12 +156,15 @@ hasKalGuiGlitch activeSubSystemlabels = do
 
    {--  Select Glitch Monitor --}
   onClicked (glitchMonitorButtons !! 0) $ do
-    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (glitchMonitorButtons !! 0))
     let glitchActiveLabels = getActiveLabels glitchChannelCButtons
-    hasKalGuiKleineWelle glitchActiveLabels
+    if length glitchActiveLabels == 0
+    then hasKalGuiMessage "Error" "Not selected channels"
+    else hasKalGuiKleineWelle glitchActiveLabels
+    widgetDestroy glitchWindow
+    hasKalGuiGlitch activeSubSystemlabels
   {--  Select Closed  --}
   onClicked glitchCloseButton $ do
-    putStrLn "Closed Glitch window"
+    putStrLn "Closed Glitch Monitors Window"
     widgetDestroy glitchWindow
 
   {--  Exit Process  --}
@@ -168,6 +182,7 @@ main = hasKalGuiKleineWelle "Channel_Name"
 hasKalGuiKleineWelle :: [String] -> IO ()
 hasKalGuiKleineWelle kleineWelleActiveLabels = do
   initGUI
+  putStrLn "Open KleineWelle Window"
 
   {--  Fixed value for KleineWelle  --}
   let kwBasename = "KW_"
@@ -329,15 +344,16 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
 
   {--  Execute --}
-  onClicked kleineWelleClose $ do
-    putStrLn "Closed KleineWelle Monitor"
-    widgetDestroy kleineWelleWindow
   onClicked kleineWelleExecute $ do
     putStrLn "Execute"
     --let kleineWelleActiveLabels = getActiveLabels kleineWelleChannelCButtons
     let kwActiveLabels = getActiveLabels kwChannelCButtons
 {--}
     s_temp <- entryGetText kleineWelleYearEntry
+    -- if s_temp == ""
+    -- then do widgetDestroy kleineWelleWindow
+    --         hasKalGuiKleineWelle kleineWelleActiveLabels
+    -- else do return ()
     let kwYear = read s_temp :: Int
     s_temp <- entryGetText kleineWelleMonthEntry
     let kwMonth = read s_temp :: Int
@@ -388,8 +404,13 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
       else if lwtColmunNum == 3
         then CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L lambda)
         else mapM putStrLn ["Required 2 or 3 columns"]
-    putStrLn "Closed KleineWelle"
+    --putStrLn "Closed KleineWelle Window"
+    --widgetDestroy kleineWelleWindow
+    return ()
+  onClicked kleineWelleClose $ do
+    putStrLn "Closed KleineWelle Monitor"
     widgetDestroy kleineWelleWindow
+
   {--  Exit Process  --}
   onDestroy kleineWelleWindow mainQuit
   widgetShowAll kleineWelleWindow
@@ -406,6 +427,7 @@ main = hasKalGuiGaussianity ["Test"]
 hasKalGuiGaussianity :: [String] -> IO ()
 hasKalGuiGaussianity activeSubSystemlabels = do
   initGUI
+  putStrLn "Open Gaussianity Monitors Window"
 
   {--  Create new object --}
   gaussianityWindow <- windowNew
@@ -444,12 +466,15 @@ hasKalGuiGaussianity activeSubSystemlabels = do
 
    {--  Select RayleighMon  --}
   onClicked (gaussianityMonitorButtons !! 0) $ do
-    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (gaussianityMonitorButtons !! 0))
     let gaussianityActiveLabels = getActiveLabels gaussianityChannelCButtons
-    hasKalGuiRayleighMon gaussianityActiveLabels
+    if length gaussianityActiveLabels == 0
+    then hasKalGuiMessage "Error" "Not selected channels"
+    else hasKalGuiRayleighMon gaussianityActiveLabels
+    widgetDestroy gaussianityWindow
+    hasKalGuiGaussianity activeSubSystemlabels
   {--  Select Closed  --}
   onClicked gaussianityCloseButton $ do
-    putStrLn "Closed Gaussianity window"
+    putStrLn "Closed Gaussianity Monitors Window"
     widgetDestroy gaussianityWindow
 
   {--  Exit Process  --}
@@ -468,6 +493,7 @@ main = hasKalGuiRayleighMon ["Channel_Name"]
 hasKalGuiRayleighMon :: [String] -> IO ()
 hasKalGuiRayleighMon activeChannelLabels = do
   initGUI  
+  putStrLn "Open RayLeigMon Window"
 
   {--  Create new object --}
   rayleighMonWindow <- windowNew
@@ -561,7 +587,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
   {--  Execute --}
   onClicked rayleighMonClose $ do
-    putStrLn "Closed RayleighMon"
+    putStrLn "Closed RayleighMon Window"
     widgetDestroy rayleighMonWindow
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
@@ -569,7 +595,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
     s_temp <- entryGetText rayleighMonYearEntry
     let rmYear = read s_temp :: Int
     s_temp <- entryGetText rayleighMonMonthEntry
-    let rmMonth = read s_temp :: Int
+    let rmMonth = (read s_temp :: Int)
     s_temp <- entryGetText rayleighMonDayEntry
     let rmDay = read s_temp :: Int
     s_temp <- entryGetText rayleighMonHourEntry
@@ -594,7 +620,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("     stride: " ++ (show rmStride) )
 
     frData <- HFF.readFrame (activeChannelLabels !! 0) "../sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 + 1)]) ( (transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPR.LogXY HPPR.Line
+    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) ( (transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPR.LogXY HPPR.Line
     -- 横軸の値を直す(1秒スペクトルなので今は正しい)
 
     {-- 暫定的なファイル出力 --}
@@ -602,7 +628,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
     SIO.hPutStrLn oFile (convert_DLL2S $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData)) )
     SIO.hClose oFile
     {--  ここまで、ファイル出力  --}
-    widgetDestroy rayleighMonWindow
+    --widgetDestroy rayleighMonWindow
 
 
   {--  Exit Process  --}
@@ -620,6 +646,7 @@ main = hasKalGuiRangeMon
 hasKalGuiRangeMon :: IO ()
 hasKalGuiRangeMon = do
   initGUI
+  putStrLn "Open RangeMon Window"
 
   {-- Create new object --}
   rangeMonWindow <- windowNew
@@ -646,10 +673,8 @@ hasKalGuiRangeMon = do
 
   {--  Select Range Monitor  --}
   onClicked (rangeMonButtons !! 0) $ do
-    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (rangeMonButtons !! 0))
     hasKalGuiInspiralRange
   onClicked (rangeMonButtons !! 1) $ do
-    putStrLn =<< fmap (++ ": New window open.") (buttonGetLabel (rangeMonButtons !! 1))
     hasKalGuiRingDownRange
   onClicked rangeMonCloseButton $ do
     putStrLn "Closed RangeMon Window"
@@ -671,6 +696,7 @@ main = hasKalGuiInspiralRange
 hasKalGuiInspiralRange :: IO ()
 hasKalGuiInspiralRange = do
   initGUI
+  putStrLn "Open InspiralRange Window"
 
   {--  Create new object  --}
   inspiralRangeWindow <- windowNew
@@ -808,12 +834,12 @@ hasKalGuiInspiralRange = do
     putStrLn ("   Thresold: " ++ (show inspThreshold) )
     {-- Monitor tool --}
     -- 複数要素のvectorを与えるとおかしいのでとりあえずforMで代用
-    inspDist <- CM.forM [inspMass1, inspMass1+2.0..inspMass2] $ \mass ->
+    inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
       return $ NLA.toList $ HMRIRD.distInspiral (NLA.fromList [mass]) (NLA.fromList [mass]) (NLA.fromList [inspThreshold]) HDD.KAGRA
-    HPPR.hroot_core (map (*2.0) [inspMass1,inspMass1+2.0..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPR.Linear HPPR.Line
+    HPPR.hroot_core (map (*2) [inspMass1,inspMass1+2..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPR.LogXY HPPR.Line
     {-- End of Monitor Tool --}
-    putStrLn "Closed InspiralRange Window"
-    widgetDestroy inspiralRangeWindow
+    -- putStrLn "Closed InspiralRange Window"
+    -- widgetDestroy inspiralRangeWindow
 
   {--  Exit Process  --}
   onDestroy inspiralRangeWindow mainQuit
@@ -832,6 +858,7 @@ main = hasKalGuiRingDownRange
 hasKalGuiRingDownRange :: IO ()
 hasKalGuiRingDownRange = do
   initGUI
+  putStrLn "Open RingDownRange Window"
 
   {--  Create new object  --}
   ringDownRangeWindow <- windowNew
@@ -989,16 +1016,57 @@ hasKalGuiRingDownRange = do
     {-- Monitor tool --}
     ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] $ \mass -> 
       return $ NLA.toList $ HMRIRD.distRingdown (NLA.fromList [mass]) (NLA.fromList [ringDThreshold]) (NLA.fromList [ringDKerrParam]) (NLA.fromList [ringDMassDefect]) (NLA.fromList [ringDIniPhase]) HDD.KAGRA
-    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPR.Linear HPPR.Line
+    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPR.LogXY HPPR.Line
    {-- End of Monitor Tool --}
-    putStrLn "Closed RingDownRange Window"
-    widgetDestroy ringDownRangeWindow
+    -- putStrLn "Closed RingDownRange Window"
+    --widgetDestroy ringDownRangeWindow
 
 
   {--  Exit Process  --}
   onDestroy ringDownRangeWindow mainQuit
   widgetShowAll ringDownRangeWindow
   mainGUI
+
+
+
+{-- Message window
+-- test code
+main :: IO ()
+main = hasKalGuiMessage "error orz"
+--}
+hasKalGuiMessage :: String -> String -> IO ()
+hasKalGuiMessage messageTitle messageSentence = do
+  initGUI
+  putStrLn "Open Message Window"
+
+  messageWindow <- windowNew
+  messageSentenceVBox <- vBoxNew True 10
+  messageCloseVBox <- vBoxNew True 10
+  messageCloseButton <- buttonNewWithLabel "Close"
+
+  messageTitleLabel <- labelNewWithMnemonic messageTitle
+  messageSentenceLabel <- labelNewWithMnemonic messageSentence
+
+  set messageWindow [ windowTitle := "Message window",
+                    windowDefaultWidth := 200,
+                    windowDefaultHeight := 150,
+                    containerChild := messageSentenceVBox,
+                    containerBorderWidth := 20 ]
+
+  boxPackStartDefaults messageSentenceVBox messageTitleLabel
+  boxPackStartDefaults messageSentenceVBox messageSentenceLabel
+  boxPackStartDefaults messageSentenceVBox messageCloseButton
+
+  {--  Execute  --}
+  onClicked messageCloseButton $ do
+    putStrLn "Closed Message Window"
+    widgetDestroy messageWindow
+
+  {--  Exit Process  --}
+  onDestroy messageWindow mainQuit
+  widgetShowAll messageWindow
+  mainGUI
+
 
 
 
