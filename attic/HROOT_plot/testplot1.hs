@@ -1,16 +1,21 @@
-import HasKAL.PlotUtils.PlotUtilsHROOT
 
---import Control.Monad
---import HROOT
+import HasKAL.PlotUtils.PlotUtilsHROOT
+import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
+
+import HROOT
 
 main = do
-
 
      let x = [0.0, 0.1 .. 2*pi]
      let y = map (sin) x
 
-     plot_st x y "" "" Line
---     plot_st x y "" "" LinePoint
+     tapp <- newTApplication "test" [0] ["test"] 
 
-     --hroot_core x y "" "" Linear LinePoint
-     --plot x y
+     plot_st x y "" "" Line "hoge.png" tapp
+
+     let z = map (cos) x
+     plot_st x z "" "" Line "foo.png" tapp
+
+     plot_st x y "" "" Line "X11" tapp
+
+     delete tapp
