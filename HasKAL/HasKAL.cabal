@@ -53,9 +53,11 @@ library
     HasKAL.FrameUtils.FrameUtils,
     HasKAL.GUI_Utils.GUI_Utils,
 -- To avoid error, comment out
---    HasKAL.MonitorUtils.EXTKleineWelle,
+    HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
+    HasKAL.MonitorUtils.RayleighMon.RayleighMon,
 --    HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.PlotUtils,
+    HasKAL.PlotUtils.PlotUtilsHROOT,
     HasKAL.SpectrumUtils.SpectrumUtils
     HasKAL.SpectrumUtils.DetectorSensitivity
 
