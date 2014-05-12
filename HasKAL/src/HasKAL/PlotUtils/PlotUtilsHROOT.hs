@@ -1,4 +1,3 @@
-
 {--
 
 ----- To compile -----
@@ -29,10 +28,7 @@ main = do
 
 --}
 
-
 module HasKAL.PlotUtils.PlotUtilsHROOT(
-       PlotTypeOption(Line, Point, LinePoint, PointLine, Dot),
-       LogOption(Linear, LogX, LogY, LogXY),
        hroot_core,
        plot,
        plot_st,
@@ -40,15 +36,12 @@ module HasKAL.PlotUtils.PlotUtilsHROOT(
        ) where
 
 import HROOT
+import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
-data PlotTypeOption = Line | Point | LinePoint | PointLine | Dot deriving Eq
-data LogOption = Linear | LogX | LogY | LogXY deriving Eq
+hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String ->TApplication ->IO()
+hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName tapp = do
 
-
-hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> IO()
-hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine = do
-
-	   tapp <- newTApplication "test" [0] ["test"]
+--	   tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 
 	   g1 <- newTGraph (length xdata) xdata ydata
@@ -85,29 +78,40 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine = do
 
 	   draw g1 (checkPlotLine flagPlotLine)
 
-	   run tapp 1
+           let checkSaveAsOrPlotX11 :: String -> IO()
+               checkSaveAsOrPlotX11 fileName
+                                    | (reverse $ take 4 $ reverse fileName) == ".png" = saveAs tcanvas fileName ""
+                                    | (reverse $ take 4 $ reverse fileName) == ".pdf" = saveAs tcanvas fileName ""
+                                    | (reverse $ take 4 $ reverse fileName) == ".eps" = saveAs tcanvas fileName ""
+                                    | otherwise = run tapp 1
+
+           checkSaveAsOrPlotX11 fileName
+
 
 	   delete g1
            delete tcanvas
-	   delete tapp
+--	   delete tapp
 
---hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine
+
+
 
 -- 細かいことはいいからplotしたい人向け
-plot::[Double] -> [Double] ->IO()
-plot xdata ydata = do
-           hroot_core xdata ydata "" "" Linear LinePoint
+plot::[Double] -> [Double] -> String -> TApplication ->IO()
+plot xdata ydata fileName tapp = do
+           hroot_core xdata ydata "" "" Linear LinePoint fileName tapp
+
 
 -- 時系列データをplotする
 -- 時系列なので、logスケールの引数はなし
-plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption ->IO()
-plot_st xdata ydata xLabel yLabel flagPlotLine = do
-           hroot_core xdata ydata "" "" Linear flagPlotLine
+plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> TApplication ->IO()
+plot_st xdata ydata xLabel yLabel flagPlotLine fileName tapp = do
+           hroot_core xdata ydata "" "" Linear flagPlotLine fileName tapp
+
 
 -- log-logスケールでスペクトルをplotする
-plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption ->IO()
-plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine= do
-           hroot_core xdata ydata "" "" flagLog flagPlotLine
+plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String-> TApplication -> IO()
+plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine fileName tapp = do
+           hroot_core xdata ydata "" "" flagLog flagPlotLine fileName tapp
 
 
 
