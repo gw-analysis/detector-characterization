@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/02 21:34:11
+  * Last Modified: 2014/05/13 17:13:05
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -22,6 +22,7 @@ import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMKKW
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance as HMRIRD
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
+import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
 import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 
@@ -72,25 +73,22 @@ hasKalGuiTop = do
   {--  Select Glitch Monitor --}
   onClicked (topMonitorButtons !! 0) $ do
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
-    if length topActiveLabels == 0
-    then do hasKalGuiMessage "Error" "Not selected subsystem."
-    else do hasKalGuiGlitch topActiveLabels
+    case length topActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected subsystem."
+                                   _ -> hasKalGuiGlitch topActiveLabels
     widgetDestroy topWindow
     hasKalGuiTop
   {--  Select Line Monitor --}
   onClicked (topMonitorButtons !! 1) $ do
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
-    if length topActiveLabels == 0
-    then hasKalGuiMessage "Error" "Not selected subsystem."
-    else hasKalGuiMessage "Error" "Not implemented yet."
+    case length topActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected subsystem."
+                                   _ -> hasKalGuiMessage "Error" "Not implemented yet."
     widgetDestroy topWindow
     hasKalGuiTop
   {--  Select Gaussianity Monitor --}
   onClicked (topMonitorButtons !! 2) $ do
     let topActiveLabels = getActiveLabels topSubSystemCheckButtons
-    if length topActiveLabels == 0
-    then hasKalGuiMessage "Error" "Not selected subsystem."
-    else hasKalGuiGaussianity topActiveLabels
+    case length topActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected subsystem."
+                                   _ -> hasKalGuiGaussianity topActiveLabels
     widgetDestroy topWindow
     hasKalGuiTop
   {--  Select Range Monitor --}
@@ -157,9 +155,8 @@ hasKalGuiGlitch activeSubSystemlabels = do
    {--  Select Glitch Monitor --}
   onClicked (glitchMonitorButtons !! 0) $ do
     let glitchActiveLabels = getActiveLabels glitchChannelCButtons
-    if length glitchActiveLabels == 0
-    then hasKalGuiMessage "Error" "Not selected channels"
-    else hasKalGuiKleineWelle glitchActiveLabels
+    case length glitchActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected channels"
+                                      _ -> hasKalGuiKleineWelle glitchActiveLabels
     widgetDestroy glitchWindow
     hasKalGuiGlitch activeSubSystemlabels
   {--  Select Closed  --}
@@ -399,13 +396,9 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     lwtOutput <- HMKKW.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kleineWelleActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
     let lwtColmunNum = length kwActiveLabels
     putStrLn "Run Plot tool"
-    if lwtColmunNum == 2
-      then CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_2d "TITLE 2" "HOGEHOGE" 10.0 (640,480) (convert_StoDT2L lambda)
-      else if lwtColmunNum == 3
-        then CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L lambda)
-        else mapM putStrLn ["Required 2 or 3 columns"]
-    --putStrLn "Closed KleineWelle Window"
-    --widgetDestroy kleineWelleWindow
+    case lwtColmunNum of 2 -> CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_2d "TITLE 2" "HOGEHOGE" 10.0 (640,480) (convert_StoDT2L lambda)
+                         3 -> CM.forM lwtOutput $ \lambda -> HPP.scatter_plot_3d "TITLE 3" "HOGEHOGE" 10.0 (640,480) (convert_StoDT3L lambda)
+                         _ -> mapM putStrLn ["Required 2 or 3 columns"]
     return ()
   onClicked kleineWelleClose $ do
     putStrLn "Closed KleineWelle Monitor"
@@ -467,9 +460,8 @@ hasKalGuiGaussianity activeSubSystemlabels = do
    {--  Select RayleighMon  --}
   onClicked (gaussianityMonitorButtons !! 0) $ do
     let gaussianityActiveLabels = getActiveLabels gaussianityChannelCButtons
-    if length gaussianityActiveLabels == 0
-    then hasKalGuiMessage "Error" "Not selected channels"
-    else hasKalGuiRayleighMon gaussianityActiveLabels
+    case length gaussianityActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected channels"
+                                           _ -> hasKalGuiRayleighMon gaussianityActiveLabels
     widgetDestroy gaussianityWindow
     hasKalGuiGaussianity activeSubSystemlabels
   {--  Select Closed  --}
@@ -620,7 +612,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("     stride: " ++ (show rmStride) )
 
     frData <- HFF.readFrame (activeChannelLabels !! 0) "../sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) ( (transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPR.LogXY HPPR.Line
+    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) ( (transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
     -- 横軸の値を直す(1秒スペクトルなので今は正しい)
 
     {-- 暫定的なファイル出力 --}
@@ -836,7 +828,7 @@ hasKalGuiInspiralRange = do
     -- 複数要素のvectorを与えるとおかしいのでとりあえずforMで代用
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
       return $ NLA.toList $ HMRIRD.distInspiral (NLA.fromList [mass]) (NLA.fromList [mass]) (NLA.fromList [inspThreshold]) HDD.KAGRA
-    HPPR.hroot_core (map (*2) [inspMass1,inspMass1+2..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPR.LogXY HPPR.Line
+    HPPR.hroot_core (map (*2) [inspMass1,inspMass1+2..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
     -- putStrLn "Closed InspiralRange Window"
     -- widgetDestroy inspiralRangeWindow
@@ -1016,7 +1008,7 @@ hasKalGuiRingDownRange = do
     {-- Monitor tool --}
     ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] $ \mass -> 
       return $ NLA.toList $ HMRIRD.distRingdown (NLA.fromList [mass]) (NLA.fromList [ringDThreshold]) (NLA.fromList [ringDKerrParam]) (NLA.fromList [ringDMassDefect]) (NLA.fromList [ringDIniPhase]) HDD.KAGRA
-    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPR.LogXY HPPR.Line
+    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
    {-- End of Monitor Tool --}
     -- putStrLn "Closed RingDownRange Window"
     --widgetDestroy ringDownRangeWindow
@@ -1102,8 +1094,12 @@ iDate2sDate intYear intMonth intDay intHour intMinute intSecond =
               (TP.printf "%04d" intYear :: String) ++ "-" ++ (TP.printf "%02d" intMonth :: String) ++ "-" ++ (TP.printf "%02d" intDay :: String) ++ " " ++ (TP.printf "%02d" intHour :: String) ++ ":" ++ (TP.printf "%02d" intMinute :: String) ++ ":" ++ (TP.printf "%02d" intSecond :: String) ++ " JST"
 
 -- transposed 2D list
-transposed :: [[Double]] -> [[Double]]
-transposed xxs = [ concat $ map ((drop (m-1)).(take m)) xxs | m <- [1..(length (head xxs))] ]
+-- transposed :: [[Double]] -> [[Double]]
+-- transposed xxs = [ concat $ map ((drop (m-1)).(take m)) xxs | m <- [1..(length (head xxs))] ]
+transposed :: [[a]] -> [[a]]
+transposed [] = []
+transposed ([] : xss) = transposed xss
+transposed ((x:xs) : xss) = (x : [y | (y:_) <- xss]) : transposed (xs : [z | (_:z) <- xss])
 -- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
 -- same as in RayleighMon
 
