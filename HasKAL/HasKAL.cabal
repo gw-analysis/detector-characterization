@@ -51,7 +51,7 @@ library
     HasKAL.DetectorUtils.Detector,
     HasKAL.ExternalUtils.Lwtprint,
     HasKAL.FrameUtils.FrameUtils,
---    HasKAL.GUI_Utils.GUI_Utils,
+    HasKAL.GUI_Utils.GUI_Utils,
 -- To avoid error, comment out
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.RayleighMon.RayleighMon,
