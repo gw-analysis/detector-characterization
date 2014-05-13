@@ -38,10 +38,10 @@ module HasKAL.PlotUtils.PlotUtilsHROOT(
 import HROOT
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
-hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String ->TApplication ->IO()
-hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName tapp = do
+hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String ->IO()
+hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
 
---	   tapp <- newTApplication "test" [0] ["test"]
+	   tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 
 	   g1 <- newTGraph (length xdata) xdata ydata
@@ -90,28 +90,28 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName tapp = do
 
 	   delete g1
            delete tcanvas
---	   delete tapp
+	   delete tapp
 
 
 
 
 -- 細かいことはいいからplotしたい人向け
-plot::[Double] -> [Double] -> String -> TApplication ->IO()
-plot xdata ydata fileName tapp = do
-           hroot_core xdata ydata "" "" Linear LinePoint fileName tapp
+plot::[Double] -> [Double] -> String ->IO()
+plot xdata ydata fileName = do
+           hroot_core xdata ydata "" "" Linear LinePoint fileName
 
 
 -- 時系列データをplotする
 -- 時系列なので、logスケールの引数はなし
-plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> TApplication ->IO()
-plot_st xdata ydata xLabel yLabel flagPlotLine fileName tapp = do
-           hroot_core xdata ydata "" "" Linear flagPlotLine fileName tapp
+plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
+plot_st xdata ydata xLabel yLabel flagPlotLine fileName = do
+           hroot_core xdata ydata "" "" Linear flagPlotLine fileName
 
 
 -- log-logスケールでスペクトルをplotする
-plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String-> TApplication -> IO()
-plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine fileName tapp = do
-           hroot_core xdata ydata "" "" flagLog flagPlotLine fileName tapp
+plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String -> IO()
+plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
+           hroot_core xdata ydata "" "" flagLog flagPlotLine fileName
 
 
 
