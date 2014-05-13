@@ -9,11 +9,8 @@ import HROOT
 
 main = do
 
-       tapp <- newTApplication "test" [0] ["test"] 
-
        let f = [1,2..1000]
        let sn = toList $ sqrt $ ifonoisepsd KAGRA (fromList [1,2..1000])
 
-       plot_sf f sn "" "" LogXY Line "X11" tapp
+       plot_sf f sn "" "" LogXY Line "X11"
 
-       delete tapp

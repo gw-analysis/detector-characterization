@@ -23,14 +23,6 @@ main = do
          lstxf = take (length lsty) [1,2..]
 
 
-     tapp <- newTApplication "test" [0] ["test"] 
-
-
-     plot_sf lstxf lsty "" "" LogXY Line "" tapp
---     plot_sf lstxf lsty "" "" LogXY Line "test.png" tapp
---     plot_sf lstxf lsty "" "" LogXY Line "X11" tapp
-
-
-
-     delete tapp
-
+     plot_sf lstxf lsty "" "" LogXY Line ""
+--     plot_sf lstxf lsty "" "" LogXY Line "test.png"
+--     plot_sf lstxf lsty "" "" LogXY Line "X11"
