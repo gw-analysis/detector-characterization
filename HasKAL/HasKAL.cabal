@@ -52,9 +52,13 @@ library
     HasKAL.ExternalUtils.Lwtprint,
     HasKAL.FrameUtils.FrameUtils,
     HasKAL.GUI_Utils.GUI_Utils,
-    HasKAL.MonitorUtils.EXTKleineWelle,
+-- To avoid error, comment out
+    HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
+    HasKAL.MonitorUtils.RayleighMon.RayleighMon,
 --    HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.PlotUtils,
+    HasKAL.PlotUtils.PlotUtilsHROOT,
+    HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
     HasKAL.SpectrumUtils.SpectrumUtils
     HasKAL.SpectrumUtils.DetectorSensitivity
 
@@ -77,10 +81,16 @@ library
        colour >=2.3,
        data-default-class >=0.0,
        lens >=3.10,
-       hmatrix ==0.14.*
+       hmatrix ==0.14.*,
+       -- temporary
+       HROOT ==0.8,
+       old-time ==1.1.0.1,
+       old-locale ==1.0.0.5,
+       time ==1.4.0.1
 
   -- Directories containing source files.
   hs-source-dirs:      src
+  extensions: DoAndIfThenElse
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   build-tools:         hsc2hs
