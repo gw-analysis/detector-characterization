@@ -18,7 +18,6 @@ OBJ3=testplot3.hs
 LIBLINK=-lstdc++ -lm -lFrame
 
 FRAMEDATA=~/detector-characterization/test/sample-data/test-1066392016-300.gwf
-PATHHASKAL=~/detector-characterization/HasKAL/src/HasKAL
 
 #TARGET=testplot1
 TARGET=testplot1 testplot2 testplot3

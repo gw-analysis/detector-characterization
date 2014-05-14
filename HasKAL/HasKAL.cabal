@@ -58,6 +58,7 @@ library
 --    HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.PlotUtils.PlotUtilsHROOT,
+    HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
     HasKAL.SpectrumUtils.SpectrumUtils
     HasKAL.SpectrumUtils.DetectorSensitivity
 
