@@ -18,23 +18,26 @@ main = do
      contents <- hGetContents handle
      let contentsList = lines contents
 
-     putStrLn $ pickUpFileName "993597840" contentsList
+     mapM putStrLn $ pickUpFileName "993597840" "993598000" contentsList
 -}
 
-pickUpFileName :: String -> [String] -> String
-pickUpFileName gpsTime contentsList = do
+pickUpFileName :: String -> String -> [String] -> [String]
+pickUpFileName gpsTimeStart gpsTimeFinish contentsList = do
      let extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer 
        	 contentsVec = V.fromList contentsList
        	 gpstimeList :: [Integer]
        	 gpstimeList = map extractstartGPStime contentsList 
        	 time2index :: M.Map Integer Int
-       	 time2index = M.fromList $ zip gpstimeList [0..]    	  
+       	 time2index = M.fromList $ zip gpstimeList [1..]    	  
+	 startIndex = case M.lookupLE (read gpsTimeStart) time2index of
+     	  	      	   Nothing -> -1
+			   Just (_,i) -> i
+	 finishIndex = case M.lookupLE (read gpsTimeFinish) time2index of
+      	     	       	    Nothing -> -1
+			    Just (_,j) -> j
 
-     case M.lookupLE (read gpsTime) time2index of
-     	  Nothing -> "Nothing"
-	  Just (_,i) -> (contentsVec ! i)
-
-
-
-
+     case (startIndex,finishIndex) of (-1,_) -> ["Nothing"]
+	     		    	      (_,-1) -> ["Nothing"]
+				      (_,_)  -> drop (startIndex -1) $ take (finishIndex) contentsList
+--				      (_,_)  -> take (finishIndex - startIndex +1) $ drop (startIndex -1) contentsList
 
