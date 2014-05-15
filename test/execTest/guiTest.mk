@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/04/28 10:16:33
+# Last Modified: 2014/05/15 10:11:33
 #******************************************#
 
 # compiler option
@@ -19,7 +19,8 @@ INFs = ./*.hi ./HasKAL/GUI_Utils/*.hi
 # compile rule
 all: ${TAR1}
 
-${TAR1}: ${TAR1}.hs ./HasKAL/GUI_Utils/GUI_Utils.hs
+${TAR1}: ${TAR1}.hs ./HasKAL/GUI_Utils/GUI_Utils.hs ../../attic/imbh/IMBH.hs
+	ln -sf ../../attic/imbh/IMBH.hs IMBH.hs
 	${HC} -o $@ $< -lstdc++ -lFrame
 
 clean:
@@ -31,4 +32,5 @@ cleanobs:
 cleanall:
 	rm -f ./optKW_* ${TARs} ${TILs} ${OBJs} ${INFs}
 	rm -fR ./KW_*
+	rm -f ./IMBH.hs
 
