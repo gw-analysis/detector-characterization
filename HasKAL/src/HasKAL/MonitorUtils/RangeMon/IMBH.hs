@@ -1,4 +1,4 @@
-module IMBH
+module HasKAL.MonitorUtils.RangeMon.IMBH
 (
   calcEta
 , calcTotalmass
@@ -14,6 +14,7 @@ where
 // Description
 
 calcEta
+Calculation of the symmetric mass ratio
 input:
 mass1 : mass of a star [unit of solar mass]
 mass2 : mass of a star [unit of solar mass]
@@ -21,6 +22,7 @@ output:
 symmetric mass ratio
 
 calcTotalmass
+Calculation of the total mass of a binary system.
 input:
 mass1 : mass of a star [unit of solar mass]
 mass2 : mass of a star [unit of solar mass]
@@ -29,6 +31,7 @@ total mass of the binary sistem
 
 rhoImbh
 calculation of a signal-to-noise ratio of IMBH with a given binary mass, distance, detector spectrum data.
+The lower cut off frequency is fixed to 5 Hz.
 input :
 mass1 : mass of a star [unit of solar mass]
 mass2 : mass of a star [unit of solar mass]
@@ -39,6 +42,7 @@ signal-to-noise raio
 
 rhodistImbh
 calculation of a SNR*distance of IMBH with a given binary mass,  detector spectrum data.
+The lower cut off frequency is fixed to 5 Hz.
 input :
 mass1 : mass of a star [unit of solar mass]
 mass2 : mass of a star [unit of solar mass]
@@ -52,6 +56,7 @@ distance : distance from the earth [unit of Mega parsec]
 
 distImbh
 calculation of a distance of IMBH with a given binary mass, SNR=8, detector spectrum data.
+The lower cut off frequency is fixed to 5 Hz. The SNR is fixed 8.
 input :
 mass1 : mass of a star [unit of solar mass]
 mass2 : mass of a star [unit of solar mass]
