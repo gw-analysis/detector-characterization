@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/15 13:49:26
+  * Last Modified: 2014/05/15 21:21:54
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -831,7 +831,8 @@ hasKalGuiInspiralRange = do
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
-      return $ HMRIRD.distInspiral mass mass inspThreshold detData
+--      return $ HMRIRD.distInspiral mass mass inspThreshold detData
+      return $ HMRIRD.distInspiral mass mass detData
     HPPR.hroot_core [inspMass1,inspMass1+2..inspMass2] inspDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
 
@@ -1011,7 +1012,8 @@ hasKalGuiRingDownRange = do
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}
     ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] $ \mass -> 
-      return $ HMRIRD.distRingdown mass ringDThreshold ringDKerrParam ringDMassDefect ringDIniPhase detData
+--      return $ HMRIRD.distRingdown mass ringDThreshold ringDKerrParam ringDMassDefect ringDIniPhase detData
+      return $ HMRIRD.distRingdown mass detData
     HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] ringDDist "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
 
