@@ -78,6 +78,14 @@ main = do
     return $ distImbh 100 100 spectrumData
 
 
+
+// reference:
+"Template bank for gravitational waveforms from coalescing binary black holes: Nonspinning binaries"
+P. Ajith++
+Physical Review D,  vol. 77,  Issue 10,  id. 104017
+[0] http://adsabs.harvard.edu/abs/2008PhRvD..77j4017A
+[1] http://arxiv.org/abs/0710.2335
+
 -}
 
 -- physical cpnstant
@@ -100,6 +108,7 @@ calcTotalmass mass1 mass2 = mass1 + mass2
 
 getWavParam :: (Double, Double, Double) -> Double -> Double -> Double
 getWavParam (a, b, c) var_eta var_tmass = (a*var_eta**2 + b*var_eta + c)/(pi*var_tmass)
+--from Eq.(4.18) in [1]
 
 setParam :: ParamType -> (Double, Double, Double)
 setParam ptype
@@ -107,6 +116,7 @@ setParam ptype
   | ptype == F_RING  = (5.9411 * 1E-1, 8.9794 * 1E-2, 1.9111 * 1E-1)
   | ptype == SIGMA   = (5.0801 * 1E-1, 7.7515 * 1E-2, 2.2369 * 1E-2)
   | ptype == F_CUT   = (8.4845 * 1E-1, 1.2848 * 1E-1, 2.7299 * 1E-1)
+-- from TABLE I in [1]
 
 getF_merge :: Double -> Double -> Double
 getF_merge = getWavParam (setParam F_MERGE)
@@ -119,6 +129,7 @@ getF_cut   = getWavParam (setParam F_CUT)
 
 calcRhoCoef :: Double -> Double -> Double-> Double-> Double
 calcRhoCoef var_tmass var_fmerg var_eta dist = var_tmass**(5/6)*var_fmerg**(-7/6)/dist/pi**(2/3)*(5*var_eta/6)**(1/2)
+-- from Eq.(B11) in [1]
 
 calcRhoDistCoef :: Double -> Double -> Double -> Double
 calcRhoDistCoef var_tmass var_fmerg var_eta = var_tmass**(5/6)*var_fmerg**(-7/6)/pi**(2/3)*(5*var_eta/6)**(1/2)
@@ -128,12 +139,14 @@ calcRhoInsp var_flow var_fmerg spectrumData = sum $ zipWith (*) shList df
   where shList = [(f/var_fmerg)**(-7/3)/sh | (f, sh)<-spectrumData,  f>var_flow, f<var_fmerg]
         fList = [f | (f, _)<-spectrumData,  f>var_flow,  f<var_fmerg]
         df = zipWith (-) (tail fList) (init fList)
+-- from Eq.(B11) in [1]
 
 calcRhoMerg :: Double -> Double -> [(Double, Double)] -> Double
 calcRhoMerg var_fmerg var_fring spectrumData = sum $ zipWith (*) shList df
   where shList = [(f/var_fmerg)**(-4/3)/sh | (f, sh)<-spectrumData,  f>var_fmerg, f<var_fring]
         fList = [f | (f, _)<-spectrumData,  f>var_fmerg,  f<var_fring]
         df = zipWith (-) (tail fList) (init fList)
+-- from Eq.(B11) in [1]
 
 calcRhoRing :: Double -> Double -> Double -> Double -> [(Double, Double)] -> Double
 calcRhoRing var_fmerg var_fring var_fcut sigma spectrumData = w**2 * sum (zipWith (*) shList df)
@@ -142,7 +155,7 @@ calcRhoRing var_fmerg var_fring var_fcut sigma spectrumData = w**2 * sum (zipWit
         shList = [lorentz f**2/sh | (f, sh)<-spectrumData, f>var_fmerg, f<var_fring]
          where lorentz f = 1/(2*pi)*sigma/((f-var_fring)**2+sigma**2/4)
         df = zipWith (-) (tail fList) (init fList)
-
+-- from Eq.(B11) in [1]
 
 
 rhoImbhCore :: Double -> Double -> Double -> Double -> [(Double, Double)]-> Double
@@ -163,6 +176,7 @@ rhoImbhCore flow mass1 mass2 distMPC spectrumData = do
       rhoRing = calcRhoRing fmerg fring fcut sigma spectrumData
 
   rhoCoef * (rhoCoef + rhoInsp + rhoMerg + rhoRing)**(1/2)
+-- from Eq.(B11) in [1]
 
 rhoImbh :: Double -> Double -> Double -> [(Double,  Double)]-> Double
 rhoImbh = rhoImbhCore 5
