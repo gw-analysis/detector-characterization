@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/15 00:00:28
+  * Last Modified: 2014/05/15 13:49:26
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -21,7 +21,7 @@ import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMKKW
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
-import qualified IMBH as HMRIMBHD
+import qualified HasKAL.MonitorUtils.RangeMon.IMBH as HMRIMBHD
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
 import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR

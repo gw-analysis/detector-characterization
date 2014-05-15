@@ -54,6 +54,8 @@ library
     HasKAL.GUI_Utils.GUI_Utils,
 -- To avoid error, comment out
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
+    HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
+    HasKAL.MonitorUtils.RangeMon.IMBH,
     HasKAL.MonitorUtils.RayleighMon.RayleighMon,
 --    HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.PlotUtils,
