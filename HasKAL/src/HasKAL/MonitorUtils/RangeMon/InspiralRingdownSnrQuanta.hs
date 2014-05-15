@@ -1,20 +1,20 @@
  --- テストコード
  -- 注:このソースコード自体にIOは含まれていないので、ここに書いてあるテストコードはこのプログラムの一番下にあるIOプログラム群を通して出力したものになっています。ご了承下さい。
  --  snrInspiralCore
- --  *Main> snrInspiralCoreCulculation 1.4 1.4 280 "kagraPsd.dat" 30
- --  8.171848679902961
+ --  *Main> snrInspiralCoreCulculation 1.4 1.4 280 "kagraPsd.dat" 10
+ --  8.23304118549503
 
  --  snrInspiral
  --  *Main> snrInspiralCulculation 1.4 1.4 280 "kagraPsd.dat"
- --  8.171848679902961
+ --  8.23304118549503
 
  --  snrRingdownCore
- --  *Main> snrRingdownCoreCulculation 300 8697 0.9 0.01 0 """kagraPsd.dat" 2048 30
- --  8.667650765753233
+ --  *Main> snrRingdownCoreCulculation 300 15840 0.98 0.03 0.0 "kagraPsd.dat" 2048 10
+ --  8.00018224854012
 
  --  distRingdown
- --  *Main> snrRingdownCulculation 300 8697 0.9 0.01 0 "kagraPsd.dat"
- --  8.667650765753233
+ --  *Main> snrRingdownCulculation 300 15840 "kagraPsd.dat"
+ --  8.00018224854012
 
  --- 出典元
  --  snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
@@ -53,28 +53,17 @@ megapc = 3.085677*(10**22)
  -- 引数
  -- 連星質量1[太陽質量] 連星太陽質量2[太陽質量] 連星までの距離[Mpc] 使用する検出器の(周波数,ノイズパワースペクトル)データ
 snrInspiral :: Double -> Double -> Double -> [(Double,Double)] -> Double
-snrInspiral  msol1 msol2 dmpc ifo = getsnrInspiral
-  where ifonontupl = map invtuplify2 ifo
-        fupp =  1/((6**(3/2)) *pi*(msol1 +  msol2)*(msolar)*(g/(c**3)))
-        flower = 30
-        readnumwithfrequencycut = updowncut ifonontupl flower fupp -- データの周波数を必要な分だけ取り出す(詳しくはupdowncut関数を参照)
-        numfreq = map head readnumwithfrequencycut -- 周波数データのみのリストを作成
-        numnois = map last readnumwithfrequencycut -- パワースペクトルのみのリストを作成
-        vectnumhead = fromList numfreq -- 周波数データをリストからVectorに変換
-        nf = dim vectnumhead
-        f1 = subVector 0 (nf - 1) vectnumhead
-        f2 = subVector 1 (nf - 1) vectnumhead
-        df = zipWith (-) (toList f2) (toList f1) -- 離散データ間の周波数刻み幅のリストを作成
-        mapInspiralwithparam = zipWith (*) df (init (zipWith integratedInspiral numfreq numnois)) -- zipWithで離散データの周波数、パワースペクトルのリストをintegratedwithparamに適用し、リストを返す。更にそのリスト全てに対応する周波数刻み幅の重み付けをする
-        snrRingdownPow2 = foldr (+) 0 mapInspiralwithparam -- 作成したリストを全て足し合わせる
-        getsnrInspiral = snrInspiralculc msol1 msol2 dmpc snrRingdownPow2 -- SNRを計算する
+snrInspiral  msol1 msol2 dmpc ifo = snrInspiralCore msol1 msol2 dmpc ifo 10
+
 
 
  --- snrInspiralCore:インスパイラルのSNRを計算する準備をし、周波数カットオフもパラメータに加えた上でSNRを返す
  -- 引数
  -- 連星質量1[太陽質量] 連星太陽質量2[太陽質量] 連星までの距離[Mpc] 使用する検出器の(周波数,ノイズパワースペクトル)データ 周波数cutoff下限[Hz]
 snrInspiralCore :: Double -> Double -> Double -> [(Double,Double)] -> Double -> Double
-snrInspiralCore  msol1 msol2 dmpc ifo flower = getsnrInspiral
+snrInspiralCore  msol1 msol2 dmpc ifo flower
+  | flower >= fupp = 0
+  | otherwise = getsnrInspiral
   where ifonontupl = map invtuplify2 ifo
         fupp =  1/((6**(3/2)) *pi*(msol1 +  msol2)*(msolar)*(g/(c**3)))
         readnumwithfrequencycut = updowncut ifonontupl flower fupp -- データの周波数を必要な分だけ取り出す(詳しくはupdowncut関数を参照)
@@ -111,23 +100,8 @@ snrInspiralculc msol1 msol2 dmpc snrInspiralPow2= ((2)**( -  0.5))*(cons*(allmas
  --- snrRingdown:リングダウンのSNRを計算する準備をし、SNRを返す
  -- 引数
  -- BH質量[太陽質量] BHまでの距離[Mpc] Kerr parameter 質量欠損比率 初期位相 使用する検出器の[(周波数,パワースペクトル)]データ
-snrRingdown :: Double -> Double -> Double -> Double -> Double -> [(Double,Double)] -> Double 
-snrRingdown msol dmpc a epsil phi ifo = getsnrRingdown
-  where flower = 30
-        fupp = 2048
-        ifonontupl = map invtuplify2 ifo
-        readnumwithfrequencycut = updowncut ifonontupl flower fupp -- データの周波数を必要な分だけ取り出す(詳しくはupdowncut関数を参照)
-        numfreq = map head readnumwithfrequencycut -- 周波数データのみのリストを作成
-        numnois = map last readnumwithfrequencycut -- パワースペクトルのみのリストを作成
-        vectnumhead = fromList numfreq -- 周波数データをリストからVectorに変換
-        nf = dim vectnumhead
-        f1 = subVector 0 (nf - 1) vectnumhead
-        f2 = subVector 1 (nf - 1) vectnumhead
-        df = zipWith (-) (toList f2) (toList f1) -- 離散データ間の周波数刻み幅のリストを作成
-        integratedRingdownwithparam fin noiseSpec= integratedRingdown msol a phi fin noiseSpec -- 周波数、パワースペクトル以外の変数を指定したintegratedRingdownを返す
-        mapRingdownwithparam = zipWith (*) df (init (zipWith integratedRingdownwithparam numfreq numnois)) -- zipWithで離散データの周波数、パワースペクトルのリストをintegratedwithparamに適用し、リストを返す。更にそのリスト全てに対応する周波数刻み幅の重み付けをする
-        snrRingdownPow2 = foldr (+) 0 mapRingdownwithparam -- 作成したリストを全て足し合わせる
-        getsnrRingdown = snrRingdownculc msol dmpc a epsil snrRingdownPow2 -- SNRを計算する
+snrRingdown :: Double -> Double -> [(Double,Double)] -> Double
+snrRingdown msol dmpc ifo = snrRingdownCore msol dmpc 0.98 0.03 0.0 ifo 2048 10
 
 
  --- snrRingdownCore:リングダウンのSNRを計算する準備をし、周波数カットオフもパラメータに加えた上でSNRを返す
@@ -207,15 +181,15 @@ invtuplify2 (x,y) = [x,y]
 --   let num =  map words $ lines contents      -- データを[[[周波数1,パワースペクトル1],[周波数2,パワースペクトル2]..],..]という形に整形
 --       ifolist = map (map read) num :: [[Double]] -- データをDoubleに変換
 --       ifolist2 = map tuplify2 ifolist -- データを[(Double,Double)]に変換
---   print $ snrInspiral msol1 msol2 dmpc ifolist2
+--   print $ snrInspiralCore msol1 msol2 dmpc ifolist2 flower
 
--- snrRingdownCulculation :: Double -> Double -> Double -> Double -> Double -> FilePath -> IO()
--- snrRingdownCulculation msol dmpc a epsil phi ifo = do
+-- snrRingdownCulculation :: Double -> Double -> FilePath -> IO()
+-- snrRingdownCulculation msol dmpc ifo = do
 --   contents <- readFile ifo  -- FilePathのデータのポインタをcontentsに格納
 --   let num =  map words $ lines contents      -- データを[[[周波数1,パワースペクトル1],[周波数2,パワースペクトル2]..],..]という形に整形
 --       ifolist = map (map read) num :: [[Double]] -- データをDoubleに変換
 --       ifolist2 = map tuplify2 ifolist -- データを[(Double,Double)]に変換
---   print $ snrRingdown msol dmpc a epsil phi ifolist2
+--   print $ snrRingdown msol dmpc ifolist2
 
 -- snrRingdownCoreCulculation :: Double -> Double -> Double -> Double -> Double -> FilePath -> Double -> Double -> IO()
 -- snrRingdownCoreCulculation msol dmpc a epsil phi ifo fupp flower = do
