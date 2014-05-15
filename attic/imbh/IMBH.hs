@@ -94,7 +94,7 @@ rhoImbhCore flow mass1 mass2 distMPC spectrumData = do
       rhoMerg = calcRhoMerg fmerg fring spectrumData
       rhoRing = calcRhoRing fmerg fring fcut sigma spectrumData
 
-  rhoCoef * (rhoCoef + rhoInsp + rhoMerg + rhoRing)**2
+  rhoCoef * (rhoCoef + rhoInsp + rhoMerg + rhoRing)**(1/2)
 
 rhoImbh :: Double -> Double -> Double -> [(Double,  Double)]-> Double
 rhoImbh = rhoImbhCore 5
@@ -115,7 +115,7 @@ rhodistImbhCore flow mass1 mass2 spectrumData = do
       rhoMerg = calcRhoMerg fmerg fring spectrumData
       rhoRing = calcRhoRing fmerg fring fcut sigma spectrumData
 
-  rhodistCoef * (rhoInsp + rhoMerg + rhoRing)**2
+  rhodistCoef * (rhoInsp + rhoMerg + rhoRing)**(1/2)
 
 rhodistImbh :: Double -> Double -> [(Double,  Double)]-> Double
 rhodistImbh = rhodistImbhCore 5
@@ -136,7 +136,7 @@ distImbhCore flow mass1 mass2 spectrumData = do
       rhoMerg = calcRhoMerg fmerg fring spectrumData
       rhoRing = calcRhoRing fmerg fring fcut sigma spectrumData
 
-  rhodistCoef * (rhoInsp + rhoMerg + rhoRing)**2 /8.0 /mparsec_sec
+  rhodistCoef * (rhoInsp + rhoMerg + rhoRing)**(1/2) /8.0 /mparsec_sec
 
 distImbh :: Double -> Double -> [(Double,  Double)]-> Double
 distImbh = distImbhCore 5
