@@ -19,6 +19,9 @@ main = do
      let contentsList = lines contents
 
      mapM putStrLn $ pickUpFileName "993597840" "993598000" contentsList
+
+--KAGRA's FileName is "K-K1_C-1083981344-32.gwf" (one example)
+
 -}
 
 pickUpFileName :: String -> String -> [String] -> [String]
