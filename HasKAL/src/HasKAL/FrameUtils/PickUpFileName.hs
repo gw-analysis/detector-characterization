@@ -3,7 +3,7 @@
  *Created:2014/05/20
  *Author:Mitsuhiro Asano
  ****************************************************
-Last Modified: 2014/05/20 15:16:13
+Last Modified: 2014/05/20 15:35:52
 -}
  
 module PickUpFileName (pickUpFileName) where
@@ -22,6 +22,9 @@ main = do
      let contentsList = lines contents
 
      mapM putStrLn $ pickUpFileName 993597840 993598000 contentsList
+
+--KAGRA's FileName is "K-K1_C-1083981344-32.gwf" (one example)
+
 -}
 
 pickUpFileName :: Integer -> Integer -> [String] -> [String]
