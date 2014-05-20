@@ -21,7 +21,14 @@ main = do
      contents <- hGetContents handle
      let contentsList = lines contents
 
+<<<<<<< HEAD
      mapM putStrLn $ pickUpFileName 993597840 993598000 contentsList
+=======
+     mapM putStrLn $ pickUpFileName "993597840" "993598000" contentsList
+
+--KAGRA's FileName is "K-K1_C-1083981344-32.gwf" (one example)
+
+>>>>>>> 3a1b17424fa0d830a31204b1dc2dbbccb9d65ba1
 -}
 
 pickUpFileName :: Integer -> Integer -> [String] -> [String]

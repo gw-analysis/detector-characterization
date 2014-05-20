@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/13 17:13:05
+  * Last Modified: 2014/05/15 21:21:54
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -20,7 +20,8 @@ import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMKKW
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
-import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance as HMRIRD
+import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
+import qualified HasKAL.MonitorUtils.RangeMon.IMBH as HMRIMBHD
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
 import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
@@ -646,7 +647,7 @@ hasKalGuiRangeMon = do
   rangeMonVBox2 <- vBoxNew True 10
 
   {-- Information --}
-  let rangeMonLabels = ["Inspiral", "Ringdown"]
+  let rangeMonLabels = ["Inspiral", "Ringdown", "Insp-Marge-Ring"]
   
   rangeMonButtons <- mapM buttonNewWithLabel rangeMonLabels
   rangeMonCloseButton <- buttonNewWithLabel "Close"
@@ -668,6 +669,8 @@ hasKalGuiRangeMon = do
     hasKalGuiInspiralRange
   onClicked (rangeMonButtons !! 1) $ do
     hasKalGuiRingDownRange
+  onClicked (rangeMonButtons !! 2) $ do
+    hasKalGuiIMR'Range
   onClicked rangeMonCloseButton $ do
     putStrLn "Closed RangeMon Window"
     widgetDestroy rangeMonWindow
@@ -737,12 +740,9 @@ hasKalGuiInspiralRange = do
   entrySetText inspiralRangeMinuteEntry "0"
   entrySetText inspiralRangeSecondEntry "0"
   entrySetText inspiralRangeObsTimeEntry "300"
-  entrySetText inspiralRangeMinuteEntry "0"
-  entrySetText inspiralRangeSecondEntry "0"
-  entrySetText inspiralRangeObsTimeEntry "300"
   entrySetText inspiralRangeMass1Entry "1.0"
-  entrySetText inspiralRangeMass2Entry "300.0"
-  entrySetText inspiralRangeThresholdEntry "10.0"
+  entrySetText inspiralRangeMass2Entry "70.0"
+  entrySetText inspiralRangeThresholdEntry "8.0"
   
   {--  Set Parameters of the objects  --}
   set inspiralRangeWindow [ windowTitle := "Inspiral Range",
@@ -824,14 +824,17 @@ hasKalGuiInspiralRange = do
     s_temp <- entryGetText inspiralRangeThresholdEntry
     let inspThreshold = read s_temp :: Double
     putStrLn ("   Thresold: " ++ (show inspThreshold) )
+
+    {-- detecter data IO and format --}
+    detDataStr <- readFile "../sample-data/bKAGRA/prebKAGRA.dat" -- ファイルは[Hz], [/rHz]が書かれているので2乗して使う
+    let detData = map amp2psd $ map convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
+    {-- end of detecter data IO and format --}
     {-- Monitor tool --}
-    -- 複数要素のvectorを与えるとおかしいのでとりあえずforMで代用
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
-      return $ NLA.toList $ HMRIRD.distInspiral (NLA.fromList [mass]) (NLA.fromList [mass]) (NLA.fromList [inspThreshold]) HDD.KAGRA
-    HPPR.hroot_core (map (*2) [inspMass1,inspMass1+2..inspMass2]) (concat inspDist) "Total Mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+--      return $ HMRIRD.distInspiral mass mass inspThreshold detData
+      return $ HMRIRD.distInspiral mass mass detData
+    HPPR.hroot_core [inspMass1,inspMass1+2..inspMass2] inspDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
-    -- putStrLn "Closed InspiralRange Window"
-    -- widgetDestroy inspiralRangeWindow
 
   {--  Exit Process  --}
   onDestroy inspiralRangeWindow mainQuit
@@ -905,14 +908,11 @@ hasKalGuiRingDownRange = do
   entrySetText ringDownRangeMinuteEntry "0"
   entrySetText ringDownRangeSecondEntry "0"
   entrySetText ringDownRangeObsTimeEntry "300"
-  entrySetText ringDownRangeMinuteEntry "0"
-  entrySetText ringDownRangeSecondEntry "0"
-  entrySetText ringDownRangeObsTimeEntry "300"
   entrySetText ringDownRangeMassEntry "10.0"
   entrySetText ringDownRangeKerrParamEntry "0.98"
   entrySetText ringDownRangeMassDefectEntry "0.03"
   entrySetText ringDownRangeIniPhaseEntry "0.0"
-  entrySetText ringDownRangeThresholdEntry "10.0"
+  entrySetText ringDownRangeThresholdEntry "8.0"
   
   {--  Set Parameters of the objects  --}
   set ringDownRangeWindow [ windowTitle := "RingDown Range",
@@ -1005,18 +1005,181 @@ hasKalGuiRingDownRange = do
     s_temp <- entryGetText ringDownRangeThresholdEntry
     let ringDThreshold = read s_temp :: Double
     putStrLn ("   Thresold: " ++ (show ringDThreshold) )
-    {-- Monitor tool --}
-    ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] $ \mass -> 
-      return $ NLA.toList $ HMRIRD.distRingdown (NLA.fromList [mass]) (NLA.fromList [ringDThreshold]) (NLA.fromList [ringDKerrParam]) (NLA.fromList [ringDMassDefect]) (NLA.fromList [ringDIniPhase]) HDD.KAGRA
-    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..300.0*ringDMass] (concat ringDDist) "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
-   {-- End of Monitor Tool --}
-    -- putStrLn "Closed RingDownRange Window"
-    --widgetDestroy ringDownRangeWindow
 
+    {-- detecter data IO and format --}
+    detDataStr <- readFile "../sample-data/bKAGRA/prebKAGRA.dat"
+    let detData = map amp2psd $ map convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
+    {-- end of detecter data IO and format --}
+    {-- Monitor tool --}
+    ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] $ \mass -> 
+--      return $ HMRIRD.distRingdown mass ringDThreshold ringDKerrParam ringDMassDefect ringDIniPhase detData
+      return $ HMRIRD.distRingdown mass detData
+    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] ringDDist "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    {-- End of Monitor Tool --}
 
   {--  Exit Process  --}
   onDestroy ringDownRangeWindow mainQuit
   widgetShowAll ringDownRangeWindow
+  mainGUI
+
+
+
+{--  Inspiral-Marger-RingdownRange Window
+-- test code
+main = IO ()
+main = hasKalGuiIMR'Range
+-- arguments: Nothing
+--}
+hasKalGuiIMR'Range :: IO ()
+hasKalGuiIMR'Range = do
+  initGUI
+  putStrLn "Open Inspiral-Merger-RingdownRange Window"
+
+  {--  Create new object  --}
+  imrRangeWindow <- windowNew
+  imrRangeVBox <- vBoxNew True 5
+  imrRangeHBoxYear <- hBoxNew True 5
+  imrRangeHBoxMonth <- hBoxNew True 5
+  imrRangeHBoxDay <- hBoxNew True 5
+  imrRangeHBoxHour <- hBoxNew True 5
+  imrRangeHBoxMinute <- hBoxNew True 5
+  imrRangeHBoxSecond <- hBoxNew True 5
+  imrRangeHBoxObsTime <- hBoxNew True 5
+  imrRangeHBoxMass1 <- hBoxNew True 5
+  imrRangeHBoxMass2 <- hBoxNew True 5
+  -- imrRangeHBoxThreshold <- hBoxNew True 5
+  imrRangeHBoxButtons <- hBoxNew True 5
+
+  imrRangeYearEntryLabel <- labelNewWithMnemonic "Year"
+  imrRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
+  imrRangeDayEntryLabel <- labelNewWithMnemonic "Day"
+  imrRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
+  imrRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
+  imrRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
+  imrRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
+  imrRangeMass1EntryLabel <- labelNewWithMnemonic "mass_min [M_solar]"
+  imrRangeMass2EntryLabel <- labelNewWithMnemonic "mass_max [M_solar]"
+  -- imrRangeThresholdEntryLabel <- labelNewWithMnemonic "Threshold SNR"
+
+  imrRangeYearEntry <- entryNew
+  imrRangeMonthEntry <- entryNew
+  imrRangeDayEntry <- entryNew
+  imrRangeHourEntry <- entryNew
+  imrRangeMinuteEntry <- entryNew
+  imrRangeSecondEntry <- entryNew
+  imrRangeObsTimeEntry <- entryNew
+  imrRangeMass1Entry <- entryNew
+  imrRangeMass2Entry <- entryNew
+  -- imrRangeThresholdEntry <- entryNew
+
+  imrRangeClose <- buttonNewWithLabel "Close"
+  imrRangeExecute <- buttonNewWithLabel "Execute"
+
+  entrySetText imrRangeYearEntry "2013"
+  entrySetText imrRangeMonthEntry "10"
+  entrySetText imrRangeDayEntry "21"
+  entrySetText imrRangeHourEntry "21"
+  entrySetText imrRangeMinuteEntry "0"
+  entrySetText imrRangeSecondEntry "0"
+  entrySetText imrRangeObsTimeEntry "300"
+  entrySetText imrRangeMass1Entry "1.0"
+  entrySetText imrRangeMass2Entry "300.0"
+  -- entrySetText imrRangeThresholdEntry "8.0"
+
+  {--  Set Parameters of the objects  --}
+  set imrRangeWindow [ windowTitle := "Inspiral-Merger-Ringdown Range",
+                      windowDefaultWidth := 200,
+                      windowDefaultHeight := 450,
+                      containerChild := imrRangeVBox,
+                      containerBorderWidth := 20 ]
+
+  {--  Arrange object in window  --}
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxYear
+  boxPackStartDefaults imrRangeHBoxYear imrRangeYearEntryLabel
+  boxPackStartDefaults imrRangeHBoxYear imrRangeYearEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxMonth
+  boxPackStartDefaults imrRangeHBoxMonth imrRangeMonthEntryLabel
+  boxPackStartDefaults imrRangeHBoxMonth imrRangeMonthEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxDay
+  boxPackStartDefaults imrRangeHBoxDay imrRangeDayEntryLabel
+  boxPackStartDefaults imrRangeHBoxDay imrRangeDayEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxHour
+  boxPackStartDefaults imrRangeHBoxHour imrRangeHourEntryLabel
+  boxPackStartDefaults imrRangeHBoxHour imrRangeHourEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxMinute
+  boxPackStartDefaults imrRangeHBoxMinute imrRangeMinuteEntryLabel
+  boxPackStartDefaults imrRangeHBoxMinute imrRangeMinuteEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxSecond
+  boxPackStartDefaults imrRangeHBoxSecond imrRangeSecondEntryLabel
+  boxPackStartDefaults imrRangeHBoxSecond imrRangeSecondEntry
+
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxObsTime
+  boxPackStartDefaults imrRangeHBoxObsTime imrRangeObsTimeEntryLabel
+  boxPackStartDefaults imrRangeHBoxObsTime imrRangeObsTimeEntry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxMass1
+  boxPackStartDefaults imrRangeHBoxMass1 imrRangeMass1EntryLabel
+  boxPackStartDefaults imrRangeHBoxMass1 imrRangeMass1Entry
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxMass2
+  boxPackStartDefaults imrRangeHBoxMass2 imrRangeMass2EntryLabel
+  boxPackStartDefaults imrRangeHBoxMass2 imrRangeMass2Entry
+  -- boxPackStartDefaults imrRangeVBox imrRangeHBoxThreshold
+  -- boxPackStartDefaults imrRangeHBoxThreshold imrRangeThresholdEntryLabel
+  -- boxPackStartDefaults imrRangeHBoxThreshold imrRangeThresholdEntry
+
+  boxPackStartDefaults imrRangeVBox imrRangeHBoxButtons
+  boxPackStartDefaults imrRangeHBoxButtons imrRangeClose
+  boxPackStartDefaults imrRangeHBoxButtons imrRangeExecute
+
+  {--  Execute  --}
+  onClicked imrRangeClose $ do
+    putStrLn "Closed Inspiral-Merger-RingdownRange Window"
+    widgetDestroy imrRangeWindow
+  onClicked imrRangeExecute $ do
+    putStrLn "Execute"
+
+    s_temp <- entryGetText imrRangeYearEntry
+    let imrYear = read s_temp :: Int
+    s_temp <- entryGetText imrRangeMonthEntry
+    let imrMonth = read s_temp :: Int
+    s_temp <- entryGetText imrRangeDayEntry
+    let imrDay = read s_temp :: Int
+    s_temp <- entryGetText imrRangeHourEntry
+    let imrHour = read s_temp :: Int
+    s_temp <- entryGetText imrRangeMinuteEntry
+    let imrMinute = read s_temp :: Int
+    s_temp <- entryGetText imrRangeSecondEntry
+    let imrSecond = read s_temp :: Int
+
+    let imrRangeDateStr = iDate2sDate imrYear imrMonth imrDay imrHour imrMinute imrSecond
+    putStrLn ("   JST Time: " ++ imrRangeDateStr)
+    let hogeGPS = HTG.time2gps imrRangeDateStr
+    putStrLn ("   GPS Time: " ++ hogeGPS)
+    s_temp <- entryGetText imrRangeObsTimeEntry
+    let imrObsTime = read s_temp :: Int
+    putStrLn ("   Obs Time: " ++ (show imrObsTime) )
+    s_temp <- entryGetText imrRangeMass1Entry
+    let imrMass1 = read s_temp :: Double
+    putStrLn ("     Mass_1: " ++ (show imrMass1) )
+    s_temp <- entryGetText imrRangeMass2Entry
+    let imrMass2 = read s_temp :: Double
+    putStrLn ("     Mass_2: " ++ (show imrMass2) )
+    -- s_temp <- entryGetText imrRangeThresholdEntry
+    -- let imrThreshold = read s_temp :: Double
+    -- putStrLn ("   Thresold: " ++ (show imrThreshold) )
+
+    {-- detecter data IO and format --}
+    detDataStr <- readFile "../sample-data/bKAGRA/prebKAGRA.dat"
+    let detData = map amp2psd $ map convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
+    {-- end of detecter data IO and format --}
+    {-- Monitor tool --}
+    imrDist <- CM.forM [imrMass1, imrMass1+10..imrMass2] $ \mass ->
+      return $ HMRIMBHD.distImbh mass mass detData
+    HPPR.hroot_core [imrMass1,imrMass1+10..imrMass2] imrDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    {-- End of Monitor Tool --}
+
+  {--  Exit Process  --}
+  onDestroy imrRangeWindow mainQuit
+  widgetShowAll imrRangeWindow
   mainGUI
 
 
@@ -1061,7 +1224,6 @@ hasKalGuiMessage messageTitle messageSentence = do
 
 
 
-
 {-- Supplementary Functions --}
 getActiveLabels :: [CheckButton] -> [String]
 getActiveLabels [] = []
@@ -1071,12 +1233,15 @@ getActiveLabels (x:xs) =
     False -> getActiveLabels xs
 
 
+amp2psd :: (Double, Double) -> (Double, Double)
+amp2psd (x, y) = (x, y*y)
+
 convert_StoD :: String -> Double
 convert_StoD = read
 
 convert_LtoT2 :: [Double] -> (Double, Double)
 convert_LtoT2 [x, y] = (x, y)
-
+-- 列数が合わないとerrorをランタイムエラーを吐くと思うので後で修正する
 convert_LtoT3 :: [Double] -> (Double, Double, Double)
 convert_LtoT3 [x, y, z] = (x, y, z)
 
