@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/15 21:21:54
+  * Last Modified: 2014/05/20 21:12:12
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -647,7 +647,7 @@ hasKalGuiRangeMon = do
   rangeMonVBox2 <- vBoxNew True 10
 
   {-- Information --}
-  let rangeMonLabels = ["Inspiral", "Ringdown", "Insp-Marge-Ring"]
+  let rangeMonLabels = ["Inspiral", "Ringdown", "Insp-Merge-Ring"]
   
   rangeMonButtons <- mapM buttonNewWithLabel rangeMonLabels
   rangeMonCloseButton <- buttonNewWithLabel "Close"
