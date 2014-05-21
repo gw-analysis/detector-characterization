@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/20 21:12:12
+  * Last Modified: 2014/05/21 15:39:15
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -18,6 +18,7 @@ import qualified Text.Printf as TP -- printf
 
 import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
+import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle as HMKKW
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
@@ -39,7 +40,7 @@ hasKalGuiTop = do
   putStrLn "Start HasKAL GUI"
 
   {--  information  --}
-  let topSubSystemLabels = ["Test", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
+  let topSubSystemLabels = ["Test", "TestForKW", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
   let topNumOfSubSystems = length topSubSystemLabels -- number of sub systems
   let topMonitorLabels = ["Glitch", "Line", "Gaussianity", "RangeMon"] -- monitor names
 
@@ -188,10 +189,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   let kwDecimateFactor = -1
   let kwUnowen_2 = 2
   let kwOptFilePref = "optKW_"
-  let kwListFile = "gwffilelist.txt"
-
-  {--  Read file of channel list  --}
-  --kleineWelleChannels <- forM activeSubSystemlabels $ \lambda -> hGetContents =<< openFile ("../ChList/channelList" ++ lambda ++ ".txt") ReadMode --kleineWelleIFile
+--  let kwListFile = "gwffilelist.txt"
 
   {--  for lwtprint  --}
   let kwChannelLabels = [ "ifo", "peak_time", "peak_time_ns", "start_time", "start_time_ns", "duration", "search", "central_freq", "channel", "amplitude", "snr", "confidence", "chisq", "chisq_dof", "bandwidth", "event_id", "process_id", "table" ]
@@ -199,10 +197,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kwChannelBBox <- vButtonBoxNew
   kwChannelCButtons <- mapM checkButtonNewWithLabel kwChannelLabels
 
-
   {--  Information  --}
-  --let kleineWelleChannelLabels = lines (concat kleineWelleChannels)
-  --let kleineWelleNumOfChannel = length kleineWelleChannelLabels
   let kwNumOfChannel = length kwChannelLabels
 
   {--  Create new object --}
@@ -223,19 +218,18 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleHBox6 <- hBoxNew True 5
   kleineWelleHBox7 <- hBoxNew True 5
 
-
   kleineWelleChannelScroll <- scrolledWindowNew Nothing Nothing
   kleineWelleChannelBBox <- vButtonBoxNew
   --kleineWelleChannelCButtons <- mapM checkButtonNewWithLabel kleineWelleChannelLabels
-  kleineWelleGpsEntryLable <- labelNewWithMnemonic "GPS Time [s]"
-{--}
+  --kleineWelleGpsEntryLable <- labelNewWithMnemonic "GPS Time [s]"
+
   kleineWelleYearEntryLable <- labelNewWithMnemonic "Year"
   kleineWelleMonthEntryLable <- labelNewWithMnemonic "Month"
   kleineWelleDayEntryLable <- labelNewWithMnemonic "Day"
   kleineWelleHourEntryLable <- labelNewWithMnemonic "Hour"
   kleineWelleMinuteEntryLable <- labelNewWithMnemonic "Minute"
   kleineWelleSecondEntryLable <- labelNewWithMnemonic "Second (JST)"
-{----}
+
   kleineWelleObsEntryLable <- labelNewWithMnemonic "OBS Time [s]"
   kleineWelleStrideEntryLable <- labelNewWithMnemonic "Stride"
   kleineWelleSignificanceEntryLable <- labelNewWithMnemonic "Significance"
@@ -243,14 +237,14 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleLowCutOffEntryLable <- labelNewWithMnemonic "LowCutOff [Hz]"
   kleineWelleHighCutOffEntryLable <- labelNewWithMnemonic "HighCutOff [Hz]"
   kleineWelleGpsEntry <- entryNew
-{--}
+
   kleineWelleYearEntry <- entryNew
   kleineWelleMonthEntry <- entryNew
   kleineWelleDayEntry <- entryNew
   kleineWelleHourEntry <- entryNew
   kleineWelleMinuteEntry <- entryNew
   kleineWelleSecondEntry <- entryNew
-{----}
+
   kleineWelleObsEntry <- entryNew
   kleineWelleStrideEntry <- entryNew
   kleineWelleSignificanceEntry <- entryNew
@@ -259,16 +253,16 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleHighCutOffEntry <- entryNew
   kleineWelleClose <- buttonNewWithLabel "Close"
   kleineWelleExecute <- buttonNewWithLabel "Execute"
-  entrySetText kleineWelleGpsEntry "1066392016"
-{--}
-  entrySetText kleineWelleYearEntry "2013"
-  entrySetText kleineWelleMonthEntry "10"
-  entrySetText kleineWelleDayEntry "21"
-  entrySetText kleineWelleHourEntry "21"
-  entrySetText kleineWelleMinuteEntry "0"
-  entrySetText kleineWelleSecondEntry "0"
-{----}
-  entrySetText kleineWelleObsEntry "300"
+--  entrySetText kleineWelleGpsEntry "1066392016"
+
+  entrySetText kleineWelleYearEntry "2014"
+  entrySetText kleineWelleMonthEntry "3"
+  entrySetText kleineWelleDayEntry "17"
+  entrySetText kleineWelleHourEntry "16"
+  entrySetText kleineWelleMinuteEntry "15"
+  entrySetText kleineWelleSecondEntry "12"
+
+  entrySetText kleineWelleObsEntry "128"
   entrySetText kleineWelleStrideEntry "16"
   entrySetText kleineWelleSignificanceEntry "2.0"
   entrySetText kleineWelleThresholdEntry "3.0"
@@ -285,11 +279,6 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
 
   {--  Arrange object in window  --}
-  --mapM (boxPackStartDefaults kleineWelleChannelBBox) kleineWelleChannelCButtons
-  --scrolledWindowAddWithViewport kleineWelleChannelScroll kleineWelleChannelBBox
-  --boxPackStartDefaults kleineWelleVBox kleineWelleHBox00
-  --boxPackStartDefaults kleineWelleHBox00 kleineWelleChannelScroll
-
   mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
   scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
   boxPackStartDefaults kleineWelleHBox00 kwChannelScroll
@@ -297,9 +286,6 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   boxPackStartDefaults kleineWelleHBox00 kleineWelleVBox2
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox
 
-  -- boxPackStartDefaults kleineWelleHBox kleineWelleGpsEntryLable
-  -- boxPackStartDefaults kleineWelleHBox kleineWelleGpsEntry
-{--}
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox1
   boxPackStartDefaults kleineWelleHBox1 kleineWelleYearEntryLable
   boxPackStartDefaults kleineWelleHBox1 kleineWelleMonthEntryLable
@@ -316,7 +302,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   boxPackStartDefaults kleineWelleHBox13 kleineWelleHourEntry
   boxPackStartDefaults kleineWelleHBox13 kleineWelleMinuteEntry
   boxPackStartDefaults kleineWelleHBox13 kleineWelleSecondEntry
-{----}
+
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox2
   boxPackStartDefaults kleineWelleHBox2 kleineWelleObsEntryLable
   boxPackStartDefaults kleineWelleHBox2 kleineWelleObsEntry
@@ -344,14 +330,9 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   {--  Execute --}
   onClicked kleineWelleExecute $ do
     putStrLn "Execute"
-    --let kleineWelleActiveLabels = getActiveLabels kleineWelleChannelCButtons
     let kwActiveLabels = getActiveLabels kwChannelCButtons
-{--}
+
     s_temp <- entryGetText kleineWelleYearEntry
-    -- if s_temp == ""
-    -- then do widgetDestroy kleineWelleWindow
-    --         hasKalGuiKleineWelle kleineWelleActiveLabels
-    -- else do return ()
     let kwYear = read s_temp :: Int
     s_temp <- entryGetText kleineWelleMonthEntry
     let kwMonth = read s_temp :: Int
@@ -365,14 +346,14 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     let kwSecond = read s_temp :: Int
     let kleineWelleDateStr = iDate2sDate kwYear kwMonth kwDay kwHour kwMinute kwSecond
     putStrLn ("   JST Time: " ++ kleineWelleDateStr)
-    let hogeGPS = HTG.time2gps kleineWelleDateStr
-    putStrLn ("   GPS Time: " ++ hogeGPS)
-{----}
-    s_temp <- entryGetText kleineWelleGpsEntry
-    let kwGpsTime = read s_temp :: Int
-    putStrLn ("   GPS Time: " ++ (show kwGpsTime) )
+    let kwGpsTime = read $ HTG.time2gps kleineWelleDateStr :: Int
+    putStrLn ("   GPS Time: " ++ (show kwGpsTime))
+
+    -- s_temp <- entryGetText kleineWelleGpsEntry
+    -- let kwGpsTime = read s_temp :: Int
+    -- putStrLn ("   GPS Time: " ++ (show kwGpsTime) )
     s_temp <- entryGetText kleineWelleObsEntry
-    let kwObsTime = read s_temp :: Int
+    let kwObsTime = read s_temp :: Integer
     putStrLn ("   Obs Time: " ++ (show kwObsTime) )
     s_temp <- entryGetText kleineWelleStrideEntry
     let kwStride = read s_temp :: Int
@@ -393,6 +374,12 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     mapM_ putStrLn kleineWelleActiveLabels
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
+{--}
+    let kwCasheFile = "../sample-data/gwffiles_sorted.lst"
+    putStrLn $ (show (fromIntegral kwGpsTime)) ++ " ~ " ++ (show (fromIntegral kwGpsTime + kwObsTime))
+    HFP.pickUpFileNameinoutFile (fromIntegral kwGpsTime) (fromIntegral kwGpsTime + kwObsTime) kwCasheFile
+    let kwListFile = "tmpCachedFrameFile.lst"
+{----}
     putStrLn "Generate optM file for KleineWelle"
     lwtOutput <- HMKKW.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kleineWelleActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
     let lwtColmunNum = length kwActiveLabels
