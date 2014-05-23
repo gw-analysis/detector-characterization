@@ -17,7 +17,7 @@
  --  15840.360852109441
 
  --- 出典元
- --  snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
+ --  snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3)
  --  snrRingdown:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
 
 
@@ -89,7 +89,7 @@ integratedInspiral fin noiseSpec =  fin**( - 7/3)/noiseSpec
  -- 引数
  -- 連星質量1[太陽質量] 連星太陽質量2[太陽質量] SNR インスパイラル被積分関数の和
 distInspiralculc :: Double -> Double -> Double -> Double -> Double
-distInspiralculc msol1 msol2 snr snrInspiralPow2= ((2)**( -  0.5))*(cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*(snrInspiralPow2**(1/2))
+distInspiralculc msol1 msol2 snr snrInspiralPow2= (cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*(snrInspiralPow2**(1/2))
   where allmass =  (msol1 +  msol2)*(msolar)
         symmass =  msol1*msol2/((msol1 +  msol2)**2)
         snrstand =  snr*(megapc)

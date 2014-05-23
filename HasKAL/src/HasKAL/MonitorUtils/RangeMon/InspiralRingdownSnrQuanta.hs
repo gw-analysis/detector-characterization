@@ -17,7 +17,7 @@
  --  8.00018224854012
 
  --- 出典元
- --  snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
+ --  snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3)
  --  snrRingdown:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
 
 
@@ -90,7 +90,7 @@ integratedInspiral fin noiseSpec =  fin**( - 7/3)/noiseSpec
  -- 引数
  -- BH質量[太陽質量] BHまでの距離[Mpc] Kerr parameter 質量欠損比率 初期位相 使用する検出器
 snrInspiralculc :: Double -> Double -> Double -> Double -> Double
-snrInspiralculc msol1 msol2 dmpc snrInspiralPow2= ((2)**( -  0.5))*(cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(d * pi**(2/3)))*(snrInspiralPow2**(1/2))
+snrInspiralculc msol1 msol2 dmpc snrInspiralPow2= (cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(d * pi**(2/3)))*(snrInspiralPow2**(1/2))
   where allmass =  (msol1 +  msol2)*(msolar)
         symmass =  msol1*msol2/((msol1 +  msol2)**2)
         d =  dmpc*(megapc)

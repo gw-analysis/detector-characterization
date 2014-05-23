@@ -8,7 +8,7 @@
  -- fromList [8.667669341182771]
 
  ---出典元
- -- snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
+ -- snrInspiral:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3)
  -- snrRingdown:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
 
 
@@ -67,7 +67,7 @@ snrInspiral msol1 msol2 dmpc ifo flower df
     | msol1 <  0 =  error "mass 1: Why did you insert a minus number?"
     | msol2 <  0 =  error "mass 2 : Why did you insert a minus number?"
     | dmpc <  0 =  error "distance : Why did you insert a minus number?"
-    | otherwise = ((2)**( - 0.5))*(cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(d * pi**(2/3)))*((snrInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
+    | otherwise = (cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(d * pi**(2/3)))*((snrInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
   where allmass = (msol1 + msol2)*(msolar)
         symmass = msol1*msol2/((msol1 + msol2)**2)
         d = dmpc*(megapc)

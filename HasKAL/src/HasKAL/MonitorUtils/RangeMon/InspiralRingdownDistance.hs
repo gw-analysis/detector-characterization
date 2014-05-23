@@ -16,7 +16,7 @@
  -- fromList [9422.840032902668]
 
  ---出典元
- -- distInspiral,distInspiralCore:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 注:LIGOとKAGRAとのSNRの定義の違いにより、(B3)に対し1/sqrt(2)倍の補正がかかっています。
+ -- distInspiral,distInspiralCore:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B3) 
  -- distRingdown,distRingdownCore:P.Ajith et al. Phys.Rev.D77:104017 (2008) 式番号(B10)
 
 
@@ -48,7 +48,6 @@ msolar = 1.989*(10**30)
 megapc :: Vector Double
 megapc = 3.085677*(10**22)
 
-
  --- integratedInpiral:インスパイラルのSNRの被積分関数を定義
  -- 引数
  -- 使用する検出器 周波数
@@ -77,7 +76,7 @@ distInspiralCore msol1 msol2 snr ifo flower df
     | msol1 <  0 =  error "mass 1: Why did you insert a minus number?"
     | msol2 <  0 =  error "mass 2 : Why did you insert a minus number?"
     | snr <  0 =  error "SNR : Why did you insert a minus number?"
-    | otherwise = ((2)**( - 0.5))*(cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*((distInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
+    | otherwise = (cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*((distInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
   where allmass = (msol1 + msol2)*(msolar)
         symmass = msol1*msol2/((msol1 + msol2)**2)
         snrstand = snr*(megapc)
@@ -92,7 +91,7 @@ distInspiral msol1 msol2 snr ifo
     | msol1 <  0 =  error "mass 1: Why did you insert a minus number?"
     | msol2 <  0 =  error "mass 2 : Why did you insert a minus number?"
     | snr <  0 =  error "SNR : Why did you insert a minus number?"
-    | otherwise = ((2)**( - 0.5))*(cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*((distInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
+    | otherwise = (cons*(allmass**(5/6))*((5*symmass/6)**(1/2))/(snrstand * pi**(2/3)))*((distInspiralPow2 msol1 msol2 ifo flower df)**(1/2))
   where allmass = (msol1 + msol2)*(msolar)
         symmass = msol1*msol2/((msol1 + msol2)**2)
         snrstand = snr*(megapc)
