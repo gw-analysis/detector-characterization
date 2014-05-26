@@ -51,6 +51,12 @@ library
     HasKAL.DetectorUtils.Detector,
     HasKAL.ExternalUtils.Lwtprint,
     HasKAL.FrameUtils.FrameUtils,
+    HasKAL.GUI_Utils.GUI_GaussianityRayleighMon,
+    HasKAL.GUI_Utils.GUI_GlitchKleineWelle,
+    HasKAL.GUI_Utils.GUI_RangeIMBH,
+    HasKAL.GUI_Utils.GUI_RangeInspiral,
+    HasKAL.GUI_Utils.GUI_RangeRingDown,
+    HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
 -- To avoid error, comment out
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
