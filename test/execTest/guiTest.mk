@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/05/15 13:52:16
+# Last Modified: 2014/05/21 15:45:26
 #******************************************#
 
 # compiler option
@@ -29,6 +29,6 @@ cleanobs:
 	rm -f ${TILs} ${OBJs} ${INFs}
 
 cleanall:
-	rm -f ./optKW_* ${TARs} ${TILs} ${OBJs} ${INFs}
+	rm -f ./optKW_* ${TARs} ${TILs} ${OBJs} ${INFs} ./*.lst
 	rm -fR ./KW_*
 
