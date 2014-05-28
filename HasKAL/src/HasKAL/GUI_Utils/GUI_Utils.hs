@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 12:28:34
+  * Last Modified: 2014/05/28 18:05:25
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -118,7 +118,7 @@ hasKalGuiGlitch activeSubSystemlabels = do
   glitchVBox2 <- vBoxNew True 5
 
   {--  Read file of channel list  --}
-  glitchChannels <- CM.forM activeSubSystemlabels $ \lambda -> SIO.hGetContents =<< SIO.openFile ("../ChList/channelList" ++ lambda ++ ".txt") SIO.ReadMode --glitchIFile
+  glitchChannels <- CM.forM activeSubSystemlabels $ \lambda -> SIO.hGetContents =<< SIO.openFile (HGGS.haskalOpt ++ "/channels/channelList" ++ lambda ++ ".txt") SIO.ReadMode --glitchIFile
 
   {--  Information  --}
   let glitchMonitorLabels = ["KleineWelle"]
@@ -183,7 +183,7 @@ hasKalGuiGaussianity activeSubSystemlabels = do
   gaussianityVBox2 <- vBoxNew True 5
 
   {--  Read file of channel list  --}
-  gaussianityChannels <- CM.forM activeSubSystemlabels $ \lambda -> SIO.hGetContents =<< SIO.openFile ("../ChList/channelList" ++ lambda ++ ".txt") SIO.ReadMode --gaussianityIFile
+  gaussianityChannels <- CM.forM activeSubSystemlabels $ \lambda -> SIO.hGetContents =<< SIO.openFile (HGGS.haskalOpt ++ "/channels/channelList" ++ lambda ++ ".txt") SIO.ReadMode --gaussianityIFile
 
   {--  Information  --}
   let gaussianityMonitorLabels = ["RayleighMon"]

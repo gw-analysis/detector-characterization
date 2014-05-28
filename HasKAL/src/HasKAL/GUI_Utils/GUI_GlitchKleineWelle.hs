@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 12:26:28
+  * Last Modified: 2014/05/28 18:07:50
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -220,7 +220,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
 {--}
-    let kwCasheFile = "../sample-data/gwffiles_sorted.lst"
+    let kwCasheFile = HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
     putStrLn $ (show (fromIntegral kwGpsTime)) ++ " ~ " ++ (show (fromIntegral kwGpsTime + kwObsTime))
     HFP.pickUpFileNameinoutFile (fromIntegral kwGpsTime) (fromIntegral kwGpsTime + kwObsTime) kwCasheFile
     let kwListFile = "tmpCachedFrameFile.lst"

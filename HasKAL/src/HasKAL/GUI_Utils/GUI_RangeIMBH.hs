@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 11:49:42
+  * Last Modified: 2014/05/28 18:26:47
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -151,7 +151,7 @@ hasKalGuiIMR'Range = do
     putStrLn ("     Mass_2: " ++ (show imrMass2) )
 
     {-- detecter data IO and format --}
-    detDataStr <- readFile "../sample-data/bKAGRA/prebKAGRA.dat"
+    detDataStr <- readFile $ HGGS.haskalOpt ++ "/sensitivities/bKAGRA/prebKAGRA.dat"
     let detData = map HGGS.amp2psd $ map HGGS.convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}

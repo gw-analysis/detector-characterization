@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 12:15:14
+  * Last Modified: 2014/05/28 18:29:37
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -155,13 +155,13 @@ hasKalGuiRayleighMon activeChannelLabels = do
     let rmStride = read s_temp :: Int
     putStrLn ("     stride: " ++ (show rmStride) )
 
-    frData <- HFF.readFrame (activeChannelLabels !! 0) "../sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) ( (HGGS.transposed $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData))) !! 0) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
+    frData <- HFF.readFrame (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
+    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) (HMRRM.rayleighMon rmStride 1 0.9 (map realToFrac (HFF.eval frData))) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
     -- 横軸の値を直す(1秒スペクトルなので今は正しい)
 
     {-- 暫定的なファイル出力 --}
     oFile <- SIO.openFile "./GUI-RayleighMon_Result.txt" SIO.WriteMode
-    SIO.hPutStrLn oFile (HGGS.convert_DLL2S $ HMRRM.rayleighMon rmStride rmStride rmSampling (map realToFrac (HFF.eval frData)) )
+    SIO.hPutStrLn oFile (HGGS.convert_DL2S $ HMRRM.rayleighMon rmStride 1 0.9 (map realToFrac (HFF.eval frData)) )
     SIO.hClose oFile
     {--  ここまで、ファイル出力  --}
     --widgetDestroy rayleighMonWindow

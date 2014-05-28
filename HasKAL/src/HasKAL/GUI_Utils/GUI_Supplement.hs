@@ -1,26 +1,33 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 11:37:25
+  * Last Modified: 2014/05/28 18:08:47
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
-   getActiveLabels
+   haskalOpt
+  ,getActiveLabels
   ,amp2psd
   ,convert_StoD
   ,convert_LtoT2
   ,convert_LtoT3
   ,convert_StoDT2L
   ,convert_StoDT3L
+  ,convert_DL2S
   ,convert_DLL2S
   ,iDate2sDate
   ,transposed
 ) where
 
 import Graphics.UI.Gtk
+import qualified System.Environment as SE -- getEnv
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 import qualified Text.Regex as TR -- splitRegex, mkRegex
 import qualified Text.Printf as TP -- printf
+
+{-- Environment --}
+haskalOpt :: String
+haskalOpt = SIOU.unsafePerformIO $ SE.getEnv "HASKALOPT"
 
 {-- Supplementary Functions --}
 getActiveLabels :: [CheckButton] -> [String]
@@ -48,6 +55,9 @@ convert_StoDT2L stringData = map convert_LtoT2 (map (map convert_StoD) (map (TR.
 
 convert_StoDT3L :: String -> [(Double, Double, Double)]
 convert_StoDT3L stringData = map convert_LtoT3 (map (map convert_StoD) (map (TR.splitRegex (TR.mkRegex ",")) (lines stringData) ) )
+
+convert_DL2S :: [Double] -> String
+convert_DL2S xs = unlines $ map show xs
 
 convert_DLL2S :: [[Double]] -> String
 convert_DLL2S xss = unlines [unwords (map show xs) | xs <- xss]

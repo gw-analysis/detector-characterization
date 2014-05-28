@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/22 12:06:04
+  * Last Modified: 2014/05/28 18:28:00
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -161,7 +161,7 @@ hasKalGuiInspiralRange = do
     putStrLn ("   Thresold: " ++ (show inspThreshold) )
 
     {-- detecter data IO and format --}
-    detDataStr <- readFile "../sample-data/bKAGRA/prebKAGRA.dat" -- ファイルは[Hz], [/rHz]が書かれているので2乗して使う
+    detDataStr <- readFile $ HGGS.haskalOpt ++ "/sensitivities/bKAGRA/prebKAGRA.dat" -- ファイルは[Hz], [/rHz]が書かれているので2乗して使う
     let detData = map HGGS.amp2psd $ map HGGS.convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}
