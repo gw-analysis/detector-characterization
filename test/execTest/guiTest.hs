@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: guiTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/01 18:35:58
+  * Last Modified: 2014/05/29 11:23:13
   ******************************************************************-}
 
 module Main (Main.main) where

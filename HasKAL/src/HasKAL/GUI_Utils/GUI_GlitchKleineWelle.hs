@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:07:50
+  * Last Modified: 2014/05/29 11:50:49
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -47,27 +47,26 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
   {--  Create new object --}
   kleineWelleWindow <- windowNew
-  kleineWelleVBox <- vBoxNew True 5
+--  kleineWelleVBox <- vBoxNew True 5
   kleineWelleVBox2 <- vBoxNew True 5
-  kleineWelleHBox0 <- hBoxNew True 5
-  kleineWelleHBox <- hBoxNew True 5
-  kleineWelleHBox00 <- hBoxNew True 5
-  kleineWelleHBox1 <- hBoxNew True 5
-  kleineWelleHBox11 <- hBoxNew True 5
-  kleineWelleHBox12 <- hBoxNew True 5
-  kleineWelleHBox13 <- hBoxNew True 5
-  kleineWelleHBox2 <- hBoxNew True 5
-  kleineWelleHBox3 <- hBoxNew True 5
-  kleineWelleHBox4 <- hBoxNew True 5
-  kleineWelleHBox5 <- hBoxNew True 5
-  kleineWelleHBox6 <- hBoxNew True 5
-  kleineWelleHBox7 <- hBoxNew True 5
+  kleineWelleHBoxCache <- hBoxNew True 5
+  kleineWelleHBoxScroll <- hBoxNew True 5
+  kleineWelleHBoxDateL <- hBoxNew True 5
+  kleineWelleHBoxDateE <- hBoxNew True 5
+  kleineWelleHBoxTimeL <- hBoxNew True 5
+  kleineWelleHBoxTimeE <- hBoxNew True 5
+  kleineWelleHBoxObs <- hBoxNew True 5
+  kleineWelleHBoxStride <- hBoxNew True 5
+  kleineWelleHBoxSignificance <- hBoxNew True 5
+  kleineWelleHBoxThreshold <- hBoxNew True 5
+  kleineWelleHBoxLowCutOff <- hBoxNew True 5
+  kleineWelleHBoxHighCutOff <- hBoxNew True 5
+  kleineWelleHBoxExecute <- hBoxNew True 5
 
   kleineWelleChannelScroll <- scrolledWindowNew Nothing Nothing
   kleineWelleChannelBBox <- vButtonBoxNew
-  --kleineWelleChannelCButtons <- mapM checkButtonNewWithLabel kleineWelleChannelLabels
-  --kleineWelleGpsEntryLable <- labelNewWithMnemonic "GPS Time [s]"
 
+  kleineWelleCacheEntryLable <- labelNewWithMnemonic "Cache file"
   kleineWelleYearEntryLable <- labelNewWithMnemonic "Year"
   kleineWelleMonthEntryLable <- labelNewWithMnemonic "Month"
   kleineWelleDayEntryLable <- labelNewWithMnemonic "Day"
@@ -83,6 +82,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleHighCutOffEntryLable <- labelNewWithMnemonic "HighCutOff [Hz]"
   kleineWelleGpsEntry <- entryNew
 
+  kleineWelleCacheEntry <- entryNew
   kleineWelleYearEntry <- entryNew
   kleineWelleMonthEntry <- entryNew
   kleineWelleDayEntry <- entryNew
@@ -98,8 +98,8 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleHighCutOffEntry <- entryNew
   kleineWelleClose <- buttonNewWithLabel "Close"
   kleineWelleExecute <- buttonNewWithLabel "Execute"
---  entrySetText kleineWelleGpsEntry "1066392016"
 
+  entrySetText kleineWelleCacheEntry "gwffiles_sorted.lst"
   entrySetText kleineWelleYearEntry "2014"
   entrySetText kleineWelleMonthEntry "3"
   entrySetText kleineWelleDayEntry "17"
@@ -118,7 +118,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   set kleineWelleWindow [ windowTitle := "KleineWelle",
                       windowDefaultWidth := 200,
                       windowDefaultHeight := 450,
-                      containerChild := kleineWelleHBox00,
+                      containerChild := kleineWelleHBoxScroll,
                       containerBorderWidth := 20 ]
   scrolledWindowSetPolicy kleineWelleChannelScroll PolicyAutomatic PolicyAutomatic
 
@@ -126,50 +126,52 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   {--  Arrange object in window  --}
   mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
   scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
-  boxPackStartDefaults kleineWelleHBox00 kwChannelScroll
+  boxPackStartDefaults kleineWelleHBoxScroll kwChannelScroll
 
-  boxPackStartDefaults kleineWelleHBox00 kleineWelleVBox2
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox
+  boxPackStartDefaults kleineWelleHBoxScroll kleineWelleVBox2
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxCache
+  boxPackStartDefaults kleineWelleHBoxCache kleineWelleCacheEntryLable
+  boxPackStartDefaults kleineWelleHBoxCache kleineWelleCacheEntry
 
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox1
-  boxPackStartDefaults kleineWelleHBox1 kleineWelleYearEntryLable
-  boxPackStartDefaults kleineWelleHBox1 kleineWelleMonthEntryLable
-  boxPackStartDefaults kleineWelleHBox1 kleineWelleDayEntryLable
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox11
-  boxPackStartDefaults kleineWelleHBox11 kleineWelleYearEntry
-  boxPackStartDefaults kleineWelleHBox11 kleineWelleMonthEntry
-  boxPackStartDefaults kleineWelleHBox11 kleineWelleDayEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox12
-  boxPackStartDefaults kleineWelleHBox12 kleineWelleHourEntryLable
-  boxPackStartDefaults kleineWelleHBox12 kleineWelleMinuteEntryLable
-  boxPackStartDefaults kleineWelleHBox12 kleineWelleSecondEntryLable
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox13
-  boxPackStartDefaults kleineWelleHBox13 kleineWelleHourEntry
-  boxPackStartDefaults kleineWelleHBox13 kleineWelleMinuteEntry
-  boxPackStartDefaults kleineWelleHBox13 kleineWelleSecondEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateL
+  boxPackStartDefaults kleineWelleHBoxDateL kleineWelleYearEntryLable
+  boxPackStartDefaults kleineWelleHBoxDateL kleineWelleMonthEntryLable
+  boxPackStartDefaults kleineWelleHBoxDateL kleineWelleDayEntryLable
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateE
+  boxPackStartDefaults kleineWelleHBoxDateE kleineWelleYearEntry
+  boxPackStartDefaults kleineWelleHBoxDateE kleineWelleMonthEntry
+  boxPackStartDefaults kleineWelleHBoxDateE kleineWelleDayEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeL
+  boxPackStartDefaults kleineWelleHBoxTimeL kleineWelleHourEntryLable
+  boxPackStartDefaults kleineWelleHBoxTimeL kleineWelleMinuteEntryLable
+  boxPackStartDefaults kleineWelleHBoxTimeL kleineWelleSecondEntryLable
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeE
+  boxPackStartDefaults kleineWelleHBoxTimeE kleineWelleHourEntry
+  boxPackStartDefaults kleineWelleHBoxTimeE kleineWelleMinuteEntry
+  boxPackStartDefaults kleineWelleHBoxTimeE kleineWelleSecondEntry
 
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox2
-  boxPackStartDefaults kleineWelleHBox2 kleineWelleObsEntryLable
-  boxPackStartDefaults kleineWelleHBox2 kleineWelleObsEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox3
-  boxPackStartDefaults kleineWelleHBox3 kleineWelleStrideEntryLable
-  boxPackStartDefaults kleineWelleHBox3 kleineWelleStrideEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox4
-  boxPackStartDefaults kleineWelleHBox4 kleineWelleSignificanceEntryLable
-  boxPackStartDefaults kleineWelleHBox4 kleineWelleSignificanceEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox5
-  boxPackStartDefaults kleineWelleHBox5 kleineWelleThresholdEntryLable
-  boxPackStartDefaults kleineWelleHBox5 kleineWelleThresholdEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox6
-  boxPackStartDefaults kleineWelleHBox6 kleineWelleLowCutOffEntryLable
-  boxPackStartDefaults kleineWelleHBox6 kleineWelleLowCutOffEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox7
-  boxPackStartDefaults kleineWelleHBox7 kleineWelleHighCutOffEntryLable
-  boxPackStartDefaults kleineWelleHBox7 kleineWelleHighCutOffEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxObs
+  boxPackStartDefaults kleineWelleHBoxObs kleineWelleObsEntryLable
+  boxPackStartDefaults kleineWelleHBoxObs kleineWelleObsEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxStride
+  boxPackStartDefaults kleineWelleHBoxStride kleineWelleStrideEntryLable
+  boxPackStartDefaults kleineWelleHBoxStride kleineWelleStrideEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxSignificance
+  boxPackStartDefaults kleineWelleHBoxSignificance kleineWelleSignificanceEntryLable
+  boxPackStartDefaults kleineWelleHBoxSignificance kleineWelleSignificanceEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxThreshold
+  boxPackStartDefaults kleineWelleHBoxThreshold kleineWelleThresholdEntryLable
+  boxPackStartDefaults kleineWelleHBoxThreshold kleineWelleThresholdEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxLowCutOff
+  boxPackStartDefaults kleineWelleHBoxLowCutOff kleineWelleLowCutOffEntryLable
+  boxPackStartDefaults kleineWelleHBoxLowCutOff kleineWelleLowCutOffEntry
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxHighCutOff
+  boxPackStartDefaults kleineWelleHBoxHighCutOff kleineWelleHighCutOffEntryLable
+  boxPackStartDefaults kleineWelleHBoxHighCutOff kleineWelleHighCutOffEntry
 
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBox0
-  boxPackStartDefaults kleineWelleHBox0 kleineWelleClose
-  boxPackStartDefaults kleineWelleHBox0 kleineWelleExecute
+  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxExecute
+  boxPackStartDefaults kleineWelleHBoxExecute kleineWelleClose
+  boxPackStartDefaults kleineWelleHBoxExecute kleineWelleExecute
 
 
   {--  Execute --}
@@ -177,6 +179,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     putStrLn "Execute"
     let kwActiveLabels = HGGS.getActiveLabels kwChannelCButtons
 
+    kwCache <- entryGetText kleineWelleCacheEntry
     s_temp <- entryGetText kleineWelleYearEntry
     let kwYear = read s_temp :: Int
     s_temp <- entryGetText kleineWelleMonthEntry
@@ -194,9 +197,6 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     let kwGpsTime = read $ HTG.time2gps kleineWelleDateStr :: Int
     putStrLn ("   GPS Time: " ++ (show kwGpsTime))
 
-    -- s_temp <- entryGetText kleineWelleGpsEntry
-    -- let kwGpsTime = read s_temp :: Int
-    -- putStrLn ("   GPS Time: " ++ (show kwGpsTime) )
     s_temp <- entryGetText kleineWelleObsEntry
     let kwObsTime = read s_temp :: Integer
     putStrLn ("   Obs Time: " ++ (show kwObsTime) )
@@ -220,7 +220,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
 {--}
-    let kwCasheFile = HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
+    let kwCasheFile = HGGS.haskalOpt ++ "/cachefiles/" ++ kwCache
     putStrLn $ (show (fromIntegral kwGpsTime)) ++ " ~ " ++ (show (fromIntegral kwGpsTime + kwObsTime))
     HFP.pickUpFileNameinoutFile (fromIntegral kwGpsTime) (fromIntegral kwGpsTime + kwObsTime) kwCasheFile
     let kwListFile = "tmpCachedFrameFile.lst"

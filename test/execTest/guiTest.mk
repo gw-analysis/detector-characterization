@@ -1,34 +1,42 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/05/21 15:45:26
+# Last Modified: 2014/05/29 11:23:29
 #******************************************#
 
-# compiler option
-HC = ghc -O
+# compiler/option
+HC = ghc -O2
+LIBS = -lstdc++ -lFrame
 
 # program
 TAR1 = guiTest
 TARs = ${TAR1}
 
+# dependency
+PREF = ./HasKAL/GUI_Utils/GUI
+DEPs = ${PREF}_Utils.hs \
+       ${PREF}_Supplement.hs \
+       ${PREF}_RangeRingDown.hs \
+       ${PREF}_RangeInspiral.hs \
+       ${PREF}_RangeIMBH.hs \
+       ${PREF}_GlitchKleineWelle.hs \
+       ${PREF}_GaussianityRayleighMon.hs
+
 # temp file
-TILs = ./*~ ./HasKAL/GUI_Utils/*~
-OBJs = ./*.o ./HasKAL/GUI_Utils/*.o
-INFs = ./*.hi ./HasKAL/GUI_Utils/*.hi
+TEMP = ./*~ ${PREF}*~ \
+       ./*.o ${PREF}*.o \
+       ./*.hi ${PREF}*.hi
 
 # compile rule
-all: ${TAR1}
+all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ./HasKAL/GUI_Utils/GUI_Utils.hs
-	${HC} -o $@ $< -lstdc++ -lFrame
+${TAR1}: ${TAR1}.hs ${DEPs}
+	${HC} -o $@ $< ${LIBS}
 
 clean:
-	rm -f ${TILs}
+	rm -f ${TEMP}
 
-cleanobs:
-	rm -f ${TILs} ${OBJs} ${INFs}
-
-cleanall:
-	rm -f ./optKW_* ${TARs} ${TILs} ${OBJs} ${INFs} ./*.lst
+cleanall: clean
+	rm -f ./optKW_* ${TARs} ./*.lst
 	rm -fR ./KW_*
 
