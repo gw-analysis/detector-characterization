@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:05:25
+  * Last Modified: 2014/05/30 21:49:30
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -19,7 +19,6 @@ import qualified HasKAL.GUI_Utils.GUI_RangeInspiral as HGGRI
 import qualified HasKAL.GUI_Utils.GUI_RangeIMBH as HGGRIMBH
 import qualified HasKAL.GUI_Utils.GUI_RangeRingDown as HGGRRD
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
-
 
 {-- GUI main window
 -- test code

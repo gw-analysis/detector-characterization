@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeRingDown.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:28:38
+  * Last Modified: 2014/05/30 22:31:01
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeRingDown(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
@@ -38,55 +39,23 @@ hasKalGuiRingDownRange = do
   ringDownRangeHBoxMinute <- hBoxNew True 5
   ringDownRangeHBoxSecond <- hBoxNew True 5
   ringDownRangeHBoxObsTime <- hBoxNew True 5
-  ringDownRangeHBoxMass <- hBoxNew True 5
-  ringDownRangeHBoxKerrParam <- hBoxNew True 5
-  ringDownRangeHBoxMassDefect <- hBoxNew True 5
-  ringDownRangeHBoxIniPhase <- hBoxNew True 5
-  ringDownRangeHBoxThreshold <- hBoxNew True 5
+  ringDownRangeHBoxMass1 <- hBoxNew True 5
+  ringDownRangeHBoxMass2 <- hBoxNew True 5
   ringDownRangeHBoxButtons <- hBoxNew True 5
 
-  ringDownRangeYearEntryLabel <- labelNewWithMnemonic "Year"
-  ringDownRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
-  ringDownRangeDayEntryLabel <- labelNewWithMnemonic "Day"
-  ringDownRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
-  ringDownRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
-  ringDownRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
-  ringDownRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
-  ringDownRangeMassEntryLabel <- labelNewWithMnemonic "mass [M_solar]"
-  ringDownRangeKerrParamEntryLabel <- labelNewWithMnemonic "Kerr parameter"
-  ringDownRangeMassDefectEntryLabel <- labelNewWithMnemonic "mass defect ratio"
-  ringDownRangeIniPhaseEntryLabel <- labelNewWithMnemonic "Initial Phase [rad]"
-  ringDownRangeThresholdEntryLabel <- labelNewWithMnemonic "Threshold SNR"
-
-  ringDownRangeYearEntry <- entryNew
-  ringDownRangeMonthEntry <- entryNew
-  ringDownRangeDayEntry <- entryNew
-  ringDownRangeHourEntry <- entryNew
-  ringDownRangeMinuteEntry <- entryNew
-  ringDownRangeSecondEntry <- entryNew
-  ringDownRangeObsTimeEntry <- entryNew
-  ringDownRangeMassEntry <- entryNew
-  ringDownRangeKerrParamEntry <- entryNew
-  ringDownRangeMassDefectEntry <- entryNew
-  ringDownRangeIniPhaseEntry <- entryNew
-  ringDownRangeThresholdEntry <- entryNew
+  ringDownRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
+  ringDownRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
+  ringDownRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
+  ringDownRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
+  ringDownRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
+  ringDownRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  ringDownRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
+  ringDownRangeMass1Entry <- HGGS.entryNewWithLabelDefault "massMin [M_solar]" "10.0"
+  ringDownRangeMass2Entry <- HGGS.entryNewWithLabelDefault "massMax [M_solar]" "10000.0"
 
   ringDownRangeClose <- buttonNewWithLabel "Close"
   ringDownRangeExecute <- buttonNewWithLabel "Execute"
 
-  entrySetText ringDownRangeYearEntry "2013"
-  entrySetText ringDownRangeMonthEntry "10"
-  entrySetText ringDownRangeDayEntry "21"
-  entrySetText ringDownRangeHourEntry "21"
-  entrySetText ringDownRangeMinuteEntry "0"
-  entrySetText ringDownRangeSecondEntry "0"
-  entrySetText ringDownRangeObsTimeEntry "300"
-  entrySetText ringDownRangeMassEntry "10.0"
-  entrySetText ringDownRangeKerrParamEntry "0.98"
-  entrySetText ringDownRangeMassDefectEntry "0.03"
-  entrySetText ringDownRangeIniPhaseEntry "0.0"
-  entrySetText ringDownRangeThresholdEntry "8.0"
-  
   {--  Set Parameters of the objects  --}
   set ringDownRangeWindow [ windowTitle := "RingDown Range",
                       windowDefaultWidth := 200,
@@ -96,45 +65,26 @@ hasKalGuiRingDownRange = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxYear
-  boxPackStartDefaults ringDownRangeHBoxYear ringDownRangeYearEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxYear ringDownRangeYearEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxYear ringDownRangeYearEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMonth
-  boxPackStartDefaults ringDownRangeHBoxMonth ringDownRangeMonthEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxMonth ringDownRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMonth ringDownRangeMonthEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxDay
-  boxPackStartDefaults ringDownRangeHBoxDay ringDownRangeDayEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxDay ringDownRangeDayEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxDay ringDownRangeDayEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxHour
-  boxPackStartDefaults ringDownRangeHBoxHour ringDownRangeHourEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxHour ringDownRangeHourEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxHour ringDownRangeHourEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMinute
-  boxPackStartDefaults ringDownRangeHBoxMinute ringDownRangeMinuteEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxMinute ringDownRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMinute ringDownRangeMinuteEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxSecond
-  boxPackStartDefaults ringDownRangeHBoxSecond ringDownRangeSecondEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxSecond ringDownRangeSecondEntry
-
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxSecond ringDownRangeSecondEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxObsTime
-  boxPackStartDefaults ringDownRangeHBoxObsTime ringDownRangeObsTimeEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxObsTime ringDownRangeObsTimeEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass
-  boxPackStartDefaults ringDownRangeHBoxMass ringDownRangeMassEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxMass ringDownRangeMassEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxKerrParam
-  boxPackStartDefaults ringDownRangeHBoxKerrParam ringDownRangeKerrParamEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxKerrParam ringDownRangeKerrParamEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMassDefect
-  boxPackStartDefaults ringDownRangeHBoxMassDefect ringDownRangeMassDefectEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxMassDefect ringDownRangeMassDefectEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxIniPhase
-  boxPackStartDefaults ringDownRangeHBoxIniPhase ringDownRangeIniPhaseEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxIniPhase ringDownRangeIniPhaseEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxThreshold
-  boxPackStartDefaults ringDownRangeHBoxThreshold ringDownRangeThresholdEntryLabel
-  boxPackStartDefaults ringDownRangeHBoxThreshold ringDownRangeThresholdEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxObsTime ringDownRangeObsTimeEntry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass1
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMass1 ringDownRangeMass1Entry
+  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass2
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMass2 ringDownRangeMass2Entry
+
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxButtons
-  boxPackStartDefaults ringDownRangeHBoxButtons ringDownRangeClose
-  boxPackStartDefaults ringDownRangeHBoxButtons ringDownRangeExecute
+  mapM (boxPackStartDefaults ringDownRangeHBoxButtons) [ringDownRangeClose, ringDownRangeExecute]
 
   {--  Execute  --}
   onClicked ringDownRangeClose $ do
@@ -142,52 +92,31 @@ hasKalGuiRingDownRange = do
     widgetDestroy ringDownRangeWindow
   onClicked ringDownRangeExecute $ do
     putStrLn "Execute"
-
-    s_temp <- entryGetText ringDownRangeYearEntry
-    let ringDYear = read s_temp :: Int
-    s_temp <- entryGetText ringDownRangeMonthEntry
-    let ringDMonth = read s_temp :: Int
-    s_temp <- entryGetText ringDownRangeDayEntry
-    let ringDDay = read s_temp :: Int
-    s_temp <- entryGetText ringDownRangeHourEntry
-    let ringDHour = read s_temp :: Int
-    s_temp <- entryGetText ringDownRangeMinuteEntry
-    let ringDMinute = read s_temp :: Int
-    s_temp <- entryGetText ringDownRangeSecondEntry
-    let ringDSecond = read s_temp :: Int
-
-    let ringDownRangeDateStr = HGGS.iDate2sDate ringDYear ringDMonth ringDDay ringDHour ringDMinute ringDSecond
+    let ringDYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeYearEntry :: Int
+        ringDMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMonthEntry :: Int
+        ringDDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeDayEntry :: Int
+        ringDHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeHourEntry :: Int
+        ringDMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMinuteEntry :: Int
+        ringDSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeSecondEntry :: Int
+        ringDownRangeDateStr = HGGS.iDate2sDate ringDYear ringDMonth ringDDay ringDHour ringDMinute ringDSecond
+        ringDGPS = HTG.time2gps ringDownRangeDateStr
+        ringDObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeObsTimeEntry :: Int
+        ringDMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMass1Entry :: Double
+        ringDMass2 = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMass2Entry :: Double
     putStrLn ("   JST Time: " ++ ringDownRangeDateStr)
-    let hogeGPS = HTG.time2gps ringDownRangeDateStr
-    putStrLn ("   GPS Time: " ++ hogeGPS)
-    s_temp <- entryGetText ringDownRangeObsTimeEntry
-    let ringDObsTime = read s_temp :: Int
+    putStrLn ("   GPS Time: " ++ ringDGPS)
     putStrLn ("   Obs Time: " ++ (show ringDObsTime) )
-    s_temp <- entryGetText ringDownRangeMassEntry
-    let ringDMass = read s_temp :: Double
-    putStrLn ("       Mass: " ++ (show ringDMass) )
-    s_temp <- entryGetText ringDownRangeKerrParamEntry
-    let ringDKerrParam = read s_temp :: Double
-    putStrLn (" Kerr Param: " ++ (show ringDKerrParam) )
-    s_temp <- entryGetText ringDownRangeMassDefectEntry
-    let ringDMassDefect = read s_temp :: Double
-    putStrLn ("Mass defect: " ++ (show ringDMassDefect) )
-    s_temp <- entryGetText ringDownRangeIniPhaseEntry
-    let ringDIniPhase = read s_temp :: Double
-    putStrLn ("  Ini Phase: " ++ (show ringDIniPhase) )
-    s_temp <- entryGetText ringDownRangeThresholdEntry
-    let ringDThreshold = read s_temp :: Double
-    putStrLn ("   Thresold: " ++ (show ringDThreshold) )
+    putStrLn ("   Mass Min: " ++ (show ringDMass1) )
+    putStrLn ("   Mass Max: " ++ (show ringDMass2) )
 
     {-- detecter data IO and format --}
     detDataStr <- readFile $ HGGS.haskalOpt ++ "/sensitivities/bKAGRA/prebKAGRA.dat"
     let detData = map HGGS.amp2psd $ map HGGS.convert_LtoT2 $ map (map read) $ map words $ lines detDataStr :: [(Double, Double)]
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}
-    ringDDist <- CM.forM [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] $ \mass -> 
---      return $ HMRIRD.distRingdown mass ringDThreshold ringDKerrParam ringDMassDefect ringDIniPhase detData
+    ringDDist <- CM.forM [ringDMass1, 10.0*ringDMass1..ringDMass2] $ \mass -> 
       return $ HMRIRD.distRingdown mass detData
-    HPPR.hroot_core [1.0*ringDMass, 10.0*ringDMass..1000.0*ringDMass] ringDDist "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    HPPR.hroot_core [ringDMass1, 10.0*ringDMass1..ringDMass2] ringDDist "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}

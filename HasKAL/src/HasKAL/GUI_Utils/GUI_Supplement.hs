@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:08:47
+  * Last Modified: 2014/05/30 22:18:31
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -17,6 +17,8 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,convert_DLL2S
   ,iDate2sDate
   ,transposed
+  ,entryNewWithLabelDefault
+  ,boxPackStartDefaultsPair
 ) where
 
 import Graphics.UI.Gtk
@@ -76,3 +78,18 @@ transposed ((x:xs) : xss) = (x : [y | (y:_) <- xss]) : transposed (xs : [z | (_:
 -- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
 -- same as in RayleighMon
 
+entryNewWithDefault :: String -> IO Entry
+entryNewWithDefault ss = do
+  xEntry <- entryNew
+  entrySetText xEntry ss
+  return xEntry
+
+entryNewWithLabelDefault :: String -> String -> IO (Label, Entry)
+entryNewWithLabelDefault label defVal = do
+  xLabel <- labelNewWithMnemonic label
+  xEntry <- entryNewWithDefault defVal
+  return (xLabel, xEntry)
+
+boxPackStartDefaultsPair x (a, b) = do
+  boxPackStartDefaults x a
+  boxPackStartDefaults x b

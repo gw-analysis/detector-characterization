@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:26:47
+  * Last Modified: 2014/05/30 22:27:16
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeIMBH(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.IMBH as HMRIMBHD
@@ -42,38 +43,18 @@ hasKalGuiIMR'Range = do
   imrRangeHBoxMass2 <- hBoxNew True 5
   imrRangeHBoxButtons <- hBoxNew True 5
 
-  imrRangeYearEntryLabel <- labelNewWithMnemonic "Year"
-  imrRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
-  imrRangeDayEntryLabel <- labelNewWithMnemonic "Day"
-  imrRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
-  imrRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
-  imrRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
-  imrRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
-  imrRangeMass1EntryLabel <- labelNewWithMnemonic "mass_min [M_solar]"
-  imrRangeMass2EntryLabel <- labelNewWithMnemonic "mass_max [M_solar]"
-
-  imrRangeYearEntry <- entryNew
-  imrRangeMonthEntry <- entryNew
-  imrRangeDayEntry <- entryNew
-  imrRangeHourEntry <- entryNew
-  imrRangeMinuteEntry <- entryNew
-  imrRangeSecondEntry <- entryNew
-  imrRangeObsTimeEntry <- entryNew
-  imrRangeMass1Entry <- entryNew
-  imrRangeMass2Entry <- entryNew
+  imrRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
+  imrRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
+  imrRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
+  imrRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
+  imrRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
+  imrRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  imrRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
+  imrRangeMass1Entry <- HGGS.entryNewWithLabelDefault "mass_min [M_solar]" "1.0"
+  imrRangeMass2Entry <- HGGS.entryNewWithLabelDefault "mass_max [M_solar]" "300.0"
 
   imrRangeClose <- buttonNewWithLabel "Close"
   imrRangeExecute <- buttonNewWithLabel "Execute"
-
-  entrySetText imrRangeYearEntry "2013"
-  entrySetText imrRangeMonthEntry "10"
-  entrySetText imrRangeDayEntry "21"
-  entrySetText imrRangeHourEntry "21"
-  entrySetText imrRangeMinuteEntry "0"
-  entrySetText imrRangeSecondEntry "0"
-  entrySetText imrRangeObsTimeEntry "300"
-  entrySetText imrRangeMass1Entry "1.0"
-  entrySetText imrRangeMass2Entry "300.0"
 
   {--  Set Parameters of the objects  --}
   set imrRangeWindow [ windowTitle := "Inspiral-Merger-Ringdown Range",
@@ -84,37 +65,26 @@ hasKalGuiIMR'Range = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults imrRangeVBox imrRangeHBoxYear
-  boxPackStartDefaults imrRangeHBoxYear imrRangeYearEntryLabel
-  boxPackStartDefaults imrRangeHBoxYear imrRangeYearEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxYear imrRangeYearEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMonth
-  boxPackStartDefaults imrRangeHBoxMonth imrRangeMonthEntryLabel
-  boxPackStartDefaults imrRangeHBoxMonth imrRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMonth imrRangeMonthEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxDay
-  boxPackStartDefaults imrRangeHBoxDay imrRangeDayEntryLabel
-  boxPackStartDefaults imrRangeHBoxDay imrRangeDayEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxDay imrRangeDayEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxHour
-  boxPackStartDefaults imrRangeHBoxHour imrRangeHourEntryLabel
-  boxPackStartDefaults imrRangeHBoxHour imrRangeHourEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxHour imrRangeHourEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMinute
-  boxPackStartDefaults imrRangeHBoxMinute imrRangeMinuteEntryLabel
-  boxPackStartDefaults imrRangeHBoxMinute imrRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMinute imrRangeMinuteEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxSecond
-  boxPackStartDefaults imrRangeHBoxSecond imrRangeSecondEntryLabel
-  boxPackStartDefaults imrRangeHBoxSecond imrRangeSecondEntry
-
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxSecond imrRangeSecondEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxObsTime
-  boxPackStartDefaults imrRangeHBoxObsTime imrRangeObsTimeEntryLabel
-  boxPackStartDefaults imrRangeHBoxObsTime imrRangeObsTimeEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxObsTime imrRangeObsTimeEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMass1
-  boxPackStartDefaults imrRangeHBoxMass1 imrRangeMass1EntryLabel
-  boxPackStartDefaults imrRangeHBoxMass1 imrRangeMass1Entry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMass1 imrRangeMass1Entry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMass2
-  boxPackStartDefaults imrRangeHBoxMass2 imrRangeMass2EntryLabel
-  boxPackStartDefaults imrRangeHBoxMass2 imrRangeMass2Entry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMass2 imrRangeMass2Entry
 
   boxPackStartDefaults imrRangeVBox imrRangeHBoxButtons
-  boxPackStartDefaults imrRangeHBoxButtons imrRangeClose
-  boxPackStartDefaults imrRangeHBoxButtons imrRangeExecute
+  mapM (boxPackStartDefaults imrRangeHBoxButtons) [imrRangeClose, imrRangeExecute]
 
   {--  Execute  --}
   onClicked imrRangeClose $ do
@@ -123,31 +93,21 @@ hasKalGuiIMR'Range = do
   onClicked imrRangeExecute $ do
     putStrLn "Execute"
 
-    s_temp <- entryGetText imrRangeYearEntry
-    let imrYear = read s_temp :: Int
-    s_temp <- entryGetText imrRangeMonthEntry
-    let imrMonth = read s_temp :: Int
-    s_temp <- entryGetText imrRangeDayEntry
-    let imrDay = read s_temp :: Int
-    s_temp <- entryGetText imrRangeHourEntry
-    let imrHour = read s_temp :: Int
-    s_temp <- entryGetText imrRangeMinuteEntry
-    let imrMinute = read s_temp :: Int
-    s_temp <- entryGetText imrRangeSecondEntry
-    let imrSecond = read s_temp :: Int
-
-    let imrRangeDateStr = HGGS.iDate2sDate imrYear imrMonth imrDay imrHour imrMinute imrSecond
+    let imrYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeYearEntry :: Int    
+        imrMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMonthEntry :: Int
+        imrDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeDayEntry :: Int
+        imrHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeHourEntry :: Int
+        imrMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMinuteEntry :: Int
+        imrSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeSecondEntry :: Int
+        imrRangeDateStr = HGGS.iDate2sDate imrYear imrMonth imrDay imrHour imrMinute imrSecond
+        imrGPS = HTG.time2gps imrRangeDateStr
+        imrObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeObsTimeEntry :: Int
+        imrMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMass1Entry :: Double
+        imrMass2 = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMass2Entry :: Double
     putStrLn ("   JST Time: " ++ imrRangeDateStr)
-    let hogeGPS = HTG.time2gps imrRangeDateStr
-    putStrLn ("   GPS Time: " ++ hogeGPS)
-    s_temp <- entryGetText imrRangeObsTimeEntry
-    let imrObsTime = read s_temp :: Int
+    putStrLn ("   GPS Time: " ++ imrGPS)
     putStrLn ("   Obs Time: " ++ (show imrObsTime) )
-    s_temp <- entryGetText imrRangeMass1Entry
-    let imrMass1 = read s_temp :: Double
     putStrLn ("     Mass_1: " ++ (show imrMass1) )
-    s_temp <- entryGetText imrRangeMass2Entry
-    let imrMass2 = read s_temp :: Double
     putStrLn ("     Mass_2: " ++ (show imrMass2) )
 
     {-- detecter data IO and format --}

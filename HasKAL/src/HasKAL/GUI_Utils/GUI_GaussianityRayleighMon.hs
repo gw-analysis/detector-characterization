@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:29:37
+  * Last Modified: 2014/05/30 22:33:31
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -11,6 +11,7 @@ module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
 import qualified System.IO as SIO -- openFile
+import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -25,7 +26,6 @@ main = IO ()
 main = hasKalGuiRayleighMon ["Channel_Name"]
 -- arguments: channel_name
 --}
-
 hasKalGuiRayleighMon :: [String] -> IO ()
 hasKalGuiRayleighMon activeChannelLabels = do
   initGUI  
@@ -45,39 +45,18 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxStride <- hBoxNew True 5
   rayleighMonHBoxButtons <- hBoxNew True 5
 
-
-  rayleighMonYearEntryLable <- labelNewWithMnemonic "Year"
-  rayleighMonMonthEntryLable <- labelNewWithMnemonic "Month"
-  rayleighMonDayEntryLable <- labelNewWithMnemonic "Day"
-  rayleighMonHourEntryLable <- labelNewWithMnemonic "Hour"
-  rayleighMonMinuteEntryLable <- labelNewWithMnemonic "Minute"
-  rayleighMonSecondEntryLable <- labelNewWithMnemonic "Second (JST)"
-  rayleighMonObsTimeEntryLable <- labelNewWithMnemonic "OBS Time [s]"
-  rayleighMonSamplingEntryLable <- labelNewWithMnemonic "fsample [Hz]"
-  rayleighMonStrideEntryLable <- labelNewWithMnemonic "Stride Num"
-
-  rayleighMonYearEntry <- entryNew
-  rayleighMonMonthEntry <- entryNew
-  rayleighMonDayEntry <- entryNew
-  rayleighMonHourEntry <- entryNew
-  rayleighMonMinuteEntry <- entryNew
-  rayleighMonSecondEntry <- entryNew
-  rayleighMonObsTimeEntry <- entryNew
-  rayleighMonSamplingEntry <- entryNew
-  rayleighMonStrideEntry <- entryNew
+  rayleighMonYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
+  rayleighMonMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
+  rayleighMonDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
+  rayleighMonHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
+  rayleighMonMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
+  rayleighMonSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
+  rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "1000.0"
+  rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "1000"
 
   rayleighMonClose <- buttonNewWithLabel "Close"
   rayleighMonExecute <- buttonNewWithLabel "Execute"
-
-  entrySetText rayleighMonYearEntry "2013"
-  entrySetText rayleighMonMonthEntry "10"
-  entrySetText rayleighMonDayEntry "21"
-  entrySetText rayleighMonHourEntry "21"
-  entrySetText rayleighMonMinuteEntry "0"
-  entrySetText rayleighMonSecondEntry "0"
-  entrySetText rayleighMonObsTimeEntry "300"
-  entrySetText rayleighMonSamplingEntry "1000.0"
-  entrySetText rayleighMonStrideEntry "1000"
 
   {--  Set Parameters of the objects  --}
   set rayleighMonWindow [ windowTitle := "RayleighMon",
@@ -86,40 +65,28 @@ hasKalGuiRayleighMon activeChannelLabels = do
                       containerChild := rayleighMonVBox,
                       containerBorderWidth := 20 ]
 
-
   {--  Arrange object in window  --}
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxYear
-  boxPackStartDefaults rayleighMonHBoxYear rayleighMonYearEntryLable
-  boxPackStartDefaults rayleighMonHBoxYear rayleighMonYearEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxYear rayleighMonYearEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxMonth
-  boxPackStartDefaults rayleighMonHBoxMonth rayleighMonMonthEntryLable
-  boxPackStartDefaults rayleighMonHBoxMonth rayleighMonMonthEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxMonth rayleighMonMonthEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxDay
-  boxPackStartDefaults rayleighMonHBoxDay rayleighMonDayEntryLable
-  boxPackStartDefaults rayleighMonHBoxDay rayleighMonDayEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxDay rayleighMonDayEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxHour
-  boxPackStartDefaults rayleighMonHBoxHour rayleighMonHourEntryLable
-  boxPackStartDefaults rayleighMonHBoxHour rayleighMonHourEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxHour rayleighMonHourEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxMinute
-  boxPackStartDefaults rayleighMonHBoxMinute rayleighMonMinuteEntryLable
-  boxPackStartDefaults rayleighMonHBoxMinute rayleighMonMinuteEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxMinute rayleighMonMinuteEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxSecond
-  boxPackStartDefaults rayleighMonHBoxSecond rayleighMonSecondEntryLable
-  boxPackStartDefaults rayleighMonHBoxSecond rayleighMonSecondEntry
-
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxSecond rayleighMonSecondEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxObsTime
-  boxPackStartDefaults rayleighMonHBoxObsTime rayleighMonObsTimeEntryLable
-  boxPackStartDefaults rayleighMonHBoxObsTime rayleighMonObsTimeEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxObsTime rayleighMonObsTimeEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxSampling
-  boxPackStartDefaults rayleighMonHBoxSampling rayleighMonSamplingEntryLable
-  boxPackStartDefaults rayleighMonHBoxSampling rayleighMonSamplingEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxSampling rayleighMonSamplingEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxStride
-  boxPackStartDefaults rayleighMonHBoxStride rayleighMonStrideEntryLable
-  boxPackStartDefaults rayleighMonHBoxStride rayleighMonStrideEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxStride rayleighMonStrideEntry
 
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxButtons
-  boxPackStartDefaults rayleighMonHBoxButtons rayleighMonClose
-  boxPackStartDefaults rayleighMonHBoxButtons rayleighMonExecute
+  mapM (boxPackStartDefaults rayleighMonHBoxButtons) [rayleighMonClose, rayleighMonExecute]
 
   {--  Execute --}
   onClicked rayleighMonClose $ do
@@ -127,32 +94,21 @@ hasKalGuiRayleighMon activeChannelLabels = do
     widgetDestroy rayleighMonWindow
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
-
-    s_temp <- entryGetText rayleighMonYearEntry
-    let rmYear = read s_temp :: Int
-    s_temp <- entryGetText rayleighMonMonthEntry
-    let rmMonth = (read s_temp :: Int)
-    s_temp <- entryGetText rayleighMonDayEntry
-    let rmDay = read s_temp :: Int
-    s_temp <- entryGetText rayleighMonHourEntry
-    let rmHour = read s_temp :: Int
-    s_temp <- entryGetText rayleighMonMinuteEntry
-    let rmMinute = read s_temp :: Int
-    s_temp <- entryGetText rayleighMonSecondEntry
-    let rmSecond = read s_temp :: Int
-
-    let rayleighMonDateStr = HGGS.iDate2sDate rmYear rmMonth rmDay rmHour rmMinute rmSecond
+    let rmYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonYearEntry :: Int
+        rmMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonMonthEntry :: Int
+        rmDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonDayEntry :: Int
+        rmHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonHourEntry :: Int
+        rmMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonMinuteEntry :: Int
+        rmSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSecondEntry :: Int
+        rayleighMonDateStr = HGGS.iDate2sDate rmYear rmMonth rmDay rmHour rmMinute rmSecond
+        rmGPS = HTG.time2gps rayleighMonDateStr
+        rmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonObsTimeEntry :: Int
+        rmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSamplingEntry :: Double
+        rmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonStrideEntry :: Int
     putStrLn ("   JST Time: " ++ rayleighMonDateStr)
-    let hogeGPS = HTG.time2gps rayleighMonDateStr
-    putStrLn ("   GPS Time: " ++ hogeGPS)
-    s_temp <- entryGetText rayleighMonObsTimeEntry
-    let rmObsTime = read s_temp :: Int
+    putStrLn ("   GPS Time: " ++ rmGPS)
     putStrLn ("   Obs Time: " ++ (show rmObsTime) )
-    s_temp <- entryGetText rayleighMonSamplingEntry
-    let rmSampling = read s_temp :: Double
     putStrLn ("    fsample: " ++ (show rmSampling) )
-    s_temp <- entryGetText rayleighMonStrideEntry
-    let rmStride = read s_temp :: Int
     putStrLn ("     stride: " ++ (show rmStride) )
 
     frData <- HFF.readFrame (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
@@ -165,7 +121,6 @@ hasKalGuiRayleighMon activeChannelLabels = do
     SIO.hClose oFile
     {--  ここまで、ファイル出力  --}
     --widgetDestroy rayleighMonWindow
-
 
   {--  Exit Process  --}
   onDestroy rayleighMonWindow mainQuit

@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 18:28:00
+  * Last Modified: 2014/05/30 22:22:18
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeInspiral(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
@@ -40,45 +41,21 @@ hasKalGuiInspiralRange = do
   inspiralRangeHBoxObsTime <- hBoxNew True 5
   inspiralRangeHBoxMass1 <- hBoxNew True 5
   inspiralRangeHBoxMass2 <- hBoxNew True 5
-  inspiralRangeHBoxThreshold <- hBoxNew True 5
   inspiralRangeHBoxButtons <- hBoxNew True 5
 
-  inspiralRangeYearEntryLabel <- labelNewWithMnemonic "Year"
-  inspiralRangeMonthEntryLabel <- labelNewWithMnemonic "Month"
-  inspiralRangeDayEntryLabel <- labelNewWithMnemonic "Day"
-  inspiralRangeHourEntryLabel <- labelNewWithMnemonic "Hour"
-  inspiralRangeMinuteEntryLabel <- labelNewWithMnemonic "Minute"
-  inspiralRangeSecondEntryLabel <- labelNewWithMnemonic "Second (JST)"
-  inspiralRangeObsTimeEntryLabel <- labelNewWithMnemonic "OBS Time [s]"
-  inspiralRangeMass1EntryLabel <- labelNewWithMnemonic "mass_min [M_solar]"
-  inspiralRangeMass2EntryLabel <- labelNewWithMnemonic "mass_max [M_solar]"
-  inspiralRangeThresholdEntryLabel <- labelNewWithMnemonic "Threshold SNR"
-
-  inspiralRangeYearEntry <- entryNew
-  inspiralRangeMonthEntry <- entryNew
-  inspiralRangeDayEntry <- entryNew
-  inspiralRangeHourEntry <- entryNew
-  inspiralRangeMinuteEntry <- entryNew
-  inspiralRangeSecondEntry <- entryNew
-  inspiralRangeObsTimeEntry <- entryNew
-  inspiralRangeMass1Entry <- entryNew
-  inspiralRangeMass2Entry <- entryNew
-  inspiralRangeThresholdEntry <- entryNew
+  inspiralRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
+  inspiralRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
+  inspiralRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
+  inspiralRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
+  inspiralRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
+  inspiralRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  inspiralRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
+  inspiralRangeMass1Entry <- HGGS.entryNewWithLabelDefault "mass_min [M_solor]" "1.0"
+  inspiralRangeMass2Entry <- HGGS.entryNewWithLabelDefault "mass_max [M_solor]" "70.0"
 
   inspiralRangeClose <- buttonNewWithLabel "Close"
   inspiralRangeExecute <- buttonNewWithLabel "Execute"
 
-  entrySetText inspiralRangeYearEntry "2013"
-  entrySetText inspiralRangeMonthEntry "10"
-  entrySetText inspiralRangeDayEntry "21"
-  entrySetText inspiralRangeHourEntry "21"
-  entrySetText inspiralRangeMinuteEntry "0"
-  entrySetText inspiralRangeSecondEntry "0"
-  entrySetText inspiralRangeObsTimeEntry "300"
-  entrySetText inspiralRangeMass1Entry "1.0"
-  entrySetText inspiralRangeMass2Entry "70.0"
-  entrySetText inspiralRangeThresholdEntry "8.0"
-  
   {--  Set Parameters of the objects  --}
   set inspiralRangeWindow [ windowTitle := "Inspiral Range",
                       windowDefaultWidth := 200,
@@ -88,40 +65,26 @@ hasKalGuiInspiralRange = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxYear
-  boxPackStartDefaults inspiralRangeHBoxYear inspiralRangeYearEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxYear inspiralRangeYearEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxYear inspiralRangeYearEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMonth
-  boxPackStartDefaults inspiralRangeHBoxMonth inspiralRangeMonthEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxMonth inspiralRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMonth inspiralRangeMonthEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxDay
-  boxPackStartDefaults inspiralRangeHBoxDay inspiralRangeDayEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxDay inspiralRangeDayEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxDay  inspiralRangeDayEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxHour
-  boxPackStartDefaults inspiralRangeHBoxHour inspiralRangeHourEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxHour inspiralRangeHourEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxHour inspiralRangeHourEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMinute
-  boxPackStartDefaults inspiralRangeHBoxMinute inspiralRangeMinuteEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxMinute inspiralRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMinute inspiralRangeMinuteEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxSecond
-  boxPackStartDefaults inspiralRangeHBoxSecond inspiralRangeSecondEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxSecond inspiralRangeSecondEntry
-
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxSecond inspiralRangeSecondEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxObsTime
-  boxPackStartDefaults inspiralRangeHBoxObsTime inspiralRangeObsTimeEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxObsTime inspiralRangeObsTimeEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxObsTime inspiralRangeObsTimeEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass1
-  boxPackStartDefaults inspiralRangeHBoxMass1 inspiralRangeMass1EntryLabel
-  boxPackStartDefaults inspiralRangeHBoxMass1 inspiralRangeMass1Entry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMass1 inspiralRangeMass1Entry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass2
-  boxPackStartDefaults inspiralRangeHBoxMass2 inspiralRangeMass2EntryLabel
-  boxPackStartDefaults inspiralRangeHBoxMass2 inspiralRangeMass2Entry
-  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxThreshold
-  boxPackStartDefaults inspiralRangeHBoxThreshold inspiralRangeThresholdEntryLabel
-  boxPackStartDefaults inspiralRangeHBoxThreshold inspiralRangeThresholdEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMass2 inspiralRangeMass2Entry
 
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxButtons
-  boxPackStartDefaults inspiralRangeHBoxButtons inspiralRangeClose
-  boxPackStartDefaults inspiralRangeHBoxButtons inspiralRangeExecute
+  mapM (boxPackStartDefaults inspiralRangeHBoxButtons) [inspiralRangeClose, inspiralRangeExecute]
 
   {--  Execute  --}
   onClicked inspiralRangeClose $ do
@@ -129,36 +92,22 @@ hasKalGuiInspiralRange = do
     widgetDestroy inspiralRangeWindow
   onClicked inspiralRangeExecute $ do
     putStrLn "Execute"
-
-    s_temp <- entryGetText inspiralRangeYearEntry
-    let inspYear = read s_temp :: Int
-    s_temp <- entryGetText inspiralRangeMonthEntry
-    let inspMonth = read s_temp :: Int
-    s_temp <- entryGetText inspiralRangeDayEntry
-    let inspDay = read s_temp :: Int
-    s_temp <- entryGetText inspiralRangeHourEntry
-    let inspHour = read s_temp :: Int
-    s_temp <- entryGetText inspiralRangeMinuteEntry
-    let inspMinute = read s_temp :: Int
-    s_temp <- entryGetText inspiralRangeSecondEntry
-    let inspSecond = read s_temp :: Int
-
-    let inspiralRangeDateStr = HGGS.iDate2sDate inspYear inspMonth inspDay inspHour inspMinute inspSecond
+    let inspYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeYearEntry :: Int
+        inspMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMonthEntry :: Int
+        inspDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeDayEntry :: Int
+        inspHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeHourEntry :: Int
+        inspMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMinuteEntry :: Int
+        inspSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeSecondEntry :: Int
+        inspiralRangeDateStr = HGGS.iDate2sDate inspYear inspMonth inspDay inspHour inspMinute inspSecond
+        inspGPS = HTG.time2gps inspiralRangeDateStr
+        inspObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeObsTimeEntry :: Int
+        inspMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMass1Entry :: Double
+        inspMass2 = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMass2Entry :: Double
     putStrLn ("   JST Time: " ++ inspiralRangeDateStr)
-    let hogeGPS = HTG.time2gps inspiralRangeDateStr
-    putStrLn ("   GPS Time: " ++ hogeGPS)
-    s_temp <- entryGetText inspiralRangeObsTimeEntry
-    let inspObsTime = read s_temp :: Int
+    putStrLn ("   GPS Time: " ++ inspGPS)
     putStrLn ("   Obs Time: " ++ (show inspObsTime) )
-    s_temp <- entryGetText inspiralRangeMass1Entry
-    let inspMass1 = read s_temp :: Double
     putStrLn ("     Mass_1: " ++ (show inspMass1) )
-    s_temp <- entryGetText inspiralRangeMass2Entry
-    let inspMass2 = read s_temp :: Double
     putStrLn ("     Mass_2: " ++ (show inspMass2) )
-    s_temp <- entryGetText inspiralRangeThresholdEntry
-    let inspThreshold = read s_temp :: Double
-    putStrLn ("   Thresold: " ++ (show inspThreshold) )
 
     {-- detecter data IO and format --}
     detDataStr <- readFile $ HGGS.haskalOpt ++ "/sensitivities/bKAGRA/prebKAGRA.dat" -- ファイルは[Hz], [/rHz]が書かれているので2乗して使う
@@ -166,7 +115,6 @@ hasKalGuiInspiralRange = do
     {-- end of detecter data IO and format --}
     {-- Monitor tool --}
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
---      return $ HMRIRD.distInspiral mass mass inspThreshold detData
       return $ HMRIRD.distInspiral mass mass detData
     HPPR.hroot_core [inspMass1,inspMass1+2..inspMass2] inspDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
     {-- End of Monitor Tool --}
