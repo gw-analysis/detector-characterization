@@ -1,13 +1,16 @@
 {-******************************************
   *     File Name: RayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/28 14:35:56
+  * Last Modified: 2014/06/04 21:38:33
   *******************************************-}
 
 module HasKAL.MonitorUtils.RayleighMon.RayleighMon(
    rayleighMon
   ,getEmpiricalQuantile
 ) where
+
+import qualified Foreign.Storable as FS
+import qualified Data.Packed.Vector as DPV
 
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 
@@ -20,7 +23,7 @@ import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 rayleighMon :: Int -> Int -> Double -> [Double] -> [Double]
 rayleighMon numT numF pVal datT = map (getEmpiricalQuantile pVal) datF'
   where datF' = transposed datF
-        datF = map (gwpsd' 1000.0) $ dataSplit numT datT
+        datF = map (gwpsd' 1000.0) $ dataSplit' numT datT
 
 ---- param1: quantile p(x)
 ---- param2: データセット n(f_j)
@@ -57,15 +60,18 @@ quicksort (x:xs) =
   in quicksort smallerOrEqual ++ [x] ++ quicksort larger
 
 -- transposed 2D list
-transposed :: [[Double]] -> [[Double]]
-transposed xxs = [ concat $ map ((drop (m-1)).(take m)) xxs | m <- [1..(length (head xxs))] ]
+transposed :: [[a]] -> [[a]]
+transposed [] = []
+transposed ([] : xss) = transposed xss
+transposed ((x:xs) : xss) = (x : [y | (y:_) <- xss]) : transposed (xs : [z | (_:z) <- xss])
 -- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
 
 -- divide list xs into n point data
 dataSplit :: Int -> [Double] -> [[Double]]
 dataSplit n xs = [drop (n*(m-1)) (take (m*n) xs) | m <- [1..((length xs) `div` n)]]
--- [h(t)] -> [ [h_1(t)], [h_2(t)], ..]
--- n: Chunk Size
+-- 分割数が少なければ上の方が速い
+dataSplit' :: (FS.Storable a) => Int -> [a] -> [[a]]
+dataSplit' n xs = map DPV.toList $ map (flip231 DPV.subVector n $ DPV.fromList xs) [0, n..(length xs)-n]
 
 -- n-th data pickup from List xs
 pickups :: [Int] -> [Double] -> [Double]

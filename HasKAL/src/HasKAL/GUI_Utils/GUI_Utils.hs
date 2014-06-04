@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 21:49:30
+  * Last Modified: 2014/06/04 22:21:49
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -32,7 +32,7 @@ hasKalGuiTop = do
   putStrLn "Start HasKAL GUI"
 
   {--  information  --}
-  let topSubSystemLabels = ["Test", "TestForKW", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
+  let topSubSystemLabels = ["TestForKW", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
   let topNumOfSubSystems = length topSubSystemLabels -- number of sub systems
   let topMonitorLabels = ["Glitch", "Line", "Gaussianity", "RangeMon"] -- monitor names
 
