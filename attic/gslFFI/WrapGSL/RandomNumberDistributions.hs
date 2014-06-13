@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: RandomNumberDistributions.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/16 21:44:37
+  * Last Modified: 2014/06/10 15:03:12
   *******************************************-}
 module WrapGSL.RandomNumberDistributions (
                gslRanGaussianPdf
@@ -24,6 +24,11 @@ module WrapGSL.RandomNumberDistributions (
               ,gslCdfFdistQ
               ,gslCdfFdistPinv
               ,gslCdfFdistQinv
+              ,gslRanTdistPdf
+              ,gslCdfTdistP
+              ,gslCdfTdistQ
+              ,gslCdfTdistPinv
+              ,gslCdfTdistQinv
               ,gslRanPoissonPdf
               ,gslCdfPoissonP
               ,gslCdfPoissonQ
