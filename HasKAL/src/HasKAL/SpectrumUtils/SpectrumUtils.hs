@@ -12,7 +12,7 @@ import Numeric.LinearAlgebra
 {- For Analysis -}
 
 
-gwpsd :: [Double]-> Int -> Double -> [Double]
+gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = do
   let ndat = length dat
       maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
@@ -21,7 +21,7 @@ gwpsd dat nfft fs = do
       power =  map (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
       meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros nfft) power
       scale_psd = 1/(fromIntegral nfft * fs)
-  toList $ scale scale_psd meanpower
+  zip (toList $ linspace nfft (0, fs)) (toList $ scale scale_psd meanpower)
   where
     applyFFT :: [Vector (Complex Double)] -> [Vector (Complex Double)]
     applyFFT = map fft
@@ -29,6 +29,7 @@ gwpsd dat nfft fs = do
     applytoComplex = map toComplex
     applyTuplify2 :: [Vector Double] -> [(Vector Double, Vector Double)]
     applyTuplify2 = map (tuplify2 (constant 0 nfft))
+    toVectorComplex x = x :: Vector Complex
     applyWindow :: [Vector Double] -> [Vector Double]
     applyWindow = map (windowed (hanning nfft))
 
