@@ -13,6 +13,7 @@ import HasKAL.SpectrumUtils.GwPsdMethod
 
 {- for windowing -}
 import HasKAL.SignalProcessing.WindowType
+import HasKAL.SignalProcessing.WindowFunction
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs
@@ -49,19 +50,6 @@ zeros nzero = constant 0 nzero
 tuplify2 :: Vector Double -> Vector Double -> (Vector Double, Vector Double)
 tuplify2 x y = (y, x)
 
-windowed :: Vector Double -> Vector Double -> Vector Double
-windowed w x = w * x
-
-hanning :: Int -> Vector Double
-hanning = makeWindow hanning'
-
-makeWindow :: (Double -> Double -> Double) -> Int -> Vector Double
-makeWindow win m =
-    let md = fromIntegral m
-    in fromList $ map (win md . fromIntegral) [(0::Int)..(m-1::Int)]
-
-hanning' :: Double -> Double -> Double
-hanning' m n = 0.5 - 0.5 * cos(2 * pi * n / m)
 
 
 
