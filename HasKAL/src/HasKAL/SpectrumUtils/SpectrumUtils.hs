@@ -12,12 +12,13 @@ import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.GwPsdMethod
 
 {- for windowing -}
-import HasKAL.SignalProcessing.WindowType
-import HasKAL.SignalProcessing.WindowFunction
+import HasKAL.SignalProcessingUtils.WindowType
+import HasKAL.SignalProcessingUtils.WindowFunction
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs
 
+gwpsdCore :: PSDMETHOD -> [Double] -> Int -> Double -> [(Double, Double)]
 gwpsdCore method dat nfft fs
   | method==Welch = gwpsdWelch dat nfft fs
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"

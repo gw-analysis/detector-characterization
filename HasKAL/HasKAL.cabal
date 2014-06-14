@@ -67,8 +67,11 @@ library
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.PlotUtils.PlotUtilsHROOT,
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
-    HasKAL.SpectrumUtils.SpectrumUtils
-    HasKAL.SpectrumUtils.DetectorSensitivity
+    HasKAL.SpectrumUtils.SpectrumUtils,
+    HasKAL.SpectrumUtils.DetectorSensitivity,
+    HasKAL.SpectrumUtils.GwPsdMethod,
+    HasKAL.SignalPocessingUtils.WindowFunction,
+    HasKAL.SignalPocessingUtils.WindowType
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -90,6 +93,7 @@ library
        data-default-class >=0.0,
        lens >=3.10,
        hmatrix ==0.14.*,
+       hmatrix-special,
        -- temporary
        HROOT ==0.8,
        old-time ==1.1.0.1,
