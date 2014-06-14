@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/04 22:26:29
+  * Last Modified: 2014/06/13 18:16:39
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -121,7 +121,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
 {--}
     frData <- CM.liftM concat $ mapM (readFrame' $ activeChannelLabels !! 0) rmFiles
 --    frData <- HFF.readFrame (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core ([0,df..(rmSampling / 2.0)-df]) (HMRRM.rayleighMon rmStride 1 0.9 frData) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
+    HPPR.hroot_core ([0,df..(rmSampling / 2.0)-df]) (HMRRM.rayleighMon rmStride 1 rmSampling 0.9 frData) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
 --    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) (HMRRM.rayleighMon rmStride 1 0.9 (map realToFrac (HFF.eval frData))) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
     -- 横軸の値を直す(1秒スペクトルなので今は正しい)
 {----}
