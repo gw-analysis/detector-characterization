@@ -4,16 +4,23 @@ module HasKAL.SpectrumUtils.SpectrumUtils (
 )
 where
 
-
 {- For fft -}
 import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 
-{- For Analysis -}
+{- psd method type -}
+import HasKAL.SpectrumUtils.GwPsdMethod
 
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
-gwpsd dat nfft fs = do
+gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs
+
+gwpsdCore method dat nfft fs
+  | method==Welch = gwpsdWelch dat nfft fs
+  | otherwise =  error "No such method inmplemnted. Check GwPsdMethod.hs"
+
+gwpsdWelch :: [Double]-> Int -> Double -> [(Double, Double)]
+gwpsdWelch dat nfft fs = do
   let ndat = length dat
       maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
       datlist = takesV (take maxitr (repeat nfft)) $ fromList dat
@@ -29,7 +36,6 @@ gwpsd dat nfft fs = do
     applytoComplex = map toComplex
     applyTuplify2 :: [Vector Double] -> [(Vector Double, Vector Double)]
     applyTuplify2 = map (tuplify2 (constant 0 nfft))
-    toVectorComplex x = x :: Vector Complex
     applyWindow :: [Vector Double] -> [Vector Double]
     applyWindow = map (windowed (hanning nfft))
 
