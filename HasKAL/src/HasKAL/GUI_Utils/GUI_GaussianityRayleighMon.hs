@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/13 18:16:39
+  * Last Modified: 2014/06/16 22:32:51
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -17,9 +17,10 @@ import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
-import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
-import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
+import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
+
+import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 
 {-- RayleighMon Window 
 -- test code
@@ -45,6 +46,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxObsTime <- hBoxNew True 5
   rayleighMonHBoxSampling <- hBoxNew True 5
   rayleighMonHBoxStride <- hBoxNew True 5
+  rayleighMonHBoxFClust <- hBoxNew True 5
   rayleighMonHBoxButtons <- hBoxNew True 5
 
   rayleighMonCacheEntry <- HGGS.entryNewWithLabelDefault "Cache file" "gwffiles_sorted.lst"
@@ -54,9 +56,10 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "16"
   rayleighMonMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "15"
   rayleighMonSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "12"
-  rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "16"
+  rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
-  rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "1024"
+  rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "65536"
+  rayleighMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "64"
 
   rayleighMonClose <- buttonNewWithLabel "Close"
   rayleighMonExecute <- buttonNewWithLabel "Execute"
@@ -89,6 +92,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxSampling rayleighMonSamplingEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxStride
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxStride rayleighMonStrideEntry
+  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxFClust
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxFClust rayleighMonFClustEntry
 
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxButtons
   mapM (boxPackStartDefaults rayleighMonHBoxButtons) [rayleighMonClose, rayleighMonExecute]
@@ -107,23 +112,22 @@ hasKalGuiRayleighMon activeChannelLabels = do
         rmMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonMinuteEntry :: Int
         rmSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSecondEntry :: Int
         rayleighMonDateStr = HGGS.iDate2sDate rmYear rmMonth rmDay rmHour rmMinute rmSecond
-        rmGPS = read $ HTG.time2gps rayleighMonDateStr :: Int
-        rmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonObsTimeEntry :: Int
+        rmGPS = read $ HTG.time2gps rayleighMonDateStr :: Integer
+        rmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonObsTimeEntry :: Integer
         rmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSamplingEntry :: Double
         rmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonStrideEntry :: Int
-        rmFiles = HFP.pickUpFileNameinFile (fromIntegral rmGPS) (fromIntegral $ rmGPS+rmObsTime) $ HGGS.haskalOpt ++ "/cachefiles/" ++ rmCache
-        df = rmSampling / (realToFrac rmStride)
+        rmFClust = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonFClustEntry :: Int
+        dF = (fromIntegral rmFClust) * rmSampling / (realToFrac rmStride)
     putStrLn ("   JST Time: " ++ rayleighMonDateStr)
     putStrLn ("   GPS Time: " ++ (show rmGPS) )
     putStrLn ("   Obs Time: " ++ (show rmObsTime) )
     putStrLn ("    fsample: " ++ (show rmSampling) )
     putStrLn ("     stride: " ++ (show rmStride) )
 {--}
-    frData <- CM.liftM concat $ mapM (readFrame' $ activeChannelLabels !! 0) rmFiles
---    frData <- HFF.readFrame (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/sample-data/test-1066392016-300.gwf" -- 複数チャンネルに対応させる
-    HPPR.hroot_core ([0,df..(rmSampling / 2.0)-df]) (HMRRM.rayleighMon rmStride 1 rmSampling 0.9 frData) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
---    HPPR.hroot_core (map fromIntegral [0,1..(rmStride `div` 2 {-+ 1-})]) (HMRRM.rayleighMon rmStride 1 0.9 (map realToFrac (HFF.eval frData))) "frequency [Hz]" "noise level [/rHz]" HPPOR.LogXY HPPOR.Line "X11"
-    -- 横軸の値を直す(1秒スペクトルなので今は正しい)
+    let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/cachefiles/" ++ rmCache
+        frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/cachefiles/" ++ rmCache
+        quantiles = HMRRM.rayleighMon' rmStride rmFClust rmSampling 0.95 snf frData
+    HPP.scatter_plot_2d "RayleighMon 0.95 quantile" "x" 2.0 (720,480) $ zip [0, dF..rmSampling/2] quantiles
 {----}
 
   {--  Exit Process  --}
@@ -134,5 +138,16 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
 {-- Supplementary Functions --}
 readFrame' :: String -> String -> IO [Double]
-readFrame' channel_Name framefile_Name = CM.liftM ((map realToFrac).HFF.eval) $ HFF.readFrame channel_Name framefile_Name
+readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
 
+flip231 :: (a -> b -> c -> d) -> b -> c -> a -> d
+flip231 = (flip.).flip
+
+getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
+getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
+  where datW = SIOU.unsafePerformIO $ mapM (readFrame' channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
+        gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
+
+getDataFromGPS :: Integer -> Integer -> String -> String -> [Double]
+getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (readFrame' channel) filelist
+  where filelist = HFP.pickUpFileNameinFile gpsD (gpsD+obsD-1) cache

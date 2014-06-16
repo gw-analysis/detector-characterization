@@ -1,12 +1,14 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 22:18:31
+  * Last Modified: 2014/06/16 19:41:18
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
    haskalOpt
   ,getActiveLabels
+  ,entryNewWithLabelDefault
+  ,boxPackStartDefaultsPair
   ,amp2psd
   ,convert_StoD
   ,convert_LtoT2
@@ -17,8 +19,6 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,convert_DLL2S
   ,iDate2sDate
   ,transposed
-  ,entryNewWithLabelDefault
-  ,boxPackStartDefaultsPair
 ) where
 
 import Graphics.UI.Gtk
@@ -32,6 +32,12 @@ haskalOpt :: String
 haskalOpt = SIOU.unsafePerformIO $ SE.getEnv "HASKALOPT"
 
 {-- Supplementary Functions --}
+-- for TimeUtils
+iDate2sDate :: Int -> Int -> Int -> Int -> Int -> Int -> String
+iDate2sDate intYear intMonth intDay intHour intMinute intSecond =
+              (TP.printf "%04d" intYear :: String) ++ "-" ++ (TP.printf "%02d" intMonth :: String) ++ "-" ++ (TP.printf "%02d" intDay :: String) ++ " " ++ (TP.printf "%02d" intHour :: String) ++ ":" ++ (TP.printf "%02d" intMinute :: String) ++ ":" ++ (TP.printf "%02d" intSecond :: String) ++ " JST"
+
+-- for gtk
 getActiveLabels :: [CheckButton] -> [String]
 getActiveLabels [] = []
 getActiveLabels (x:xs) = 
@@ -39,7 +45,23 @@ getActiveLabels (x:xs) =
     True -> (SIOU.unsafePerformIO (buttonGetLabel x)):(getActiveLabels xs)
     False -> getActiveLabels xs
 
+entryNewWithDefault :: String -> IO Entry
+entryNewWithDefault ss = do
+  xEntry <- entryNew
+  entrySetText xEntry ss
+  return xEntry
 
+entryNewWithLabelDefault :: String -> String -> IO (Label, Entry)
+entryNewWithLabelDefault label defVal = do
+  xLabel <- labelNewWithMnemonic label
+  xEntry <- entryNewWithDefault defVal
+  return (xLabel, xEntry)
+
+boxPackStartDefaultsPair x (a, b) = do
+  boxPackStartDefaults x a
+  boxPackStartDefaults x b
+
+-- for data format
 amp2psd :: (Double, Double) -> (Double, Double)
 amp2psd (x, y) = (x, y*y)
 
@@ -64,32 +86,7 @@ convert_DL2S xs = unlines $ map show xs
 convert_DLL2S :: [[Double]] -> String
 convert_DLL2S xss = unlines [unwords (map show xs) | xs <- xss]
 
-iDate2sDate :: Int -> Int -> Int -> Int -> Int -> Int -> String
-iDate2sDate intYear intMonth intDay intHour intMinute intSecond =
-              (TP.printf "%04d" intYear :: String) ++ "-" ++ (TP.printf "%02d" intMonth :: String) ++ "-" ++ (TP.printf "%02d" intDay :: String) ++ " " ++ (TP.printf "%02d" intHour :: String) ++ ":" ++ (TP.printf "%02d" intMinute :: String) ++ ":" ++ (TP.printf "%02d" intSecond :: String) ++ " JST"
-
--- transposed 2D list
--- transposed :: [[Double]] -> [[Double]]
--- transposed xxs = [ concat $ map ((drop (m-1)).(take m)) xxs | m <- [1..(length (head xxs))] ]
 transposed :: [[a]] -> [[a]]
 transposed [] = []
 transposed ([] : xss) = transposed xss
 transposed ((x:xs) : xss) = (x : [y | (y:_) <- xss]) : transposed (xs : [z | (_:z) <- xss])
--- [ [h_1(f=0), h_1(f=1), ..], [h_2(f=0), h_2(f=1), ..], ..] -> [ [h_1(f=0), h_2(f=0), ..], [h_1(f=1), h_2(f=1), ..], ..]
--- same as in RayleighMon
-
-entryNewWithDefault :: String -> IO Entry
-entryNewWithDefault ss = do
-  xEntry <- entryNew
-  entrySetText xEntry ss
-  return xEntry
-
-entryNewWithLabelDefault :: String -> String -> IO (Label, Entry)
-entryNewWithLabelDefault label defVal = do
-  xLabel <- labelNewWithMnemonic label
-  xEntry <- entryNewWithDefault defVal
-  return (xLabel, xEntry)
-
-boxPackStartDefaultsPair x (a, b) = do
-  boxPackStartDefaults x a
-  boxPackStartDefaults x b
