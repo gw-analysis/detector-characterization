@@ -94,7 +94,9 @@ library
        lens >=3.10,
        hmatrix ==0.14.*,
        hmatrix-special,
-       -- temporary
+       --hmatrix-gsl-stats,
+       --vector,
+       -- temporary,
        HROOT ==0.8,
        old-time ==1.1.0.1,
        old-locale ==1.0.0.5,
