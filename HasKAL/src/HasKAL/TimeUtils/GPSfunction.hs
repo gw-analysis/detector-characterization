@@ -10,6 +10,8 @@ Modified by T.Yokozawa, Mar.7. 2014
    Make TimeUtils.gpstime
 Modified by T.Yokozawa, Jun.11.2014
    Make gps2time
+Modified by T.Yokozawa, Jun.16.2014
+   Change the directory of readFile of tai-utc.dat
 -}
 
 
@@ -40,8 +42,8 @@ import System.Time
 {-# NOINLINE theLeapSecondTable #-}
 theLeapSecondTable :: LeapSecondTable
 theLeapSecondTable = parseTAIUTCDATFile $ unsafePerformIO $
-  readFile "./HasKAL/TimeUtils/tai-utc.dat"
-
+--TY  readFile "./HasKAL/TimeUtils/tai-utc.dat"
+  readFile "./tai-utc.dat"
 
 utcbase :: UTCTime
 utcbase = UTCTime (fromGregorian 1980 1 6) 0
