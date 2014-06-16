@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 22:40:36
+  * Last Modified: 2014/06/16 10:02:55
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -66,7 +66,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleChannelScroll <- scrolledWindowNew Nothing Nothing
   kleineWelleChannelBBox <- vButtonBoxNew
 
-  kleineWelleCacheEntry <- HGGS.entryNewWithLabelDefault "Cache file" "gwffiles_stored.lst"
+  kleineWelleCacheEntry <- HGGS.entryNewWithLabelDefault "Cache file" "gwffiles_sorted.lst"
   kleineWelleYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2014"
   kleineWelleMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "3"
   kleineWelleDayEntry <- HGGS.entryNewWithLabelDefault "Day" "17"
