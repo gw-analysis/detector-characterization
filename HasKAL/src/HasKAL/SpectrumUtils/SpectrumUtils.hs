@@ -70,7 +70,7 @@ gwpsdMedianAverageCore dat nfft fs w = do
         $ zipWith (+) (map (*(fromIntegral nsodd)) medianListOdd) (map (*(fromIntegral nseven)) medianListEven)
 
       scale_psd = 1/(fromIntegral nfft * fs)
-      medianAverageSpectrum = map (/scale_psd) medianList
+      medianAverageSpectrum = map (*scale_psd) medianList
 
       -- set corresponding frequency
       fvec = toList $ linspace nfft (0, fs) :: [Double]
