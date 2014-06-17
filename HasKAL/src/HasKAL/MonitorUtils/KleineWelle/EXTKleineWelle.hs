@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: EXTKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/28 10:12:52
+  * Last Modified: 2014/06/17 19:23:49
   *******************************************-}
 
 module HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
@@ -15,14 +15,14 @@ import qualified System.IO as SIO --openFile
 import qualified System.Process as SP -- system
 import qualified Control.Monad as CM -- forM
 
-import qualified HasKAL.ExternalUtils.Lwtprint as HEL
+import qualified HasKAL.ExternalUtils.LAL.Lwtprint as HELL
 
 
 execKleineWelle :: Int -> String -> Double -> Double -> Double -> Int -> [String] -> Int -> Int -> Int -> String -> String -> Int -> [String] -> IO [String]
 execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor glitchActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 optFilePref listFile kwGpsTime kwActiveLabels = do
   generateOptKW kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kwLowCutOff kwHighCutOff kwUnowen_2 optFilePref glitchActiveLabels
   coreKleineWelle optFilePref listFile glitchActiveLabels
-  HEL.execLwtprint glitchActiveLabels kwBasename kwGpsTime kwStride kwActiveLabels
+  HELL.execLwtprint glitchActiveLabels kwBasename kwGpsTime kwStride kwActiveLabels
 
 
 generateOptKW :: Int -> String -> Double -> Double -> Double -> Int  -> Int -> Int -> Int -> String -> [String] -> IO [()]

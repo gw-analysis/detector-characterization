@@ -1,10 +1,10 @@
 {-******************************************
   *     File Name: Lwtprint.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/04/18 10:19:43
+  * Last Modified: 2014/06/17 19:34:04
   *******************************************-}
 
-module HasKAL.ExternalUtils.Lwtprint
+module HasKAL.ExternalUtils.LAL.Lwtprint
   (execLwtprint
   ) where
 
