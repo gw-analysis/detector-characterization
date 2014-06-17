@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/17 23:22:49
+  * Last Modified: 2014/06/18 02:44:29
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -68,12 +68,12 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleChannelBBox <- vButtonBoxNew
 
   kleineWelleCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
-  kleineWelleYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2014"
-  kleineWelleMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "3"
-  kleineWelleDayEntry <- HGGS.entryNewWithLabelDefault "Day" "17"
-  kleineWelleHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "16"
-  kleineWelleMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "15"
-  kleineWelleSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "12"
+  kleineWelleYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
+  kleineWelleMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 2
+  kleineWelleDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
+  kleineWelleHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
+  kleineWelleMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
+  kleineWelleSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
   kleineWelleObsEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   kleineWelleStrideEntry <- HGGS.entryNewWithLabelDefault "Stride" "16"
   kleineWelleSignificanceEntry <- HGGS.entryNewWithLabelDefault "Significance" "2.0"
@@ -101,13 +101,13 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxCache
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxCache kleineWelleCacheOpener
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateL
-  mapM (boxPackStartDefaults kleineWelleHBoxDateL) $ map fst [kleineWelleYearEntry, kleineWelleMonthEntry, kleineWelleDayEntry]
+  mapM (boxPackStartDefaults kleineWelleHBoxDateL) $ map fst [kleineWelleYearCombo, kleineWelleMonthCombo, kleineWelleDayCombo]
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateE
-  mapM (boxPackStartDefaults kleineWelleHBoxDateE) $ map snd [kleineWelleYearEntry, kleineWelleMonthEntry, kleineWelleDayEntry]
+  mapM (boxPackStartDefaults kleineWelleHBoxDateE) $ map snd [kleineWelleYearCombo, kleineWelleMonthCombo, kleineWelleDayCombo]
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeL
-  mapM (boxPackStartDefaults kleineWelleHBoxTimeL) $ map fst [kleineWelleHourEntry, kleineWelleMinuteEntry, kleineWelleSecondEntry]
+  mapM (boxPackStartDefaults kleineWelleHBoxTimeL) $ map fst [kleineWelleHourCombo, kleineWelleMinuteCombo, kleineWelleSecondCombo]
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeE
-  mapM (boxPackStartDefaults kleineWelleHBoxTimeE) $ map snd [kleineWelleHourEntry, kleineWelleMinuteEntry, kleineWelleSecondEntry]
+  mapM (boxPackStartDefaults kleineWelleHBoxTimeE) $ map snd [kleineWelleHourCombo, kleineWelleMinuteCombo, kleineWelleSecondCombo]
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxObs
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxObs kleineWelleObsEntry
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxStride
@@ -130,12 +130,12 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     let kwActiveLabels = HGGS.getActiveLabels kwChannelCButtons
         lwtColmunNum = length kwActiveLabels
         kwCasheFile = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd kleineWelleCacheOpener
-        kwYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleYearEntry :: Int
-        kwMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleMonthEntry :: Int
-        kwDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleDayEntry :: Int
-        kwHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleHourEntry :: Int
-        kwMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleMinuteEntry :: Int
-        kwSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleSecondEntry :: Int
+        kwYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleYearCombo :: Int
+        kwMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleMonthCombo :: Int
+        kwDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleDayCombo :: Int
+        kwHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleHourCombo :: Int
+        kwMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleMinuteCombo :: Int
+        kwSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleSecondCombo :: Int
         kleineWelleDateStr = HGGS.iDate2sDate kwYear kwMonth kwDay kwHour kwMinute kwSecond
         kwGpsTime = read $ HTG.time2gps kleineWelleDateStr :: Int
         kwObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleObsEntry :: Integer

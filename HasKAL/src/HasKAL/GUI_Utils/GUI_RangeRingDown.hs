@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeRingDown.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 22:31:01
+  * Last Modified: 2014/06/18 02:39:44
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeRingDown(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified Data.Maybe as DM
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -43,12 +44,12 @@ hasKalGuiRingDownRange = do
   ringDownRangeHBoxMass2 <- hBoxNew True 5
   ringDownRangeHBoxButtons <- hBoxNew True 5
 
-  ringDownRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
-  ringDownRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
-  ringDownRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
-  ringDownRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
-  ringDownRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
-  ringDownRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  ringDownRangeYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
+  ringDownRangeMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 4
+  ringDownRangeDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
+  ringDownRangeHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
+  ringDownRangeMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
+  ringDownRangeSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
   ringDownRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
   ringDownRangeMass1Entry <- HGGS.entryNewWithLabelDefault "massMin [M_solar]" "10.0"
   ringDownRangeMass2Entry <- HGGS.entryNewWithLabelDefault "massMax [M_solar]" "10000.0"
@@ -65,17 +66,17 @@ hasKalGuiRingDownRange = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxYear
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxYear ringDownRangeYearEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxYear ringDownRangeYearCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMonth
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMonth ringDownRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMonth ringDownRangeMonthCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxDay
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxDay ringDownRangeDayEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxDay ringDownRangeDayCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxHour
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxHour ringDownRangeHourEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxHour ringDownRangeHourCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMinute
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMinute ringDownRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMinute ringDownRangeMinuteCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxSecond
-  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxSecond ringDownRangeSecondEntry
+  HGGS.boxPackStartDefaultsPair ringDownRangeHBoxSecond ringDownRangeSecondCombo
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxObsTime
   HGGS.boxPackStartDefaultsPair ringDownRangeHBoxObsTime ringDownRangeObsTimeEntry
   boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass1
@@ -92,12 +93,12 @@ hasKalGuiRingDownRange = do
     widgetDestroy ringDownRangeWindow
   onClicked ringDownRangeExecute $ do
     putStrLn "Execute"
-    let ringDYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeYearEntry :: Int
-        ringDMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMonthEntry :: Int
-        ringDDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeDayEntry :: Int
-        ringDHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeHourEntry :: Int
-        ringDMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMinuteEntry :: Int
-        ringDSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeSecondEntry :: Int
+    let ringDYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeYearCombo :: Int
+        ringDMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeMonthCombo :: Int
+        ringDDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeDayCombo :: Int
+        ringDHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeHourCombo :: Int
+        ringDMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeMinuteCombo :: Int
+        ringDSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd ringDownRangeSecondCombo :: Int
         ringDownRangeDateStr = HGGS.iDate2sDate ringDYear ringDMonth ringDDay ringDHour ringDMinute ringDSecond
         ringDGPS = HTG.time2gps ringDownRangeDateStr
         ringDObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeObsTimeEntry :: Int

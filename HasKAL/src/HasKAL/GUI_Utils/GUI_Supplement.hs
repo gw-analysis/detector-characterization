@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/17 23:20:41
+  * Last Modified: 2014/06/18 02:13:03
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,entryNewWithLabelDefault
   ,boxPackStartDefaultsPair
   ,fileOpenButtonNewWithLabelDefault
+  ,comboBoxNewLabelAppendTexts
   ,amp2psd
   ,convert_StoD
   ,convert_LtoT2
@@ -73,6 +74,19 @@ fileOpenButtonNewWithLabelDefault label defPath = do
   xLabel <- labelNewWithMnemonic label
   xFileOpener <- fileOpenButtonNewWithDefault defPath
   return (xLabel, xFileOpener)
+
+comboBoxNewAppendTexts :: [String] -> Int -> IO ComboBox
+comboBoxNewAppendTexts texts defNum = do
+  xComboBox <- comboBoxNewText
+  mapM (comboBoxAppendText xComboBox) texts
+  comboBoxSetActive xComboBox defNum
+  return xComboBox
+
+comboBoxNewLabelAppendTexts :: String -> [String] -> Int -> IO (Label, ComboBox)
+comboBoxNewLabelAppendTexts label texts defNum = do
+  xLabel <- labelNewWithMnemonic label
+  xComboBox <- comboBoxNewAppendTexts texts defNum
+  return (xLabel, xComboBox)
 
 -- for data format
 amp2psd :: (Double, Double) -> (Double, Double)

@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 22:27:16
+  * Last Modified: 2014/06/18 02:31:22
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeIMBH(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified Data.Maybe as DM
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -43,12 +44,12 @@ hasKalGuiIMR'Range = do
   imrRangeHBoxMass2 <- hBoxNew True 5
   imrRangeHBoxButtons <- hBoxNew True 5
 
-  imrRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
-  imrRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
-  imrRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
-  imrRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
-  imrRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
-  imrRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  imrRangeYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
+  imrRangeMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 4
+  imrRangeDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
+  imrRangeHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
+  imrRangeMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
+  imrRangeSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
   imrRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
   imrRangeMass1Entry <- HGGS.entryNewWithLabelDefault "mass_min [M_solar]" "1.0"
   imrRangeMass2Entry <- HGGS.entryNewWithLabelDefault "mass_max [M_solar]" "300.0"
@@ -65,17 +66,17 @@ hasKalGuiIMR'Range = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults imrRangeVBox imrRangeHBoxYear
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxYear imrRangeYearEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxYear imrRangeYearCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMonth
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxMonth imrRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMonth imrRangeMonthCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxDay
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxDay imrRangeDayEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxDay imrRangeDayCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxHour
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxHour imrRangeHourEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxHour imrRangeHourCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMinute
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxMinute imrRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxMinute imrRangeMinuteCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxSecond
-  HGGS.boxPackStartDefaultsPair imrRangeHBoxSecond imrRangeSecondEntry
+  HGGS.boxPackStartDefaultsPair imrRangeHBoxSecond imrRangeSecondCombo
   boxPackStartDefaults imrRangeVBox imrRangeHBoxObsTime
   HGGS.boxPackStartDefaultsPair imrRangeHBoxObsTime imrRangeObsTimeEntry
   boxPackStartDefaults imrRangeVBox imrRangeHBoxMass1
@@ -92,13 +93,12 @@ hasKalGuiIMR'Range = do
     widgetDestroy imrRangeWindow
   onClicked imrRangeExecute $ do
     putStrLn "Execute"
-
-    let imrYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeYearEntry :: Int    
-        imrMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMonthEntry :: Int
-        imrDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeDayEntry :: Int
-        imrHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeHourEntry :: Int
-        imrMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMinuteEntry :: Int
-        imrSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeSecondEntry :: Int
+    let imrYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeYearCombo :: Int    
+        imrMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeMonthCombo :: Int
+        imrDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeDayCombo :: Int
+        imrHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeHourCombo :: Int
+        imrMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeMinuteCombo :: Int
+        imrSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd imrRangeSecondCombo :: Int
         imrRangeDateStr = HGGS.iDate2sDate imrYear imrMonth imrDay imrHour imrMinute imrSecond
         imrGPS = HTG.time2gps imrRangeDateStr
         imrObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeObsTimeEntry :: Int

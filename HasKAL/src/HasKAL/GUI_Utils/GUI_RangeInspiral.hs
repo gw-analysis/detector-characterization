@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/05/30 22:22:18
+  * Last Modified: 2014/06/18 02:35:59
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_RangeInspiral(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified Data.Maybe as DM
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -43,12 +44,12 @@ hasKalGuiInspiralRange = do
   inspiralRangeHBoxMass2 <- hBoxNew True 5
   inspiralRangeHBoxButtons <- hBoxNew True 5
 
-  inspiralRangeYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2013"
-  inspiralRangeMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "10"
-  inspiralRangeDayEntry <- HGGS.entryNewWithLabelDefault "Day" "21"
-  inspiralRangeHourEntry <- HGGS.entryNewWithLabelDefault "Hour" "21"
-  inspiralRangeMinuteEntry <- HGGS.entryNewWithLabelDefault "Minute" "0"
-  inspiralRangeSecondEntry <- HGGS.entryNewWithLabelDefault "Second (JST)" "0"
+  inspiralRangeYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
+  inspiralRangeMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 4
+  inspiralRangeDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
+  inspiralRangeHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
+  inspiralRangeMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
+  inspiralRangeSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
   inspiralRangeObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "300"
   inspiralRangeMass1Entry <- HGGS.entryNewWithLabelDefault "mass_min [M_solor]" "1.0"
   inspiralRangeMass2Entry <- HGGS.entryNewWithLabelDefault "mass_max [M_solor]" "70.0"
@@ -65,17 +66,17 @@ hasKalGuiInspiralRange = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxYear
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxYear inspiralRangeYearEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxYear inspiralRangeYearCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMonth
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMonth inspiralRangeMonthEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMonth inspiralRangeMonthCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxDay
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxDay  inspiralRangeDayEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxDay  inspiralRangeDayCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxHour
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxHour inspiralRangeHourEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxHour inspiralRangeHourCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMinute
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMinute inspiralRangeMinuteEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMinute inspiralRangeMinuteCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxSecond
-  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxSecond inspiralRangeSecondEntry
+  HGGS.boxPackStartDefaultsPair inspiralRangeHBoxSecond inspiralRangeSecondCombo
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxObsTime
   HGGS.boxPackStartDefaultsPair inspiralRangeHBoxObsTime inspiralRangeObsTimeEntry
   boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass1
@@ -92,12 +93,12 @@ hasKalGuiInspiralRange = do
     widgetDestroy inspiralRangeWindow
   onClicked inspiralRangeExecute $ do
     putStrLn "Execute"
-    let inspYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeYearEntry :: Int
-        inspMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMonthEntry :: Int
-        inspDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeDayEntry :: Int
-        inspHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeHourEntry :: Int
-        inspMinute = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMinuteEntry :: Int
-        inspSecond = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeSecondEntry :: Int
+    let inspYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeYearCombo :: Int
+        inspMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeMonthCombo :: Int
+        inspDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeDayCombo :: Int
+        inspHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeHourCombo :: Int
+        inspMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeMinuteCombo :: Int
+        inspSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd inspiralRangeSecondCombo :: Int
         inspiralRangeDateStr = HGGS.iDate2sDate inspYear inspMonth inspDay inspHour inspMinute inspSecond
         inspGPS = HTG.time2gps inspiralRangeDateStr
         inspObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeObsTimeEntry :: Int
