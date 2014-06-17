@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/16 19:41:18
+  * Last Modified: 2014/06/17 23:20:41
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -9,6 +9,7 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,getActiveLabels
   ,entryNewWithLabelDefault
   ,boxPackStartDefaultsPair
+  ,fileOpenButtonNewWithLabelDefault
   ,amp2psd
   ,convert_StoD
   ,convert_LtoT2
@@ -60,6 +61,18 @@ entryNewWithLabelDefault label defVal = do
 boxPackStartDefaultsPair x (a, b) = do
   boxPackStartDefaults x a
   boxPackStartDefaults x b
+
+fileOpenButtonNewWithDefault :: String -> IO FileChooserButton
+fileOpenButtonNewWithDefault path = do
+  fileOpener <- fileChooserButtonNew "hoge" FileChooserActionOpen
+  fileChooserSetFilename fileOpener path
+  return fileOpener
+
+fileOpenButtonNewWithLabelDefault :: String -> String -> IO (Label, FileChooserButton)
+fileOpenButtonNewWithLabelDefault label defPath = do
+  xLabel <- labelNewWithMnemonic label
+  xFileOpener <- fileOpenButtonNewWithDefault defPath
+  return (xLabel, xFileOpener)
 
 -- for data format
 amp2psd :: (Double, Double) -> (Double, Double)

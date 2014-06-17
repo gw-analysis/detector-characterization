@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/16 10:02:55
+  * Last Modified: 2014/06/17 23:22:49
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -10,6 +10,7 @@ module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
+import qualified Data.Maybe as DM -- fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
@@ -66,7 +67,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleChannelScroll <- scrolledWindowNew Nothing Nothing
   kleineWelleChannelBBox <- vButtonBoxNew
 
-  kleineWelleCacheEntry <- HGGS.entryNewWithLabelDefault "Cache file" "gwffiles_sorted.lst"
+  kleineWelleCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
   kleineWelleYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2014"
   kleineWelleMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "3"
   kleineWelleDayEntry <- HGGS.entryNewWithLabelDefault "Day" "17"
@@ -98,7 +99,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   boxPackStartDefaults kleineWelleHBoxScroll kleineWelleVBox2
 
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxCache
-  HGGS.boxPackStartDefaultsPair kleineWelleHBoxCache kleineWelleCacheEntry
+  HGGS.boxPackStartDefaultsPair kleineWelleHBoxCache kleineWelleCacheOpener
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateL
   mapM (boxPackStartDefaults kleineWelleHBoxDateL) $ map fst [kleineWelleYearEntry, kleineWelleMonthEntry, kleineWelleDayEntry]
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateE
@@ -128,8 +129,8 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     putStrLn "Execute"
     let kwActiveLabels = HGGS.getActiveLabels kwChannelCButtons
         lwtColmunNum = length kwActiveLabels
-    kwCache <- entryGetText $ snd kleineWelleCacheEntry
-    let kwYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleYearEntry :: Int
+        kwCasheFile = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd kleineWelleCacheOpener
+        kwYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleYearEntry :: Int
         kwMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleMonthEntry :: Int
         kwDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleDayEntry :: Int
         kwHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleHourEntry :: Int
@@ -143,7 +144,6 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
         kwThreshold = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleThresholdEntry :: Double
         kwLowCutOff = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleLowCutOffEntry :: Int
         kwHighCutOff = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleHighCutOffEntry :: Int
-        kwCasheFile = HGGS.haskalOpt ++ "/cachefiles/" ++ kwCache
     putStrLn ("   JST Time: " ++ kleineWelleDateStr)
     putStrLn ("   GPS Time: " ++ (show kwGpsTime))
     putStrLn ("   Obs Time: " ++ (show kwObsTime) )

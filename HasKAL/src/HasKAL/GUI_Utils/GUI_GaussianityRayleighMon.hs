@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/16 22:32:51
+  * Last Modified: 2014/06/17 23:35:08
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -10,7 +10,7 @@ module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
-import qualified System.IO as SIO -- openFile
+import qualified Data.Maybe as DM -- fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
@@ -49,7 +49,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxFClust <- hBoxNew True 5
   rayleighMonHBoxButtons <- hBoxNew True 5
 
-  rayleighMonCacheEntry <- HGGS.entryNewWithLabelDefault "Cache file" "gwffiles_sorted.lst"
+  rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
   rayleighMonYearEntry <- HGGS.entryNewWithLabelDefault "Year" "2014"
   rayleighMonMonthEntry <- HGGS.entryNewWithLabelDefault "Month" "3"
   rayleighMonDayEntry <- HGGS.entryNewWithLabelDefault "Day" "17"
@@ -73,7 +73,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
   {--  Arrange object in window  --}
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxCache
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxCache rayleighMonCacheEntry
+  HGGS.boxPackStartDefaultsPair rayleighMonHBoxCache rayleighMonCacheOpener
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxYear
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxYear rayleighMonYearEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxMonth
@@ -104,8 +104,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
     widgetDestroy rayleighMonWindow
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
-    rmCache <- entryGetText $ snd rayleighMonCacheEntry
-    let rmYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonYearEntry :: Int
+    let rmCache = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd rayleighMonCacheOpener
+        rmYear = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonYearEntry :: Int
         rmMonth = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonMonthEntry :: Int
         rmDay = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonDayEntry :: Int
         rmHour = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonHourEntry :: Int
@@ -124,8 +124,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("    fsample: " ++ (show rmSampling) )
     putStrLn ("     stride: " ++ (show rmStride) )
 {--}
-    let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/cachefiles/" ++ rmCache
-        frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) $ HGGS.haskalOpt ++ "/cachefiles/" ++ rmCache
+    let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) rmCache
+        frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) rmCache
         quantiles = HMRRM.rayleighMon' rmStride rmFClust rmSampling 0.95 snf frData
     HPP.scatter_plot_2d "RayleighMon 0.95 quantile" "x" 2.0 (720,480) $ zip [0, dF..rmSampling/2] quantiles
 {----}
