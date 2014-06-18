@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 02:23:06
+  * Last Modified: 2014/06/18 20:45:23
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -37,12 +37,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonWindow <- windowNew
   rayleighMonVBox <- vBoxNew True 5
   rayleighMonHBoxCache <- hBoxNew True 5
-  rayleighMonHBoxYear <- hBoxNew True 5
-  rayleighMonHBoxMonth <- hBoxNew True 5
-  rayleighMonHBoxDay <- hBoxNew True 5
-  rayleighMonHBoxHour <- hBoxNew True 5
-  rayleighMonHBoxMinute <- hBoxNew True 5
-  rayleighMonHBoxSecond <- hBoxNew True 5
+  rayleighMonHBoxDate <- mapM (hBoxNew True) $ take 7 [5..]
   rayleighMonHBoxObsTime <- hBoxNew True 5
   rayleighMonHBoxSampling <- hBoxNew True 5
   rayleighMonHBoxStride <- hBoxNew True 5
@@ -50,17 +45,11 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxButtons <- hBoxNew True 5
 
   rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
-  rayleighMonYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
-  rayleighMonMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 2
-  rayleighMonDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
-  rayleighMonHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
-  rayleighMonMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
-  rayleighMonSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
+  rayleighMonDateCombo <- HGGS.dateComboNew (2014, 3, 17, 16, 15, 12, "JST")
   rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
   rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "65536"
   rayleighMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "64"
-
   rayleighMonClose <- buttonNewWithLabel "Close"
   rayleighMonExecute <- buttonNewWithLabel "Execute"
 
@@ -74,18 +63,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
   {--  Arrange object in window  --}
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxCache
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxCache rayleighMonCacheOpener
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxYear
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxYear rayleighMonYearCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxMonth
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxMonth rayleighMonMonthCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxDay
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxDay rayleighMonDayCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxHour
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxHour rayleighMonHourCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxMinute
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxMinute rayleighMonMinuteCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxSecond
-  HGGS.boxPackStartDefaultsPair rayleighMonHBoxSecond rayleighMonSecondCombo
+  mapM (boxPackStartDefaults rayleighMonVBox) rayleighMonHBoxDate
+  CM.zipWithM HGGS.boxPackStartDefaultsPair rayleighMonHBoxDate $ rayleighMonDateCombo
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxObsTime
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxObsTime rayleighMonObsTimeEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxSampling
@@ -94,7 +73,6 @@ hasKalGuiRayleighMon activeChannelLabels = do
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxStride rayleighMonStrideEntry
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxFClust
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxFClust rayleighMonFClustEntry
-
   boxPackStartDefaults rayleighMonVBox rayleighMonHBoxButtons
   mapM (boxPackStartDefaults rayleighMonHBoxButtons) [rayleighMonClose, rayleighMonExecute]
 
@@ -105,20 +83,13 @@ hasKalGuiRayleighMon activeChannelLabels = do
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
     let rmCache = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd rayleighMonCacheOpener
-        rmYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonYearCombo :: Int
-        rmMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonMonthCombo :: Int
-        rmDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonDayCombo :: Int
-        rmHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonHourCombo :: Int
-        rmMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonMinuteCombo :: Int
-        rmSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd rayleighMonSecondCombo :: Int
-        rayleighMonDateStr = HGGS.iDate2sDate rmYear rmMonth rmDay rmHour rmMinute rmSecond
-        rmGPS = read $ HTG.time2gps rayleighMonDateStr :: Integer
+        rmDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) rayleighMonDateCombo
+        rmGPS = read $ HTG.timetuple2gps rmDate :: Integer
         rmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonObsTimeEntry :: Integer
         rmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSamplingEntry :: Double
         rmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonStrideEntry :: Int
         rmFClust = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonFClustEntry :: Int
         dF = (fromIntegral rmFClust) * rmSampling / (realToFrac rmStride)
-    putStrLn ("   JST Time: " ++ rayleighMonDateStr)
     putStrLn ("   GPS Time: " ++ (show rmGPS) )
     putStrLn ("   Obs Time: " ++ (show rmObsTime) )
     putStrLn ("    fsample: " ++ (show rmSampling) )

@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 02:44:29
+  * Last Modified: 2014/06/18 20:57:17
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -49,14 +49,10 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
   {--  Create new object --}
   kleineWelleWindow <- windowNew
---  kleineWelleVBox <- vBoxNew True 5
   kleineWelleVBox2 <- vBoxNew True 5
   kleineWelleHBoxCache <- hBoxNew True 5
   kleineWelleHBoxScroll <- hBoxNew True 5
-  kleineWelleHBoxDateL <- hBoxNew True 5
-  kleineWelleHBoxDateE <- hBoxNew True 5
-  kleineWelleHBoxTimeL <- hBoxNew True 5
-  kleineWelleHBoxTimeE <- hBoxNew True 5
+  kleineWelleHBoxDate <- mapM (hBoxNew True) $ take 7 [5..]
   kleineWelleHBoxObs <- hBoxNew True 5
   kleineWelleHBoxStride <- hBoxNew True 5
   kleineWelleHBoxSignificance <- hBoxNew True 5
@@ -68,12 +64,7 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   kleineWelleChannelBBox <- vButtonBoxNew
 
   kleineWelleCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
-  kleineWelleYearCombo <- HGGS.comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) 4
-  kleineWelleMonthCombo <- HGGS.comboBoxNewLabelAppendTexts "Month" (map show [1..12]) 2
-  kleineWelleDayCombo <- HGGS.comboBoxNewLabelAppendTexts "Day" (map show [1..31]) 16
-  kleineWelleHourCombo <- HGGS.comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) 16
-  kleineWelleMinuteCombo <- HGGS.comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) 15
-  kleineWelleSecondCombo <- HGGS.comboBoxNewLabelAppendTexts "Second (JST)" (map show [0..59]) 12
+  kleineWelleDateCombo <- HGGS.dateComboNew (2014, 3, 17, 16, 15, 12, "JST")
   kleineWelleObsEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   kleineWelleStrideEntry <- HGGS.entryNewWithLabelDefault "Stride" "16"
   kleineWelleSignificanceEntry <- HGGS.entryNewWithLabelDefault "Significance" "2.0"
@@ -100,14 +91,9 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
 
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxCache
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxCache kleineWelleCacheOpener
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateL
-  mapM (boxPackStartDefaults kleineWelleHBoxDateL) $ map fst [kleineWelleYearCombo, kleineWelleMonthCombo, kleineWelleDayCombo]
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxDateE
-  mapM (boxPackStartDefaults kleineWelleHBoxDateE) $ map snd [kleineWelleYearCombo, kleineWelleMonthCombo, kleineWelleDayCombo]
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeL
-  mapM (boxPackStartDefaults kleineWelleHBoxTimeL) $ map fst [kleineWelleHourCombo, kleineWelleMinuteCombo, kleineWelleSecondCombo]
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxTimeE
-  mapM (boxPackStartDefaults kleineWelleHBoxTimeE) $ map snd [kleineWelleHourCombo, kleineWelleMinuteCombo, kleineWelleSecondCombo]
+  mapM (boxPackStartDefaults kleineWelleVBox2) kleineWelleHBoxDate
+  CM.zipWithM HGGS.boxPackStartDefaultsPair kleineWelleHBoxDate $ kleineWelleDateCombo
+
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxObs
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxObs kleineWelleObsEntry
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxStride
@@ -120,7 +106,6 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxLowCutOff kleineWelleLowCutOffEntry
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxHighCutOff
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxHighCutOff kleineWelleHighCutOffEntry
-
   boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxExecute
   mapM (boxPackStartDefaults kleineWelleHBoxExecute) [kleineWelleClose, kleineWelleExecute]
 
@@ -130,21 +115,14 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     let kwActiveLabels = HGGS.getActiveLabels kwChannelCButtons
         lwtColmunNum = length kwActiveLabels
         kwCasheFile = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd kleineWelleCacheOpener
-        kwYear = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleYearCombo :: Int
-        kwMonth = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleMonthCombo :: Int
-        kwDay = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleDayCombo :: Int
-        kwHour = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleHourCombo :: Int
-        kwMinute = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleMinuteCombo :: Int
-        kwSecond = read $ DM.fromJust $ SIOU.unsafePerformIO $ comboBoxGetActiveText $ snd kleineWelleSecondCombo :: Int
-        kleineWelleDateStr = HGGS.iDate2sDate kwYear kwMonth kwDay kwHour kwMinute kwSecond
-        kwGpsTime = read $ HTG.time2gps kleineWelleDateStr :: Int
+        kwDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) kleineWelleDateCombo
+        kwGpsTime = read $ HTG.timetuple2gps kwDate :: Integer
         kwObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleObsEntry :: Integer
         kwStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleStrideEntry :: Int
         kwSignificance = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleSignificanceEntry :: Double
         kwThreshold = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleThresholdEntry :: Double
         kwLowCutOff = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleLowCutOffEntry :: Int
         kwHighCutOff = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleHighCutOffEntry :: Int
-    putStrLn ("   JST Time: " ++ kleineWelleDateStr)
     putStrLn ("   GPS Time: " ++ (show kwGpsTime))
     putStrLn ("   Obs Time: " ++ (show kwObsTime) )
     putStrLn ("   Stride: " ++ (show kwStride) )
@@ -156,9 +134,9 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     mapM_ putStrLn kleineWelleActiveLabels
     putStrLn "   Column: "
     mapM_ putStrLn kwActiveLabels
-    putStrLn $ (show (fromIntegral kwGpsTime)) ++ " ~ " ++ (show (fromIntegral kwGpsTime + kwObsTime))
+    putStrLn $ (show kwGpsTime) ++ " ~ " ++ (show $ kwGpsTime + kwObsTime)
 {--}
-    HFP.pickUpFileNameinoutFile (fromIntegral kwGpsTime) (fromIntegral kwGpsTime + kwObsTime) kwCasheFile
+    HFP.pickUpFileNameinoutFile kwGpsTime (kwGpsTime + kwObsTime) kwCasheFile
     putStrLn "Generate optM file for KleineWelle"
     lwtOutput <- HMKKW.execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kleineWelleActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 kwOptFilePref kwListFile kwGpsTime kwActiveLabels
 {----}

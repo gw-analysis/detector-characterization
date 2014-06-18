@@ -1,16 +1,18 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 02:13:03
+  * Last Modified: 2014/06/18 20:48:33
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
    haskalOpt
+  ,dateStr2Tuple
   ,getActiveLabels
   ,entryNewWithLabelDefault
   ,boxPackStartDefaultsPair
   ,fileOpenButtonNewWithLabelDefault
   ,comboBoxNewLabelAppendTexts
+  ,dateComboNew
   ,amp2psd
   ,convert_StoD
   ,convert_LtoT2
@@ -19,7 +21,6 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,convert_StoDT3L
   ,convert_DL2S
   ,convert_DLL2S
-  ,iDate2sDate
   ,transposed
 ) where
 
@@ -35,9 +36,9 @@ haskalOpt = SIOU.unsafePerformIO $ SE.getEnv "HASKALOPT"
 
 {-- Supplementary Functions --}
 -- for TimeUtils
-iDate2sDate :: Int -> Int -> Int -> Int -> Int -> Int -> String
-iDate2sDate intYear intMonth intDay intHour intMinute intSecond =
-              (TP.printf "%04d" intYear :: String) ++ "-" ++ (TP.printf "%02d" intMonth :: String) ++ "-" ++ (TP.printf "%02d" intDay :: String) ++ " " ++ (TP.printf "%02d" intHour :: String) ++ ":" ++ (TP.printf "%02d" intMinute :: String) ++ ":" ++ (TP.printf "%02d" intSecond :: String) ++ " JST"
+dateStr2Tuple :: [String] -> (Int, Int, Int, Int, Int, Int, String)
+dateStr2Tuple [year, month, day, hour, minute, second, tZone] =
+  (read year, read month, read day, read hour, read minute, read second, tZone)
 
 -- for gtk
 getActiveLabels :: [CheckButton] -> [String]
@@ -87,6 +88,19 @@ comboBoxNewLabelAppendTexts label texts defNum = do
   xLabel <- labelNewWithMnemonic label
   xComboBox <- comboBoxNewAppendTexts texts defNum
   return (xLabel, xComboBox)
+
+dateComboNew :: (Int, Int, Int, Int, Int, Int, String) -> IO [(Label, ComboBox)]
+dateComboNew (year, month, day, hour, minute, second, tZone) = do
+  let num = case tZone of "JST" -> 0
+                          "UTC" -> 1
+  comboYear <- comboBoxNewLabelAppendTexts "Year" (map show [2010..2020]) (year-2010)
+  comboMonth <- comboBoxNewLabelAppendTexts "Month" (map show [1..12]) (month-1)
+  comboDay <- comboBoxNewLabelAppendTexts "Day" (map show [1..31]) (day-1)
+  comboHour <- comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) hour
+  comboMinute <- comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) minute
+  comboSecond <- comboBoxNewLabelAppendTexts "Second" (map show [0..59]) second
+  comboTZone <- comboBoxNewLabelAppendTexts "timeZone" ["JST", "UTC"] num
+  return [comboYear, comboMonth, comboDay, comboHour, comboMinute, comboSecond, comboTZone]
 
 -- for data format
 amp2psd :: (Double, Double) -> (Double, Double)
