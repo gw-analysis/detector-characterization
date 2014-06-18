@@ -45,6 +45,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 
+
 library
   -- Modules exported by the library.
   exposed-modules:
@@ -59,7 +60,6 @@ library
     HasKAL.GUI_Utils.GUI_RangeRingDown,
     HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
--- To avoid error, comment out
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
     HasKAL.MonitorUtils.RangeMon.IMBH,
@@ -71,11 +71,15 @@ library
     HasKAL.SpectrumUtils.SpectrumUtils,
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
-    HasKAL.SignalPocessingUtils.WindowFunction,
-    HasKAL.SignalPocessingUtils.WindowType
+    HasKAL.SignalProcessingUtils.WindowFunction,
+    HasKAL.SignalProcessingUtils.WindowType,
+    HasKAL.SignalProcessingUtils.Filter
 
   -- Modules included in this library but not exported.
   -- other-modules:
+  C-sources:
+    src/HasKAL/SignalProcessingUtils/filterFunctions.c
+
 
   -- Other library packages from which modules are imported.
   build-depends:
@@ -96,19 +100,25 @@ library
        hmatrix ==0.14.*,
        hmatrix-special,
        --hmatrix-gsl-stats,
-       --vector,
+       vector,
        -- temporary,
        HROOT ==0.8,
        old-time ==1.1.0.1,
        old-locale ==1.0.0.5,
-       time ==1.4.0.1
+       time ==1.4.0.1,
+       split,
+       containers
 
   -- Directories containing source files.
   hs-source-dirs:      src
-  extensions: DoAndIfThenElse
+  extensions: DoAndIfThenElse,
+              ForeignFunctionInterface,
+              CPP
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   build-tools:         hsc2hs
+
+
 
 executable loadFrameData
   hs-source-dirs: exe-src
