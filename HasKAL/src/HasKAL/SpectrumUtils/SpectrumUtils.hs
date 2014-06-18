@@ -20,12 +20,12 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 import Data.List (sort, foldl')
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
-gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs
+gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
 
-gwpsdCore :: PSDMETHOD -> [Double] -> Int -> Double -> [(Double, Double)]
-gwpsdCore method dat nfft fs
-  | method==Welch = gwpsdWelch dat nfft fs Hann
-  | method==MedianAverage = gwpsdMedianAverageCore dat nfft fs Hann
+gwpsdCore :: PSDMETHOD -> [Double] -> Int -> Double -> WindowType -> [(Double, Double)]
+gwpsdCore method dat nfft fs w
+  | method==Welch = gwpsdWelch dat nfft fs w
+  | method==MedianAverage = gwpsdMedianAverageCore dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
 gwpsdWelch :: [Double]-> Int -> Double -> WindowType -> [(Double, Double)]
