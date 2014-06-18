@@ -12,23 +12,21 @@ Modified by T.Yokozawa, Jun.11.2014
    Make gps2time
 Modified by T.Yokozawa, Jun.16.2014
    Change the directory of readFile of tai-utc.dat
+Modified by T.Yokozawa, Jun.18.2014
+   Make timetuple2gps
 -}
 
 
 
 
 module HasKAL.TimeUtils.GPSfunction
-( utcbase
-, taibase
-, timegiven
-, taigiven
-, time2gps
-, gpsgiven
-, utcgiven
+( time2gps
 , gps2time
+, timetuple2gps
 ) where
 
 import Data.Time
+import Data.Time.Clock
 import Data.Time.Clock.TAI
 import System.Environment
 import Data.List
@@ -69,6 +67,14 @@ utcgiven g = taiToUTCTime theLeapSecondTable (gpsgiven g)
 gps2time :: Integer->String
 gps2time g = formatTime defaultTimeLocale "%F %T %Z" (utcgiven g)
 
+timestring :: String->String
+timestring ss = show (readTime defaultTimeLocale "%Y %_m %e %k %_M %_S %Z" ss :: UTCTime)
+
+tuple2string :: (Int, Int, Int, Int, Int, Int, String)->String
+tuple2string (aa,bb,cc,dd,ee,ff,gg) = (show aa)++" "++(show bb)++" "++(show cc)++" "++(show dd)++" "++(show ee)++" "++(show ff)++" "++gg
+
+timetuple2gps = time2gps.timestring.tuple2string
+
 
 {-
 These output is obsolute : Mar.4. 2014
@@ -89,5 +95,12 @@ input format is "integer"
 New function output example : Jun.11. 2014
 *Main> gps2time 1041033616
 "2013-01-01 00:00:00 UTC"
+
+Output example : Jun. 18. 2014
+*HasKAL.TimeUtils.GPSfunction> let datesample = (2014, 3, 17, 16, 15, 12, "JST") :: (Int, Int, Int, Int, Int, Int, String)
+*HasKAL.TimeUtils.GPSfunction> timetuple2gps datesample
+"1079075728"
+
+
 -}
 
