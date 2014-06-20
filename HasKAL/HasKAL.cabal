@@ -73,7 +73,8 @@ library
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
-    HasKAL.SignalProcessingUtils.Filter
+    HasKAL.SignalProcessingUtils.Filter,
+    HasKAL.TimeUtils.GPSfunction
 
   -- Modules included in this library but not exported.
   -- other-modules:
