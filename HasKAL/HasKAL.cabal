@@ -53,6 +53,8 @@ library
     HasKAL.ExternalUtils.GSL.RandomNumberDistributions,
     HasKAL.ExternalUtils.LAL.Lwtprint,
     HasKAL.FrameUtils.FrameUtils,
+    HasKAL.FrameUtils.PickUpFileName,
+    HasKAL.FrameUtils.FileManipulation,
     HasKAL.GUI_Utils.GUI_GaussianityRayleighMon,
     HasKAL.GUI_Utils.GUI_GlitchKleineWelle,
     HasKAL.GUI_Utils.GUI_RangeIMBH,
@@ -68,11 +70,11 @@ library
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.PlotUtils.PlotUtilsHROOT,
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
+    HasKAL.SignalProcessingUtils.WindowFunction,
+    HasKAL.SignalProcessingUtils.WindowType,
     HasKAL.SpectrumUtils.SpectrumUtils,
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
-    HasKAL.SignalProcessingUtils.WindowFunction,
-    HasKAL.SignalProcessingUtils.WindowType,
     HasKAL.SignalProcessingUtils.Filter,
     HasKAL.TimeUtils.GPSfunction
 
@@ -108,7 +110,9 @@ library
        old-locale ==1.0.0.5,
        time ==1.4.0.1,
        split,
-       containers
+       containers,
+       filepath,
+       directory
 
   -- Directories containing source files.
   hs-source-dirs:      src
