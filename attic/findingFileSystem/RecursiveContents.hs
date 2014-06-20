@@ -1,7 +1,7 @@
 module RecursiveContents
 ( getRecursiveContents
 , getCurrentDirectory
---,
+, genFileList
 ) where
 
 import Control.Monad (forM)
@@ -11,7 +11,7 @@ import System.FilePath ((</>))
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents topdir = do
     name <- getDirectoryContents topdir
-    let properNames = filter (`notElem` [".", ".."]) name
+    let properNames = filter (`notElem` [".", "..", ".DS_Store"]) name
     paths <- forM properNames $ \tmpname -> do
       let path = topdir </> tmpname
       isDirectory <- doesDirectoryExist path
@@ -20,5 +20,8 @@ getRecursiveContents topdir = do
         else return [path]
     return (concat paths)
 
-
+genFileList :: FilePath -> FilePath -> IO()
+genFileList fileName absDir = do
+    contents <- getRecursiveContents absDir
+    writeFile fileName $ unlines contents
 
