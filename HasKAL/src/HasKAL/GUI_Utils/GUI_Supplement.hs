@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:48:33
+  * Last Modified: 2014/06/23 15:06:40
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -21,7 +21,6 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,convert_StoDT3L
   ,convert_DL2S
   ,convert_DLL2S
-  ,transposed
 ) where
 
 import Graphics.UI.Gtk
@@ -126,8 +125,3 @@ convert_DL2S xs = unlines $ map show xs
 
 convert_DLL2S :: [[Double]] -> String
 convert_DLL2S xss = unlines [unwords (map show xs) | xs <- xss]
-
-transposed :: [[a]] -> [[a]]
-transposed [] = []
-transposed ([] : xss) = transposed xss
-transposed ((x:xs) : xss) = (x : [y | (y:_) <- xss]) : transposed (xs : [z | (_:z) <- xss])
