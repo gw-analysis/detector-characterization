@@ -62,6 +62,7 @@ library
     HasKAL.GUI_Utils.GUI_RangeRingDown,
     HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
+    HasKAL.Misc.StrictMapping,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
     HasKAL.MonitorUtils.RangeMon.IMBH,
