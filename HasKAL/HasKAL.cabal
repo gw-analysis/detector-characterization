@@ -147,3 +147,6 @@ executable loadFrameData
 
   ghc-options:  -O2 -threaded -rtsopts -eventlog
   extra-libraries:  Frame
+
+
+
