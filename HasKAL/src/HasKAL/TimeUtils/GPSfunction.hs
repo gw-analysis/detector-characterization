@@ -14,6 +14,8 @@ Modified by T.Yokozawa, Jun.16.2014
    Change the directory of readFile of tai-utc.dat
 Modified by T.Yokozawa, Jun.18.2014
    Make timetuple2gps
+Modified by T.Yokozawa, Jun.24.2014
+   Make mjd2gps' (preliminary)
 -}
 
 
@@ -23,9 +25,11 @@ module HasKAL.TimeUtils.GPSfunction
 ( time2gps
 , gps2time
 , timetuple2gps
+, mjd2gps'
 ) where
 
 import Data.Time
+import Data.Time.Calendar
 import Data.Time.Clock
 import Data.Time.Clock.TAI
 import System.Environment
@@ -75,6 +79,21 @@ tuple2string (aa,bb,cc,dd,ee,ff,gg) = (show aa)++" "++(show bb)++" "++(show cc)+
 
 timetuple2gps = time2gps.timestring.tuple2string
 
+mjdsample = 56733.302222::Double
+
+mjdday :: Double->Double
+mjdday tt = (fromIntegral (floor tt))::Double
+
+mjdsecond :: Double->Integer
+mjdsecond tt = round (86400.0*(tt - (mjdday tt)))
+
+mjd2utc :: Double->UTCTime
+mjd2utc tt = UTCTime (ModifiedJulianDay $ floor tt) (secondsToDiffTime $ mjdsecond tt)
+
+mjd2string :: Double->String
+mjd2string tt = formatTime defaultTimeLocale "%F %T %Z" (mjd2utc tt)
+
+mjd2gps' = time2gps.mjd2string
 
 {-
 These output is obsolute : Mar.4. 2014
@@ -101,6 +120,10 @@ Output example : Jun. 18. 2014
 *HasKAL.TimeUtils.GPSfunction> timetuple2gps datesample
 "1079075728"
 
+Output example : Jun. 24. 2014
+56733.302222 is modified julian day of (2014, 3, 17, 16, 15, 12, "JST")
+*HasKAL.TimeUtils.GPSfunction> mjd2gps' 56733.302222
+"1079075728"
 
 -}
 
