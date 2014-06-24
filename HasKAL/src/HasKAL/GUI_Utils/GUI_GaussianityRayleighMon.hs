@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:45:23
+  * Last Modified: 2014/06/24 18:05:16
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -19,6 +19,7 @@ import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
+import qualified HasKAL.Misc.Flip3param as HMF
 
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 
@@ -111,11 +112,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
 readFrame' :: String -> String -> IO [Double]
 readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
 
-flip231 :: (a -> b -> c -> d) -> b -> c -> a -> d
-flip231 = (flip.).flip
-
 getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
-getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
+getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(HMF.flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
   where datW = SIOU.unsafePerformIO $ mapM (readFrame' channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
         gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
 
