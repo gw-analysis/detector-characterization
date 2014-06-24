@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/04/12 19:47:51
+# Last Modified: 2014/06/24 11:47:31
 #******************************************#
 
 # compiler option
@@ -12,8 +12,10 @@ HC = ghc -O2
 USELIB=
 
 # program
-TAR1=testGSL
-TAR= ${TAR1}
+TAR1=gslBindingsTest
+#TAR2=gslRandomTest
+TAR3=gslHasKALTest
+TAR= ${TAR1} ${TAR2} ${TAR3}
 
 # link path
 ifneq (${USELIB},)
@@ -30,6 +32,11 @@ endif
 all: ${TAR}
 
 ${TAR1}: ${TAR1}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR2}: ${TAR2}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR3}: ${TAR3}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
