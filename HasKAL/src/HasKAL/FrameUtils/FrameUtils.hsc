@@ -39,12 +39,15 @@ framefile_Name = "test-1065803961-10.gwf"
 {-# LANGUAGE GADTs #-}
 
 module HasKAL.FrameUtils.FrameUtils
-    (writeFrame
-    , addChannel
-    , readFrame
-    , FrDataType(CFloatData, CDoubleData)
-    , eval
-    ) where
+( writeFrame
+, addChannel
+, readFrame
+, getChannelList
+, getGPSTime
+, getSamplingFrequency
+, FrDataType(CFloatData, CDoubleData)
+, eval
+) where
 
 -- Foreigns
 import Foreign
@@ -61,9 +64,9 @@ import Control.Applicative
 type CFRVECTTYPES = (#type FRVECTTYPES)
 type CFRULONG     = (#type FRULONG)
 type CFRLONG      = (#type FRLONG)
-
 newtype FrVectOption = FrVectOption { unFrVectOption :: CInt }
     deriving (Eq,Show)
+
 #{enum FrVectOption, FrVectOption
     , frvect_c      = FR_VECT_C
     , frvect_2s     = FR_VECT_2S
@@ -86,26 +89,32 @@ newtype FrVectOption = FrVectOption { unFrVectOption :: CInt }
     , frvect_h16    = FR_VECT_H16
     , frvect_END    = FR_VECT_END}
 
-
 data FrFile_partial
-data FrameH_partial = FrameH_partial {frameh_dt         :: CDouble
-                                    , frameh_GTimeS     :: CUInt
-                                    , frameh_frprocdata :: Ptr FrProcData_partial}
+data FrameH_partial = FrameH_partial { frameh_dt         :: CDouble
+                                     , frameh_GTimeS     :: CUInt
+                                     , frameh_GTimeN     :: CUInt
+                                     , frameh_frprocdata :: Ptr FrProcData_partial
+                                     , frameh_frrawdata  :: Ptr C_FrRawData
+                                     }
 data FrProcData_partial = FrProcData_partial {frprocdata_data :: Ptr FrVect_partial}
+data C_FrRawData = C_FrRawData {raw_FrAdcData :: Ptr C_FrAdcData}
 data CFrameDump
 data FrFile
-data FrVect_partial = FrVect_partial {frvect_type     :: CFRVECTTYPES
-                                    , frvect_nData    :: CFRULONG
-                                    , frvect_dx       :: Ptr CDouble
-                                    , frvect_nDim     :: CUInt
-                                    , frvect_nx       :: Ptr CFRULONG
-                                    , frvect_startX   :: CDouble
-                                    , frvect_GTime    :: CDouble
-                                    , frvect_dataF    :: Ptr CFloat
-                                    , frvect_dataD    :: Ptr CDouble}
+data FrVect_partial = FrVect_partial { frvect_type    :: CFRVECTTYPES
+                                     , frvect_nData   :: CFRULONG
+                                     , frvect_dx      :: Ptr CDouble
+                                     , frvect_nDim    :: CUInt
+                                     , frvect_nx      :: Ptr CFRULONG
+                                     , frvect_startX  :: CDouble
+                                     , frvect_GTime   :: CDouble
+                                     , frvect_dataF   :: Ptr CFloat
+                                     , frvect_dataD   :: Ptr CDouble
+                                     }
+data C_FrAdcData = C_FrAdcData { fradc_data       :: Ptr FrVect_partial
+                               , fradc_sampleRate :: CDouble
+                               }
 --data FrDataType  = CFloatData [CFloat] | CDoubleData [CDouble]
 --                 deriving (Show)
-
 data FrDataType a where
     CFloatData  :: [CFloat] -> FrDataType [CFloat]
     CDoubleData :: [CDouble] -> FrDataType [CDouble]
@@ -114,8 +123,7 @@ eval (CFloatData a)  = a
 eval (CDoubleData a) = a
 
 
--- (注意！！DoubleとCDoubleは消費メモリが違う！！！)
-
+{-- Functions to manipulate frame-formated files --}
 writeFrame :: String -> String -> String -> String -> CDouble -> CDouble -> CDouble -> [CFloat] -> IO()
 writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate startGPS dt xs = do
 
@@ -150,7 +158,9 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
     let nData' = (truncate sampleRate)*(truncate dt) :: Int
     copyArray ptr_frvectdataf ys nData'
     let startGPS' = truncate startGPS :: CUInt
-    poke frameptr (FrameH_partial dt startGPS' ptr_frprocdata)
+        startGPSN = 0 :: CUInt
+        ptr_frrawdata = nullPtr
+    poke frameptr (FrameH_partial dt startGPS' startGPSN ptr_frprocdata ptr_frrawdata)
 
 --    xs <- return (read (show [1..16384]) :: [CFloat])
 --    pokeArray ptr_frvectdataf xs
@@ -160,7 +170,6 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
 --    cstdout <- ciostdout
 -- 理由がまだ分からないが、Cのstdoutが使えない。
 --    c_FrameDump frameptr cstdout 2
-
     c_FrameWrite frameptr oFile
     c_FrFileOEnd oFile
     c_FrameFree frameptr
@@ -190,16 +199,15 @@ addChannel framefileName channel_Name sampleRate startGPS dt xs = do
     let nData' = (truncate sampleRate)*(truncate dt) :: Int
     copyArray ptr_frvectdataf ys nData'
     let startGPS' = truncate startGPS :: CUInt
-    poke frameptr (FrameH_partial dt startGPS' ptr_frprocdata)
+        startGPSN = 0 :: CUInt
+        ptr_frrawdata = nullPtr
+    poke frameptr (FrameH_partial dt startGPS' startGPSN ptr_frprocdata ptr_frrawdata)
 
 --    cstdout <- ciostdout
 -- 理由がまだ分からないが、Cのstdoutが使えない。
 --    c_FrameDump frameptr cstdout 2
-
     c_FrFileITEnd iFile
     c_FrameFree frameptr
-
-
 
 {-
 readFrame :: IO (String) -> IO (String) -> IO (FrDataType)
@@ -234,6 +242,8 @@ readFrame channel_Name framefile_Name = do
             array_vdata <- retrieveFrVectDataD v
             return (CDoubleData array_vdata)
 -}
+
+
 readFrame :: String -> String -> IO(FrDataType [CDouble])
 readFrame channel_Name framefile_Name = do
 
@@ -247,7 +257,6 @@ readFrame channel_Name framefile_Name = do
 
     ptr_v <- c_FrFileIGetV ifile channel fstart frlen
     v <- peek ptr_v
-
 
     let datatype = frvect_type v
     case datatype of
@@ -264,19 +273,51 @@ readFrame channel_Name framefile_Name = do
           return (CDoubleData array_vdata)
 
 
--- storable type
+getChannelList :: String -> Int -> IO [String]
+getChannelList frameFile gpsTime = do
+  frameFile' <- newCString frameFile
+  ifile <- c_FrFileINew frameFile'
+  let gpsTime' = fromIntegral gpsTime :: CInt
+  channelList' <- c_FrFileIGetChannelList ifile gpsTime'
+  channelList <- peekCString channelList'
+  return $ lines channelList
+
+
+getSamplingFrequency :: String -> String -> Int -> IO Double
+getSamplingFrequency = undefined
+
+
+getGPSTime :: String -> IO (Int, Int)
+getGPSTime frameFile = do
+  frameFile' <- newCString frameFile
+  ifile <- c_FrFileINew frameFile'
+  ptr_frameH <- c_FrameRead ifile
+  val_frameH <- peek ptr_frameH
+  val_GTimeS <-  return $ frameh_GTimeS val_frameH
+  val_GTimeN <-  return $ frameh_GTimeN val_frameH
+  return (fromIntegral val_GTimeS, fromIntegral val_GTimeN)
+
+
+{-- Storable Type for structure--}
 instance Storable FrameH_partial where
   sizeOf = const #size FrameH
   alignment = sizeOf
-  poke frameptr (FrameH_partial val_dt val_GTimeS val_FrProcData) = do
+  poke frameptr (FrameH_partial val_dt val_GTimeS val_GTimeN val_FrProcData val_FrRawData) = do
     (#poke FrameH, dt) frameptr val_dt
     (#poke FrameH, GTimeS) frameptr val_GTimeS
-    (#poke FrameH, procData ) frameptr val_FrProcData
+    (#poke FrameH, GTimeN) frameptr val_GTimeN
+    (#poke FrameH, procData) frameptr val_FrProcData
+    (#poke FrameH, rawData) frameptr val_FrRawData
   peek frameptr = do
     val_dt <- (#peek FrameH, dt) frameptr
     val_GTimeS <- (#peek FrameH, GTimeS) frameptr
+    val_GTimeN <- (#peek FrameH,  GTimeN) frameptr
     val_FrProcData <- (#peek FrameH,  procData) frameptr
-    return $ FrameH_partial {frameh_dt=val_dt, frameh_GTimeS=val_GTimeS, frameh_frprocdata=val_FrProcData}
+    val_FrRawData <- (#peek FrameH, rawData) frameptr
+    return $ FrameH_partial {frameh_dt=val_dt, frameh_GTimeS=val_GTimeS
+                            , frameh_GTimeN=val_GTimeN, frameh_frprocdata=val_FrProcData
+                            , frameh_frrawdata=val_FrRawData}
+
 
 instance Storable FrVect_partial where
   sizeOf = const #size struct FrVect
@@ -319,6 +360,7 @@ instance Storable FrVect_partial where
                               , frvect_dataF    = ptr_dataF
                               , frvect_dataD    = ptr_dataD }
 
+
 instance Storable FrProcData_partial where
   sizeOf = const #size struct FrProcData
   alignment = sizeOf
@@ -329,7 +371,23 @@ instance Storable FrProcData_partial where
     return $ FrProcData_partial {frprocdata_data = ptr_data}
 
 
--- import C function
+instance Storable C_FrAdcData where
+  sizeOf = const #size struct FrAdcData
+  alignment = sizeOf
+  poke ptr_FrAdcData (C_FrAdcData ptr_data val_sampleRate) = do
+    (#poke struct FrAdcData, data) ptr_FrAdcData ptr_data
+    (#poke struct FrAdcData, sampleRate) ptr_FrAdcData val_sampleRate
+  peek ptr_FrAdcData = do
+    ptr_data <- (#peek struct FrAdcData, data) ptr_FrAdcData
+    val_sampleRate <- (#peek struct FrAdcData, sampleRate) ptr_FrAdcData
+    return $ C_FrAdcData { fradc_data = ptr_data
+                         , fradc_sampleRate = val_sampleRate
+                         }
+
+
+
+
+{-- import C function --}
 foreign import ccall unsafe "FrameL.h FrameNew"
     c_FrameNew :: CString -> IO (Ptr FrameH_partial)
 
@@ -348,7 +406,7 @@ foreign import ccall unsafe "FrameL.h FrFileONewM"
                     -> CInt
                     -> IO (Ptr FrFile_partial)
 
-foreign import ccall unsafe "FrFileOEnd"
+foreign import ccall unsafe "FrameL.h FrFileOEnd"
     c_FrFileOEnd :: Ptr FrFile_partial
                     -> IO(CInt)
 
@@ -394,5 +452,10 @@ foreign import ccall unsafe "FrameL.h FrVectFree"
 
 foreign import ccall unsafe "FrameL.h FrameRead"
   c_FrameRead :: Ptr FrFile -> IO (Ptr FrameH_partial)
+
+foreign import ccall unsafe "FrameL.h FrFileIGetChannelList"
+  c_FrFileIGetChannelList :: Ptr FrFile -> CInt -> IO CString
+
+
 
 
