@@ -63,6 +63,7 @@ library
     HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
     HasKAL.Misc.StrictMapping,
+    HasKAL.Misc.Flip3param,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
     HasKAL.MonitorUtils.RangeMon.IMBH,
@@ -77,7 +78,8 @@ library
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.SignalProcessingUtils.Filter,
-    HasKAL.TimeUtils.GPSfunction
+    HasKAL.TimeUtils.GPSfunction,
+    HasKAL.TimeUtils.TimeConvert
 
   -- Modules included in this library but not exported.
   -- other-modules:
