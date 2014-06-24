@@ -275,27 +275,44 @@ readFrame channel_Name framefile_Name = do
 
 getChannelList :: String -> Int -> IO [String]
 getChannelList frameFile gpsTime = do
-  frameFile' <- newCString frameFile
-  ifile <- c_FrFileINew frameFile'
-  let gpsTime' = fromIntegral gpsTime :: CInt
-  channelList' <- c_FrFileIGetChannelList ifile gpsTime'
-  channelList <- peekCString channelList'
-  return $ lines channelList
+    frameFile' <- newCString frameFile
+    ifile <- c_FrFileINew frameFile'
+    let gpsTime' = fromIntegral gpsTime :: CInt
+    channelList' <- c_FrFileIGetChannelList ifile gpsTime'
+    channelList <- peekCString channelList'
+    return $ lines channelList
 
 
 getSamplingFrequency :: String -> String -> Int -> IO Double
-getSamplingFrequency = undefined
+getSamplingFrequency frameFile channelName gpsTime = do
+    channel <- newCString channelName
+    framefileName <- newCString frameFile
+    ifile <- c_FrFileINew framefileName
+    fstart <- c_FrFileITStart ifile
+    fend   <- c_FrFileITEnd ifile
+    let frlen = fend - fstart
+    ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+    v <- peek ptr_v
+    dt' <- peekArray 1 (frvect_dx v)
+    let dt = realToFrac (dt'!!0) :: Double
+    return $ sampleRateIt dt
+    where
+      sampleRateIt dt
+        | rate>=1.0 = fromIntegral $ floor $ rate + 0.5
+        | rate<1.0  = rate
+        where rate = 1.0 / dt
+
 
 
 getGPSTime :: String -> IO (Int, Int)
 getGPSTime frameFile = do
-  frameFile' <- newCString frameFile
-  ifile <- c_FrFileINew frameFile'
-  ptr_frameH <- c_FrameRead ifile
-  val_frameH <- peek ptr_frameH
-  val_GTimeS <-  return $ frameh_GTimeS val_frameH
-  val_GTimeN <-  return $ frameh_GTimeN val_frameH
-  return (fromIntegral val_GTimeS, fromIntegral val_GTimeN)
+    frameFile' <- newCString frameFile
+    ifile <- c_FrFileINew frameFile'
+    ptr_frameH <- c_FrameRead ifile
+    val_frameH <- peek ptr_frameH
+    val_GTimeS <-  return $ frameh_GTimeS val_frameH
+    val_GTimeN <-  return $ frameh_GTimeN val_frameH
+    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN)
 
 
 {-- Storable Type for structure--}
