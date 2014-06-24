@@ -25,6 +25,7 @@ module HasKAL.TimeUtils.GPSfunction
 ( time2gps
 , gps2time
 , timetuple2gps
+, gps2timetuple
 , mjd2gps'
 ) where
 
@@ -62,6 +63,8 @@ taigiven s = utcToTAITime theLeapSecondTable (timegiven s)
 time2gps :: String->String
 time2gps s = init $ show (diffAbsoluteTime (taigiven s) taibase)
 
+--for gps2time
+
 gpsgiven :: Integer->AbsoluteTime
 gpsgiven g = addAbsoluteTime (secondsToDiffTime g) taibase
 
@@ -71,6 +74,8 @@ utcgiven g = taiToUTCTime theLeapSecondTable (gpsgiven g)
 gps2time :: Integer->String
 gps2time g = formatTime defaultTimeLocale "%F %T %Z" (utcgiven g)
 
+--for timetuple2gps
+
 timestring :: String->String
 timestring ss = show (readTime defaultTimeLocale "%Y %_m %e %k %_M %_S %Z" ss :: UTCTime)
 
@@ -78,6 +83,29 @@ tuple2string :: (Int, Int, Int, Int, Int, Int, String)->String
 tuple2string (aa,bb,cc,dd,ee,ff,gg) = (show aa)++" "++(show bb)++" "++(show cc)++" "++(show dd)++" "++(show ee)++" "++(show ff)++" "++gg
 
 timetuple2gps = time2gps.timestring.tuple2string
+
+--for gps2timetuple
+
+gps2Gregorian :: Integer->(Integer, Int, Int)
+gps2Gregorian gg = toGregorian (utctDay (utcgiven gg))
+
+gps2Hour :: Integer -> Int
+gps2Hour gg = todHour $ timeToTimeOfDay (utctDayTime (utcgiven gg))
+
+gps2Min :: Integer -> Int
+gps2Min gg = todMin $ timeToTimeOfDay (utctDayTime (utcgiven gg))
+
+gps2Sec :: Integer -> Int
+gps2Sec gg = (floor (todSec $ timeToTimeOfDay (utctDayTime (utcgiven gg))))::Int
+
+maketimetuple :: (Integer, Int, Int) -> Int -> Int -> Int ->(Int, Int, Int, Int, Int, Int, String)
+maketimetuple (yy,mm,dd) h m s = ((fromInteger yy)::Int, mm, dd, h, m, s, "UTC")
+
+gps2timetuple :: Integer -> (Int, Int, Int, Int, Int, Int, String)
+gps2timetuple gg = maketimetuple (gps2Gregorian gg) (gps2Hour gg) (gps2Min gg) (gps2Sec gg) 
+
+
+--for Modified Julian Day(mjd)
 
 mjdsample = 56733.302222::Double
 
