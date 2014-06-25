@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/04 22:21:49
+  * Last Modified: 2014/06/25 14:28:23
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -14,6 +14,7 @@ import qualified Numeric.LinearAlgebra as NLA -- data Vector, fromList, toList
 import qualified System.IO as SIO -- openFile
 
 import qualified HasKAL.GUI_Utils.GUI_GaussianityRayleighMon as HGGGR
+import qualified HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon as HGGGS
 import qualified HasKAL.GUI_Utils.GUI_GlitchKleineWelle as HGGGKW
 import qualified HasKAL.GUI_Utils.GUI_RangeInspiral as HGGRI
 import qualified HasKAL.GUI_Utils.GUI_RangeIMBH as HGGRIMBH
@@ -185,7 +186,7 @@ hasKalGuiGaussianity activeSubSystemlabels = do
   gaussianityChannels <- CM.forM activeSubSystemlabels $ \lambda -> SIO.hGetContents =<< SIO.openFile (HGGS.haskalOpt ++ "/channels/channelList" ++ lambda ++ ".txt") SIO.ReadMode --gaussianityIFile
 
   {--  Information  --}
-  let gaussianityMonitorLabels = ["RayleighMon"]
+  let gaussianityMonitorLabels = ["RayleighMon", "SRMon"]
   let gaussianityChannelLabels = lines (concat gaussianityChannels)
   let gaussianityNumOfChannel = length gaussianityChannelLabels
 
@@ -216,6 +217,10 @@ hasKalGuiGaussianity activeSubSystemlabels = do
     let gaussianityActiveLabels = HGGS.getActiveLabels gaussianityChannelCButtons
     case length gaussianityActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected channels"
                                            _ -> HGGGR.hasKalGuiRayleighMon gaussianityActiveLabels
+  onClicked (gaussianityMonitorButtons !! 1) $ do
+    let gaussianityActiveLabels = HGGS.getActiveLabels gaussianityChannelCButtons
+    case length gaussianityActiveLabels of 0 -> hasKalGuiMessage "Error" "Not selected channels"
+                                           _ -> HGGGS.hasKalGuiStudentRayleighMon gaussianityActiveLabels
     widgetDestroy gaussianityWindow
     hasKalGuiGaussianity activeSubSystemlabels
   {--  Select Closed  --}
