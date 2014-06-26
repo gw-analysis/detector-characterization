@@ -21,13 +21,11 @@ iirFilter input ilen numCoeff denomCoeff flen = do
       denomCoeff' = d2cd denomCoeff
   cd2d $ iirFilterCore input' ilen numCoeff' denomCoeff' flen
 
-firFilter :: [Double] -> Int -> [Double] -> [Double] -> [Int] -> Int -> [Double]
-firFilter input ilen firCoeff firBuff indx flen = do
+firFilter :: [Double] -> Int -> [Double] -> Int -> [Double]
+firFilter input ilen firCoeff flen = do
   let input' = d2cd input
       firCoeff' = d2cd firCoeff
-      firBuff' = d2cd firBuff
-      indx' = i2w32 indx
-  cd2d $ firFilterCore input' ilen firCoeff' firBuff' indx' flen
+  cd2d $ firFilterCore input' ilen firCoeff' flen
 
 
 
@@ -44,14 +42,12 @@ iirFilterCore input ilen numCoeff denomCoeff flen
       where wilen = itow32 ilen
             wflen = itow32 flen
 
-firFilterCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> [CUInt] -> Int -> [CDouble]
-firFilterCore input ilen firCoeff firBuff indx flen
+firFilterCore :: [CDouble] -> Int -> [CDouble] -> Int -> [CDouble]
+firFilterCore input ilen firCoeff flen
   = unsafePerformIO $ withArray input $ \ptrInput ->
    withArray firCoeff $ \ptrFirCoeff ->
-   withArray firBuff $ \ptrFirBuff ->
-   withArray indx $ \ptrIndx ->
    allocaArray ilen $ \ptrOutput ->
-   do c_fir_filter ptrInput wilen ptrFirCoeff ptrFirBuff ptrIndx wflen ptrOutput
+   do c_fir_filter ptrInput wilen ptrFirCoeff wflen ptrOutput
       peekArray ilen ptrOutput
       where wilen = itow32 ilen
             wflen = itow32 flen
@@ -59,9 +55,6 @@ firFilterCore input ilen firCoeff firBuff indx flen
 
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
-
-i2w32:: [Int] -> [CUInt]
-i2w32 = map fromIntegral
 
 d2cd :: [Double] -> [CDouble]
 d2cd = map realToFrac
@@ -72,6 +65,6 @@ cd2d = map realToFrac
 
 foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
-foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble ->  Ptr CDouble -> Ptr CUInt -> CUInt -> Ptr CDouble -> IO()
+foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
 
