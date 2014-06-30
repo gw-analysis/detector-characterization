@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/25 14:23:07
+  * Last Modified: 2014/06/30 10:47:20
   *******************************************-}
 
 -- Reference
@@ -29,18 +29,30 @@ import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as HMSRF
 --   print $ studentRayleighMon 100 10 100.0 [1.0,1.0..] $ take 1000 [0.0, 0.1..]
 
 {-- External Functions --}
+---- param1: データチャンクT
+---- param1: オーバーラップ p (0 < p < 1)
+---- param2: データストライド dT
+---- param3: データストライド dF
+---- param4: サンプリング 1/dt
+---- param5: 両側平均スペクトル Sn(f)
+---- param6: 時系列データ n(t)
+---- retur7: 自由度 nu(f_{j})
+studentRayleighMon :: Int -> Double -> Int -> Int -> Double -> [Double] -> [Double] -> [[Double]]
+studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMon numT numF fsample snf) $ dataSplit num m noft
+  where m = truncate $ (fromIntegral num) * p
+
+{-- Internal Functions --}
 ---- param1: データストライド dT
 ---- param2: データストライド dF
 ---- param3: サンプリング 1/dt
 ---- param4: 両側平均スペクトル Sn(f)
 ---- param5: 時系列データ n(t)
 ---- return: 自由度 nu(f_{j})
-studentRayleighMon :: Int -> Int -> Double -> [Double] -> [Double] -> [Double]
-studentRayleighMon numT numF fsample snf noft = map getOptimalNuLSM $ dataSplit (numF*(length woff)) 0 $ concat $ DL.transpose woff
+baseStudentRayleighMon :: Int -> Int -> Double -> [Double] -> [Double] -> [Double]
+baseStudentRayleighMon numT numF fsample snf noft = map getOptimalNuLSM $ dataSplit (numF*(length woff)) 0 $ concat $ DL.transpose woff
   where woff = map (map (*(sqrt 2.0)) ) $ map (flip (zipWith (/)) (map sqrt snf)) noff
         noff = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 noft
 
-{-- Internal Functions --}
 -- nu決定ルーチン(最小二乗法)
 ---- param1: 規格化されたデータセット w(f_{j=j0})
 ---- return: 自由度 nu(f_{j=j0})

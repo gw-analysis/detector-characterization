@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityStudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/25 14:25:23
+  * Last Modified: 2014/06/30 11:15:59
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon(
@@ -38,6 +38,8 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
   srMonHBoxCache <- hBoxNew True 5
   srMonHBoxDate <- mapM (hBoxNew True) $ take 7 [5..]
   srMonHBoxObsTime <- hBoxNew True 5
+  srMonHBoxChunck <- hBoxNew True 5
+  srMonHBoxOverlap <- hBoxNew True 5
   srMonHBoxSampling <- hBoxNew True 5
   srMonHBoxStride <- hBoxNew True 5
   srMonHBoxFClust <- hBoxNew True 5
@@ -45,7 +47,9 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
 
   srMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
   srMonDateCombo <- HGGS.dateComboNew (2014, 3, 17, 16, 15, 12, "JST")
-  srMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
+  srMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "256"
+  srMonChunckEntry <- HGGS.entryNewWithLabelDefault "Chunk size" "2097152"
+  srMonOverlapEntry <- HGGS.entryNewWithLabelDefault "Overlap(0 < p < 1)" "0.5"
   srMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
   srMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "32768"
   srMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "32"
@@ -66,6 +70,12 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
   CM.zipWithM HGGS.boxPackStartDefaultsPair srMonHBoxDate $ srMonDateCombo
   boxPackStartDefaults srMonVBox srMonHBoxObsTime
   HGGS.boxPackStartDefaultsPair srMonHBoxObsTime srMonObsTimeEntry
+
+  boxPackStartDefaults srMonVBox srMonHBoxChunck
+  HGGS.boxPackStartDefaultsPair srMonHBoxChunck srMonChunckEntry
+  boxPackStartDefaults srMonVBox srMonHBoxOverlap
+  HGGS.boxPackStartDefaultsPair srMonHBoxOverlap srMonOverlapEntry
+
   boxPackStartDefaults srMonVBox srMonHBoxSampling
   HGGS.boxPackStartDefaultsPair srMonHBoxSampling srMonSamplingEntry
   boxPackStartDefaults srMonVBox srMonHBoxStride
@@ -85,6 +95,10 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
         srmDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) srMonDateCombo
         srmGPS = read $ HTG.timetuple2gps srmDate :: Integer
         srmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonObsTimeEntry :: Integer
+
+        srmChunck = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonChunckEntry :: Int
+        srmOverlap = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonOverlapEntry :: Double
+
         srmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonSamplingEntry :: Double
         srmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonStrideEntry :: Int
         srmFClust = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonFClustEntry :: Int
@@ -96,8 +110,10 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
 {--}
     let snf = getAvePsdFromGPS srmStride srmSampling 32 srmGPS (activeChannelLabels !! 0) srmCache
         frData = getDataFromGPS srmGPS srmObsTime (activeChannelLabels !! 0) srmCache
-        nu = SRM.studentRayleighMon srmStride srmFClust srmSampling snf frData
-    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] nu
+        nu = SRM.studentRayleighMon srmChunck srmOverlap srmStride srmFClust srmSampling snf frData
+    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 0)
+    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 1)
+    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 2)
 {----}
 
   {--  Exit Process  --}
