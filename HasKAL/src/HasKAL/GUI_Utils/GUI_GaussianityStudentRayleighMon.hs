@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityStudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/30 11:15:59
+  * Last Modified: 2014/06/30 13:30:50
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon(
@@ -112,8 +112,6 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
         frData = getDataFromGPS srmGPS srmObsTime (activeChannelLabels !! 0) srmCache
         nu = SRM.studentRayleighMon srmChunck srmOverlap srmStride srmFClust srmSampling snf frData
     HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 0)
-    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 1)
-    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 2)
 {----}
 
   {--  Exit Process  --}

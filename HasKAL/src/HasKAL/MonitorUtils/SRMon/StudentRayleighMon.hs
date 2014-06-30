@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/30 10:47:20
+  * Last Modified: 2014/06/30 13:31:13
   *******************************************-}
 
 -- Reference
@@ -30,13 +30,13 @@ import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as HMSRF
 
 {-- External Functions --}
 ---- param1: データチャンクT
----- param1: オーバーラップ p (0 < p < 1)
----- param2: データストライド dT
----- param3: データストライド dF
----- param4: サンプリング 1/dt
----- param5: 両側平均スペクトル Sn(f)
----- param6: 時系列データ n(t)
----- retur7: 自由度 nu(f_{j})
+---- param2: オーバーラップ p (0 < p < 1)
+---- param3: データストライド dT
+---- param4: データストライド dF
+---- param5: サンプリング 1/dt
+---- param6: 両側平均スペクトル Sn(f)
+---- param7: 時系列データ n(t)
+---- retur8: 自由度 nu(f_{j})
 studentRayleighMon :: Int -> Double -> Int -> Int -> Double -> [Double] -> [Double] -> [[Double]]
 studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMon numT numF fsample snf) $ dataSplit num m noft
   where m = truncate $ (fromIntegral num) * p
