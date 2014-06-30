@@ -1,16 +1,14 @@
 {--
 
 ----- To compile -----
-You need to create symbolic link to HasKAL.
-    ln -s ~/detector-characterization/HasKAL/src/HasKAL ./
+You must set enviromental variables of HasKAL
+    setenv HASKALOPT /somewhere/detecotor-characterization/optFiles
 
-You need to create symbolic link to frame data.
-    ln -s ~/detector-characterization/test/sample-data/test-1066392016-300.gwf ./
-
-After these command, you can compile.
+After this, you can compile.
 If you have any trouble or error, let author(Hirotaka Yuzurihara) know please.
 
 --}
+
 
 {--
 ----- sample code -----
@@ -28,11 +26,14 @@ main = do
 
 --}
 
+
 module HasKAL.PlotUtils.PlotUtilsHROOT(
        hroot_core,
        plot,
-       plot_st,
-       plot_sf
+       linearLinearPlot,
+       linearLogPlot,
+       logLinearPlot,
+       logLogPlot
        ) where
 
 import HROOT
@@ -40,8 +41,8 @@ import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
 hroot_core::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String ->IO()
 hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
-
-	   tapp <- newTApplication "test" [0] ["test"]
+    
+           tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 
 	   g1 <- newTGraph (length xdata) xdata ydata
@@ -88,30 +89,45 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
            checkSaveAsOrPlotX11 fileName
 
 
+
 	   delete g1
            delete tcanvas
-	   delete tapp
+--	   delete tapp
 
 
+-- linearLinearPlot,
+-- linearLogPlot,
+-- logLinearPlot,
+-- logLogPlot
 
-
--- 細かいことはいいからplotしたい人向け
+-- functiont to plot simply
 plot::[Double] -> [Double] -> String ->IO()
 plot xdata ydata fileName = do
            hroot_core xdata ydata "" "" Linear LinePoint fileName
 
 
--- 時系列データをplotする
--- 時系列なので、logスケールの引数はなし
-plot_st::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
-plot_st xdata ydata xLabel yLabel flagPlotLine fileName = do
+-- function to plot in scale of linear-linear
+linearLinearPlot::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
+linearLinearPlot xdata ydata xLabel yLabel flagPlotLine fileName = do
            hroot_core xdata ydata "" "" Linear flagPlotLine fileName
 
 
--- log-logスケールでスペクトルをplotする
-plot_sf::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String -> IO()
-plot_sf xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
-           hroot_core xdata ydata "" "" flagLog flagPlotLine fileName
+-- function to plot in scale of linear-log
+linearLogPlot::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
+linearLogPlot xdata ydata xLabel yLabel flagPlotLine fileName = do
+           hroot_core xdata ydata "" "" LogY flagPlotLine fileName
+
+
+-- function to plot in scale of linear-log
+logLinearPlot::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
+logLinearPlot xdata ydata xLabel yLabel flagPlotLine fileName = do
+           hroot_core xdata ydata "" "" LogX flagPlotLine fileName
+
+
+-- function to plot in scale of log-log
+logLogPlot::[Double] -> [Double] -> String -> String -> PlotTypeOption -> String -> IO()
+logLogPlot xdata ydata xLabel yLabel flagPlotLine fileName = do
+           hroot_core xdata ydata "" "" LogXY flagPlotLine fileName
 
 
 

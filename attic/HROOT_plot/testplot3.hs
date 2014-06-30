@@ -12,5 +12,5 @@ main = do
        let f = [1,2..1000]
        let sn = toList $ sqrt $ ifonoisepsd KAGRA (fromList [1,2..1000])
 
-       plot_sf f sn "" "" LogXY Line "X11"
+       logLogPlot f sn "" "" Line "X11"
 
