@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityStudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/30 13:30:50
+  * Last Modified: 2014/07/02 15:27:20
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon(
@@ -20,6 +20,7 @@ import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighMon as SRM
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
+import qualified HasKAL.Misc.Flip3param as HMF -- HFFと一緒に無くす
 
 {-- StudentRayleighMon Window 
 -- test code
@@ -45,14 +46,14 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
   srMonHBoxFClust <- hBoxNew True 5
   srMonHBoxButtons <- hBoxNew True 5
 
-  srMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
-  srMonDateCombo <- HGGS.dateComboNew (2014, 3, 17, 16, 15, 12, "JST")
+  srMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/cachefile_20140702.lst"
+  srMonDateCombo <- HGGS.dateComboNew (2014, 5, 17, 16, 15, 12, "JST")
   srMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "256"
   srMonChunckEntry <- HGGS.entryNewWithLabelDefault "Chunk size" "2097152"
-  srMonOverlapEntry <- HGGS.entryNewWithLabelDefault "Overlap(0 < p < 1)" "0.5"
+  srMonOverlapEntry <- HGGS.entryNewWithLabelDefault "Overlap(0 < p < 1)" "0.75"
   srMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
-  srMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "32768"
-  srMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "32"
+  srMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "16384"
+  srMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "16"
   srMonClose <- buttonNewWithLabel "Close"
   srMonExecute <- buttonNewWithLabel "Execute"
 
@@ -70,12 +71,10 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
   CM.zipWithM HGGS.boxPackStartDefaultsPair srMonHBoxDate $ srMonDateCombo
   boxPackStartDefaults srMonVBox srMonHBoxObsTime
   HGGS.boxPackStartDefaultsPair srMonHBoxObsTime srMonObsTimeEntry
-
   boxPackStartDefaults srMonVBox srMonHBoxChunck
   HGGS.boxPackStartDefaultsPair srMonHBoxChunck srMonChunckEntry
   boxPackStartDefaults srMonVBox srMonHBoxOverlap
   HGGS.boxPackStartDefaultsPair srMonHBoxOverlap srMonOverlapEntry
-
   boxPackStartDefaults srMonVBox srMonHBoxSampling
   HGGS.boxPackStartDefaultsPair srMonHBoxSampling srMonSamplingEntry
   boxPackStartDefaults srMonVBox srMonHBoxStride
@@ -95,14 +94,13 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
         srmDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) srMonDateCombo
         srmGPS = read $ HTG.timetuple2gps srmDate :: Integer
         srmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonObsTimeEntry :: Integer
-
         srmChunck = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonChunckEntry :: Int
         srmOverlap = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonOverlapEntry :: Double
-
         srmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonSamplingEntry :: Double
         srmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonStrideEntry :: Int
         srmFClust = read $ SIOU.unsafePerformIO $ entryGetText $ snd srMonFClustEntry :: Int
         dF = (fromIntegral srmFClust) * srmSampling / (realToFrac srmStride)
+        dT = fromIntegral srmChunck / srmSampling * (1.0 - srmOverlap)
     putStrLn ("   GPS Time: " ++ (show srmGPS) )
     putStrLn ("   Obs Time: " ++ (show srmObsTime) )
     putStrLn ("    fsample: " ++ (show srmSampling) )
@@ -111,7 +109,7 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
     let snf = getAvePsdFromGPS srmStride srmSampling 32 srmGPS (activeChannelLabels !! 0) srmCache
         frData = getDataFromGPS srmGPS srmObsTime (activeChannelLabels !! 0) srmCache
         nu = SRM.studentRayleighMon srmChunck srmOverlap srmStride srmFClust srmSampling snf frData
-    HPP.scatter_plot_2d "Student-RayleighMon" "nu" 2.0 (720,480) $ zip [0, dF..1024] $ (nu !! 0)
+    HPP.scatter_plot_3d "Student-RayleighMon" "nu" 2.0 (720,480) $ format3dPlot [0, dT..] [0, dF..1024] nu
 {----}
 
   {--  Exit Process  --}
@@ -121,14 +119,17 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
 
 
 {-- Supplementary Functions --}
+format3dPlot :: [Double] -> [Double] -> [[Double]] -> [(Double, Double, Double)]
+format3dPlot [] _ _ = []
+format3dPlot _ [] _ = []
+format3dPlot _ _ [] = []
+format3dPlot (x:xs) ys (zs:zss) = zip3 [x,x..] ys zs ++ format3dPlot xs ys zss
+
 readFrame' :: String -> String -> IO [Double]
 readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
 
-flip231 :: (a -> b -> c -> d) -> b -> c -> a -> d
-flip231 = (flip.).flip
-
 getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
-getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
+getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(HMF.flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
   where datW = SIOU.unsafePerformIO $ mapM (readFrame' channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
         gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
 

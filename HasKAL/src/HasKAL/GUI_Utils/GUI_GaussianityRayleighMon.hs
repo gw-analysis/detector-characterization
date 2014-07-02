@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/24 18:05:16
+  * Last Modified: 2014/07/02 15:29:09
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -45,8 +45,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxFClust <- hBoxNew True 5
   rayleighMonHBoxButtons <- hBoxNew True 5
 
-  rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/gwffiles_sorted.lst"
-  rayleighMonDateCombo <- HGGS.dateComboNew (2014, 3, 17, 16, 15, 12, "JST")
+  rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/cachefile_20140702.lst"
+  rayleighMonDateCombo <- HGGS.dateComboNew (2014, 5, 17, 16, 15, 12, "JST")
   rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
   rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "65536"
