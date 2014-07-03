@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/30 13:31:13
+  * Last Modified: 2014/07/03 19:43:06
   *******************************************-}
 
 -- Reference
@@ -9,7 +9,9 @@
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
    studentRayleighMon
+  ,baseStudentRayleighMon
   ,getOptimalNuLSM -- 後で隠す
+--  ,getOptimalNuMLE -- 後で隠す
   ,getOptimalNuQuant -- 後で隠す
   ) where
 
@@ -49,7 +51,7 @@ studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMo
 ---- param5: 時系列データ n(t)
 ---- return: 自由度 nu(f_{j})
 baseStudentRayleighMon :: Int -> Int -> Double -> [Double] -> [Double] -> [Double]
-baseStudentRayleighMon numT numF fsample snf noft = map getOptimalNuLSM $ dataSplit (numF*(length woff)) 0 $ concat $ DL.transpose woff
+baseStudentRayleighMon numT numF fsample snf noft = map getOptimalNuLSM $ freqClustering numF woff
   where woff = map (map (*(sqrt 2.0)) ) $ map (flip (zipWith (/)) (map sqrt snf)) noff
         noff = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 noft
 
@@ -64,6 +66,15 @@ getOptimalNuLSM wfj = snd $ minimum $ zip ls nu
         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
         nu = [4.0, 5.0..100.0]
 
+-- nu決定ルーチン(最尤法)
+---- param1: 規格化されたデータセット w(f_{j=j0})
+---- return: 自由度 nu(f_{j=j0})
+-- getOptimalNuMLE :: [Double] -> Double
+-- getOptimalNuMLE wfj = snd $ maximum $ zip lt nu
+--   where lt = map (DL.foldl1' (*)) $ mapWith3 HMSRF.hkalRanStudentRayleighPdf sigma nu wfj :: [Double]
+--         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
+--         nu = [4.0, 5.0..100.0]
+
 -- nu決定ルーチン(quantileベース[2])
 ---- param1: quantile
 ---- param2: 規格化されたデータセット w(f_{j=j0})
@@ -76,6 +87,8 @@ getOptimalNuQuant pVal dat = snd $ minimum $ zip diff nu
         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
         nu = [4.0, 5.0..100.0]
 
+freqClustering :: Int -> [[Double]] -> [[Double]]
+freqClustering numF woff = dataSplit (numF*(length woff)) 0 $ concat $ DL.transpose woff
 
 {-- Supplementary Functions --}
 ---- param1: ビン数
