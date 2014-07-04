@@ -3,7 +3,7 @@
  *Created:2014/06/24
  *Author:Mitsuhiro Asano
  **********************************
-Last Modified: 2014/07/04 10:50:22
+Last Modified: 2014/07/04 11:08:27
 -}
 
 module HasKAL.FrameUtils.UpdatedFile
@@ -19,7 +19,7 @@ import System.IO
 {-
 --Main Part
 main = do
-     hoge <- updatedFile "/Users/asano/2014/study/haskell/detchar_asano/filecheck/" "/Users/asano/2014/study/haskell/detchar_asano/pickup/"
+     hoge <- updatedFile "/frames/full/10857/" "/frames/full/10861/"
      print hoge
 -}
 
