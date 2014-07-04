@@ -5,10 +5,10 @@ module HasKAL.DetectorUtils.Detector
 where
 
 data Detector = DECIGO | ELISA | ET | GEO | INDIGO | KAGRA | LIGO LIGOLocation| VIRGO
-  deriving (Show)
+  deriving (Show, Eq)
 
 data LIGOLocation = Livingston | Hanford
-  deriving (Show)
+  deriving (Show, Eq)
 
 
 
