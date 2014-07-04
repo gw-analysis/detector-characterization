@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/03 19:43:06
+  * Last Modified: 2014/07/04 15:37:19
   *******************************************-}
 
 -- Reference
@@ -10,12 +10,16 @@
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
    studentRayleighMon
   ,baseStudentRayleighMon
-  ,getOptimalNuLSM -- 後で隠す
---  ,getOptimalNuMLE -- 後で隠す
-  ,getOptimalNuQuant -- 後で隠す
+  ,getOptimalNuLSM -- 以下、後で隠す
+  ,getOptimalNuMLE
+  ,getOptimalNuQuant
+  ,histogram
+  ,freqClustering
+  ,dataSplit
   ) where
 
 import qualified Data.List as DL
+import qualified Data.Packed.Matrix as DPM -- for freqClustering
 import qualified Data.Packed.Vector as DPV -- for dataSplit
 import qualified Foreign.Storable as FS -- for dataSplit
 import qualified HROOT as HROOT -- for histgram
@@ -69,11 +73,11 @@ getOptimalNuLSM wfj = snd $ minimum $ zip ls nu
 -- nu決定ルーチン(最尤法)
 ---- param1: 規格化されたデータセット w(f_{j=j0})
 ---- return: 自由度 nu(f_{j=j0})
--- getOptimalNuMLE :: [Double] -> Double
--- getOptimalNuMLE wfj = snd $ maximum $ zip lt nu
---   where lt = map (DL.foldl1' (*)) $ mapWith3 HMSRF.hkalRanStudentRayleighPdf sigma nu wfj :: [Double]
---         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
---         nu = [4.0, 5.0..100.0]
+getOptimalNuMLE :: [Double] -> Double
+getOptimalNuMLE wfj = snd $ minimum $ zip lt nu
+  where lt = map (DL.foldl1' (+)) $ map (map (logBase 10)) $ mapWith3 HMSRF.hkalRanStudentRayleighPdf sigma nu wfj
+        sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
+        nu = [4.0, 5.0..100.0]
 
 -- nu決定ルーチン(quantileベース[2])
 ---- param1: quantile
@@ -88,7 +92,10 @@ getOptimalNuQuant pVal dat = snd $ minimum $ zip diff nu
         nu = [4.0, 5.0..100.0]
 
 freqClustering :: Int -> [[Double]] -> [[Double]]
-freqClustering numF woff = dataSplit (numF*(length woff)) 0 $ concat $ DL.transpose woff
+freqClustering n xss = DPM.toLists $ (DPM.reshape m) $ DPV.subVector 0 (l*m) $ DPM.flatten $ DPM.trans xm
+  where xm = DPM.fromLists xss
+        m = DPM.rows xm * n
+        l = (DPM.cols xm)`div`n
 
 {-- Supplementary Functions --}
 ---- param1: ビン数
