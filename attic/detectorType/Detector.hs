@@ -1,14 +1,14 @@
 module Detector
 (
   Detector
-, LIGO
+--, LIGO
 )
 where
 
-data Detector = GEO | LIGO | KAGRA | VIRGO | INDIGO
+data Detector = GEO | LIGO LIGOLocation | KAGRA | VIRGO | INDIGO
   deriving (Show)
 
-data LIGO = Livingston | Hanford
+data  LIGOLocation = Livingston | Hanford
   deriving (Show)
 
 
