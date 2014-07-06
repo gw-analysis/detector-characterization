@@ -12,15 +12,18 @@ module HasKAL.SpectrumUtils.DetectorSensitivity
 -- eq. 5 in paper 4 in the paper http://arxiv.org/abs/1202.4031
 --
 --
+-- add LIGO_Livingston, Hanford to ifonoisepsd by Yokozawa 2014/07/06
 
 import Numeric.LinearAlgebra
 import HasKAL.DetectorUtils.Detector
 
 ifonoisepsd :: Detector -> Vector Double -> Vector Double
 ifonoisepsd ifo fin = case ifo of
-  LIGO  -> aligoPsd fin
-  KAGRA -> kagraPsd fin
-  VIRGO -> advirgoPsd fin
+  LIGO            -> aligoPsd fin
+  LIGO_Livingston -> aligoPsd fin
+  LIGO_Hanford    -> aligoPsd fin
+  KAGRA           -> kagraPsd fin
+  VIRGO           -> advirgoPsd fin
 
 
 aligoPsd :: Vector Double -> Vector Double
