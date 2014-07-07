@@ -85,10 +85,10 @@ giveorf :: Int -> Double -> Double
 giveorf id ff = (last $ filter (\xs -> (head xs) == ff) read_ORF) !! id
 
 read_erfc_inv :: [[Double]]
-read_erfc_inv = readMultiColumn (unsafePerformIO $ readFile "erfc_inv.dat")
+read_erfc_inv = readMultiColumn (unsafePerformIO $ readFile "HasKAL/MonitorUtils/RangeMon/StochMon/erfc_inv.dat")
 
 read_ORF :: [[Double]]
-read_ORF = readMultiColumn (unsafePerformIO $ readFile "orf_data_1.txt")
+read_ORF = readMultiColumn (unsafePerformIO $ readFile "HasKAL/MonitorUtils/RangeMon/StochMon/orf_data_1.txt")
 
 readMultiColumn :: String -> [[Double]]
 readMultiColumn = map (map read.words).lines
