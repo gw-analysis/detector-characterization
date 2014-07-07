@@ -7,6 +7,7 @@ import System.IO
 import System.IO.Unsafe
 import HasKAL.DetectorUtils.Detector
 import Control.Concurrent
+import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
 --input  : ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility)
 --output : [Double] := h2omega for each frequency
@@ -68,7 +69,11 @@ advirgoPsd_stoch fin = (psdmodel x)*1.0E+44
 ----------------------------------------------
 
 --Function for error function
-erfc_inv par = last $ last $ filter (\xs -> (head xs) == par) read_erfc_inv
+erfc_inv ::Double->Double
+erfc_inv par = gslCdfGaussianQinv (par/2.0) sigma
+  where sigma = 1/sqrt(2.0)
+
+erfc_inv' par = last $ last $ filter (\xs -> (head xs) == par) read_erfc_inv
 
 --Function for overlap reduction function
 orf_detectors :: Detector->Detector->Double->Double
