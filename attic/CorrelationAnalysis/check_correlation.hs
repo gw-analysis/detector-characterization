@@ -49,19 +49,16 @@ main = do
    
   
    -- ##### plot in format : png
-   {--
-   let lsty  = map snd $ gwpsd dat (length dat) 1000
-       lstxf = take (length lsty) [1,2..]
+   
 
    --linearLinearPlot xdata1 data1 "" "" Line "png"
+   {--
    tcanvas <- newTCanvas  "Test" "Plot" 640 480
    g1 <- newTGraph (length (min data1 data2)) data1 data2
-   draw g1 "AP*"
+   draw g1 "AP"
    saveAs tcanvas "hoge.png" ""
    delete g1
    delete tcanvas
-   let doCommand = "/bin/mv hoge.png" ++ " " ++ channel1 ++ "_" ++ channel2 ++ ".png"
+   let doCommand = "/bin/mv hoge.png" ++ " " ++ channel1 ++ "___" ++ channel2 ++ ".png"
    system doCommand
    --}
-
-  --print channel1
