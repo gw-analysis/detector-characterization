@@ -4,8 +4,8 @@ import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import HasKAL.DetectorUtils.Detector
 
 main = do
-     let x = [0..1000]
-     let y = h2omega_allf 10000000 KAGRA VIRGO 0.05 0.95
+     let x = [1..100]
+     let y = h2omega_sens_allf 10000000 KAGRA VIRGO 0.05 0.95 x
      logLogPlot x y "" "" Line "X11"
 
 

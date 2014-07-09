@@ -1,35 +1,17 @@
-module HasKAL.MonitorUtils.RangeMon.StochMon.StochMon(
-       h2omega_sens_allf,
-       h2omega_sens,
-       h2omega_sens_fband
+module StochMon(
+       h2omega_allf,
+       h2omega_sens
        ) where
 
 import System.IO
 import System.IO.Unsafe
 import HasKAL.DetectorUtils.Detector
 import Control.Concurrent
-import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
---Calculation of h2omega for given frequency list[..]
---input  : ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility) xs[give frequency]
+--input  : ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility)
 --output : [Double] := h2omega for each frequency
-h2omega_sens_allf :: Double->Detector->Detector->Double->Double->[Double]->[Double]
-h2omega_sens_allf ttot det_a det_b far df xs = map (h2omega_sens ttot det_a det_b far df) xs
-
---Calculation of h2omega for sensitivity curve with given frequency band [fmin:fmax]
---input	: ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility) fmin(minimum frequency[Hz]) fmax(maximum frequency[Hz])
---output ; Double := h2omega for given frequency band(fmin:fmax)
-h2omega_sens_fband :: Double->Detector->Detector->Double->Double->Double->Double->Double
-h2omega_sens_fband ttot det_a det_b far df fmin fmax= (h2omega_factor ttot)*(h2omega_erfc far df)*((h2omega_psd_fband det_a det_b fmin fmax)**(-1/2))
-
---One paragraph	of h2omega_sens_fband
-h2omega_psd_fband :: Detector->Detector->Double->Double->Double
-h2omega_psd_fband det_a det_b fmin fmax = sumarray $ map (h2omega_psd det_a det_b) [fmin..fmax]
-
---function for getting sum value of list
-sumarray :: [Double]->Double
-sumarray [] =0
-sumarray (x:xs) = x + sumarray xs
+h2omega_allf :: Double->Detector->Detector->Double->Double->[Double]
+h2omega_allf ttot det_a det_b far df = map (h2omega_sens ttot det_a det_b far df) [1..1000]
 
 --Calculation of h2omega for sensitivity curve
 --input : ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility) fin(target frequency[Hz])
@@ -86,11 +68,7 @@ advirgoPsd_stoch fin = (psdmodel x)*1.0E+44
 ----------------------------------------------
 
 --Function for error function
-erfc_inv ::Double->Double
-erfc_inv par = gslCdfGaussianQinv (par/2.0) sigma
-  where sigma = 1/sqrt(2.0)
-
-erfc_inv' par = last $ last $ filter (\xs -> (head xs) == par) read_erfc_inv
+erfc_inv par = last $ last $ filter (\xs -> (head xs) == par) read_erfc_inv
 
 --Function for overlap reduction function
 orf_detectors :: Detector->Detector->Double->Double
@@ -107,10 +85,10 @@ giveorf :: Int -> Double -> Double
 giveorf id ff = (last $ filter (\xs -> (head xs) == ff) read_ORF) !! id
 
 read_erfc_inv :: [[Double]]
-read_erfc_inv = readMultiColumn (unsafePerformIO $ readFile "HasKAL/MonitorUtils/RangeMon/StochMon/erfc_inv.dat")
+read_erfc_inv = readMultiColumn (unsafePerformIO $ readFile "erfc_inv.dat")
 
 read_ORF :: [[Double]]
-read_ORF = readMultiColumn (unsafePerformIO $ readFile "HasKAL/MonitorUtils/RangeMon/StochMon/orf_data_1.txt")
+read_ORF = readMultiColumn (unsafePerformIO $ readFile "orf_data_1.txt")
 
 readMultiColumn :: String -> [[Double]]
 readMultiColumn = map (map read.words).lines
