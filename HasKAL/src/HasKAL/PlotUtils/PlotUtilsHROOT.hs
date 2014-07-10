@@ -33,7 +33,8 @@ module HasKAL.PlotUtils.PlotUtilsHROOT(
        linearLinearPlot,
        linearLogPlot,
        logLinearPlot,
-       logLogPlot
+       logLogPlot,
+       plotSaveAsPicture
        ) where
 
 import HROOT
@@ -45,7 +46,7 @@ hroot_core xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
            tapp <- newTApplication "test" [0] ["test"]
            tcanvas <- newTCanvas  "Test" "Plot" 640 480
 
-	   g1 <- newTGraph (length xdata) xdata ydata
+	   g1 <- newTGraph (length (min xdata ydata)) xdata ydata
 
            let checkLogX :: LogOption -> Int
                checkLogX flagLog
@@ -132,7 +133,40 @@ logLogPlot xdata ydata xLabel yLabel flagPlotLine fileName = do
 
 
 
+plotSaveAsPicture::[Double] -> [Double] -> String -> String -> LogOption -> PlotTypeOption -> String -> IO()
+plotSaveAsPicture  xdata ydata xLabel yLabel flagLog flagPlotLine fileName = do
+  tcanvas <- newTCanvas  "Test" "Plot" 640 480                
+  g1 <- newTGraph (length (min ydata xdata)) xdata ydata
 
+  let checkLogX :: LogOption -> Int
+      checkLogX flagLog
+          | flagLog == Linear = 0
+          | flagLog == LogX   = 1
+          | flagLog == LogY   = 0
+          | flagLog == LogXY  = 1
+          | otherwise         = 0
 
+  let checkLogY :: LogOption -> Int
+      checkLogY flagLog
+          | flagLog == Linear = 0
+          | flagLog == LogX   = 0
+          | flagLog == LogY   = 1
+          | flagLog == LogXY  = 1
+          | otherwise         = 0
 
+  setLogx tcanvas (checkLogX flagLog)
+  setLogy tcanvas (checkLogY flagLog)
 
+  let checkPlotLine :: PlotTypeOption -> String
+      checkPlotLine flagPlotLine
+          | flagPlotLine == Line      = "AL"
+          | flagPlotLine == Point     = "AP*"
+          | flagPlotLine == LinePoint = "AL*"
+          | flagPlotLine == PointLine = "AL*"
+          | flagPlotLine == Dot       = "AP"
+          | otherwise                 = "AL"
+
+  draw g1 (checkPlotLine flagPlotLine)
+  saveAs tcanvas fileName ""
+  delete g1
+  delete tcanvas
