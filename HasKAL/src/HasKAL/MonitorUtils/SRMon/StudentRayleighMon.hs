@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/04 15:37:19
+  * Last Modified: 2014/07/10 14:17:57
   *******************************************-}
 
 -- Reference
@@ -10,10 +10,11 @@
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
    studentRayleighMon
   ,baseStudentRayleighMon
+  ,studentRayleighMon'
+  ,baseStudentRayleighMon'
   ,getOptimalNuLSM -- 以下、後で隠す
   ,getOptimalNuMLE
   ,getOptimalNuQuant
-  ,histogram
   ,freqClustering
   ,dataSplit
   ) where
@@ -21,7 +22,6 @@ module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
 import qualified Data.List as DL
 import qualified Data.Packed.Matrix as DPM -- for freqClustering
 import qualified Data.Packed.Vector as DPV -- for dataSplit
-import qualified Foreign.Storable as FS -- for dataSplit
 import qualified HROOT as HROOT -- for histgram
 import qualified System.IO.Unsafe as SIOU
 
@@ -46,6 +46,10 @@ import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as HMSRF
 studentRayleighMon :: Int -> Double -> Int -> Int -> Double -> [Double] -> [Double] -> [[Double]]
 studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMon numT numF fsample snf) $ dataSplit num m noft
   where m = truncate $ (fromIntegral num) * p
+studentRayleighMon' :: Int -> Double -> Int -> [Double] -> [[Double]] -> [[Double]]
+studentRayleighMon' num p numF snf noff = map (baseStudentRayleighMon' numF snf) $ dataSplit' num m noff
+  where m = truncate $ (fromIntegral num) * p
+
 
 {-- Internal Functions --}
 ---- param1: データストライド dT
@@ -55,9 +59,14 @@ studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMo
 ---- param5: 時系列データ n(t)
 ---- return: 自由度 nu(f_{j})
 baseStudentRayleighMon :: Int -> Int -> Double -> [Double] -> [Double] -> [Double]
-baseStudentRayleighMon numT numF fsample snf noft = map getOptimalNuLSM $ freqClustering numF woff
+baseStudentRayleighMon numT numF fsample snf noft = baseStudentRayleighMon' numF snf noff
+  where noff = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 noft
+
+baseStudentRayleighMon' :: Int -> [Double] -> [[Double]] -> [Double]
+baseStudentRayleighMon' numF snf noff = map (getOptimalNuQuant 0.99) $ freqClustering numF woff
   where woff = map (map (*(sqrt 2.0)) ) $ map (flip (zipWith (/)) (map sqrt snf)) noff
-        noff = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 noft
+
+
 
 -- nu決定ルーチン(最小二乗法)
 ---- param1: 規格化されたデータセット w(f_{j=j0})
@@ -74,7 +83,7 @@ getOptimalNuLSM wfj = snd $ minimum $ zip ls nu
 ---- param1: 規格化されたデータセット w(f_{j=j0})
 ---- return: 自由度 nu(f_{j=j0})
 getOptimalNuMLE :: [Double] -> Double
-getOptimalNuMLE wfj = snd $ minimum $ zip lt nu
+getOptimalNuMLE wfj = snd $ maximum $ zip lt nu
   where lt = map (DL.foldl1' (+)) $ map (map (logBase 10)) $ mapWith3 HMSRF.hkalRanStudentRayleighPdf sigma nu wfj
         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
         nu = [4.0, 5.0..100.0]
@@ -125,5 +134,12 @@ quicksort (x:xs) =
       larger = [a | a <- xs, a > x]
   in quicksort smallerOrEqual ++ [x] ++ quicksort larger
 
-dataSplit :: (FS.Storable a) => Int -> Int -> [a] -> [[a]]
+dataSplit :: (DPM.Element a) => Int -> Int -> [a] -> [[a]]
 dataSplit n m xs = map DPV.toList $ map (HMF.flip231 DPV.subVector n $ DPV.fromList xs) $ [0, (n-m)..(length xs)-n]
+
+dataSplit' :: (DPM.Element a) => Int -> Int -> [[a]] -> [[[a]]]
+dataSplit' n m xss = map DPM.toLists $ map (subMatrix' mat n) $ [0, (n-m)..(DPM.rows mat)-n]
+  where mat = DPM.fromLists xss
+        l = DPM.cols mat
+        subMatrix' mat n m = DPM.subMatrix (m, 0) (n, l) mat
+
