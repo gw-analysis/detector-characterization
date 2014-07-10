@@ -1,4 +1,5 @@
 module HasKAL.MonitorUtils.RangeMon.StochMon.StochMon(
+--module StochMon(
        h2omega_sens_allf,
        h2omega_sens,
        h2omega_sens_fband
@@ -20,7 +21,7 @@ h2omega_sens_allf ttot det_a det_b far df xs = map (h2omega_sens ttot det_a det_
 --input	: ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility) fmin(minimum frequency[Hz]) fmax(maximum frequency[Hz])
 --output ; Double := h2omega for given frequency band(fmin:fmax)
 h2omega_sens_fband :: Double->Detector->Detector->Double->Double->Double->Double->Double
-h2omega_sens_fband ttot det_a det_b far df fmin fmax= (h2omega_factor ttot)*(h2omega_erfc far df)*((h2omega_psd_fband det_a det_b fmin fmax)**(-1/2))
+h2omega_sens_fband ttot det_a det_b far df fmin fmax= (h2omega_factor ttot)*(h2omega_erfc far df)*((h2omega_psd_fband det_a det_b fmin fmax)**(-0.5))
 
 --One paragraph	of h2omega_sens_fband
 h2omega_psd_fband :: Detector->Detector->Double->Double->Double
@@ -28,18 +29,18 @@ h2omega_psd_fband det_a det_b fmin fmax = sumarray $ map (h2omega_psd det_a det_
 
 --function for getting sum value of list
 sumarray :: [Double]->Double
-sumarray [] =0
+sumarray [] = 0
 sumarray (x:xs) = x + sumarray xs
 
 --Calculation of h2omega for sensitivity curve
 --input : ttot(observation time[s]) det_a(Detector A) det_b(Detector B) far(False Alarm Rate) df(Detection probility) fin(target frequency[Hz])
 --output ; Double := h2omega for given frequency(fin)
 h2omega_sens :: Double->Detector->Detector->Double->Double->Double->Double
-h2omega_sens ttot det_a det_b far df fin= (h2omega_factor ttot)*(h2omega_erfc far df)*((h2omega_psd det_a det_b fin)**(-1/2))
+h2omega_sens ttot det_a det_b far df fin= (h2omega_factor ttot)*(h2omega_erfc far df)*((h2omega_psd det_a det_b fin)**(-0.5))
 
 --One paragraph of h2omega_sens
 h2omega_factor :: Double->Double
-h2omega_factor ttot = 1/(ttot**(1/2))*10.0*(pi**2)/3.0*(2**(1/2))/10000.0
+h2omega_factor ttot = 1/(sqrt(ttot))*10.0*(pi**2)/3.0/((3.2*1.0E-18)**2)*(sqrt(2.0))
 
 --One paragraph of h2omega_sens
 h2omega_erfc :: Double->Double->Double
@@ -47,7 +48,7 @@ h2omega_erfc far df = (erfc_inv (2.0*far))-(erfc_inv (2.0*df))
 
 --One paragraph of h2omega_sens
 h2omega_psd :: Detector->Detector->Double->Double
-h2omega_psd det_a det_b fin = ((orf_detectors det_a det_b fin)**2)/((fin/100.0)**6)/((ifonoisepsd_stoch det_a fin)**(1/2))/((ifonoisepsd_stoch det_b fin)**(1/2))
+h2omega_psd det_a det_b fin = ((orf_detectors det_a det_b fin)**2)/(fin**6)/(ifonoisepsd_stoch det_a fin)/(ifonoisepsd_stoch det_b fin)
 
 
 --Detector sensitivity curve of KAGRA, VIRGO, LIGO_Hanford, LIGO_Livingston
@@ -61,7 +62,7 @@ ifonoisepsd_stoch ifo fin = case ifo of
   VIRGO -> advirgoPsd_stoch fin
 
 aligoPsd_stoch :: Double -> Double
-aligoPsd_stoch fin = (psdmodel x)*1.0E+44
+aligoPsd_stoch fin = (psdmodel x)
   where
     f0 = 215 :: Double
     psd_scale = 1.0E-49 :: Double
@@ -69,7 +70,7 @@ aligoPsd_stoch fin = (psdmodel x)*1.0E+44
     psdmodel y = psd_scale * (y**(-4.14) - 5*y**(-2) + 111*(1-y**2+y**4/2)/(1+y**2/2))
 
 kagraPsd_stoch :: Double -> Double
-kagraPsd_stoch fin = (psdmodel x)*1.0E+44
+kagraPsd_stoch fin = (psdmodel x)
   where
     f0 = 100 :: Double
     x  = toLog fin
@@ -77,7 +78,7 @@ kagraPsd_stoch fin = (psdmodel x)*1.0E+44
     psdmodel y = (6.499*1.0E-25*(9.72*10e-9*(exp (-1.43-9.88*y-0.23*y**2))+1.17*(exp (0.14-3.10*y-0.26*y**2))+1.70*(exp (0.14+1.09*y-0.013*y**2))+1.25*(exp (0.071+2.83*y-4.91*y**2))))**2
 
 advirgoPsd_stoch :: Double -> Double
-advirgoPsd_stoch fin = (psdmodel x)*1.0E+44
+advirgoPsd_stoch fin = (psdmodel x)
   where
     f0 = 300 :: Double
     x  = toLog fin
