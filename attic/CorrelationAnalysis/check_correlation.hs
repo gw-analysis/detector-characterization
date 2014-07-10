@@ -1,6 +1,6 @@
--- 2つのデータをそれぞれ読み込む
--- charのリストをDoubleのリストに変換
--- correlation の値を計算する
+-- test code of HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
+-- read 1 frame data and for each channel data, calculate correlation value.
+
 
 import Numeric.LinearAlgebra  --subVector
 import Numeric --showFFloat
@@ -11,20 +11,21 @@ import System.Cmd
 import HROOT hiding (eval)
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
---import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
 import HasKAL.PlotUtils.PlotUtilsHROOT
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
-
 
 
 main :: IO()
 main = do
 
 
+ -- now these channel list is written explicitly.
+ -- but future work remove these channel list and in this source, channel list is calculated.
  let channelList = ["L1:OMC-TT1_SUSYAW_IN1_DAQ", "L1:OMC-TT2_SUSYAW_IN1_DAQ", "L1:OMC-TT1_SUSPIT_IN1_DAQ","L1:OMC-TT2_SUSPIT_IN1_DAQ","L1:OMC-TT1_SUSPOS_IN1_DAQ","L1:OMC-TT2_SUSPOS_IN1_DAQ"]
 
 
+ -- how size slide
  let fs = 128
  let duration = 64
 
@@ -34,10 +35,6 @@ main = do
   readData1 <- readFrame channel1 "./L-L1_RDS_R_L1-959200000-64.gwf"
   let data1  = map realToFrac (eval readData1)
       xdata1  = take (length data1) [1,2..]
-
-
-
-
 
   {-
   writeFile "tmp.txt" $ show (eval readData1)
@@ -56,7 +53,6 @@ main = do
    --let rValue_10 = showFFloat (Just 10) rValue ""
    print rValue
 
-   
   
    -- ## plot in format : png
    let outputFile = "pic_scatterplot__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
