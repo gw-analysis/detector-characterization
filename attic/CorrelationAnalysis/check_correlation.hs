@@ -5,10 +5,8 @@
 import Numeric.LinearAlgebra  --subVector
 import Numeric --showFFloat
 import Control.Monad -- forM
-import System.Random
-import System.Cmd
-
-import HROOT hiding (eval)
+import System.Environment -- getArgs
+import System.Cmd -- system
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
@@ -29,10 +27,13 @@ main = do
  let fs = 128
  let duration = 64
 
+ frameFileName <- getArgs
+ print $ frameFileName!!0
+
 
  forM_ channelList $ \channel1 -> do
 
-  readData1 <- readFrame channel1 "./L-L1_RDS_R_L1-959200000-64.gwf"
+  readData1 <- readFrame channel1 (frameFileName!!0)
   let data1  = map realToFrac (eval readData1)
       xdata1  = take (length data1) [1,2..]
 
@@ -44,7 +45,7 @@ main = do
 
   forM_ channelList $ \channel2 -> do
 
-   readData2 <- readFrame channel2 "./L-L1_RDS_R_L1-959200000-64.gwf"
+   readData2 <- readFrame channel2 (frameFileName!!0)
    let data2 = map realToFrac (eval readData2)
        xdata2 = take (length data2) [1,2..]
        
