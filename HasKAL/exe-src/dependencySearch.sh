@@ -3,13 +3,9 @@ set -e
 #******************************************#
 #     File Name: dependencySearch.sh
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/06/15 13:08:28
+# Last Modified: 2014/07/10 19:16:50
 #******************************************#
 
-# if test ! $1
-# then
-#     echo "Usage: $0 moduleName"
-#     exit 1
 if test ! ${HASKALOPT}
 then
     echo "Undefind \"\${HASKALOPT}\""
