@@ -2,6 +2,13 @@
 -- read 1 frame data and for each channel data, calculate correlation value.
 
 
+-- usage: Neew one argument (Frame File)
+-- check_correlation /data/ligo/archive/frames/S6/L1/LLO/L-L1_RDS_R_L1-9592/L-L1_RDS_R_L1-959200000-64.gwf
+
+-- First you must execute below command
+-- setupChannelList.sh
+
+
 import Numeric.LinearAlgebra  --subVector
 import Numeric --showFFloat
 import Control.Monad -- forM
@@ -14,26 +21,36 @@ import HasKAL.PlotUtils.PlotUtilsHROOT
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
 
-main :: IO()
+--main IO()
 main = do
 
 
  -- now these channel list is written explicitly.
  -- but future work remove these channel list and in this source, channel list is calculated.
- let channelList = ["L1:OMC-TT1_SUSYAW_IN1_DAQ", "L1:OMC-TT2_SUSYAW_IN1_DAQ", "L1:OMC-TT1_SUSPIT_IN1_DAQ","L1:OMC-TT2_SUSPIT_IN1_DAQ","L1:OMC-TT1_SUSPOS_IN1_DAQ","L1:OMC-TT2_SUSPOS_IN1_DAQ"]
+ -- /usr/bin/FrChannels
+-- let channelList = ["L1:OMC-TT1_SUSYAW_IN1_DAQ", "L1:OMC-TT2_SUSYAW_IN1_DAQ", "L1:OMC-TT1_SUSPIT_IN1_DAQ","L1:OMC-TT2_SUSPIT_IN1_DAQ","L1:OMC-TT1_SUSPOS_IN1_DAQ","L1:OMC-TT2_SUSPOS_IN1_DAQ"]
 
 
  -- how size slide
- let fs = 128
- let duration = 64
-
- frameFileName <- getArgs
- print $ frameFileName!!0
+ let fs = "128"::String
 
 
- forM_ channelList $ \channel1 -> do
+ [frameFileName] <- getArgs
+ print $ frameFileName
+ 
 
-  readData1 <- readFrame channel1 (frameFileName!!0)
+ -- read Channel List
+ channelList'' <- readFile "channelList.txt"
+ let channelList' = map words $ lines channelList''
+ let channelList  = map (!!0) channelList'
+ --channelList <- getChannelList frameFileName 959200000
+
+
+ -- calculate correlation value
+
+ result <- forM channelList $ \channel1 -> do
+
+  readData1 <- readFrame channel1 (frameFileName)
   let data1  = map realToFrac (eval readData1)
       xdata1  = take (length data1) [1,2..]
 
@@ -43,18 +60,25 @@ main = do
   system doCommand
   -}
 
-  forM_ channelList $ \channel2 -> do
+  result' <- forM channelList $ \channel2 -> do
 
-   readData2 <- readFrame channel2 (frameFileName!!0)
+   readData2 <- readFrame channel2 (frameFileName)
    let data2 = map realToFrac (eval readData2)
        xdata2 = take (length data2) [1,2..]
        
 
    let rValue = maximum $ twoChannelData2Correlation data1 data2 1
-   --let rValue_10 = showFFloat (Just 10) rValue ""
-   print rValue
+   --return $ maximum $ twoChannelData2Correlation data1 data2 1 :: IO Double
+   return $ ( read (showFFloat (Just 10) rValue "") ::Double)
 
-  
    -- ## plot in format : png
-   let outputFile = "pic_scatterplot__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
-   plotSaveAsPicture  data1 data1 "" "" Linear Dot outputFile
+   --let outputFile = "pic_scatterplot__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
+   --plotSaveAsPicture  data1 data1 "" "" Linear Dot outputFile
+
+  --print result'
+  return result'
+
+
+ --print $ concat result
+ 
+ writeFile "result.txt" $ unlines $ map show $ concat result
