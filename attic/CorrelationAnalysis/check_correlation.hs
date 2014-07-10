@@ -35,12 +35,22 @@ main = do
   let data1  = map realToFrac (eval readData1)
       xdata1  = take (length data1) [1,2..]
 
+
+
+
+
+  {-
+  writeFile "tmp.txt" $ show (eval readData1)
+  let doCommand = "/bin/mv tmp.txt" ++ " " ++ channel1 ++ ".txt"
+  system doCommand
+  -}
+
   forM_ channelList $ \channel2 -> do
 
    readData2 <- readFrame channel2 "./L-L1_RDS_R_L1-959200000-64.gwf"
    let data2 = map realToFrac (eval readData2)
        xdata2 = take (length data2) [1,2..]
-
+       
 
    let rValue = maximum $ twoChannelData2Correlation data1 data2 1
    --let rValue_10 = showFFloat (Just 10) rValue ""
@@ -48,17 +58,6 @@ main = do
 
    
   
-   -- ##### plot in format : png
-   
-
-   --linearLinearPlot xdata1 data1 "" "" Line "png"
-   {--
-   tcanvas <- newTCanvas  "Test" "Plot" 640 480
-   g1 <- newTGraph (length (min data1 data2)) data1 data2
-   draw g1 "AP"
-   saveAs tcanvas "hoge.png" ""
-   delete g1
-   delete tcanvas
-   let doCommand = "/bin/mv hoge.png" ++ " " ++ channel1 ++ "___" ++ channel2 ++ ".png"
-   system doCommand
-   --}
+   -- ## plot in format : png
+   let outputFile = "pic_scatterplot__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
+   plotSaveAsPicture  data1 data1 "" "" Linear Dot outputFile
