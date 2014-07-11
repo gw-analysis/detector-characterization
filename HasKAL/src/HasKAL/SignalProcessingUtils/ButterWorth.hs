@@ -1,11 +1,11 @@
-module ButterWorth
+module HasKAL.SignalProcessingUtils.ButterWorth
 ( butter
 --,
 )
 where
 
 
-import FilterType
+import HasKAL.SignalProcessingUtils.FilterType
 import Data.Complex
 
 --type GammaFunc = Double -> Double -> Int -> Int -> Complex Double
