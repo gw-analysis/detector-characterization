@@ -1,14 +1,15 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/10 14:17:57
+  * Last Modified: 2014/07/11 16:36:09
   *******************************************-}
 
 -- Reference
 ---- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
-   studentRayleighMon
+   SFM.FitMethod(LSM, MLE, QUANT)
+  ,studentRayleighMon
   ,baseStudentRayleighMon
   ,studentRayleighMon'
   ,baseStudentRayleighMon'
@@ -28,6 +29,7 @@ import qualified System.IO.Unsafe as SIOU
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 import qualified HasKAL.Misc.Flip3param as HMF
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as HMSRF
+import qualified HasKAL.MonitorUtils.SRMon.FitMethod as SFM
 
 {--  Test Code  --}
 -- main :: IO ()
@@ -43,31 +45,35 @@ import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as HMSRF
 ---- param6: 両側平均スペクトル Sn(f)
 ---- param7: 時系列データ n(t)
 ---- retur8: 自由度 nu(f_{j})
-studentRayleighMon :: Int -> Double -> Int -> Int -> Double -> [Double] -> [Double] -> [[Double]]
-studentRayleighMon num p numT numF fsample snf noft = map (baseStudentRayleighMon numT numF fsample snf) $ dataSplit num m noft
+studentRayleighMon :: SFM.FitMethod -> Int -> Double -> Int -> Int -> Double -> [Double] -> [Double] -> [[Double]]
+studentRayleighMon method num p numT numF fsample snf noft 
+  = map (baseStudentRayleighMon method numT numF fsample snf) $ dataSplit num m noft
   where m = truncate $ (fromIntegral num) * p
-studentRayleighMon' :: Int -> Double -> Int -> [Double] -> [[Double]] -> [[Double]]
-studentRayleighMon' num p numF snf noff = map (baseStudentRayleighMon' numF snf) $ dataSplit' num m noff
-  where m = truncate $ (fromIntegral num) * p
+studentRayleighMon' :: SFM.FitMethod -> Int -> Double -> Int -> [Double] -> [[Double]] -> [[Double]]
+studentRayleighMon' method numTau p numF snf noff 
+  = map (baseStudentRayleighMon' method numF snf) $ dataSplit' numTau m noff
+  where m = truncate $ (fromIntegral numTau) * p
 
-
-{-- Internal Functions --}
 ---- param1: データストライド dT
 ---- param2: データストライド dF
 ---- param3: サンプリング 1/dt
 ---- param4: 両側平均スペクトル Sn(f)
 ---- param5: 時系列データ n(t)
 ---- return: 自由度 nu(f_{j})
-baseStudentRayleighMon :: Int -> Int -> Double -> [Double] -> [Double] -> [Double]
-baseStudentRayleighMon numT numF fsample snf noft = baseStudentRayleighMon' numF snf noff
+baseStudentRayleighMon :: SFM.FitMethod -> Int -> Int -> Double -> [Double] -> [Double] -> [Double]
+baseStudentRayleighMon method numT numF fsample snf noft = baseStudentRayleighMon' method numF snf noff
   where noff = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 noft
-
-baseStudentRayleighMon' :: Int -> [Double] -> [[Double]] -> [Double]
-baseStudentRayleighMon' numF snf noff = map (getOptimalNuQuant 0.99) $ freqClustering numF woff
+baseStudentRayleighMon' :: SFM.FitMethod -> Int -> [Double] -> [[Double]] -> [Double]
+baseStudentRayleighMon' method numF snf noff 
+  | method == SFM.LSM = map getOptimalNuLSM $ freqClustering numF woff
+  | method == SFM.MLE = map getOptimalNuLSM $ freqClustering numF woff
+  | method == (SFM.QUANT a) = map (getOptimalNuQuant a) $ freqClustering numF woff
   where woff = map (map (*(sqrt 2.0)) ) $ map (flip (zipWith (/)) (map sqrt snf)) noff
+        (SFM.QUANT a) = method
 
 
 
+{-- Internal Functions --}
 -- nu決定ルーチン(最小二乗法)
 ---- param1: 規格化されたデータセット w(f_{j=j0})
 ---- return: 自由度 nu(f_{j=j0})
