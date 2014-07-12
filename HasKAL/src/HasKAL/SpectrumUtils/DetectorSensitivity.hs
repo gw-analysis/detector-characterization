@@ -5,7 +5,9 @@ module HasKAL.SpectrumUtils.DetectorSensitivity
 
 -- analytical expression of the design noise curves of aLIGO, adVirgo, KAGRA
 -- aLIGO:
--- on a table in page 42 in the paper http://arxiv.org/abs/0903.0338
+-- on a table in page 42 in the paper http://arxiv.org/abs/0903.0338 for
+-- NSNS optimization
+-- in page 7 in http://arxiv.org/abs/1107.1267 for aLIGO design sensitivity
 -- adVirgo:
 -- eq. 6 in page 5 in the paper http://arxiv.org/abs/1202.4031
 -- KAGRA:
@@ -34,15 +36,22 @@ ifonoisepsd ifo fin = case ifo of
   ELISA           -> elisaPsd fin
   DECIGO          -> decigoPsd fin
 
-
-aligoPsd :: Vector Double -> Vector Double
-aligoPsd fin = mapVector psdmodel x
+--NSNS optimization
+aligoNSNSOptimPsd :: Vector Double -> Vector Double
+aligoNSNSOptimPsd fin = mapVector psdmodel x
   where
     f0 = 215 :: Double
     psd_scale = 1.0E-49 :: Double
     x  = mapVector (/f0) fin
     psdmodel y = psd_scale * (y**(-4.14) - 5*y**(-2) + 111*(1-y**2+y**4/2)/(1+y**2/2))
 
+aligoPsd :: Vector Double -> Vector Double
+aligoPsd fin = mapVector psdmodel x
+  where
+    f0 = 245.4 :: Double
+    psd_scale = 1.0E-48 :: Double
+    x = mapVector (/f0) fin
+    psdmodel y = psd_scale * (0.0152*y**(-4) + 0.2935*y**(9.0/4.0) + 2.7951*y**(3.0/2.0) - 6.5080*y**(3.0/4.0) + 17.7622)
 
 kagraPsd :: Vector Double -> Vector Double
 kagraPsd fin = mapVector psdmodel x
