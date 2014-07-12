@@ -76,6 +76,7 @@ library
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.PlotUtils.PlotUtilsHROOT,
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
+    HasKAL.SignalProcessingUtils.ButterWorth,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
     HasKAL.SpectrumUtils.SpectrumUtils,
