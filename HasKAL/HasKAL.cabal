@@ -78,6 +78,7 @@ library
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
     HasKAL.SignalProcessingUtils.Bilinear,
     HasKAL.SignalProcessingUtils.ButterWorth,
+    HasKAL.SignalProcessingUtils.Chebyshev,
     HasKAL.SignalProcessingUtils.Filter,
     HasKAL.SignalProcessingUtils.FilterType,
     HasKAL.SignalProcessingUtils.Signatures,
