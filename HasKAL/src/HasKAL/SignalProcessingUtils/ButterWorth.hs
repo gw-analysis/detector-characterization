@@ -36,18 +36,23 @@ butter n fs fc filterType =
 deltaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 deltaCore fs fc n m filt
   | filt==Low = -2.0 - (filterPole n m) * realToFrac (2.0*pi*fc/fs)
+  | filt==High = realToFrac (2.0*pi*fc/fs) - 2.0*(filterPole n m)
 
 gammaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 gammaCore fs fc n m filt
   | filt==Low = 2.0 - (filterPole n m) * realToFrac (2.0*pi*fc/fs)
+  | filt==High = realToFrac (2.0*pi*fc/fs) + 2.0*(filterPole n m)
+
 
 alphaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 alphaCore fs fc n m filt
   | filt==Low = realToFrac (2*pi*fc/fs)
+  | filt==High = 2
 
 betaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 betaCore fs fc n m filt
   | filt==Low = (- realToFrac (2*pi*fc/fs))
+  | filt==High = -2
 
 filterPole :: Int -> Int -> Complex Double
 filterPole n' k' = realToFrac (cos (pi*(2*k+n-1)/(2*n))) + jj * realToFrac (sin (pi*(2*k+n-1)/(2*n)))
