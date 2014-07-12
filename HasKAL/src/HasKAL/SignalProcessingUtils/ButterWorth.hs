@@ -1,21 +1,26 @@
 module HasKAL.SignalProcessingUtils.ButterWorth
 ( butter
---,
 )
 where
 
 
 import HasKAL.SignalProcessingUtils.FilterType
+import HasKAL.SignalProcessingUtils.Bilinear
 import Data.Complex
 
---type GammaFunc = Double -> Double -> Int -> Int -> Complex Double
---type DeltaFunc = Double -> Double -> Int -> Int -> Complex Double
+
+
 butter :: Int -> Double -> Double -> FilterType -> ([Complex Double], [Complex Double])
-butter n fs fc filterType = do
+butter n fs fc filterType =
   let denominatorList = map (denominator fs fc n) [0..n]
       numeratorList = map (numerator fs fc n) [0..n]
-  (denominatorList, numeratorList)
+  in (denominatorList, numeratorList)
   where
+    denominator :: Double -> Double -> Int -> Int -> Complex Double
+    denominator = denominatorCore gamma delta
+    numerator :: Double -> Double -> Int -> Int -> Complex Double
+    numerator = numeratorCore alpha beta
+
     gamma :: Double -> Double -> Int -> Int -> Complex Double
     gamma fs fc n m = gammaCore fs fc n m filterType
     delta :: Double -> Double -> Int -> Int -> Complex Double
@@ -24,25 +29,7 @@ butter n fs fc filterType = do
     alpha fs fc n m = alphaCore fs fc n m filterType
     beta :: Double -> Double -> Int -> Int -> Complex Double
     beta fs fc n m = betaCore fs fc n m filterType
-    denominator :: Double -> Double -> Int -> Int -> Complex Double
-    denominator = denominatorCore gamma delta
-    numerator :: Double -> Double -> Int -> Int -> Complex Double
-    numerator = numeratorCore alpha beta
 
-
---denominator :: ( -> DeltaFunc -> Double -> Double -> Int -> Int -> Complex Double
-denominatorCore gamma delta fs fc 1 0 = gamma fs fc 1 1
-denominatorCore gamma delta fs fc 1 1 = delta fs fc 1 1
-denominatorCore gamma delta fs fc n m
-  | m < n  = (gamma fs fc n n) * (denominatorCore gamma delta fs fc n (n-1))
-  | m == n = (gamma fs fc n m) * (denominatorCore gamma delta fs fc (n-1) m) + (delta fs fc n m) * (denominatorCore gamma delta fs fc (n-1) (m-1))
-
---numerator :: Double -> Double -> Int -> Int -> Complex Double
-numeratorCore alpha beta fs fc 1 0 = alpha fs fc 1 1
-numeratorCore alpha beta fs fc 1 1 = beta fs fc 1 1
-numeratorCore alpha beta fs fc n m
-  | m < n  = (alpha fs fc n n) * (numeratorCore alpha beta fs fc n (n-1))
-  | m == n = (alpha fs fc n m) * (numeratorCore alpha beta fs fc (n-1) m) + (beta fs fc n m) * (numeratorCore alpha beta fs fc (n-1) (m-1))
 
 
 {-- Internal Funtion --}
@@ -61,8 +48,6 @@ alphaCore fs fc n m filt
 betaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 betaCore fs fc n m filt
   | filt==Low = (- realToFrac (2*pi*fc/fs))
-
-
 
 filterPole :: Int -> Int -> Complex Double
 filterPole n' k' = realToFrac (cos (pi*(2*k+n-1)/(2*n))) + jj * realToFrac (sin (pi*(2*k+n-1)/(2*n)))

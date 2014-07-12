@@ -8,14 +8,18 @@ where
 import FilterType
 import Data.Complex
 
---type GammaFunc = Double -> Double -> Int -> Int -> Complex Double
---type DeltaFunc = Double -> Double -> Int -> Int -> Complex Double
+
 butter :: Int -> Double -> Double -> FilterType -> ([Complex Double], [Complex Double])
 butter n fs fc filterType = do
   let denominatorList = map (denominator fs fc n) [0..n]
       numeratorList = map (numerator fs fc n) [0..n]
   (denominatorList, numeratorList)
   where
+    denominator :: Double -> Double -> Int -> Int -> Complex Double
+    denominator = denominatorCore gamma delta
+    numerator :: Double -> Double -> Int -> Int -> Complex Double
+    numerator = numeratorCore alpha beta
+
     gamma :: Double -> Double -> Int -> Int -> Complex Double
     gamma fs fc n m = gammaCore fs fc n m filterType
     delta :: Double -> Double -> Int -> Int -> Complex Double
@@ -24,11 +28,9 @@ butter n fs fc filterType = do
     alpha fs fc n m = alphaCore fs fc n m filterType
     beta :: Double -> Double -> Int -> Int -> Complex Double
     beta fs fc n m = betaCore fs fc n m filterType
-    denominator :: Double -> Double -> Int -> Int -> Complex Double
-    denominator = denominatorCore gamma delta
-    numerator :: Double -> Double -> Int -> Int -> Complex Double
-    numerator = numeratorCore alpha beta
 
+
+{-- Internal Funtion --}
 
 --denominator :: ( -> DeltaFunc -> Double -> Double -> Int -> Int -> Complex Double
 denominatorCore gamma delta fs fc 1 0 = gamma fs fc 1 1
@@ -45,7 +47,6 @@ numeratorCore alpha beta fs fc n m
   | m == n = (alpha fs fc n m) * (numeratorCore alpha beta fs fc (n-1) m) + (beta fs fc n m) * (numeratorCore alpha beta fs fc (n-1) (m-1))
 
 
-{-- Internal Funtion --}
 deltaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 deltaCore fs fc n m filt
   | filt==Low = -2.0 - (filterPole n m) * realToFrac (2.0*pi*fc/fs)
