@@ -76,13 +76,16 @@ library
     HasKAL.PlotUtils.PlotUtils,
     HasKAL.PlotUtils.PlotUtilsHROOT,
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
+    HasKAL.SignalProcessingUtils.Bilinear,
     HasKAL.SignalProcessingUtils.ButterWorth,
+    HasKAL.SignalProcessingUtils.Filter,
+    HasKAL.SignalProcessingUtils.FilterType,
+    HasKAL.SignalProcessingUtils.Signatures,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
     HasKAL.SpectrumUtils.SpectrumUtils,
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
-    HasKAL.SignalProcessingUtils.Filter,
     HasKAL.TimeUtils.GPSfunction,
     HasKAL.TimeUtils.TimeConvert
 
