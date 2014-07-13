@@ -26,7 +26,7 @@ import qualified Data.Array.IArray as A
 
 import Numeric.LinearAlgebra
 
-import Numeric.GSL.Statistics
+--import Numeric.GSL.Statistics
 
 import Graphics.Rendering.Plot
 
@@ -41,6 +41,10 @@ ut = linspace 25 (1::Double,100)
 ss = sin (15*2*pi*ts)
 ds = 0.25*rs + ss
 es = constant (0.25*(stddev rs)) ln
+
+stddev :: Vector Double -> Double
+stddev x =  (x <.> x) / fromIntegral (dim x)
+
 gs = 0.40*rs - 1
 fs :: Double -> Double
 fs = sin . (15*2*pi*)
@@ -112,9 +116,9 @@ display r = do
    containerAdd frame canvas
    widgetModifyBg canvas StateNormal (Color 65535 65535 65535)
 
-   widgetShowAll window 
+   widgetShowAll window
 
-   on canvas exposeEvent $ tryEvent $ do 
+   on canvas exposeEvent $ tryEvent $ do
      s <- liftIO $ widgetGetSize canvas
      drw <- liftIO $ widgetGetDrawWindow canvas
      --dat <- liftIO $ takeMVar d
@@ -124,7 +128,7 @@ display r = do
    onDestroy window mainQuit
    mainGUI
 
-          
+
 main = display $ render figure
 
 test = writeFigure PDF "test.pdf" (400,400) figure
