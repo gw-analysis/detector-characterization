@@ -14,6 +14,7 @@ import Numeric --showFFloat
 import Control.Monad -- forM
 import System.Environment -- getArgs
 import System.Cmd -- system
+import Data.List.Split -- splitOn
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
@@ -37,6 +38,8 @@ main = do
 
  [frameFileName] <- getArgs
  print $ frameFileName
+ let getGpsTime = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" frameFileName :: Integer
+ --print gpsTime
  
 
  -- read Channel List
@@ -47,7 +50,6 @@ main = do
 
 
  -- calculate correlation value
-
  result <- forM channelList $ \channel1 -> do
 
   readData1 <- readFrame channel1 (frameFileName)
@@ -65,20 +67,22 @@ main = do
    readData2 <- readFrame channel2 (frameFileName)
    let data2 = map realToFrac (eval readData2)
        xdata2 = take (length data2) [1,2..]
-       
+  
 
    let rValue = maximum $ twoChannelData2Correlation data1 data2 1
+   let rValue_10 = read (showFFloat (Just 10) rValue "")::Double
+   let outputFile = "pic__" ++ (show getGpsTime) ++ "__" ++(show rValue_10) ++  "__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
+   plotSaveAsPicture data1 data2 "" "" Linear Dot outputFile
+
+
    --return $ maximum $ twoChannelData2Correlation data1 data2 1 :: IO Double
-   return $ ( read (showFFloat (Just 10) rValue "") ::Double)
+   --return $ ( read (showFFloat (Just 10) rValue "") ::Double)
 
-   -- ## plot in format : png
-   --let outputFile = "pic_scatterplot__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
-   --plotSaveAsPicture  data1 data1 "" "" Linear Dot outputFile
-
-  --print result'
+   return $ (showFFloat (Just 10) rValue "" ) ++ " " ++ channel1 ++ " " ++ channel2
   return result'
 
 
- --print $ concat result
+ print $ concat result
  
  writeFile "result.txt" $ unlines $ map show $ concat result
+
