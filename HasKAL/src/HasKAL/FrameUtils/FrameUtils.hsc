@@ -276,8 +276,16 @@ readFrame channel_Name framefile_Name = do
           return (CDoubleData array_vdata)
 
 
-getChannelList :: String -> Int -> IO [(String, Int)]
-getChannelList frameFile gpsTime = do
+extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
+
+
+getChannelList :: String -> IO [(String, Int)]
+getChannelList frameFile = do
+--    let extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
+    getChannelListCore frameFile $ extractstartGPStime frameFile
+
+getChannelListCore :: String -> Int -> IO [(String, Int)]
+getChannelListCore frameFile gpsTime = do
     frameFile' <- newCString frameFile
     ifile <- c_FrFileINew frameFile'
     let gpsTime' = fromIntegral gpsTime :: CInt
@@ -292,8 +300,13 @@ takeChannelandFs :: String -> (String, Int)
 takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Int)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
 
 
-getSamplingFrequency :: String -> String -> Int -> IO Double
-getSamplingFrequency frameFile channelName gpsTime = do
+getSamplingFrequency :: String -> String -> IO Double
+getSamplingFrequency frameFile channelName = do
+  getSamplingFrequencyCore frameFile channelName $ extractstartGPStime frameFile
+
+
+getSamplingFrequencyCore :: String -> String -> Int -> IO Double
+getSamplingFrequencyCore frameFile channelName gpsTime = do
     channel <- newCString channelName
     framefileName <- newCString frameFile
     ifile <- c_FrFileINew framefileName
