@@ -1,4 +1,4 @@
-#Time-stamp: "2013-11-12 14:53:15 yuzurihara"
+#Time-stamp: "2014-07-14 18:15:23 yuzurihara"
 
 # To compile, you must do follow command before make command
 #	cd ~/detector-characterization/HasKAL
@@ -9,7 +9,7 @@
 CC=ghc
 
 OBJ1=check_correlation.hs
-OBJ2=
+OBJ2=generateHtml.hs
 OBJ3=
 
 
@@ -22,9 +22,14 @@ HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 
 #TARGET=testplot1
 #TARGET=testplot1 testplot2 testplot3
-TARGET=check_correlation
+TARGET=check_correlation generateHtml
 
 all:$(TARGET)
+
+generateHtml:${OBJ2}
+	ln -fs ${HASKALPATH} ./
+	$(CC) -O ${OBJ2} -o $@ ${INKLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
 
 check_correlation:${OBJ1}
 	ln -fs ${HASKALPATH} ./
