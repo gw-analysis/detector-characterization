@@ -8,5 +8,5 @@ if [ $# -eq 2 ]; then
 
 else
     
-    /usr/bin/FrChannels $1 > channelList.txt
+    FrChannels $1 > channelList.txt
 fi
