@@ -57,6 +57,9 @@ import Foreign.C.String
 import Foreign.Marshal.Array
 import System.IO
 import Control.Applicative
+import Data.List
+import Data.List.Split
+
 
 #include "FrameL.h"
 -- #include "stdio.h"
@@ -273,14 +276,20 @@ readFrame channel_Name framefile_Name = do
           return (CDoubleData array_vdata)
 
 
-getChannelList :: String -> Int -> IO [String]
+getChannelList :: String -> Int -> IO [(String, Int)]
 getChannelList frameFile gpsTime = do
     frameFile' <- newCString frameFile
     ifile <- c_FrFileINew frameFile'
     let gpsTime' = fromIntegral gpsTime :: CInt
     channelList' <- c_FrFileIGetChannelList ifile gpsTime'
-    channelList <- peekCString channelList'
-    return $ lines channelList
+    channelList'' <- peekCString channelList'
+    let channelList = lines channelList''
+        adcChannelList = map takeChannelandFs $ filter (isPrefixOf "ADC") channelList
+        procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
+    return $ concat [procChannelList, adcChannelList]
+
+takeChannelandFs :: String -> (String, Int)
+takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Int)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
 
 
 getSamplingFrequency :: String -> String -> Int -> IO Double
