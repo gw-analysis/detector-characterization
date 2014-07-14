@@ -18,8 +18,8 @@ import Data.List.Split -- splitOn
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
-import HasKAL.PlotUtils.PlotUtilsHROOT
-import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
+--import HasKAL.PlotUtils.PlotUtilsHROOT
+--import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
 
 --main IO()
@@ -71,10 +71,12 @@ main = do
 
    let rValue = maximum $ twoChannelData2Correlation data1 data2 1
    let rValue_10 = read (showFFloat (Just 10) rValue "")::Double
+
+   {-
    let outputFile = "pic__" ++ (show getGpsTime) ++ "__" ++(show rValue_10) ++  "__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
    plotSaveAsPicture data1 data2 "" "" Linear Dot outputFile
-
-
+   -}
+   
    --return $ maximum $ twoChannelData2Correlation data1 data2 1 :: IO Double
    --return $ ( read (showFFloat (Just 10) rValue "") ::Double)
 
@@ -84,5 +86,6 @@ main = do
 
  print $ concat result
  
- writeFile "result.txt" $ unlines $ map show $ concat result
+ let resultFile = "result__" ++ (show getGpsTime) ++ ".txt"
+ writeFile resultFile $ unlines $ map show $ concat result
 
