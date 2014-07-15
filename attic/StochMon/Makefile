@@ -13,7 +13,7 @@ USELIB=
 
 # program
 TAR1=teststoch
-#TAR2=gslRandomTest
+TAR2=teststoch2
 #TAR3=gslHasKALTest
 TAR= ${TAR1} ${TAR2} ${TAR3}
 
@@ -25,7 +25,7 @@ LIBS=`pkg-config --libs-only-l ${USELIB}`
 else
 CFLAGS=
 LDFLAGS=
-LIBS=-lgsl -lgslcblas
+LIBS=-lgsl -lgslcblas -lstdc++ -lm -lFrame
 endif
 
 # compile rule
