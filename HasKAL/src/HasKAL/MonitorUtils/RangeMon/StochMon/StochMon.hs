@@ -64,10 +64,10 @@ ifonoisepsd_stoch ifo fin = case ifo of
 aligoPsd_stoch :: Double -> Double
 aligoPsd_stoch fin = (psdmodel x)
   where
-    f0 = 215 :: Double
-    psd_scale = 1.0E-49 :: Double
+    f0 = 245.4 :: Double
+    psd_scale = 1.0E-48 :: Double
     x  = fin / f0
-    psdmodel y = psd_scale * (y**(-4.14) - 5*y**(-2) + 111*(1-y**2+y**4/2)/(1+y**2/2))
+    psdmodel y = psd_scale * (0.0152*y**(-4) + 0.2935*y**(9.0/4.0) + 2.7951*y**(3.0/2.0) - 6.5080*y**(3.0/4.0) + 17.7622)
 
 kagraPsd_stoch :: Double -> Double
 kagraPsd_stoch fin = (psdmodel x)
