@@ -2,11 +2,13 @@ module HasKAL.FrameUtils.FileManipulation
 ( getRecursiveFileSystem
 , getCurrentDirectory
 , genFileList
+, extractstartGPStime
 ) where
 
 import Control.Monad (forM)
 import System.Directory (doesDirectoryExist, getDirectoryContents, getCurrentDirectory)
 import System.FilePath ((</>))
+import Data.List.Split (splitOn)
 
 getRecursiveFileSystem:: FilePath -> IO [FilePath]
 getRecursiveFileSystem topdir = do
@@ -25,4 +27,5 @@ genFileList fileName absDir = do
     contents <- getRecursiveFileSystem absDir
     writeFile fileName $ unlines contents
 
-
+extractstartGPStime :: String -> Integer
+extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer

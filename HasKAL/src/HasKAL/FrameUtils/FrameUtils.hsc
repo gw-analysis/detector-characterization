@@ -59,6 +59,7 @@ import System.IO
 import Control.Applicative
 import Data.List
 import Data.List.Split
+import HasKAL.FrameUtils.FileManipulation
 
 
 #include "FrameL.h"
@@ -276,15 +277,14 @@ readFrame channel_Name framefile_Name = do
           return (CDoubleData array_vdata)
 
 
-extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
 
 
-getChannelList :: String -> IO [(String, Int)]
+getChannelList :: String -> IO [(String, Double)]
 getChannelList frameFile = do
 --    let extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
     getChannelListCore frameFile $ extractstartGPStime frameFile
 
-getChannelListCore :: String -> Int -> IO [(String, Int)]
+getChannelListCore :: String -> Integer -> IO [(String, Double)]
 getChannelListCore frameFile gpsTime = do
     frameFile' <- newCString frameFile
     ifile <- c_FrFileINew frameFile'
@@ -296,8 +296,8 @@ getChannelListCore frameFile gpsTime = do
         procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
     return $ concat [procChannelList, adcChannelList]
 
-takeChannelandFs :: String -> (String, Int)
-takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Int)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
+takeChannelandFs :: String -> (String, Double)
+takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Double)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
 
 
 getSamplingFrequency :: String -> String -> IO Double
@@ -305,7 +305,7 @@ getSamplingFrequency frameFile channelName = do
   getSamplingFrequencyCore frameFile channelName $ extractstartGPStime frameFile
 
 
-getSamplingFrequencyCore :: String -> String -> Int -> IO Double
+getSamplingFrequencyCore :: String -> String -> Integer -> IO Double
 getSamplingFrequencyCore frameFile channelName gpsTime = do
     channel <- newCString channelName
     framefileName <- newCString frameFile

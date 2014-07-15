@@ -1,6 +1,6 @@
-{-# LINE 1 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 1 "FrameUtils.hsc" #-}
 ----------------------------------------------------------------------
-{-# LINE 2 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 2 "FrameUtils.hsc" #-}
 -- Modules for handling Frame formated file
 --
 -- frame library :
@@ -61,18 +61,19 @@ import System.IO
 import Control.Applicative
 import Data.List
 import Data.List.Split
+import HasKAL.FrameUtils.FileManipulation
 
 
 
-{-# LINE 65 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 66 "FrameUtils.hsc" #-}
 -- #include "stdio.h"
 
 type CFRVECTTYPES = (Word16)
-{-# LINE 68 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 69 "FrameUtils.hsc" #-}
 type CFRULONG     = (Word64)
-{-# LINE 69 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 70 "FrameUtils.hsc" #-}
 type CFRLONG      = (Int64)
-{-# LINE 70 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 71 "FrameUtils.hsc" #-}
 newtype FrVectOption = FrVectOption { unFrVectOption :: CInt }
     deriving (Eq,Show)
 
@@ -117,7 +118,7 @@ frvect_h16     = FrVectOption 14
 frvect_END     :: FrVectOption
 frvect_END     = FrVectOption 15
 
-{-# LINE 94 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 95 "FrameUtils.hsc" #-}
 
 data FrFile_partial
 data FrameH_partial = FrameH_partial { frameh_dt         :: CDouble
@@ -303,15 +304,14 @@ readFrame channel_Name framefile_Name = do
           return (CDoubleData array_vdata)
 
 
-extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
 
 
-getChannelList :: String -> IO [(String, Int)]
+getChannelList :: String -> IO [(String, Double)]
 getChannelList frameFile = do
 --    let extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
     getChannelListCore frameFile $ extractstartGPStime frameFile
 
-getChannelListCore :: String -> Int -> IO [(String, Int)]
+getChannelListCore :: String -> Integer -> IO [(String, Double)]
 getChannelListCore frameFile gpsTime = do
     frameFile' <- newCString frameFile
     ifile <- c_FrFileINew frameFile'
@@ -323,8 +323,8 @@ getChannelListCore frameFile gpsTime = do
         procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
     return $ concat [procChannelList, adcChannelList]
 
-takeChannelandFs :: String -> (String, Int)
-takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Int)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
+takeChannelandFs :: String -> (String, Double)
+takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Double)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
 
 
 getSamplingFrequency :: String -> String -> IO Double
@@ -332,7 +332,7 @@ getSamplingFrequency frameFile channelName = do
   getSamplingFrequencyCore frameFile channelName $ extractstartGPStime frameFile
 
 
-getSamplingFrequencyCore :: String -> String -> Int -> IO Double
+getSamplingFrequencyCore :: String -> String -> Integer -> IO Double
 getSamplingFrequencyCore frameFile channelName gpsTime = do
     channel <- newCString channelName
     framefileName <- newCString frameFile
@@ -367,30 +367,30 @@ getGPSTime frameFile = do
 {-- Storable Type for structure--}
 instance Storable FrameH_partial where
   sizeOf = const (192)
-{-# LINE 343 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 343 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke frameptr (FrameH_partial val_dt val_GTimeS val_GTimeN val_FrProcData val_FrRawData) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 40)) frameptr val_dt
-{-# LINE 346 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 346 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 28)) frameptr val_GTimeS
-{-# LINE 347 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 347 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 32)) frameptr val_GTimeN
-{-# LINE 348 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 348 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 96)) frameptr val_FrProcData
-{-# LINE 349 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 349 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 88)) frameptr val_FrRawData
-{-# LINE 350 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 350 "FrameUtils.hsc" #-}
   peek frameptr = do
     val_dt <- ((\hsc_ptr -> peekByteOff hsc_ptr 40)) frameptr
-{-# LINE 352 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 352 "FrameUtils.hsc" #-}
     val_GTimeS <- ((\hsc_ptr -> peekByteOff hsc_ptr 28)) frameptr
-{-# LINE 353 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 353 "FrameUtils.hsc" #-}
     val_GTimeN <- ((\hsc_ptr -> peekByteOff hsc_ptr 32)) frameptr
-{-# LINE 354 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 354 "FrameUtils.hsc" #-}
     val_FrProcData <- ((\hsc_ptr -> peekByteOff hsc_ptr 96)) frameptr
-{-# LINE 355 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 355 "FrameUtils.hsc" #-}
     val_FrRawData <- ((\hsc_ptr -> peekByteOff hsc_ptr 88)) frameptr
-{-# LINE 356 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 356 "FrameUtils.hsc" #-}
     return $ FrameH_partial {frameh_dt=val_dt, frameh_GTimeS=val_GTimeS
                             , frameh_GTimeN=val_GTimeN, frameh_frprocdata=val_FrProcData
                             , frameh_frrawdata=val_FrRawData}
@@ -398,7 +398,7 @@ instance Storable FrameH_partial where
 
 instance Storable FrVect_partial where
   sizeOf = const (240)
-{-# LINE 363 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 363 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke ptr_frvect (FrVect_partial val_type
                                   val_nData
@@ -410,42 +410,42 @@ instance Storable FrVect_partial where
                                   ptr_dataF
                                   ptr_dataD) = do
       ((\hsc_ptr -> pokeByteOff hsc_ptr 18))    ptr_frvect val_type
-{-# LINE 374 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 374 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 24))   ptr_frvect val_nData
-{-# LINE 375 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 375 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 64))      ptr_frvect ptr_dx
-{-# LINE 376 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 376 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 48))    ptr_frvect val_nDim
-{-# LINE 377 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 377 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 56))      ptr_frvect ptr_nx
-{-# LINE 378 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 378 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 72))  ptr_frvect val_startX
-{-# LINE 379 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 379 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 200))   ptr_frvect val_GTime
-{-# LINE 380 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 380 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 128))   ptr_frvect ptr_dataF
-{-# LINE 381 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 381 "FrameUtils.hsc" #-}
       ((\hsc_ptr -> pokeByteOff hsc_ptr 136))   ptr_frvect ptr_dataD
-{-# LINE 382 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 382 "FrameUtils.hsc" #-}
   peek ptr_frvect = do
       val_type    <- ((\hsc_ptr -> peekByteOff hsc_ptr 18))      ptr_frvect
-{-# LINE 384 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 384 "FrameUtils.hsc" #-}
       val_nData   <- ((\hsc_ptr -> peekByteOff hsc_ptr 24))     ptr_frvect
-{-# LINE 385 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 385 "FrameUtils.hsc" #-}
       ptr_dx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 64))        ptr_frvect
-{-# LINE 386 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 386 "FrameUtils.hsc" #-}
       val_nDim    <- ((\hsc_ptr -> peekByteOff hsc_ptr 48))      ptr_frvect
-{-# LINE 387 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 387 "FrameUtils.hsc" #-}
       ptr_nx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 56))        ptr_frvect
-{-# LINE 388 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 388 "FrameUtils.hsc" #-}
       val_startX  <- ((\hsc_ptr -> peekByteOff hsc_ptr 72))    ptr_frvect
-{-# LINE 389 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 389 "FrameUtils.hsc" #-}
       val_GTime   <- ((\hsc_ptr -> peekByteOff hsc_ptr 200))     ptr_frvect
-{-# LINE 390 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 390 "FrameUtils.hsc" #-}
       ptr_dataF   <- ((\hsc_ptr -> peekByteOff hsc_ptr 128))     ptr_frvect
-{-# LINE 391 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 391 "FrameUtils.hsc" #-}
       ptr_dataD   <- ((\hsc_ptr -> peekByteOff hsc_ptr 136))     ptr_frvect
-{-# LINE 392 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 392 "FrameUtils.hsc" #-}
       return $ FrVect_partial { frvect_type     = val_type
                               , frvect_nData    = val_nData
                               , frvect_dx       = ptr_dx
@@ -459,31 +459,31 @@ instance Storable FrVect_partial where
 
 instance Storable FrProcData_partial where
   sizeOf = const (152)
-{-# LINE 405 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 405 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke frprocdataptr (FrProcData_partial ptr_data) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 16)) frprocdataptr ptr_data
-{-# LINE 408 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 408 "FrameUtils.hsc" #-}
   peek frprocdataptr = do
     ptr_data <- ((\hsc_ptr -> peekByteOff hsc_ptr 16)) frprocdataptr
-{-# LINE 410 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 410 "FrameUtils.hsc" #-}
     return $ FrProcData_partial {frprocdata_data = ptr_data}
 
 
 instance Storable C_FrAdcData where
   sizeOf = const (120)
-{-# LINE 415 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 415 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke ptr_FrAdcData (C_FrAdcData ptr_data val_sampleRate) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 16)) ptr_FrAdcData ptr_data
-{-# LINE 418 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 418 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 88)) ptr_FrAdcData val_sampleRate
-{-# LINE 419 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 419 "FrameUtils.hsc" #-}
   peek ptr_FrAdcData = do
     ptr_data <- ((\hsc_ptr -> peekByteOff hsc_ptr 16)) ptr_FrAdcData
-{-# LINE 421 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 421 "FrameUtils.hsc" #-}
     val_sampleRate <- ((\hsc_ptr -> peekByteOff hsc_ptr 88)) ptr_FrAdcData
-{-# LINE 422 "HasKAL/FrameUtils/FrameUtils.hsc" #-}
+{-# LINE 422 "FrameUtils.hsc" #-}
     return $ C_FrAdcData { fradc_data = ptr_data
                          , fradc_sampleRate = val_sampleRate
                          }
