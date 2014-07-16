@@ -1,6 +1,6 @@
 module HasKAL.SignalProcessingUtils.ButterWorth
-( butter
-)
+--( butter
+--)
 where
 
 
