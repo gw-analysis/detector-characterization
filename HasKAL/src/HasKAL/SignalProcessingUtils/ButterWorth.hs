@@ -1,6 +1,19 @@
+
+{- test code to check butter
+-- import HasKAL.SignalProcessingUtils.ButterWorth
+-- import HasKAL.SignalProcessingUtils.FilterType
+-- main = return $ butter 2 30000 3000 Low
+
+output is (numerator, denominator)
+in this example,
+([6.3964384855588e-2, -0.127928769711176, 6.3964384855588e-2], [1.0, -1.1682606671932643, 0.42411820661561617])
+-}
+
+
+
 module HasKAL.SignalProcessingUtils.ButterWorth
---( butter
---)
+( butter
+)
 where
 
 
@@ -36,7 +49,7 @@ butter n fs fc filterType =
 deltaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 deltaCore fs fc n m filt
   | filt==Low = (-2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
-    / (2.0 - (filterPole n m) * realToFrac (2.0*pi*fc/fs))
+    / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
   | filt==High = realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m
     / (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m)
 

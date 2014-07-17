@@ -1,3 +1,29 @@
+{-
+- - test code to check iirFilter and butter in SignalProcessingUtils
+- - to compile the code,  run
+- - ghc -o testFilter testFilter.hs
+- HasKAL/SignalProcessingUtils/filterFunctions.c
+- - -}
+--import HasKAL.SignalProcessingUtils.Filter
+--import HasKAL.SignalProcessingUtils.ButterWorth
+--import HasKAL.SignalProcessingUtils.FilterType
+--import HasKAL.PlotUtils.PlotUtils
+--import HasKAL.PlotUtils.PlotUtilsHROOT
+--import System.Random
+--
+--main :: IO ()
+--main = do
+--  let x = take 1000 $ randomRs (-1,  1) $ mkStdGen 1 :: [Double]
+--      numCoeff   = fst $ butter 2 100 20 Low
+--      denomCoeff = snd $ butter 2 100 20 Low
+--      y = iirFilter x (length x) numCoeff denomCoeff (length numCoeff)
+--  print $ take 100 y
+--  --plot [0..100-1] y "X11"
+--  scatter_plot_2d "testing IIR + Butterworth" "timeseries" 10 (640,  480) $ zip [0..(100-1)::Double] y
+--
+--
+
+
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module HasKAL.SignalProcessingUtils.Filter
