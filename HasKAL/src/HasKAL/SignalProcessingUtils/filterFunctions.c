@@ -13,11 +13,28 @@
 int iir_filter (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double *output){
 
     unsigned inputidx, k;
+    double y, init_coeff[filterlen];
+
+    //-- initialize the delay registers
+    for (k=0;k<filterlen;k++){
+        init_coeff[k] = 0.0;
+    }
+
+    //-- main part
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+
+    return 1;
+}
+
+
+int iir_filter_core (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double init_coeff[], double *output){
+
+    unsigned inputidx, k;
     double y, Reg[filterlen];
 
     //-- initialize the delay registers
     for (k=0;k<filterlen;k++){
-        Reg[k] = 0.0;
+        Reg[k] = init_coeff[k];
     }
 
     for (inputidx=0;inputidx<inputlen;inputidx++){
@@ -41,7 +58,6 @@ int iir_filter (double *input, unsigned inputlen, double num_coeff[], double den
     }
     return 1;
 }
-
 
 
 int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned filterlen, double *output){

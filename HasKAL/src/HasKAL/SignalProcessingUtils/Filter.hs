@@ -29,7 +29,8 @@
 module HasKAL.SignalProcessingUtils.Filter
   (
   iirFilter,
-  firFilter
+  firFilter,
+  filtfilt
   ) where
 
 import Foreign.C.Types
@@ -54,8 +55,30 @@ firFilter input ilen firCoeff flen = do
   cd2d $ firFilterCore input' ilen firCoeff' flen
 
 
+filtfilt :: [Double] -> [Double] -> [Double] -> [Double]
+filtfilt input numCoeff denomCoeff = do
+--  let inputCD = d2cd input
+  let numCoeffCD = d2cd numCoeff
+      denomCoeffCD = d2cd denomCoeff
+      ilen = length input
+      flen = length numCoeff
+      lrefl = 3 * (flen - 1)
+      si'' = tail.reverse.cumsum.reverse $ zipWith (-) numCoeff $ map (*((sum numCoeff)/(sum denomCoeff))) denomCoeff
+      si' = 0:si''
+      si = d2cd si'
+
+      input'' = (map (2*(head input)-) $ reverse $ foldl (\acc m -> (input !! m):acc) [] [lrefl,lrefl-1..2])
+        ++ input ++ (map (2*(last input)-) $ reverse $ foldl (\acc m -> (input !! m):acc) [] [ilen-1, ilen-2..ilen-lrefl])
+      input' = d2cd input''
+      forwardFiltered = iirFilterCoreInit input' (length input') numCoeffCD denomCoeffCD flen (map (*(head input')) si)
+      reverseFiltered = reverse $ iirFilterCoreInit (reverse forwardFiltered)
+        (length forwardFiltered) numCoeffCD denomCoeffCD flen (map (*(last forwardFiltered)) si)
+  reverse $ foldl (\acc m -> (input !! m):acc) [] [lrefl+1..lrefl+ilen]
+
 
 -------------  Internal Functions  -----------------------------
+cumsum :: [Double] -> [Double]
+cumsum xs = scanl1 (+) xs
 
 iirFilterCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble]
 iirFilterCore input ilen numCoeff denomCoeff flen
@@ -67,6 +90,20 @@ iirFilterCore input ilen numCoeff denomCoeff flen
       peekArray ilen ptrOutput
       where wilen = itow32 ilen
             wflen = itow32 flen
+
+
+iirFilterCoreInit :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble]
+iirFilterCoreInit input ilen numCoeff denomCoeff flen initCoeff
+  = unsafePerformIO $ withArray input $ \ptrInput ->
+   withArray numCoeff $ \ptrNumCoeff ->
+   withArray denomCoeff $ \ptrDenomCoeff ->
+   withArray initCoeff $ \ptrInitCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_iir_filter_core ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrInitCoeff ptrOutput
+      peekArray ilen ptrOutput
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
 
 firFilterCore :: [CDouble] -> Int -> [CDouble] -> Int -> [CDouble]
 firFilterCore input ilen firCoeff flen
@@ -90,6 +127,8 @@ cd2d = map realToFrac
 
 
 foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
+foreign import ccall "filterFunctions.h iir_filter_core" c_iir_filter_core :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
