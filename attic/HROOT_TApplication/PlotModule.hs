@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotModule.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/17 23:53:48
+  * Last Modified: 2014/07/19 00:14:45
   *******************************************-}
 
 module PlotModule (
@@ -11,8 +11,8 @@ module PlotModule (
   ,plotX -- plot on X11
   ,oPlot -- overplot in file
   ,oPlotX -- overplot on X11
-  -- ,dPlot -- divide plot in file
-  -- ,dPlotX -- divide plot on X11
+  ,dPlot -- divide plot in file
+  ,dPlotX -- divide plot on X11
 ) where
 
 import qualified Control.Monad as CM
@@ -52,15 +52,16 @@ plotBase multi log mark (labelX, labelY) fname dats = do
     "X11" -> CM.liftM DM.Just $ DIO.readIORef gTApp
     _     -> return DM.Nothing
   tCan <- HR.newTCanvas "title" "window name" 640 480
-  setLogXY tCan log
+  setLog' tCan log
 
   tGras <- CM.forM dats $ \dat -> HR.newTGraph (length dat) (map fst dat) (map snd dat)
   case multi of
     Over -> draw' tGras mark
-    Divide -> do -- forM [1..(length dats) $ \lambda -> do
-                    -- divide_tvirtualpad
-                    -- draw' [tGras !! lambda] mark
-      error "Not implemented yet"
+    Divide -> do
+      HR.divide_tvirtualpad tCan 2 2 0.01 0.01 0 -- 後ろ3つの引数が不明
+      CM.liftM concat $ CM.forM [1..(min 4 $ length dats)] $ \lambda -> do
+        HR.cd tCan (toEnum $ lambda)
+        draw' [tGras !! (lambda-1)] mark
 
   case fname of 
     "X11" -> HR.run (DM.fromJust tApp) 1
@@ -69,14 +70,16 @@ plotBase multi log mark (labelX, labelY) fname dats = do
   CM.mapM HR.delete tGras
   HR.delete tCan
 
-setLogXY :: HR.TCanvas -> LogOption -> IO ()
-setLogXY tCan flag
+setLog' :: HR.TCanvas -> LogOption -> IO ()
+setLog' tCan flag
   | flag == Linear = return ()
   | flag == LogX   = HR.setLogx tCan 1
   | flag == LogY   = HR.setLogy tCan 1
-  | flag == LogXY  = do
-      HR.setLogx tCan 1
-      HR.setLogy tCan 1
+  -- | flag == LogZ   = HR.setLogz tCan 1
+  | flag == LogXY  = mapM_ (setLog' tCan) [LogX, LogY]
+  -- | flag == LogXZ  = mapM_ (setLog' tCan) [LogX, LogZ]
+  -- | flag == LogYZ  = mapM_ (setLog' tCan) [LogY, LogZ]
+  -- | flag == LogXYZ  = mapM_ (setLog' tCan) [LogX, LogY, LogZ]
 
 draw' :: [HR.TGraph] -> PlotTypeOption -> IO [()]
 draw' tGra flag
