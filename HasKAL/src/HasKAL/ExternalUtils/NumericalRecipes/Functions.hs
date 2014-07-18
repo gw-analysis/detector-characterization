@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module NumericalRecipes.Functions
+module HasKAL.ExternalUtils.NumericalRecipes.Functions
 ( nr_toeplz
 ) where
 
@@ -8,7 +8,7 @@ import Foreign.Ptr(Ptr)
 import Foreign.C.Types(CFloat)
 import System.IO.Unsafe(unsafePerformIO)
 import Foreign.Marshal.Array (withArray, peekArray, allocaArray)
-import StrictMapping.StrictMapping
+import HasKAL.Misc.StrictMapping
 import Control.Monad()  --((>>=))
 
 nr_toeplz :: [Float] -> [Float] -> Int -> [Float]
