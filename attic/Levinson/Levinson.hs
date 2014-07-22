@@ -9,7 +9,7 @@ import Numeric.LinearAlgebra
 --import Numeric.GSL.Fourier
 import Foreign.Ptr(Ptr)
 import Foreign.C.Types (CFloat)
-import Foreign.Marshal.Array (withArrayLen, peekArray)
+import Foreign.Marshal.Array (withArray, allocaArray, peekArray)
 import System.IO.Unsafe(unsafePerformIO)
 
 
@@ -22,20 +22,13 @@ levinson r p = unsafePerformIO $ do
       autCorr = toList $ join [reverseVCD partialrv, rv]
       autCorrFloat = map realToFrac (0:autCorr) :: [CFloat]
       rvFloat = map realToFrac (0:toList rv) :: [CFloat]
-      out = replicate p 0
 
-  ptr_autCorrFloat <- withArrayLen autCorrFloat $ \len ptr_tmp -> do
-    return ptr_tmp
-  ptr_rvFloat <- withArrayLen rvFloat $ \len ptr_tmp ->
-    return ptr_tmp
-  ptr_outFloat <- withArrayLen out $ \len ptr_tmp -> do
-    return ptr_tmp
-
-  c_nr_toeplz ptr_autCorrFloat ptr_outFloat ptr_rvFloat p
-  outFloat <- peekArray p ptr_outFloat
-
-  return (tail (map realToFrac (1:outFloat)) :: [Double])
-
+  withArray autCorrFloat $ \ptrautCorrFloat ->
+    withArray rvFloat $ \ptrrvFloat ->
+    allocaArray p $ \ptroutFloat ->
+    do c_nr_toeplz ptrautCorrFloat ptroutFloat ptrrvFloat p
+       outFloat <- peekArray p ptroutFloat
+       return . tail $ cf2d (1:outFloat)
 
 --applyConj :: Vector (Complex Double ) -> Vector (Complex)
 --applyConj = mapVector conj
@@ -44,10 +37,10 @@ reverseVCD :: Vector Double -> Vector Double
 reverseVCD = fromList . reverse . toList
 
 inputCheck :: Int -> Int -> Maybe Int
-inputCheck r p = case (r<2*p+1) of True -> Nothing
-                                   False -> Just (p+1)
+inputCheck r p = if r<2*p+1 then Nothing else Just (p+1)
 
-
+cf2d :: [CFloat] -> [Double]
+cf2d xs = map realToFrac xs :: [Double]
 
 foreign import ccall unsafe "nr.h toeplz" c_nr_toeplz :: Ptr CFloat -> Ptr CFloat -> Ptr CFloat -> Int -> IO()
 

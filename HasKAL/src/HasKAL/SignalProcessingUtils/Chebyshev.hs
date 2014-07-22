@@ -8,49 +8,54 @@ import HasKAL.SignalProcessingUtils.Bilinear
 import Data.Complex
 
 
-chebyshev1:: Int -> Double -> Double -> Double -> FilterType -> ([Complex Double], [Complex Double])
+chebyshev1:: Int -> Double -> Double -> Double -> FilterType -> ([Double], [Double])
 chebyshev1 n r fs fc filterType = do
   let denominatorList = map (denominator fs fc n) [0..n]
       numeratorList = map (numerator fs fc n) [0..n]
-  (denominatorList, numeratorList)
+  (map realPart denominatorList, map realPart numeratorList)
   where
     denominator :: Double -> Double -> Int -> Int -> Complex Double
-    denominator = denominatorCore gamma delta
+    denominator = denominatorCore gamma delta n
     numerator :: Double -> Double -> Int -> Int -> Complex Double
-    numerator = numeratorCore alpha beta
+    numerator = numeratorCore alpha beta n
 
     gamma :: Double -> Double -> Int -> Int -> Complex Double
-    gamma fs fc n m = gammaCore r fs fc n m filterType
+    gamma fs' fc' n' m' = gammaCore r fs' fc' n' m' filterType
     delta :: Double -> Double -> Int -> Int -> Complex Double
-    delta fs fc n m = deltaCore r fs fc n m filterType
+    delta fs' fc' n' m' = deltaCore r fs' fc' n' m' filterType
     alpha :: Double -> Double -> Int -> Int -> Complex Double
-    alpha fs fc n m = alphaCore r fs fc n m filterType
+    alpha fs' fc' n' m' = alphaCore r fs' fc' n' m' filterType
     beta :: Double -> Double -> Int -> Int -> Complex Double
-    beta fs fc n m = betaCore r fs fc n m filterType
+    beta fs' fc' n' m' = betaCore r fs' fc' n' m' filterType
 
 
 {-- Internal Funtion --}
 
 deltaCore :: Double -> Double -> Double -> Int -> Int -> FilterType -> Complex Double
 deltaCore r fs fc n m filt
-  | filt==Low = -2.0 - (filterPole n m r) * realToFrac (2.0*pi*fc/fs)
-  | filt==High = realToFrac (2.0*pi*fc/fs) - 2.0*(filterPole n m r)
+  | filt==Low = (-2.0 - filterPole n m r * realToFrac (2.0*pi*fc/fs))
+    / (2.0 - filterPole n m r * realToFrac (2.0*pi*fc/fs))
+  | filt==High = realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m r
+    / realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m r
 
 gammaCore :: Double -> Double -> Double -> Int -> Int -> FilterType -> Complex Double
-gammaCore r fs fc n m filt
-  | filt==Low = 2.0 - (filterPole n m r) * realToFrac (2.0*pi*fc/fs)
-  | filt==High = realToFrac (2.0*pi*fc/fs) + 2.0*(filterPole n m r)
+gammaCore _ _ _ _ _ filt
+  | filt==Low = 1.0
+  | filt==High =1.0
 
 alphaCore :: Double -> Double -> Double -> Int -> Int -> FilterType -> Complex Double
 alphaCore r fs fc n m filt
-  | filt==Low = (h0 n r) * realToFrac (2*pi*fc/fs)
-  | filt==High = 2 * h0 n r
+  | filt==Low = h0 n r *  foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+    / (2.0 - filterPole n m' r * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
+  | filt==High = 2 * h0 n r / foldl (\acc m' -> acc * (1.0/(realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m' r))) 1.0 [1..m]
 
 betaCore :: Double -> Double -> Double -> Int -> Int -> FilterType -> Complex Double
 betaCore r fs fc n m filt
-  | filt==Low = (h0 n r) * (- realToFrac (2*pi*fc/fs))
-  | filt==High = (-2) * h0 n r
+  | filt==Low = (h0 n r) * foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+    / (2.0 - filterPole n m' r * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
+  | filt==High = (-2) * h0 n r / foldl (\acc m' -> acc * (1.0/(realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m' r))) 1.0 [1..m]
 
+h0 :: Int -> Double -> Complex Double
 h0 n r
   | odd n  = foldl (\acc k -> acc * filterPole n k r) 1.0 [1..n]
   | even n = realToFrac (10.0**(r/20.0)) * (foldl (\acc k -> acc * filterPole n k r) 1.0 [1..n])

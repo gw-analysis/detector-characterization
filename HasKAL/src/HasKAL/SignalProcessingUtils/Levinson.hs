@@ -1,12 +1,11 @@
 
-module Levinson
+module HasKAL.SignalProcessingUtils.Levinson
 ( levinson
 --,
 ) where
 
 import Numeric.LinearAlgebra
---import Numeric.GSL.Fourier
-import NumericalRecipes.Functions
+import HasKAL.ExternalUtils.NumericalRecipes.Functions
 
 levinson :: [Double] -> Int -> [Double]
 levinson r p = do
