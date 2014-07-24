@@ -4,24 +4,33 @@
 - - ghc -o testFilter testFilter.hs
 - HasKAL/SignalProcessingUtils/filterFunctions.c
 - - -}
---import HasKAL.SignalProcessingUtils.Filter
---import HasKAL.SignalProcessingUtils.ButterWorth
---import HasKAL.SignalProcessingUtils.FilterType
---import HasKAL.PlotUtils.PlotUtils
---import HasKAL.PlotUtils.PlotUtilsHROOT
---import System.Random
 --
---main :: IO ()
---main = do
---  let x = take 1000 $ randomRs (-1,  1) $ mkStdGen 1 :: [Double]
---      numCoeff   = fst $ butter 2 100 20 Low
---      denomCoeff = snd $ butter 2 100 20 Low
---      y = iirFilter x (length x) numCoeff denomCoeff (length numCoeff)
---  print $ take 100 y
---  --plot [0..100-1] y "X11"
---  scatter_plot_2d "testing IIR + Butterworth" "timeseries" 10 (640,  480) $ zip [0..(100-1)::Double] y
+-- import HasKAL.SignalProcessingUtils.Filter
+-- import HasKAL.SignalProcessingUtils.ButterWorth
+-- import HasKAL.SignalProcessingUtils.FilterType
+-- import HasKAL.SpectrumUtils.GwPsdMethod
+-- import HasKAL.SpectrumUtils.SpectrumUtils
+-- import System.Random
 --
+-- import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
+-- import HasKAL.PlotUtils.PlotUtilsHROOT
 --
+-- main :: IO ()
+-- main = do
+--   let x = take 1000 $ randomRs (-1, 1) $ mkStdGen 1 :: [Double]
+--       (numCoeffLow,denomCoeffLow) = butter 2 100 20 Low
+--       (numCoeffHigh,denomCoeffHigh) = butter 2 100 20 High
+--       y = iirFilter x (length x) numCoeffLow denomCoeffLow (length numCoeffLow)
+--       z = iirFilter x (length x) numCoeffHigh denomCoeffHigh (length numCoeffHigh)
+--
+--   let out1 = gwpsd x 100 100
+--       out2 = gwpsd y 100 100
+--       out3 = gwpsd z 100 100
+--
+--   logLogPlot (map fst out1) (map snd out1) "frequency[Hz]" "asd[1/rHz]" Line "beforeFiltered.pdf"
+--   logLogPlot (map fst out2) (map snd out2) "frequency[Hz]" "asd[1/rHz]" Line "afterLowPassFiltered.pdf"
+--   logLogPlot (map fst out3) (map snd out3) "frequency[Hz]" "asd[1/rHz]" Line "afterHighPassFiltered.pdf"
+
 
 
 {-# LANGUAGE ForeignFunctionInterface #-}
