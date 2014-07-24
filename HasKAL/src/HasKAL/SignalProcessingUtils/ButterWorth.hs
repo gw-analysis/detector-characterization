@@ -67,7 +67,7 @@ alphaCore fs fc n m filt
 
 betaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 betaCore fs fc n m filt
-  | filt==Low = (-1) * foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
     / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
   | filt==High = (-2.0) * foldl (\acc m' -> acc * (1.0 / (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m'))) 1.0 [1..m]
 
