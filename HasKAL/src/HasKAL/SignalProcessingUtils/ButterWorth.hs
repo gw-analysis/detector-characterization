@@ -26,7 +26,7 @@ import Data.Complex
 butter :: Int -> Double -> Double -> FilterType -> ([Double], [Double])
 butter n fs fc filterType =
   let denominatorList = map (denominator fs fc n) [0..n]
-      numeratorList = map (numerator fs fc n) [0..n]
+      numeratorList = map (*h0 fs fc n) $ map (numerator fs fc n) [0..n]
   in (map realPart numeratorList, map realPart denominatorList)
   where
     denominator :: Double -> Double -> Int -> Int -> Complex Double
@@ -43,6 +43,8 @@ butter n fs fc filterType =
     beta :: Double -> Double -> Int -> Int -> Complex Double
     beta fs' fc' n' m' = betaCore fs' fc' n' m' filterType
 
+    h0 :: Double -> Double -> Int -> Complex Double
+    h0 fs' fc' n' = h0Core fs' fc' n' filterType
 
 
 {-- Internal Funtion --}
@@ -59,17 +61,28 @@ gammaCore _ _ _ _ filt
   | filt==High = 1.0
 
 alphaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
-alphaCore fs fc n m filt
-  | filt==Low = (realToFrac (2*pi*fc/fs))
-    / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
-  | filt==High = 2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
+alphaCore _ _ _ _ filt
+--  | filt==Low = realToFrac (2*pi*fc/fs) / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
+--  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+--    / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
+  | filt==Low = 1.0
+  | filt==High = 1.0 --2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
 
 
 betaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
-betaCore fs fc n m filt
-  | filt==Low = (realToFrac (2*pi*fc/fs))
-    / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
-  | filt==High = -2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
+betaCore _ _ _ _ filt
+--  | filt==Low = realToFrac (2*pi*fc/fs) / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
+--  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+--    / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
+  | filt==Low = 1.0
+  | filt==High = -1.0 ---2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
+
+
+h0Core :: Double -> Double -> Int -> FilterType -> Complex Double
+h0Core fs fc n filt
+  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
+    / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..n]
+  | filt==High = foldl (\acc m' -> acc *  2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m')) 1.0 [1..n]
 
 
 filterPole :: Int -> Int -> Complex Double
