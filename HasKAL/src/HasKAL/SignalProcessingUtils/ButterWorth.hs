@@ -50,8 +50,8 @@ deltaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 deltaCore fs fc n m filt
   | filt==Low = (-2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
     / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
-  | filt==High = realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m
-    / (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m)
+  | filt==High = (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m)
+    / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
 
 gammaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 gammaCore _ _ _ _ filt
@@ -60,16 +60,16 @@ gammaCore _ _ _ _ filt
 
 alphaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 alphaCore fs fc n m filt
-  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
-    / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
-  | filt==High = 2.0 * foldl (\acc m' -> acc * (1.0 / (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m'))) 1.0 [1..m]
+  | filt==Low = (realToFrac (2*pi*fc/fs))
+    / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
+  | filt==High = 2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
 
 
 betaCore :: Double -> Double -> Int -> Int -> FilterType -> Complex Double
 betaCore fs fc n m filt
-  | filt==Low = foldl (\acc m' -> acc * (realToFrac (2*pi*fc/fs)
-    / (2.0 - filterPole n m' * realToFrac (2.0*pi*fc/fs)))) 1.0 [1..m]
-  | filt==High = (-2.0) * foldl (\acc m' -> acc * (1.0 / (realToFrac (2.0*pi*fc/fs) + 2.0*filterPole n m'))) 1.0 [1..m]
+  | filt==Low = (realToFrac (2*pi*fc/fs))
+    / (2.0 - filterPole n m * realToFrac (2.0*pi*fc/fs))
+  | filt==High = -2.0 / (realToFrac (2.0*pi*fc/fs) - 2.0*filterPole n m)
 
 
 filterPole :: Int -> Int -> Complex Double

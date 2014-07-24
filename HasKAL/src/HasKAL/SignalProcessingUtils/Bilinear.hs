@@ -17,8 +17,10 @@ denominatorCore gamma delta n fs fc m k
     + delta fs fc n n * denominatorCore gamma delta n fs fc (m-1) (k-1)
 
 numeratorCore :: GammaFunc -> DeltaFunc -> Int -> Double -> Double -> Int -> Int -> Complex Double
-numeratorCore _ _ _ _ _ 1 0 = 1
-numeratorCore _ _ _ _ _ 1 1 = 1
+--numeratorCore _ _ _ _ _ 1 0 = 1
+--numeratorCore _ _ _ _ _ 1 1 = 1
+numeratorCore alpha _ n fs fc 1 0 = alpha fs fc n 0
+numeratorCore _ beta n fs fc 1 1 = beta fs fc n 1
 numeratorCore alpha beta n fs fc m k
   | k == 0 = alpha fs fc n n * numeratorCore alpha beta n fs fc (m-1) 0
   | k == m  = beta fs fc n n * numeratorCore alpha beta n fs fc (m-1) (k-1)
