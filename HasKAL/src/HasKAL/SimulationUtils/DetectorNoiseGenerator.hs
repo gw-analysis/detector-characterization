@@ -1,10 +1,10 @@
 {-******************************************
   *     File Name: DetectorNoiseGenerator.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/27 15:20:20
+  * Last Modified: 2014/07/27 15:31:10
   *******************************************-}
 
-module HasKAL.SpectrumUtils.DetectorNoiseGenerator (
+module HasKAL.SimulationUtils.DetectorNoiseGenerator (
    geneNPSD
   ,geneNPSD'
 --   ,geneNonGaussNPSD
