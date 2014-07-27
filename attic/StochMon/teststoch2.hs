@@ -13,19 +13,20 @@ import HROOT hiding (eval)
 
 main = do
 
---     ff <- getChannelList "./L-L1_RDS_C03_L2-877264406-128.gwf" 877264406
---     mapM_ putStrLn ff     
+     ff <- getChannelList "/data/L-L1_RDS_C03_L2-8772/L-L1_RDS_C03_L2-877232395-36.gwf" 
+     mapM_ print ff     
 
-     fdata <- readFrame "L1:LSC-STRAIN" "./L-L1_RDS_C03_L2-877264406-128.gwf"
+     fdata <- readFrame "L1:LSC-STRAIN" "/data/L-L1_RDS_C03_L2-8772/L-L1_RDS_C03_L2-877232395-36.gwf"
      let dat   = map realToFrac (eval fdata)
-         lstxt = take (length dat) [1,2..]
+         lstxt = map (/16384) $ take (length dat) [1,2..]
+     mapM_ print dat
 
-     let lsty  = map snd $ gwpsd dat (163) 16384
-         lstxf = map fst $ gwpsd dat (163) 16384
-     mapM_ putStrLn (map show (gwpsd dat 163 16384))
+     let lsty  = map snd $ gwpsd dat 128 16384
+         lstxf = map fst $ gwpsd dat 128 16384
+     mapM_ putStrLn (map show (gwpsd dat 128 16384))
      
 
-     logLogPlot lstxf lsty "" "" Line "X11"
+--     logLogPlot lstxf lsty "" "" Line "X11"
 --     linearLinearPlot lstxt dat "" "" Line "X11"
 --     plot lstxt dat
 --     plot_sf lstxf lsty "" "" LogXY Line "test.png"
