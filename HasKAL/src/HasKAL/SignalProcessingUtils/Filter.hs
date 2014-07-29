@@ -50,16 +50,20 @@ import System.IO.Unsafe
 
 
 
-iirFilter :: [Double] -> Int -> [Double] -> [Double] -> Int -> [Double]
-iirFilter input ilen numCoeff denomCoeff flen = do
-  let input' = d2cd input
+iirFilter :: [Double] -> [Double] -> [Double] -> [Double]
+iirFilter input numCoeff denomCoeff = do
+  let ilen = length input :: Int
+      flen = length numCoeff
+      input' = d2cd input
       numCoeff' = d2cd numCoeff
       denomCoeff' = d2cd denomCoeff
   cd2d $ iirFilterCore input' ilen numCoeff' denomCoeff' flen
 
-firFilter :: [Double] -> Int -> [Double] -> Int -> [Double]
-firFilter input ilen firCoeff flen = do
-  let input' = d2cd input
+firFilter :: [Double] -> [Double] -> [Double]
+firFilter input firCoeff = do
+  let ilen = length input :: Int
+      flen = length firCoeff
+      input' = d2cd input
       firCoeff' = d2cd firCoeff
   cd2d $ firFilterCore input' ilen firCoeff' flen
 
@@ -73,21 +77,21 @@ filtfilt input numCoeff denomCoeff = do
       flen = length numCoeff
       lrefl = 3 * (flen - 1)
       si'' = tail.reverse.cumsum.reverse $ zipWith (-) numCoeff $ map (*((sum numCoeff)/(sum denomCoeff))) denomCoeff
-      si' = 0:si''
+      si' = si''++ [0]
       si = d2cd si'
 
-      input'' = (map (2*(head input)-) $ reverse $ foldl (\acc m -> (input !! m):acc) [] [lrefl,lrefl-1..2])
-        ++ input ++ (map (2*(last input)-) $ reverse $ foldl (\acc m -> (input !! m):acc) [] [ilen-1, ilen-2..ilen-lrefl])
+      input'' = (map (2*(head input)-) $ foldl (\acc m -> acc ++ [input !! m]) [] [lrefl,lrefl-1..2])
+        ++ input ++ (map (2*(last input)-) $ foldl (\acc m -> acc ++ [input !! m]) [] [ilen-1, ilen-2..ilen-lrefl])
       input' = d2cd input''
       forwardFiltered = iirFilterCoreInit input' (length input') numCoeffCD denomCoeffCD flen (map (*(head input')) si)
       reverseFiltered = reverse $ iirFilterCoreInit (reverse forwardFiltered)
         (length forwardFiltered) numCoeffCD denomCoeffCD flen (map (*(last forwardFiltered)) si)
-  reverse $ foldl (\acc m -> (input !! m):acc) [] [lrefl+1..lrefl+ilen]
+  map realToFrac $ foldl (\acc m -> acc ++ [reverseFiltered !! m]) [] [lrefl+1..lrefl+ilen]
 
 
 -------------  Internal Functions  -----------------------------
 cumsum :: [Double] -> [Double]
-cumsum xs = scanl1 (+) xs
+cumsum = scanl1 (+)
 
 iirFilterCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble]
 iirFilterCore input ilen numCoeff denomCoeff flen
