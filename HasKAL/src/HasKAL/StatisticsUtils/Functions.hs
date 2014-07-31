@@ -1,6 +1,6 @@
 
 
-module HasKAL.StatisticalUtils.Functions
+module HasKAL.StatisticsUtils.Functions
 ( calculatePeasonCorrelation
 , permutationTestPeasonCorrelation
 )
