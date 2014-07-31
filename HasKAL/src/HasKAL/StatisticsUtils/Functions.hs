@@ -27,7 +27,7 @@ permutationTestPeasonCorrelation data1 data2 repeatTimes = do
   let data1' = map realToFrac data1
       data2' = map realToFrac data2
       len'   = fromIntegral $ length data1'
-      repeatTimes' = fromIntegral repeatTimes
+      repeatTimes' = fromIntegral repeatTimes :: CInt
   realToFrac $ permutationTestPeasonCorrelationCore data1' data2' len' repeatTimes'
 
 
@@ -48,8 +48,8 @@ permutationTestPeasonCorrelationCore data1 data2 len repeatTimes
 
 {- import functions -}
 
-foreign import ccall "StatisticsUtils.h calculatePeasonCorrelation" c'calculatePeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> IO CDouble
-foreign import ccall "StatisticsUtils.h permutationTestPeasonCorrelation" c'permutationTestPeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> CInt -> IO CDouble
+foreign import ccall "statisticsUtils.h calculatePeasonCorrelation" c'calculatePeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> IO CDouble
+foreign import ccall "statisticsUtils.h permutationTestPeasonCorrelation" c'permutationTestPeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> CInt -> IO CDouble
 
 
 
