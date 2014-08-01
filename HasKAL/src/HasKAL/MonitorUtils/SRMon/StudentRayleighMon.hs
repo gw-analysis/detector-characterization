@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/11 16:36:09
+  * Last Modified: 2014/08/01 16:20:11
   *******************************************-}
 
 -- Reference
@@ -20,11 +20,13 @@ module HasKAL.MonitorUtils.SRMon.StudentRayleighMon(
   ,dataSplit
   ) where
 
+import qualified Control.Monad as CM
 import qualified Data.List as DL
 import qualified Data.Packed.Matrix as DPM -- for freqClustering
 import qualified Data.Packed.Vector as DPV -- for dataSplit
 import qualified HROOT as HROOT -- for histgram
 import qualified System.IO.Unsafe as SIOU
+import qualified Foreign.C.String as FCS
 
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 import qualified HasKAL.Misc.Flip3param as HMF
@@ -120,13 +122,22 @@ freqClustering n xss = DPM.toLists $ (DPM.reshape m) $ DPV.subVector 0 (l*m) $ D
 ---- return: (ビンの中央値, エントリー数)
 histogram :: Int -> Double -> Double -> [Double] -> IO [(Double, Double)]
 histogram nbin min max dat = do
-  hist <- HROOT.newTH1F "test1" "test2" nbin min max
-  mapM (HROOT.fill1 hist) dat
-  entryBins <- mapM (HROOT.getBinContent1 hist) [1..nbin]
-  lEdgeBins <- mapM (HROOT.getBinLowEdge hist) [1..nbin]
-  widthBin <- HROOT.getBinWidth hist 1
+  hist <- HROOT.newTH1F (str2cstr "t1") (str2cstr "t2") (toEnum nbin) (realToFrac min) (realToFrac max)
+  mapM (HROOT.fill1 hist) $ map realToFrac dat
+  entryBins <- CM.liftM (map realToFrac) $ mapM (HROOT.getBinContent1 hist) $ map toEnum [1..nbin]
+  lEdgeBins <- CM.liftM (map realToFrac) $ mapM (HROOT.getBinLowEdge hist) $ map toEnum [1..nbin]
+  widthBin <- CM.liftM realToFrac $ HROOT.getBinWidth hist 1
   HROOT.delete hist
   return $ zip (map (+(widthBin/2.0)) lEdgeBins) (map (/(widthBin*(fromIntegral $ length dat))) entryBins)
+-- histogram' :: Int -> Double -> Double -> [Double] -> IO [(Double, Double)]
+-- histogram' nbin min max dat = do
+--   hist <- HROOT.newTH1F "test1" "test2" nbin min max
+--   mapM (HROOT.fill1 hist) dat
+--   entryBins <- mapM (HROOT.getBinContent1 hist) [1..nbin]
+--   lEdgeBins <- mapM (HROOT.getBinLowEdge hist) [1..nbin]
+--   widthBin <- HROOT.getBinWidth hist 1
+--   HROOT.delete hist
+--   return $ zip (map (+(widthBin/2.0)) lEdgeBins) (map (/(widthBin*(fromIntegral $ length dat))) entryBins)
 
 mapWith3 :: (a -> b -> c -> d) -> [a] -> [b] -> [c] -> [[d]]
 mapWith3 f [] _ _ = []
@@ -149,3 +160,5 @@ dataSplit' n m xss = map DPM.toLists $ map (subMatrix' mat n) $ [0, (n-m)..(DPM.
         l = DPM.cols mat
         subMatrix' mat n m = DPM.subMatrix (m, 0) (n, l) mat
 
+str2cstr :: String -> FCS.CString
+str2cstr = SIOU.unsafePerformIO.FCS.newCString
