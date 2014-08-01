@@ -1,0 +1,222 @@
+<?xml version="1.1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+</head>
+<title>hoge</title>
+<style>
+ 
+svg {
+  font: 10px sans-serif;
+}
+ 
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+ 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.tick line{
+  opacity: 0.2;
+}
+ 
+</style>
+
+<body>
+
+<h1>real time plot using d3.js<br>the change from loud noise to low-pass filtered noise</h1>
+
+<script type="text/javascript">
+
+
+function readData(filename) {
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{
+		 xmlhttp = new XMLHttpRequest();
+	}
+
+	if (xmlhttp != null)
+	{
+		xmlhttp.open("GET",filename,false); // the false makes this synchronous!
+		xmlhttp.send();
+		var text = xmlhttp.responseText;
+		var lines = text.split("\n");
+	}
+        return lines
+}
+
+
+
+</script>
+
+
+
+<!-- 1. read text data -->
+<!-- 2. no random data -->
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var dataCache = readData("short_ORG.txt");
+ 
+var n = 100;
+var gpscount = 0;
+var nharf = Math.round(dataCache.length / 2.0);
+// check
+
+
+var ymin = -1;
+var ymax = 1;
+var speedValue = 1;
+
+var data = [];
+for(var i=0; i < n; i++){
+  data.push(dataCache[0]);
+  dataCache.shift();
+}
+
+
+
+var margin = {top: 20, right: 20, bottom: 20, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 520 - margin.top - margin.bottom;
+ 
+var x = d3.scale.linear()
+    .domain([0, n/ speedValue])
+    .range([0, width]);
+ 
+var y = d3.scale.linear()
+    .domain([ymin,ymax])
+    .range([height, 0]);
+ 
+var line = d3.svg.line()
+    .x(function(d, i) { return x(i); })
+    .y(function(d, i) { return y(d); });
+ 
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+ 
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom").innerTickSize(-height).outerTickSize(0).tickPadding(10));
+ 
+svg.append("g")
+    .attr("class", "y axis")
+    .attr("id","the_SVG_yaxis")
+    .call(d3.svg.axis().scale(y).orient("left").innerTickSize(-width).outerTickSize(0).tickPadding(10));
+ 
+var path = svg.append("g")
+    .attr("clip-path", "url(#clip)")
+  .append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("d", line);
+
+var i = nharf;
+tick();
+
+
+
+
+function tick() {
+
+  data.push(dataCache[0]);
+  dataCache.shift();
+  
+  i = i+1;
+
+
+  if (i >= nharf){
+    var tmp = readData("short_LPF.txt");
+    for(var j=0; j< tmp.length; j++){
+      dataCache.push(tmp[j]);
+    }
+    i=0;
+  }
+
+
+
+ x = d3.scale.linear()
+    .domain([0,n/ speedValue])
+    .range([0, width]);
+ 
+ y = d3.scale.linear()
+    .domain([ymin, ymax])
+    .range([height, 0]);
+
+
+
+
+<!----------------------------------------------------- -->
+d3.select("svg")
+       .remove(); 
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+ 
+svg.append("defs").append("clipPath")
+    .attr("id", "clip")
+  .append("rect")
+    .attr("width", width)
+    .attr("height", height);
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.svg.axis().scale(x).orient("bottom").innerTickSize(-height).outerTickSize(0).tickPadding(10)); 
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(d3.svg.axis().scale(y).orient("left").innerTickSize(-width).outerTickSize(0).tickPadding(10));
+ 
+var path = svg.append("g")
+    .attr("clip-path", "url(#clip)")
+  .append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("d", line);
+
+
+<!----------------------------------------------------- -->
+
+  path.attr("d", line)
+      .attr("transform", null)
+      .transition()
+      .duration(10)
+      .ease("linear")
+      .attr("transform", "translate(" + x(-1) + ",0)")
+      .each("end", tick);
+  data.shift();
+  gpscount = gpscount+1;
+}
+
+
+ 
+</script>
+
+
+
+
+</body>
+</html>
