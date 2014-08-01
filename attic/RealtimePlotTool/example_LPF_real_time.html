@@ -68,7 +68,7 @@ function readData(filename) {
 
 var dataCache = readData("short_ORG.txt");
  
-var n = 100;
+var n = 200;
 var gpscount = 0;
 var nharf = Math.round(dataCache.length / 2.0);
 // check
@@ -76,7 +76,6 @@ var nharf = Math.round(dataCache.length / 2.0);
 
 var ymin = -1;
 var ymax = 1;
-var speedValue = 1;
 
 var data = [];
 for(var i=0; i < n; i++){
@@ -91,7 +90,7 @@ var margin = {top: 20, right: 20, bottom: 20, left: 40},
     height = 520 - margin.top - margin.bottom;
  
 var x = d3.scale.linear()
-    .domain([0, n/ speedValue])
+    .domain([0, n])
     .range([0, width]);
  
 var y = d3.scale.linear()
@@ -156,7 +155,7 @@ function tick() {
 
 
  x = d3.scale.linear()
-    .domain([0,n/ speedValue])
+    .domain([0,n])
     .range([0, width]);
  
  y = d3.scale.linear()
@@ -203,9 +202,9 @@ var path = svg.append("g")
   path.attr("d", line)
       .attr("transform", null)
       .transition()
-      .duration(10)
+      .duration(1)
       .ease("linear")
-      .attr("transform", "translate(" + x(-1) + ",0)")
+      .attr("transform", "translate(" + x(-400) + ",0)")
       .each("end", tick);
   data.shift();
   gpscount = gpscount+1;
