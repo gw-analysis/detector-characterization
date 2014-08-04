@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: plotTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/02 01:41:15
+  * Last Modified: 2014/08/04 16:18:46
   *******************************************-}
 
 -- import qualified PlotModule as PM
@@ -12,10 +12,10 @@ main = do
   let xs = [1.0..50]
       ys = reverse xs
 
-  PM.plot PM.Linear PM.LinePoint ("xl", "yl") "a.png" $ zip xs ys
-  PM.oPlot PM.Linear PM.LinePoint ("xl", "yl") "b.png" $ [zip xs xs, zip xs ys]
-  PM.dPlot PM.Linear PM.LinePoint ("xl", "yl") "c.png" $ [zip xs xs, zip xs ys]
-  PM.plotX PM.Linear PM.LinePoint ("xl", "yl") $ zip xs ys
-  PM.oPlotX PM.Linear PM.LinePoint ("xl", "yl") $ [zip xs xs, zip xs ys] 
-  PM.dPlotX PM.Linear PM.LinePoint ("xl", "yl") $ [zip xs xs, zip xs ys, zip ys xs]
+--   PM.plot PM.Linear PM.LinePoint ("X jiku","Y jiku") "Daimei" "a.png" $ zip xs ys
+--   PM.oPlot PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") "b.png" $ [zip xs xs, zip xs ys]
+--   PM.dPlot PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") "c.png" $ [zip xs xs, zip xs ys]
+  PM.plotX PM.Linear PM.LinePoint ("X jiku","Y jiku") "Daimei" $ zip xs ys
+  PM.oPlotX PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") $ [zip xs xs, zip xs ys] 
+  PM.dPlotX PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") $ [zip xs xs, zip xs ys, zip ys xs]
 

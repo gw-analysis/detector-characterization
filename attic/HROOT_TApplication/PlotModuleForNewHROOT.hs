@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotModuleForNewHROOT.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/02 01:39:23
+  * Last Modified: 2014/08/04 16:21:39
   *******************************************-}
 
 module PlotModuleForNewHROOT (
@@ -29,37 +29,43 @@ import qualified Foreign.Storable as FS
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
 data MultiPlot = Over | Divide deriving (Eq)
+data ColorOpt = BLACK | RED | GREEN | BLUE | YELLOW | PINK | CYAN deriving (Eq)
 
 {-- External Functions --}
-plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> [(Double, Double)] -> IO ()
-plot log mark (labelX, labelY) fname dat = oPlot log mark (labelX, labelY) fname [dat]
+plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> [(Double, Double)] -> IO ()
+plot log mark xyLable title fname dat = oPlot log mark [xyLable] [title] fname [dat]
 
-plotX :: LogOption -> PlotTypeOption -> (String, String) -> [(Double, Double)] -> IO ()
-plotX log mark (labelX, labelY) dat = oPlot log mark (labelX, labelY) "X11" [dat]
+plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [(Double, Double)] -> IO ()
+plotX log mark xyLable title dat = oPlot log mark [xyLable] [title] "X11" [dat]
 
-oPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> [[(Double, Double)]] -> IO ()
-oPlot log mark (labelX, labelY) fname dats = plotBase Over log mark (labelX, labelY) fname dats
+oPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
+oPlot log mark xyLables titles fname dats = plotBase Over log mark xyLables titles fname dats
 
-oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> [[(Double, Double)]] -> IO ()
-oPlotX log mark (labelX, labelY) dats = oPlot log mark (labelX, labelY) "X11" dats
+oPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [[(Double, Double)]] -> IO ()
+oPlotX log mark xyLables titles dats = oPlot log mark xyLables titles "X11" dats
 
-dPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> [[(Double, Double)]] -> IO ()
-dPlot log mark (labelX, labelY) fname dats = plotBase Divide log mark (labelX, labelY) fname dats
+dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
+dPlot log mark xyLables titles fname dats = plotBase Divide log mark xyLables titles fname dats
   
-dPlotX :: LogOption -> PlotTypeOption -> (String, String) -> [[(Double, Double)]] -> IO ()
-dPlotX log mark (labelX, labelY) dats = dPlot log mark (labelX, labelY) "X11" dats
+dPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [[(Double, Double)]] -> IO ()
+dPlotX log mark xyLables titles dats = dPlot log mark xyLables titles "X11" dats
 
 
 {-- Internal Functions --}
-plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> (String, String) -> String -> [[(Double, Double)]] -> IO ()
-plotBase multi log mark (labelX, labelY) fname dats = do
+plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
+plotBase multi log mark xyLables titles fname dats = do
   tApp <- case fname of 
     "X11" -> CM.liftM DM.Just $ DIO.readIORef gTApp
     _     -> return DM.Nothing
-  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "window name") 640 480
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   setLog' tCan log
 
   tGras <- CM.forM dats $ \dat -> HR.newTGraph (toEnum $ length dat) (list2ptr $ map cfst dat) (list2ptr $ map csnd dat)
+  CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
+  setColors' tGras [2,3..] -- Line, Markerの色
+  mapM (flip HR.setLineWidth 2) tGras -- Lineの太さ
+  CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
+
   case multi of
     Over -> draw' tGras mark
     Divide -> do
@@ -75,6 +81,8 @@ plotBase multi log mark (labelX, labelY) fname dats = do
   CM.mapM HR.delete tGras
   HR.delete tCan
 
+
+{--  Supplementary Functions for HROOT --}
 setLog' :: HR.TCanvas -> LogOption -> IO ()
 setLog' tCan flag
   | flag == Linear = return ()
@@ -87,12 +95,22 @@ setLog' tCan flag
   -- | flag == LogXYZ  = mapM_ (setLog' tCan) [LogX, LogY, LogZ]
 
 draw' :: [HR.TGraph] -> PlotTypeOption -> IO [()]
-draw' tGra flag
-  | flag == Line      = CM.zipWithM HR.draw tGra $ (str2cstr "AL") : repeat (str2cstr "L")
-  | flag == Point     = CM.zipWithM HR.draw tGra $ (str2cstr "AP*") : repeat (str2cstr "P*")
-  | flag == LinePoint = CM.zipWithM HR.draw tGra $ (str2cstr "ALP*") : repeat (str2cstr "LP*")
-  | flag == PointLine = CM.zipWithM HR.draw tGra $ (str2cstr "ALP*") : repeat (str2cstr "LP*")
-  | flag == Dot       = CM.zipWithM HR.draw tGra $ (str2cstr "AP") : repeat (str2cstr "P")
+draw' tGras flag
+  | flag == Line      = CM.zipWithM HR.draw tGras $ (str2cstr "AL") : repeat (str2cstr "L")
+  | flag == Point     = CM.zipWithM HR.draw tGras $ (str2cstr "AP*") : repeat (str2cstr "P*")
+  | flag == LinePoint = CM.zipWithM HR.draw tGras $ (str2cstr "ALP*") : repeat (str2cstr "LP*")
+  | flag == PointLine = CM.zipWithM HR.draw tGras $ (str2cstr "ALP*") : repeat (str2cstr "LP*")
+  | flag == Dot       = CM.zipWithM HR.draw tGras $ (str2cstr "AP") : repeat (str2cstr "P")
+
+setColors' :: [HR.TGraph] -> [Int] -> IO [()]
+setColors' tGras colors = do
+  CM.zipWithM HR.setLineColor tGras $ map toEnum colors
+  CM.zipWithM HR.setMarkerColor tGras $ map toEnum colors
+
+setXYLabel' :: HR.TGraph -> (String, String) -> IO ()
+setXYLabel' tGra (labelX, labelY) = do
+  HR.setTitle (SIOU.unsafePerformIO $ HR.tGraphGetXaxis tGra) $ str2cstr labelX
+  HR.setTitle (SIOU.unsafePerformIO $ HR.tGraphGetYaxis tGra) $ str2cstr labelY
 
 -- for TApplication class as global var.
 gTApp :: DIO.IORef HR.TApplication
