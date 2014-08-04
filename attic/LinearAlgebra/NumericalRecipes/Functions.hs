@@ -8,7 +8,7 @@ import Foreign.Ptr(Ptr)
 import Foreign.C.Types(CFloat)
 import System.IO.Unsafe(unsafePerformIO)
 import Foreign.Marshal.Array (withArray, peekArray, allocaArray)
-import StrictMapping.StrictMapping
+import NumericalRecipes.StrictMapping
 import Control.Monad()  --((>>=))
 
 nr_toeplz :: [Float] -> [Float] -> Int -> [Float]

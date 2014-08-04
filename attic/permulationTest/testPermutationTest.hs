@@ -16,9 +16,9 @@ import System.Random
 
 main :: IO ()
 main = do
-  let x = take 1000 $ randomRs (-1, 1) $ mkStdGen 1 :: [Double]
-      y = take 1000 $ randomRs (-1, 1) $ mkStdGen 2 :: [Double]
+  let x = take 10 $ randomRs (-1, 1) $ mkStdGen 1 :: [Double]
+      y = take 10 $ randomRs (-1, 1) $ mkStdGen 2 :: [Double]
 
-  print $ permutationTestPeasonCorrelation x y 10
-
+  print $ permutationTestPeasonCorrelation x x 10
+  print $ calculatePeasonCorrelation x y
 

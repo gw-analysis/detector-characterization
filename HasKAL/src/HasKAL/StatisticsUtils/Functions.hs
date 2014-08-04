@@ -3,6 +3,9 @@
 module HasKAL.StatisticsUtils.Functions
 ( calculatePeasonCorrelation
 , permutationTestPeasonCorrelation
+, calculatePeasonCorrelationCore
+, permutationTestPeasonCorrelationCore
+--,
 )
 where
 
