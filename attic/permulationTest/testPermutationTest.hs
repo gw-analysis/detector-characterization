@@ -32,5 +32,3 @@ main = do
   --print y
   print $ calculatePeasonCorrelation x y
   print $ permutationTestPeasonCorrelation x y 10000
-
-
