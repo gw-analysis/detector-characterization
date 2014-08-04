@@ -1,13 +1,13 @@
 #makefile
-#Time-stamp: "2014-07-28 17:09:27 yuzurihara"
+#Time-stamp: "2014-08-03 17:36:19 yuzurihara"
 
 CC=gcc
 
 OBJ1=examplePurmutationTest.o ./HasKAL/StatisticsUtils/libStatisticsUtils.o
-OBJ2=
+OBJ2=testPermutationTest.hs HasKAL/StatisticsUtils/Functions.hs HasKAL/StatisticsUtils/statisticsUtils.c
 
 GSLLINK=-lgsl -lgslcblas
-TARGET=examplePurmutationTest
+TARGET=examplePurmutationTest testPermutationTest
 
 all:$(TARGET)
 
@@ -16,8 +16,9 @@ examplePurmutationTest:$(OBJ1)
 	$(CC) -o $@ $(OBJ1) $(GSLLINK)
 	@echo "*** Making $@ ***"
 
-:$(OBJ2)
-	$(CC) -o $@ $(OBJ2)
+testPermutationTest:$(OBJ2)
+	ln -fs ../../HasKAL/src/HasKAL ./
+	ghc --make ${OBJ2} -lgsl -lgslcblas
 	@echo "*** Making $@ ***"
 clean:
 	rm -f *.o $(TARGET) *.hi
@@ -27,3 +28,4 @@ clean:
 
 
 
+#-L/play/kagra/soft/gsl/lib

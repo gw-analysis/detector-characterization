@@ -111,7 +111,7 @@ library
        Chart-cairo >=1.1,
        colour >=2.3,
        data-default-class >=0.0,
-       lens >=3.10,
+       lens >=3.10 && <=3.10.2,
        hmatrix ==0.14.*,
        hmatrix-special,
        --hmatrix-gsl-stats,
@@ -124,8 +124,9 @@ library
        split,
        containers,
        filepath,
-       directory
-
+       directory,
+       mtl ==2.1.2,
+       semigroupoids <= 4.0.1
   -- Directories containing source files.
   hs-source-dirs:      src
   extensions: DoAndIfThenElse,

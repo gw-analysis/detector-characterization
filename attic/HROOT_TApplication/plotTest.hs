@@ -1,10 +1,11 @@
 {-******************************************
   *     File Name: plotTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/19 00:29:53
+  * Last Modified: 2014/08/02 01:41:15
   *******************************************-}
 
-import qualified PlotModule as PM
+-- import qualified PlotModule as PM
+import qualified PlotModuleForNewHROOT as PM
 
 main :: IO ()
 main = do
