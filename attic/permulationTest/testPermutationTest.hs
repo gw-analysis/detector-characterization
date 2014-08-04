@@ -28,7 +28,6 @@ main = do
   let y = map read $ lines channel2 :: [Double]
 --  let x = [1,2,3]
 --  let y = [1,2,4]
-
   --print y
   print $ calculatePeasonCorrelation x y
   print $ permutationTestPeasonCorrelation x y 10000
