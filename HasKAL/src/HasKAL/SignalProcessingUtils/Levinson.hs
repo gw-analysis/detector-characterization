@@ -4,24 +4,16 @@ module HasKAL.SignalProcessingUtils.Levinson
 --,
 ) where
 
-import Numeric.LinearAlgebra
 import HasKAL.ExternalUtils.NumericalRecipes.Functions
 
 levinson :: [Double] -> Int -> [Double]
 levinson r p = do
-  let rv = p |> r :: Vector Double
-      partialrv = subVector 1 p rv
-      autCorr = toList $ join [reverseVCD partialrv, rv]
+  let rv = map (\m->(!!m) r) [0..p-1]
+      autCorr = reverse (tail rv) ++ rv
       autCorrFloat = map realToFrac autCorr :: [Float]
-      rvFloat = map realToFrac (toList rv) :: [Float]
-      outDouble = nr_toeplz autCorrFloat rvFloat p
+      rvFloat = map realToFrac rv :: [Float]
+      outDouble = nrToeplz autCorrFloat rvFloat p
   map realToFrac outDouble
-
-
-reverseVCD :: Vector Double -> Vector Double
-reverseVCD = fromList . reverse . toList
-
-
 
 
 
