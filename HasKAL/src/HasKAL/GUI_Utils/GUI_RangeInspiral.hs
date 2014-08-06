@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:43:58
+  * Last Modified: 2014/08/06 19:34:19
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -15,8 +15,7 @@ import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
-import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
-import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 
 {--  Inspiral Range Window
@@ -87,7 +86,7 @@ hasKalGuiInspiralRange = do
     {-- Monitor tool --}
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
       return $ HMRIRD.distInspiral mass mass detData
-    HPPR.hroot_core [inspMass1,inspMass1+2..inspMass2] inspDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    RPG.plotX RPG.LogXY RPG.Line ("m1 = m2 [M_sol]", "Distance [Mpc]") "Inspiral Range" $ zip [inspMass1,inspMass1+2..inspMass2] inspDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}

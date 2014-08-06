@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:44:08
+  * Last Modified: 2014/08/06 19:34:09
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -15,8 +15,7 @@ import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.IMBH as HMRIMBHD
-import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
-import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 
 {--  Inspiral-Marger-RingdownRange Window
@@ -88,7 +87,7 @@ hasKalGuiIMR'Range = do
     {-- Monitor tool --}
     imrDist <- CM.forM [imrMass1, imrMass1+10..imrMass2] $ \mass ->
       return $ HMRIMBHD.distImbh mass mass detData
-    HPPR.hroot_core [imrMass1,imrMass1+10..imrMass2] imrDist "m1 = m2 [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    RPG.plotX  RPG.LogXY RPG.Line ("m1 = m2 [M_sol]", "Distance [Mpc]") "IMBH Range" $ zip [imrMass1,imrMass1+10..imrMass2] imrDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}

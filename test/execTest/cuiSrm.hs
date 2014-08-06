@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/15 16:51:19
+  * Last Modified: 2014/08/06 19:42:32
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -18,6 +18,9 @@ import qualified HasKAL.Misc.Flip3param as HMF
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighMon as SRM
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
+
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D
 
 data DType = Time | Freq | LigoS6 deriving (Eq, Show)
 data Plot = X11 | PNG deriving (Eq)

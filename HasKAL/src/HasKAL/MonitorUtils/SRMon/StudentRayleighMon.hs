@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/01 16:20:11
+  * Last Modified: 2014/08/06 20:25:28
   *******************************************-}
 
 -- Reference
@@ -129,15 +129,6 @@ histogram nbin min max dat = do
   widthBin <- CM.liftM realToFrac $ HROOT.getBinWidth hist 1
   HROOT.delete hist
   return $ zip (map (+(widthBin/2.0)) lEdgeBins) (map (/(widthBin*(fromIntegral $ length dat))) entryBins)
--- histogram' :: Int -> Double -> Double -> [Double] -> IO [(Double, Double)]
--- histogram' nbin min max dat = do
---   hist <- HROOT.newTH1F "test1" "test2" nbin min max
---   mapM (HROOT.fill1 hist) dat
---   entryBins <- mapM (HROOT.getBinContent1 hist) [1..nbin]
---   lEdgeBins <- mapM (HROOT.getBinLowEdge hist) [1..nbin]
---   widthBin <- HROOT.getBinWidth hist 1
---   HROOT.delete hist
---   return $ zip (map (+(widthBin/2.0)) lEdgeBins) (map (/(widthBin*(fromIntegral $ length dat))) entryBins)
 
 mapWith3 :: (a -> b -> c -> d) -> [a] -> [b] -> [c] -> [[d]]
 mapWith3 f [] _ _ = []

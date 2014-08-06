@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeRingDown.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:44:59
+  * Last Modified: 2014/08/06 19:34:42
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
@@ -15,8 +15,7 @@ import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta as HMRIRD
-import qualified HasKAL.PlotUtils.PlotOption.PlotOptionHROOT as HPPOR
-import qualified HasKAL.PlotUtils.PlotUtilsHROOT as HPPR
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 
 {--  RingDown Range Window
@@ -88,7 +87,7 @@ hasKalGuiRingDownRange = do
     {-- Monitor tool --}
     ringDDist <- CM.forM [ringDMass1, 10.0*ringDMass1..ringDMass2] $ \mass -> 
       return $ HMRIRD.distRingdown mass detData
-    HPPR.hroot_core [ringDMass1, 10.0*ringDMass1..ringDMass2] ringDDist "mass [M_sol]" "Distance [Mpc]" HPPOR.LogXY HPPOR.Line "X11"
+    RPG.plotX  RPG.LogXY RPG.Line ("mass [M_sol]", "Distance [Mpc]") "Ringdown Range" $ zip [ringDMass1, 10.0*ringDMass1..ringDMass2] ringDDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}
