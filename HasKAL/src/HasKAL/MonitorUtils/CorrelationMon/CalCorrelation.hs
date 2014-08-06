@@ -1,14 +1,11 @@
-
 module HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
-       ( pearsonCorrelation
+       ( takeCorrelation
        , alpha2Pvalue
        , data2Significance
-       , dataHeadDropN
-       , dataTailDropN
-       , twoChannelData2Correlation
-       , modifyData2Correlation
+       , correlationResult2pickupMaxValueIndex
        )
        where
+import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 
 -- for Vector
 --import Numeric.LinearAlgebra
@@ -19,13 +16,46 @@ foreign import ccall "gsl_cdf_tdist_Pinv" gsl_cdf_tdist_Pinv :: FCT.CDouble -> F
 foreign import ccall "gsl_cdf_tdist_P"    gsl_cdf_tdist_P    :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble
 foreign import ccall "gsl_cdf_tdist_Q"    gsl_cdf_tdist_Q    :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble
 
--- double gsl cdf tdist Pinv (const double P, const double nu)
-gslCdfTDistPinv :: Double -> Double -> Double
-gslCdfTDistPinv pVal n = realToFrac $ gsl_cdf_tdist_Pinv (realToFrac pVal) (realToFrac n)
 
---gsl cdf tdist Q (const double x, const double nu)
-gslCdfTDistP x n = realToFrac $ gsl_cdf_tdist_P (realToFrac x) (realToFrac n)
-gslCdfTDistQ x n = realToFrac $ gsl_cdf_tdist_Q (realToFrac x) (realToFrac n)
+takeCorrelation :: (Floating a) => CorrelationMethod -> [a] -> [a] -> Int -> [a]
+takeCorrelation method x y maxN = case method of
+  Peason     -> twoChannelData2Correlation x y maxN
+  MIC        -> twoChannelData2Correlation x y maxN
+
+
+-- pearsonCorrelation :: (Floating a) => [a] -> [a] -> a
+--func f x y listN :: (Floating a) => [a] -> [a] -> [Int] -> [a]
+twoChannelData2Correlation :: (Floating a) => [a] -> [a] -> Int -> [a]
+twoChannelData2Correlation [] _ _ = []
+twoChannelData2Correlation _ [] _ = []
+twoChannelData2Correlation x y maxN
+        | maxN < 0   = []
+        | otherwise  = map (timeshiftedData2Correlation x y) [0..maxN]
+           where timeshiftedData2Correlation :: (Floating a) => [a] -> [a] -> Int -> a
+                 timeshiftedData2Correlation listX listY intN
+                     | intN < dataLength = pearsonCorrelation (dataHeadDropN listX intN) listY
+                     | otherwise         = pearsonCorrelation (dataHeadDropN listX dataLength) listY
+                   where dataLength = max (length listX) (length listY)
+
+dataHeadDropN ::  (Floating a) => [a] -> Int -> [a]
+dataHeadDropN listData intN = drop intN listData
+
+dataTailDropN ::  (Floating a) => [a] -> Int -> [a]
+dataTailDropN listData intN = take ((length listData) - intN) listData
+
+
+-- index of max correlation = 
+-- takeCorrelationの返り値は(a, int, a)にしたいが、
+-- MICの返り値も同じ形になるとは限らないので、独立した別の関数にするか？
+-- let result = twoChannelData2Correlation modData1 modData2 100
+-- let indexMaxCorrelation = snd $ maximum $ zip result [1..]
+correlationResult2pickupMaxValueIndex :: [Double] -> Double -> (Int, Double)
+correlationResult2pickupMaxValueIndex result srate = (indexMax, (fromIntegral indexMax) / srate)
+  where indexMax = snd $ maximum $ zip result [0, 1..]
+      
+--(indexMax, indexMax * srate)
+
+    --  where indexMax = maximum [1..10]
 
 
 
@@ -58,23 +88,11 @@ data2Significance n r
 
 
 
--- pearsonCorrelation :: (Floating a) => [a] -> [a] -> a
---func f x y listN :: (Floating a) => [a] -> [a] -> [Int] -> [a]
-twoChannelData2Correlation [] _ _ = []
-twoChannelData2Correlation _ [] _ = []
-twoChannelData2Correlation x y maxN
-        | maxN < 0   = []
-        | otherwise  = map (modifyData2Correlation x y) [0..maxN]
 
-modifyData2Correlation :: (Floating a) => [a] -> [a] -> Int -> a
-modifyData2Correlation listX listY intN
-        | intN < dataLength = pearsonCorrelation (dataHeadDropN listX intN) listY
-        | otherwise         = pearsonCorrelation (dataHeadDropN listX dataLength) listY
-                    where dataLength = max (length listX) (length listY)
+-- double gsl cdf tdist Pinv (const double P, const double nu)
+gslCdfTDistPinv :: Double -> Double -> Double
+gslCdfTDistPinv pVal n = realToFrac $ gsl_cdf_tdist_Pinv (realToFrac pVal) (realToFrac n)
 
-
-dataHeadDropN ::  (Floating a) => [a] -> Int -> [a]
-dataHeadDropN listData intN = drop intN listData
-
-dataTailDropN ::  (Floating a) => [a] -> Int -> [a]
-dataTailDropN listData intN = take ((length listData) - intN) listData
+--gsl cdf tdist Q (const double x, const double nu)
+gslCdfTDistP x n = realToFrac $ gsl_cdf_tdist_P (realToFrac x) (realToFrac n)
+gslCdfTDistQ x n = realToFrac $ gsl_cdf_tdist_Q (realToFrac x) (realToFrac n)
