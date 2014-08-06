@@ -1,7 +1,7 @@
 /************************************************/
 /* File   : libStatisticsUtils.c                */
 /* Author : Hirotaka Yuzurihara                 */
-/* Time-stamp: "2014-07-28 16:56:18 yuzurihara" */
+/* Time-stamp: "2014-08-04 14:41:33 yuzurihara" */
 /************************************************/
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,13 +26,16 @@ double calculatePeasonCorrelation(double *data1, double *data2, int dataLength){
   int i;
 
   for(i=0; i < dataLength ; i++) {
-    mean1 += data1[i] / dataLength;
-    mean2 += data2[i] / dataLength;
+    mean1 += data1[i];
+    mean2 += data2[i];
   }
+  mean1 = mean1 / (double)dataLength;
+  mean2 = mean2 / (double)dataLength;
+  
   for(i=0; i<dataLength; i++) {
-    var1 += (data1[i]*data1[i] - mean1*mean1) / (dataLength - 1.0);
-    var2 += (data1[i]*data2[i] - mean2*mean2) / (dataLength - 1.0);
-    cov  += (data1[i]*data2[i] - mean1*mean2) / (dataLength - 1.0);
+    var1 += (data1[i] - mean1) * (data1[i] - mean1);
+    var2 += (data2[i] - mean2) * (data2[i] - mean2);
+    cov  += (data1[i] - mean1) * (data2[i] - mean2);
   }
 
   return cov/sqrt(var1*var2);
@@ -89,7 +92,7 @@ double permutationTestPeasonCorrelation(double *data1, double *data2, int dataLe
     if(fabs(rhoPeason) > fabs(rhoPeason_0) ) countTail++;
   }
 
-  fprintf(stderr, " *** check : tail counter = %d\n", countTail);
+  //fprintf(stderr, " *** check : tail counter = %d\n", countTail);
   
   free(data2mod);
   gsl_rng_free(rnd);
