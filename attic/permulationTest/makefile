@@ -1,31 +1,44 @@
 #makefile
-#Time-stamp: "2014-08-03 17:36:19 yuzurihara"
+#Time-stamp: "2014-08-04 15:16:38 yuzurihara"
 
-CC=gcc
+PATH_STATISTICS=HasKAL/StatisticsUtils
 
-OBJ1=examplePurmutationTest.o ./HasKAL/StatisticsUtils/libStatisticsUtils.o
-OBJ2=testPermutationTest.hs HasKAL/StatisticsUtils/Functions.hs HasKAL/StatisticsUtils/statisticsUtils.c
+OBJ1=examplePurmutationTest.o  libstatisticsUtils.a
+OBJ2=testPermutationTest.hs  $(PATH_STATISTICS)/Functions.hs  libstatisticsUtils.a
+OBJ3=statisticsUtils
+
 
 GSLLINK=-lgsl -lgslcblas
-TARGET=examplePurmutationTest testPermutationTest
+TARGET=libstatisticsUtils.a examplePurmutationTest testPermutationTest
+
 
 all:$(TARGET)
 
 examplePurmutationTest:$(OBJ1)
 	ln -fs ../../HasKAL/src/HasKAL ./
-	$(CC) -o $@ $(OBJ1) $(GSLLINK)
+	gcc -o $@ $(OBJ1) $(GSLLINK)
 	@echo "*** Making $@ ***"
+	@echo ""
+
 
 testPermutationTest:$(OBJ2)
 	ln -fs ../../HasKAL/src/HasKAL ./
 	ghc --make ${OBJ2} -lgsl -lgslcblas
 	@echo "*** Making $@ ***"
+	@echo ""
+
+#- gcc -c statisticsUtils.c
+#- ar r libstatisticsUtils.a statisticsUtils.o
+
+libstatisticsUtils.a:$(PATH_STATISTICS)/$(OBJ3).c
+	gcc -c $(PATH_STATISTICS)/$(OBJ3).c
+	ar r  $@  $(OBJ3).o
+	@echo "*** Making $@ ***"
+	@echo ""
+
 clean:
 	rm -f *.o $(TARGET) *.hi
+	rm -f $(PATH_STATISTICS)/libstatisticsUtils.a
 .cc.o:
-	$(CC) -o $<
+	gcc -o $<
 
-
-
-
-#-L/play/kagra/soft/gsl/lib

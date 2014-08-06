@@ -36,7 +36,7 @@ int main(int argc,char **argv){
       i++;
     }
     dataLength = i;
-
+    
     if ((fp = fopen(argv[2], "r")) == NULL) {
       printf("file open error!!\n");
       exit(1);
@@ -48,11 +48,16 @@ int main(int argc,char **argv){
     /* set smaller size as dataLength */
     if(i < dataLength) dataLength=i;
 
-
     repeatTimesOfTest = atoi(argv[3]);
 
+
+    fprintf(stderr, "This is calculate in C\n");
+
+    double peason = calculatePeasonCorrelation(data1, data2, dataLength);
+    fprintf(stdout, "peason value = %lf\n", peason);
+
     pvalue = permutationTestPeasonCorrelation(data1, data2, dataLength, repeatTimesOfTest);
-    fprintf(stderr, "Two sided tail prob.= %.10e\n", pvalue);
+    fprintf(stdout, "Two sided tail prob.= %.10e\n", pvalue);
 
 
   } 
