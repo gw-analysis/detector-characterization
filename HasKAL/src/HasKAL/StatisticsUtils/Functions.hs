@@ -1,11 +1,9 @@
-
+{-# LANGUAGE BangPatterns #-}
 
 module HasKAL.StatisticsUtils.Functions
 ( calculatePeasonCorrelation
 , permutationTestPeasonCorrelation
-, calculatePeasonCorrelationCore
-, permutationTestPeasonCorrelationCore
---,
+, mean
 )
 where
 
@@ -15,7 +13,7 @@ import Foreign.C.Types
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
-
+import Data.List
 
 {- exposed functions -}
 calculatePeasonCorrelation :: [Double] -> [Double] -> Double
@@ -32,6 +30,12 @@ permutationTestPeasonCorrelation data1 data2 repeatTimes = do
       len'   = fromIntegral $ length data1'
       repeatTimes' = fromIntegral repeatTimes :: CInt
   realToFrac $ permutationTestPeasonCorrelationCore data1' data2' len' repeatTimes'
+
+-- |Numerically stable mean
+-- from hstats
+mean :: Floating a => [a] -> a
+mean x = fst $ foldl' (\(!m, !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
+
 
 
 {- internal functions -}
