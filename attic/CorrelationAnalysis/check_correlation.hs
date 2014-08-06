@@ -17,6 +17,7 @@ import System.Cmd -- system
 import Data.List.Split -- splitOn
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
+import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
 --import HasKAL.PlotUtils.PlotUtilsHROOT
 --import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
@@ -69,7 +70,7 @@ main = do
        xdata2 = take (length data2) [1,2..]
   
 
-   let rValue = maximum $ twoChannelData2Correlation data1 data2 1
+   let rValue = maximum $ takeCorrelation Peason data1 data2 1
    let rValue_10 = read (showFFloat (Just 10) rValue "")::Double
 
    {-

@@ -1,4 +1,4 @@
-#Time-stamp: "2014-07-14 18:15:23 yuzurihara"
+#Time-stamp: "2014-08-04 15:47:17 yuzurihara"
 
 # To compile, you must do follow command before make command
 #	cd ~/detector-characterization/HasKAL
@@ -9,7 +9,7 @@
 CC=ghc
 
 OBJ1=check_correlation.hs
-OBJ2=generateHtml.hs
+OBJ2=generateHtml.hs HasKAL/MonitorUtils/CorrelationMon/CalCorrelation.hs
 OBJ3=
 
 
