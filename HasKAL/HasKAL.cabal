@@ -126,7 +126,8 @@ library
        filepath,
        directory,
        mtl ==2.1.2,
-       semigroupoids <= 4.0.1
+       semigroupoids <= 4.0.1,
+       bindings-gsl <= 0.2.1
   -- Directories containing source files.
   hs-source-dirs:      src
   extensions: DoAndIfThenElse,
