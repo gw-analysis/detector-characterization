@@ -1,5 +1,5 @@
 
-module HasKAL.SignalPocessingUtils.LPEF
+module HasKAL.SignalPocessingUtils.LinearPrediction
 ( lpefCoeff
 ) where
 
