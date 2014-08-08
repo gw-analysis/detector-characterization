@@ -3,9 +3,9 @@
 --where
 
 
-import Functions
+import HasKAL.DetectorUtils.Functions
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
-import DetectorParam
+import HasKAL.DetectorUtils.DetectorParam
 import Control.Monad (forM)
 
 main :: IO()
@@ -20,7 +20,7 @@ main = do
 
   --print skymap
 
-  skyMap Linear COLZ "Z" "Antenna Pattern Skymap at LIGO Hanford" "X11" $ genSkymapData phiV thetaV skymap
+  skyMapX Linear COLZ "Z" "Antenna Pattern Skymap at LIGO Hanford" $ genSkymapData phiV thetaV skymap
 
 
 fst3 :: (a, b, c) -> a
