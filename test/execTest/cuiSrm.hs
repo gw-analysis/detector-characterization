@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 19:42:32
+  * Last Modified: 2014/08/08 19:32:15
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -16,7 +16,7 @@ import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS -- データ読み出�
 import qualified HasKAL.Misc.StrictMapping as HMS
 import qualified HasKAL.Misc.Flip3param as HMF 
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighMon as SRM
-import qualified HasKAL.PlotUtils.PlotUtils as HPP
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
 
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph
@@ -56,7 +56,7 @@ main = do
       nF = truncate $ dF * dT
       chunck = truncate fs * sT
       nC = truncate $ (fromIntegral sT) * fs / (fromIntegral nT)
-      num = 3 :: Int
+      num = 8 :: Int
 
   {--  データ生成  --}
   rng <- RNG.newRngWithSeed seed
@@ -93,9 +93,9 @@ main = do
   {--  nu探索  --}
   let nu = SRM.studentRayleighMon' method nC overlap nF snfs hfs
   case plot of
-    X11 -> HPP.scatter_plot_3d "SRMon" channel 2.0 (720,480) $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
+    X11 -> PG3.spectrogramX PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
     PNG -> do
-      HPP.scatter_plot_3d_png "SRMon" channel 2.0 ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
+      PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
       return ()
 
 
