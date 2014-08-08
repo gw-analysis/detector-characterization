@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/08/06 15:54:00
+# Last Modified: 2014/08/08 12:35:30
 #******************************************#
 
 # compiler option
@@ -23,7 +23,7 @@ endif
 # compile rule
 all: ${TAR}
 
-${TAR}: ${TAR}.hs ./PlotModuleForNewHROOT.hs ./Plot3DModuleForNewHROOT.hs
+${TAR}: ${TAR}.hs
 	ln -fs ../../HasKAL/src/HasKAL
 	${HC} --make -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 

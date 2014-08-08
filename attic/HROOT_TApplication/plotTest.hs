@@ -1,35 +1,35 @@
 {-******************************************
   *     File Name: plotTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 16:26:17
+  * Last Modified: 2014/08/08 13:43:50
   *******************************************-}
 
--- import qualified PlotModule as PM
-import qualified PlotModuleForNewHROOT as PM
-import qualified Plot3DModuleForNewHROOT as PM3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as PM
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PM3
+import qualified HasKAL.PlotUtils.HROOT.Histogram as H
 
 main :: IO ()
 main = do
   let xs = [1.0..50]
       ys = reverse xs
+
       as = [0.0..128.0]
       bs = [0.0..1024.0]
       css = mapWith (+) as bs
+
       ps = [-180.0..180.0]
       qs = [-90.0..90.0]
       rss = mapWith (+) ps qs
 
---   PM.plot PM.Linear PM.LinePoint ("X jiku","Y jiku") "Daimei" "a.png" $ zip xs ys
---   PM.oPlot PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") "b.png" $ [zip xs xs, zip xs ys]
---   PM.dPlot PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") "c.png" $ [zip xs xs, zip xs ys, zip ys xs]
---   PM3.spectrogram PM.Linear PM3.COLZ "Z jiku" ("Daimei") "d.png" dats
-  PM.plotX PM.Linear PM.LinePoint ("X jiku","Y jiku") "Daimei" $ zip xs ys
-  PM.oPlotX PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") $ [zip xs xs, zip xs ys] 
+      ms = [1..10] ++ [11..17] ++ [20..22] ++ [30..37] ++ [40..49] :: [Double]
+      ns = [1..6] ++ [11..15] ++ [20..21] ++ [30..34] ++ [40..46] :: [Double]
+      params = (5, 0.0, 50.0) :: (Int, Double, Double) -- (nBin, xMin, xMax)
+      
+  H.dHistX H.Linear (repeat ("X jiku", "Y jiku")) (repeat "Daimei") (repeat params) [ms, ns]
+  PM.oPlotX PM.Linear PM.LinePoint ("X jiku","Y jiku") (repeat "Daimei") $ [zip xs xs, zip xs ys] 
   PM.dPlotX PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") $ [zip xs xs, zip xs ys, zip ys xs]
   PM3.spectrogram PM.Linear PM3.COLZ "Z jiku" ("Daimei") "X11" $ timeFreqData as bs css
   PM3.skyMap PM.Linear PM3.AITOFF "Z jiku" ("Daimei") "X11" $ timeFreqData ps qs rss
---latitude
---longitude
 
 timeFreqData :: [Double] -> [Double] -> [[Double]] -> [(Double, Double, Double)]
 timeFreqData [] _ _ = []
