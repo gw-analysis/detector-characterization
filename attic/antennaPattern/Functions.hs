@@ -1,5 +1,5 @@
 module Functions
-( fplusfcross
+( fplusfcrossts
 , rx
 , ry
 , rz
@@ -8,17 +8,18 @@ module Functions
 , cosd
 , tand
 , datan
-
+, tuple2mat
+, calcd
 ) where
 
 import Numeric.LinearAlgebra
 import Constants
 import DetectorParam
-import HasKAL.DetectorUtils.Detector
+--import HasKAL.DetectorUtils.Detector
 
 {- exposed functions -}
-fplusfcross :: DetectorParam -> Double -> Double -> Double -> (Double, Double, Double)
-fplusfcross detname phi theta psi = do
+fplusfcrossts :: DetectorParam -> Double -> Double -> Double -> (Double, Double, Double)
+fplusfcrossts detname phi theta psi = do
   -- Detector Tensor
   let d = calcd (tuple2mat (deta detname)) (tuple2mat (detb detname))
       rr = rz (90+psi) <> ry (90-theta) <> rz (phi)

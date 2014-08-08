@@ -4,4 +4,4 @@ module Constants
 ) where
 
 speedofLight :: Double
-speedofLight = 1000.0
+speedofLight = 299792458
