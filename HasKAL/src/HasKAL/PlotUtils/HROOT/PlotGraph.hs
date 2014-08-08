@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotGraph.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 19:40:03
+  * Last Modified: 2014/08/08 12:04:59
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph (
@@ -28,21 +28,18 @@ import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
 
--- data MultiPlot = Over | Divide deriving (Eq)
--- data ColorOpt = BLACK | RED | GREEN | BLUE | YELLOW | PINK | CYAN deriving (Eq, Ord)
-
 {-- External Functions --}
 plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> [(Double, Double)] -> IO ()
-plot log mark xyLable title fname dat = oPlot log mark [xyLable] [title] fname [dat]
+plot log mark xyLable title fname dat = plotBase Over log mark [xyLable] [title] fname [dat]
 
 plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [(Double, Double)] -> IO ()
-plotX log mark xyLable title dat = oPlot log mark [xyLable] [title] "X11" [dat]
+plotX log mark xyLable title dat = plot log mark xyLable title "X11" dat
 
-oPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
-oPlot log mark xyLables titles fname dats = plotBase Over log mark xyLables titles fname dats
+oPlot :: LogOption -> PlotTypeOption -> (String, String) -> [String] -> String -> [[(Double, Double)]] -> IO ()
+oPlot log mark xyLable titles fname dats = plotBase Over log mark [xyLable] titles fname dats
 
-oPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [[(Double, Double)]] -> IO ()
-oPlotX log mark xyLables titles dats = oPlot log mark xyLables titles "X11" dats
+oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> [String] -> [[(Double, Double)]] -> IO ()
+oPlotX log mark xyLable titles dats = oPlot log mark xyLable titles "X11" dats
 
 dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
 dPlot log mark xyLables titles fname dats = plotBase Divide log mark xyLables titles fname dats

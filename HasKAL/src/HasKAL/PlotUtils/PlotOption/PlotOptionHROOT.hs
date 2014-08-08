@@ -8,6 +8,10 @@ module HasKAL.PlotUtils.PlotOption.PlotOptionHROOT(
 
 data PlotTypeOption = Line | Point | LinePoint | PointLine | Dot deriving Eq
 data LogOption = Linear | LogX | LogY | LogZ | LogXY | LogXZ | LogYZ | LogXYZ deriving Eq
-data PlotTypeOption3D = COLZ | CONTZ | LEGO2Z | AITOFF | MERCATOR deriving (Eq, Show)
 data MultiPlot = Over | Divide deriving (Eq)
+
+{-- histogram plot option --} -- http://root.cern.ch/root/html/THistPainter.html#HP01
+data PlotTypeOption3D = COLZ | CONTZ | LEGO2Z | AITOFF | MERCATOR deriving (Eq, Show)
+
+{-- fill color setting --} -- http://root.cern.ch/root/html/TAttFill.html#F1
 data ColorOpt = BLACK | RED | GREEN | BLUE | YELLOW | PINK | CYAN deriving (Eq, Ord) -- 未実装
