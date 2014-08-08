@@ -1,14 +1,16 @@
 {-******************************************
   *     File Name: PlotGraph3D.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 19:41:18
+  * Last Modified: 2014/08/08 19:33:04
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
    LogOption(Linear, LogX, LogY, LogZ, LogXY, LogXZ, LogYZ, LogXYZ)
   ,PlotTypeOption3D(COLZ, CONTZ, LEGO2Z, AITOFF, MERCATOR)
   ,spectrogram
+  ,spectrogramX
   ,skyMap
+  ,skyMapX
 ) where
 
 import qualified Control.Monad as CM
@@ -26,14 +28,18 @@ import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
 
--- data PlotTypeOption3D = COLZ | CONTZ | LEGO2Z | AITOFF | MERCATOR deriving (Eq, Show)
-
 {--  External Functions  --}
 spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
 spectrogram log mark zLabel title fname dats = plot3dBase log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
 
+spectrogramX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
+spectrogramX log mark zLabel title dats = spectrogram log mark zLabel title "X11" dats
+
 skyMap :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
 skyMap log mark zLabel title fname dats = plot3dBase log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
+
+skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
+skyMapX log mark zLabel title dats = skyMap log mark zLabel title "X11" dats
 
 {-- Internal Functions --}
 plot3dBase :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> [(Double, Double, Double)] -> IO ()
