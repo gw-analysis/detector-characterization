@@ -50,6 +50,8 @@ library
   -- Modules exported by the library.
   exposed-modules:
     HasKAL.DetectorUtils.Detector,
+    HasKAL.DetectorUtils.DetectorParam,
+    HasKAL.DetectorUtils.Functions,
     HasKAL.ExternalUtils.GSL.RandomNumberDistributions,
     HasKAL.ExternalUtils.GSL.RandomNumberGeneration,
     HasKAL.ExternalUtils.LAL.Lwtprint,
