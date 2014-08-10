@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotGraph3D.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/08 19:33:04
+  * Last Modified: 2014/08/10 22:19:26
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
@@ -24,26 +24,29 @@ import qualified Foreign.Marshal.Array as FMA
 import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
 
+import qualified HasKAL.Misc.CoastData as MCD
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
 
+data OptBG = NONE | COAST deriving (Eq)
+
 {--  External Functions  --}
 spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
-spectrogram log mark zLabel title fname dats = plot3dBase log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
+spectrogram log mark zLabel title fname dats = plot3dBase NONE log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
 
 spectrogramX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
 spectrogramX log mark zLabel title dats = spectrogram log mark zLabel title "X11" dats
 
 skyMap :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
-skyMap log mark zLabel title fname dats = plot3dBase log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
+skyMap log mark zLabel title fname dats = plot3dBase COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
 
 skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
 skyMapX log mark zLabel title dats = skyMap log mark zLabel title "X11" dats
 
 {-- Internal Functions --}
-plot3dBase :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> [(Double, Double, Double)] -> IO ()
-plot3dBase log mark xyzLabel title fname dats = do
+plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> [(Double, Double, Double)] -> IO ()
+plot3dBase wmap log mark xyzLabel title fname dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
@@ -57,10 +60,19 @@ plot3dBase log mark xyzLabel title fname dats = do
   HR.setStats tH2d 0
 
   HR.draw tH2d $ str2cstr $ show mark
+  case wmap of NONE  -> return ()
+               COAST -> oPlotCoastLine
 
   HRS.runOrSave' tCan tApp fname
   HR.delete tH2d
   HR.delete tCan
+
+oPlotCoastLine :: IO ()
+oPlotCoastLine = do
+  let cl = MCD.coast
+  tGra <- HR.newTGraph (toEnum $ length cl) (list2ptr $ map (realToFrac.fst) cl) (list2ptr $ map (realToFrac.snd) cl)
+  HR.setMarkerColor tGra $ toEnum 0
+  HR.draw tGra $ str2cstr "P"
 
 getNum :: [(Double, Double, Double)] -> (Int, Int)
 getNum dats = (xNum, yNum)
@@ -99,4 +111,3 @@ snd' (x, y, z) = y
 
 trd' :: (a, b, c) -> c
 trd' (x, y, z) = z
-
