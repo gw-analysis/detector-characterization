@@ -76,6 +76,7 @@ library
     HasKAL.MonitorUtils.SRMon.StudentRayleighMon,
 --    HasKAL.PlotUtils.DynamicPlot,
     HasKAL.PlotUtils.HROOT.GlobalTApplication,
+    HasKAL.PlotUtils.HROOT.Histogram,
     HasKAL.PlotUtils.HROOT.PlotGraph,
     HasKAL.PlotUtils.HROOT.PlotGraph3D,
     HasKAL.PlotUtils.HROOT.Supplement,

@@ -1,7 +1,7 @@
 /******************************************
  *     File Name: SignalHandlerROOT.h
  *        Author: Takahiro Yamamoto
- * Last Modified: 2014/08/09 01:47:31
+ * Last Modified: 2014/08/11 11:18:39
  ******************************************/
 
 #ifndef I_GUARD_SIGNALHANDLERROOT_H
@@ -15,6 +15,11 @@ class MySignalHandler : public TSignalHandler{
  public:
  MySignalHandler(ESignals sig) : TSignalHandler(sig){}
   Bool_t Notify();
+};
+
+class AddSignalHandle{
+ public:
+ AddSignalHandle();
 };
 
 #endif /*  I_GUARD_SIGNALHANDLERROOT_H  */

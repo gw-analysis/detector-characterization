@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/08/08 12:35:30
+# Last Modified: 2014/08/11 13:23:53
 #******************************************#
 
 # compiler option
@@ -12,6 +12,7 @@ USELIB =
 
 # program
 TAR = plotTest
+DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
 
 # link path
 ifneq (${USELIB},)
@@ -25,7 +26,7 @@ all: ${TAR}
 
 ${TAR}: ${TAR}.hs
 	ln -fs ../../HasKAL/src/HasKAL
-	${HC} --make -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} --make -o $@ $^ ${DEP} ${CFLAGS} -I/opt/local/root/include/root ${LDFLAGS} ${LIBS}
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi
