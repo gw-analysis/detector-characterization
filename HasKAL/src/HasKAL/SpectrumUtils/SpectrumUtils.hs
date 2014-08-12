@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
 
-module HasKAL.SpectrumUtils.SpectrumUtils (
-  gwpsd
+module HasKAL.SpectrumUtils.SpectrumUtils
+(  gwpsd
+ , gwspectrogram
 )
 where
 
@@ -18,6 +19,14 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 
 --import HasKAL.SpectrumUtils.AuxFunction(sort, median)
 import Data.List (sort, foldl')
+
+
+gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
+gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
+  where freqV = toList $ linspace nfft (0, fs/2)
+        tV    = [1/fs*(fromIntegral nfft)/2*fromIntegral y | y<-[1..nt]]
+        spec = map (\m -> map snd $ gwpsd (toList $ subVector (m*noverlap) nfft (fromList x)) nfft fs) [0..(nt-1)] :: [[Double]]
+        nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral noverlap)
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
@@ -134,5 +143,10 @@ medianBiasFactor n = foldl' (\acc x -> acc + (-1)**(fromIntegral x+1)/fromIntegr
 
 
 
+genTFData :: [Double] -> [Double] -> [[Double]] -> [(Double,   Double,   Double)]
+genTFData tV freqV spec = do
+  let tV' = concat [ replicate (length freqV) x | x <- tV]
+      freqV'=take (length tV * length freqV) $ cycle freqV
+  zip3 tV' freqV' (concat spec)
 
 
