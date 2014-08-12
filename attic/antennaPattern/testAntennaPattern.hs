@@ -11,16 +11,16 @@ import Control.Monad (forM)
 main :: IO()
 main = do
   let psi = 0
-      phiV = [-180,-179..180] :: [Double]
-      thetaV = [-90, -89..90] :: [Double]
+      phiV = [-180,-176..180] :: [Double]
+      thetaV = [-90, -86..90] :: [Double]
   skymap <- forM phiV $ \phi ->
         forM thetaV $ \theta ->
-        return $ sqrt $ (fst3 $ fplusfcrossts ligoHanford phi theta psi)**2
-          + (snd3 $ fplusfcrossts ligoHanford phi theta psi)**2
+        return $ sqrt $ (fst3 $ fplusfcrossts kagra phi theta psi)**2
+          + (snd3 $ fplusfcrossts kagra phi theta psi)**2
 
   --print skymap
 
-  skyMapX Linear COLZ "Z" "Antenna Pattern Skymap at LIGO Hanford" $ genSkymapData phiV thetaV skymap
+  skyMapX Linear COLZ " " "Antenna Pattern Skymap of KAGRA" $ genSkymapData phiV thetaV skymap
 
 
 fst3 :: (a, b, c) -> a
