@@ -20,10 +20,13 @@ import System.FilePath (pathSeparator)
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType
   | sigType srcType == "SG235Q8d9" =
-    ( map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
-    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator] ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
+    (
+    map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
+    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator]
+    ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
     , map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
-    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator] ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
+    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator]
+    ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
     )
   | otherwise = error "not recognized"
 
@@ -36,7 +39,8 @@ injDetectorResponse detName srcType gps = do
         | detName == KAGRA = kagra
         | otherwise = error "not recognized"
 
-      (antennaPattern, tauS) = fplusfcrossts detparam (longitude srcType) (latitude srcType) (psi srcType)
+      (antennaPattern, tauS) =
+        fplusfcrossts detparam (longitude srcType) (latitude srcType) (psi srcType)
 
       detresp = genDetectorResponse antennaPattern $ getPolarizations srcType
 
