@@ -14,14 +14,17 @@ import HasKAL.DetectorUtils.Signature
 import System.IO.Unsafe
 import HasKAL.TimeUtils.Signature
 import HasKAL.SimulationUtils.Injection.Signature
-
-
+import HasKAL.Misc.Environment (haskalOpt)
+import System.FilePath (pathSeparator)
 
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType
   | sigType srcType == "SG235Q8d9" =
-    ( map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile "SG235Q8d9.txt")
-    , map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile "SG235Q8d9.txt"))
+    ( map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
+    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator] ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
+    , map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
+    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator] ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
+    )
   | otherwise = error "not recognized"
 
 
