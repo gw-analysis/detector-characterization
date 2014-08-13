@@ -3,7 +3,7 @@
 --where
 
 
-import HasKAL.DetectorUtils.Functions
+import HasKAL.DetectorUtils.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.DetectorUtils.DetectorParam
 import Control.Monad (forM)
@@ -15,18 +15,14 @@ main = do
       thetaV = [-90, -86..90] :: [Double]
   skymap <- forM phiV $ \phi ->
         forM thetaV $ \theta ->
-        return $ sqrt $ (fst3 $ fplusfcrossts kagra phi theta psi)**2
-          + (snd3 $ fplusfcrossts kagra phi theta psi)**2
+        return $ sqrt $ (fst $ fst $ fplusfcrossts kagra phi theta psi)**2
+          + (snd $ fst $ fplusfcrossts kagra phi theta psi)**2
 
   --print skymap
 
   skyMapX Linear COLZ " " "Antenna Pattern Skymap of KAGRA" $ genSkymapData phiV thetaV skymap
 
 
-fst3 :: (a, b, c) -> a
-fst3 (x, _, _) = x
-snd3 :: (a, b, c) -> b
-snd3 (_, x, _) = x
 
 genSkymapData :: [Double] -> [Double] -> [[Double]] -> [(Double,  Double,  Double)]
 genSkymapData phiV thetaV skymap = do
