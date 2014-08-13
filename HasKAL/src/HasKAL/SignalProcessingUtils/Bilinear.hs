@@ -3,7 +3,7 @@ module HasKAL.SignalProcessingUtils.Bilinear
 )
 where
 
-import HasKAL.SignalProcessingUtils.Signatures
+import HasKAL.SignalProcessingUtils.Signature
 import Data.Complex(Complex)
 
 bilinear :: GammaFunc -> DeltaFunc -> Int -> Double -> Double -> Int -> Int -> Complex Double

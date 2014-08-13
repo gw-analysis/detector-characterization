@@ -1,4 +1,4 @@
-module HasKAL.SignalProcessingUtils.Signatures where
+module HasKAL.SignalProcessingUtils.Signature where
 
 import Data.Complex(Complex)
 
