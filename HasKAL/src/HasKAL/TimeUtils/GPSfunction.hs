@@ -41,11 +41,13 @@ import Data.Time.Format
 import System.Locale
 import Data.Maybe
 import System.Time
+import HasKAL.Misc.Environment
 
 {-# NOINLINE theLeapSecondTable #-}
 theLeapSecondTable :: LeapSecondTable
 theLeapSecondTable = parseTAIUTCDATFile $ unsafePerformIO $
-  readFile "./HasKAL/TimeUtils/tai-utc.dat"
+  readFile $ haskalOpt ++ "/timeTable/tai-utc.dat"
+--  readFile "./HasKAL/TimeUtils/tai-utc.dat"
 --TY  readFile "./tai-utc.dat"
 
 utcbase :: UTCTime
