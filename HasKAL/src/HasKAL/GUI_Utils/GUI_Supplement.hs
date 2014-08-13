@@ -1,11 +1,11 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/23 15:06:40
+  * Last Modified: 2014/08/13 16:03:51
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
-   haskalOpt
+   HME.haskalOpt
   ,dateStr2Tuple
   ,getActiveLabels
   ,entryNewWithLabelDefault
@@ -29,9 +29,13 @@ import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 import qualified Text.Regex as TR -- splitRegex, mkRegex
 import qualified Text.Printf as TP -- printf
 
+import qualified HasKAL.Misc.Environment as HME
+
+-- ********  Move to HasKAL.Misc.Environment.hs  ***********
 {-- Environment --}
-haskalOpt :: String
-haskalOpt = SIOU.unsafePerformIO $ SE.getEnv "HASKALOPT"
+-- haskalOpt :: String
+-- haskalOpt = SIOU.unsafePerformIO $ SE.getEnv "HASKALOPT"
+-- *********************************************************
 
 {-- Supplementary Functions --}
 -- for TimeUtils
@@ -98,7 +102,7 @@ dateComboNew (year, month, day, hour, minute, second, tZone) = do
   comboHour <- comboBoxNewLabelAppendTexts "Hour" (map show [0..23]) hour
   comboMinute <- comboBoxNewLabelAppendTexts "Minute" (map show [0..59]) minute
   comboSecond <- comboBoxNewLabelAppendTexts "Second" (map show [0..59]) second
-  comboTZone <- comboBoxNewLabelAppendTexts "timeZone" ["JST", "UTC"] num
+  comboTZone <- comboBoxNewLabelAppendTexts "timeZone" ["JST", "IST", "CET", "CETDST", "UTC", "CST", "CDT", "PST", "PDT"] num
   return [comboYear, comboMonth, comboDay, comboHour, comboMinute, comboSecond, comboTZone]
 
 -- for data format
