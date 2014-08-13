@@ -9,7 +9,7 @@ module HasKAL.SimulationUtils.Injection.Function
 
 import HasKAL.DetectorUtils.Detector
 import HasKAL.DetectorUtils.DetectorParam
-import HasKAL.DetectorUtils.Functions
+import HasKAL.DetectorUtils.Function
 import HasKAL.DetectorUtils.Signature
 import System.IO.Unsafe
 import HasKAL.TimeUtils.Signature
@@ -38,7 +38,7 @@ injDetectorResponse detName srcType gps = do
       detresp = genDetectorResponse antennaPattern $ getPolarizations srcType
 
       startGPSTime = fromIntegral (fst gps) + 1E-9 * fromIntegral (snd gps) + tauS
-      gpsTime = [startGPSTime+dt|dt<-[0, (fs srcType)..]] :: [Double]
+      gpsTime = [startGPSTime+dt|dt<-[0, 1/(fs srcType)..]] :: [Double]
       timetrain = map (\x -> (truncate x,  truncate ((x-fromIntegral (truncate x))*1E9))) gpsTime
   zip timetrain detresp
 
