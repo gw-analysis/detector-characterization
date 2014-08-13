@@ -51,7 +51,8 @@ library
   exposed-modules:
     HasKAL.DetectorUtils.Detector,
     HasKAL.DetectorUtils.DetectorParam,
-    HasKAL.DetectorUtils.Functions,
+    HasKAL.DetectorUtils.Function,
+    HasKAL.DetectorUtils.Signature,
     HasKAL.ExternalUtils.GSL.RandomNumberDistributions,
     HasKAL.ExternalUtils.GSL.RandomNumberGeneration,
     HasKAL.ExternalUtils.LAL.Lwtprint,
@@ -90,14 +91,20 @@ library
     HasKAL.SignalProcessingUtils.Chebyshev,
     HasKAL.SignalProcessingUtils.Filter,
     HasKAL.SignalProcessingUtils.FilterType,
-    HasKAL.SignalProcessingUtils.Signatures,
+    HasKAL.SignalProcessingUtils.Interpolation,
+    HasKAL.SignalProcessingUtils.InterpolationType,
+    HasKAL.SignalProcessingUtils.Signature,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
     HasKAL.SimulationUtils.DetectorNoiseGenerator,
+    HasKAL.SimulationUtils.Injection,
+    HasKAL.SimulationUtils.Injection.Function,
+    HasKAL.SimulationUtils.Injection.Signature,
     HasKAL.SpectrumUtils.SpectrumUtils,
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.TimeUtils.GPSfunction,
+    HasKAL.TimeUtils.Signature,
     HasKAL.TimeUtils.TimeConvert
 
   -- Modules included in this library but not exported.
@@ -147,6 +154,7 @@ library
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   build-tools:         hsc2hs
+  extra-libraries:  Frame, gsl, gslcblas
 
 
 
