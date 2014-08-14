@@ -7,10 +7,7 @@ module HasKAL.SimulationUtils.Injection.Function
 --,
 ) where
 
-import HasKAL.DetectorUtils.Detector
-import HasKAL.DetectorUtils.DetectorParam
-import HasKAL.DetectorUtils.Function
-import HasKAL.DetectorUtils.Signature
+import HasKAL.DetectorUtils
 import System.IO.Unsafe
 import HasKAL.TimeUtils.Signature
 import HasKAL.SimulationUtils.Injection.Signature
@@ -21,14 +18,14 @@ getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType
   | sigType srcType == "SG235Q8d9" =
     (
-    map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
-    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator]
-    ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
-    , map (\x -> read x :: Double) (lines $ unsafePerformIO $ readFile
-    (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator]
-    ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt"))
+    map (\x -> read x :: Double) dat
+    , replicate (length dat) 0
     )
   | otherwise = error "not recognized"
+  where
+    dat = lines $ unsafePerformIO $ readFile
+      (haskalOpt ++ [pathSeparator] ++ "MockDataChallenge" ++ [pathSeparator]
+      ++ "Waveforms" ++ [pathSeparator] ++ (sigType srcType) ++ ".txt")
 
 
 injDetectorResponse :: Detector -> SOURCE_TYPE -> GPSTIME -> [(GPSTIME, Double)]
@@ -46,7 +43,7 @@ injDetectorResponse detName srcType gps = do
 
       startGPSTime = fromIntegral (fst gps) + 1E-9 * fromIntegral (snd gps) + tauS
       gpsTime = [startGPSTime+dt|dt<-[0, 1/(fs srcType)..]] :: [Double]
-      timetrain = map (\x -> (truncate x,  truncate ((x-fromIntegral (truncate x))*1E9))) gpsTime
+      timetrain = map (\x -> (truncate x, truncate ((x-fromIntegral (truncate x))*1E9))) gpsTime
   zip timetrain detresp
 
 
