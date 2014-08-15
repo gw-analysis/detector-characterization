@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/25 14:28:23
+  * Last Modified: 2014/08/15 12:07:49
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -20,6 +20,7 @@ import qualified HasKAL.GUI_Utils.GUI_RangeInspiral as HGGRI
 import qualified HasKAL.GUI_Utils.GUI_RangeIMBH as HGGRIMBH
 import qualified HasKAL.GUI_Utils.GUI_RangeRingDown as HGGRRD
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
+import qualified HasKAL.GUI_Utils.GUI_RangeStochMon as HGGRS
 
 {-- GUI main window
 -- test code
@@ -252,7 +253,7 @@ hasKalGuiRangeMon = do
   rangeMonVBox2 <- vBoxNew True 10
 
   {-- Information --}
-  let rangeMonLabels = ["Inspiral", "Ringdown", "Insp-Merge-Ring"]
+  let rangeMonLabels = ["Inspiral", "Ringdown", "Insp-Merge-Ring", "Stochastic"]
   
   rangeMonButtons <- mapM buttonNewWithLabel rangeMonLabels
   rangeMonCloseButton <- buttonNewWithLabel "Close"
@@ -276,6 +277,8 @@ hasKalGuiRangeMon = do
     HGGRRD.hasKalGuiRingDownRange
   onClicked (rangeMonButtons !! 2) $ do
     HGGRIMBH.hasKalGuiIMR'Range
+  onClicked (rangeMonButtons !! 3) $ do
+    HGGRS.hasKalGuiStochMon
   onClicked rangeMonCloseButton $ do
     putStrLn "Closed RangeMon Window"
     widgetDestroy rangeMonWindow
