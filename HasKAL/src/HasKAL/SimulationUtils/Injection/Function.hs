@@ -2,9 +2,11 @@
 - Module for software injection
 -}
 
+
+
 module HasKAL.SimulationUtils.Injection.Function
 ( injDetectorResponse
---,
+, doInjection
 ) where
 
 import HasKAL.DetectorUtils
@@ -16,7 +18,9 @@ import HasKAL.TimeUtils.Function (formatGPS)
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 import Control.Monad ()
-import System.IO.Unsafe()
+import System.IO.Unsafe
+import Control.Lens
+import Numeric.LinearAlgebra
 
 
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
@@ -46,4 +50,29 @@ injDetectorResponse detName srcType gps = do
       gpsTime = [startGPSTime+dt|dt<-[0, 1/(fs srcType)..]] :: [Double]
       timetrain = map formatGPS gpsTime
   zip timetrain detresp
+
+
+doInjection :: GWDATA -> GWDATA -> GWDATA
+doInjection dat injdat = unsafePerformIO $ do
+  let tdat = fromIntegral (dat^.(startGPSTime._1))
+        + 1E-9 * fromIntegral (dat^.(startGPSTime._2))::Double
+      tinjdat = fromIntegral (injdat^.(startGPSTime._1))
+        + 1E-9 * fromIntegral (injdat^.(startGPSTime._2))::Double
+      timeSlide = floor $ (tinjdat - tdat)*dat^.samplingFrequency
+      newdat
+--        | timeSlide < 0 = vjoin [(subVector (timeSlide-1) nlen1 vinjdata + subVector 0 nlen1 vdata)
+--                               , subVector (nlen1-1) (nvinjdata-nlen1)]
+        | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
+            = toList $ join [subVector 0 timeSlide vdata
+                             , subVector (timeSlide-1) nvinjdata vdata + vinjdata
+                             , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata] :: [Double]
+        | otherwise = error "Injection not succeeded"
+          where nlen1 = nvinjdata - timeSlide
+                nvinjdata = dim vinjdata
+                nvdata = dim vdata
+                vinjdata = fromList $ injdat^.gwdata
+                vdata = fromList $ dat^.gwdata
+      newGWData = dat
+  return $ gwdata .~ newdat $ newGWData
+  return newGWData
 
