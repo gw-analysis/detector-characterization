@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_AntennaPattern.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/09 00:11:43
+  * Last Modified: 2014/08/16 12:40:48
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_AntennaPattern (
@@ -15,8 +15,10 @@ import qualified Control.Monad as CM
 
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
+import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.DetectorUtils.DetectorParam as DDP
-import qualified HasKAL.DetectorUtils.Functions as DUF
+import qualified HasKAL.DetectorUtils.Function as DUF
+import qualified HasKAL.DetectorUtils.Signature as HDS
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as RPG3
 
 {-- Test Code --}
@@ -37,7 +39,8 @@ hasKalGuiAntennaPattern = do
   hBoxTheta <- hBoxNew True 5
   hBoxButtons <- hBoxNew True 5
 
-  detectorCombo <- HGGS.comboBoxNewLabelAppendTexts "Detector" ["KAGRA", "LIGO Hanford", "LIGO Livingston", "Virgo", "GEO600"] 0
+  let detectorList = map show [HDD.KAGRA, HDD.LIGO_Hanford, HDD.LIGO_Livingston, HDD.VIRGO, HDD.GEO]
+  detectorCombo <- HGGS.comboBoxNewLabelAppendTexts "Detector" detectorList 0
   psiEntry <- HGGS.entryNewWithLabelDefault "polarization angle [deg.]" "0.0"
   phiEntry <- HGGS.entryNewWithLabelDefault "delta phi [deg.]" "1.0"
   thetaEntry <- HGGS.entryNewWithLabelDefault "delta theta [deg.]" "1.0"
@@ -73,7 +76,7 @@ hasKalGuiAntennaPattern = do
         psiD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ psiEntry :: Double
         dPhiD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ phiEntry :: Double
         dThetaD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ thetaEntry :: Double
-    putStrLn $ "   Detector: " ++ show detectorStr
+    putStrLn $ "   Detector: " ++ detectorStr
     putStrLn $ "        Psi: " ++ show psiD
     putStrLn $ "  delta Phi: " ++ show dPhiD
     putStrLn $ "delta Theta: " ++ show dThetaD
@@ -81,8 +84,8 @@ hasKalGuiAntennaPattern = do
         thetaV = [-90.0, (-90.0+dThetaD)..90.0]
     skymap <- CM.forM phiV $ \phi ->
       CM.forM thetaV $ \theta -> do
-        let fpfc = DUF.fplusfcrossts (detStr2Param detectorStr) phi theta psiD
-        return $ sqrt $ (fst3 fpfc)**2 + (snd3 fpfc)**2
+        let fpfc = DUF.fplusfcrossts (detStr2Param $ read detectorStr) phi theta psiD
+        return $ sqrt $ (fst (fst fpfc))**2 + (snd (fst fpfc))**2
     RPG3.skyMapX RPG3.Linear RPG3.COLZ "Z" ("Antenna Pattern Skymap at "++detectorStr) $ genSkymapData phiV thetaV skymap
 
   {--  Exit Process  --}
@@ -91,18 +94,14 @@ hasKalGuiAntennaPattern = do
   mainGUI
 
 {--  Internal Functions  --}
-detStr2Param :: String -> DDP.DetectorParam
+detStr2Param :: HDD.Detector -> DDP.DetectorParam
 detStr2Param detector 
-  | detector == "KAGRA" = DDP.kagra
-  | detector == "LIGO Hanford" = DDP.ligoHanford
-  | detector == "LIGO Livingston" = DDP.ligoLivingston
-  | detector == "Virgo" = DDP.virgo
-  | detector == "GEO600" = DDP.geo600
-
-fst3 :: (a, b, c) -> a
-fst3 (x, _, _) = x
-snd3 :: (a, b, c) -> b
-snd3 (_, x, _) = x
+  | detector == HDD.KAGRA = DDP.kagra
+  | detector == HDD.LIGO_Hanford = DDP.ligoHanford
+  | detector == HDD.LIGO_Livingston = DDP.ligoLivingston
+  | detector == HDD.VIRGO = DDP.virgo
+  | detector == HDD.GEO = DDP.geo600
+  | otherwise = DDP.kagra
 
 genSkymapData :: [Double] -> [Double] -> [[Double]] -> [(Double,  Double,  Double)]
 genSkymapData phiV thetaV skymap = do

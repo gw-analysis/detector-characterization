@@ -1,7 +1,7 @@
 {-******************************************************************
   *     File Name: GUI_Utils.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/15 12:07:49
+  * Last Modified: 2014/08/16 12:52:34
   ******************************************************************-}
 
 module HasKAL.GUI_Utils.GUI_Utils
@@ -13,6 +13,7 @@ import qualified Control.Monad as CM -- forM
 import qualified Numeric.LinearAlgebra as NLA -- data Vector, fromList, toList
 import qualified System.IO as SIO -- openFile
 
+import qualified HasKAL.GUI_Utils.GUI_AntennaPattern as HGGA
 import qualified HasKAL.GUI_Utils.GUI_GaussianityRayleighMon as HGGGR
 import qualified HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon as HGGGS
 import qualified HasKAL.GUI_Utils.GUI_GlitchKleineWelle as HGGGKW
@@ -36,7 +37,7 @@ hasKalGuiTop = do
   {--  information  --}
   let topSubSystemLabels = ["TestForKW", "TUN", "FCL", "VAC", "CRY", "VIS", "MIR", "LAS", "MIF", "IOO", "AOS", "AEL", "DGS", "DAS", "GIF", "DC"] -- sub system names
   let topNumOfSubSystems = length topSubSystemLabels -- number of sub systems
-  let topMonitorLabels = ["Glitch", "Line", "Gaussianity", "RangeMon"] -- monitor names
+  let topMonitorLabels = ["Glitch", "Line", "Gaussianity", "RangeMon", "Temporary"] -- monitor names
 
   {--  Create new object --}
   topWindow <- windowNew -- main window
@@ -52,7 +53,7 @@ hasKalGuiTop = do
   {--  Set Parameters of the objects  --}
   set topWindow [ windowTitle := "HasKAL_GUI",
                       windowDefaultWidth := 200,
-                      windowDefaultHeight := 450,
+                      windowDefaultHeight := 500,
                       containerChild := topSubSystemVbox,
                       containerBorderWidth := 20 ]
   scrolledWindowSetPolicy topSubSystemScroll PolicyAutomatic PolicyAutomatic
@@ -90,6 +91,9 @@ hasKalGuiTop = do
   {--  Select Range Monitor --}
   onClicked (topMonitorButtons !! 3) $ do
     hasKalGuiRangeMon
+  {--  Select Temporary --}
+  onClicked (topMonitorButtons !! 4) $ do
+    hasKalGuiTemporary
   {--  Select Exit  --}
   onClicked topExitButton $ do
     putStrLn "Exit HasKAL GUI"
@@ -327,4 +331,47 @@ hasKalGuiMessage messageTitle messageSentence = do
   onDestroy messageWindow mainQuit
   widgetShowAll messageWindow
   mainGUI
+
+
+
+hasKalGuiTemporary :: IO ()
+hasKalGuiTemporary = do
+  initGUI
+  putStrLn "Open Temporary Window"
+
+  {-- Create new object --}
+  tempWindow <- windowNew
+  tempVBox <- vBoxNew True 10
+  tempVBox2 <- vBoxNew True 10
+
+  {-- Information --}
+  let tempLabels = ["Antenna Pattern"]
+  
+  tempButtons <- mapM buttonNewWithLabel tempLabels
+  tempCloseButton <- buttonNewWithLabel "Close"
+
+  {--  Set Parameters of the objects  --}
+  set tempWindow [ windowTitle := "Temporary",
+                       windowDefaultWidth := 200,
+                       windowDefaultHeight := 150,
+                       containerChild := tempVBox,
+                       containerBorderWidth := 20 ]
+
+  {--  Arrange object in window  --}
+  boxPackStartDefaults tempVBox tempVBox2
+  mapM (boxPackStartDefaults tempVBox2) tempButtons
+  boxPackStartDefaults tempVBox2 tempCloseButton
+
+  {--  Select Range Monitor  --}
+  onClicked (tempButtons !! 0) $ do
+    HGGA.hasKalGuiAntennaPattern
+  onClicked tempCloseButton $ do
+    putStrLn "Closed Temporary Window"
+    widgetDestroy tempWindow
+
+  {--  Exit Process  --}
+  onDestroy tempWindow mainQuit
+  widgetShowAll tempWindow
+  mainGUI
+
 
