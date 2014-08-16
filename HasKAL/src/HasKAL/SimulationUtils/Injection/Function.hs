@@ -29,11 +29,11 @@ getPolarizations srcType = unsafePerformIO $ do
     case y of True -> return (map (\x -> read x :: Double) dat, replicate (length dat) 0)
               False -> error "not recognized"
       where
-        mdcFilePath = haskalOpt </> "MockDataChallenge" </> "Waveforms" </> (sigType srcType)
+        mdcFilePath = haskalOpt </> "MockDataChallenge" </> "Waveforms" </> srcType^.sigType
         dat = lines $ unsafePerformIO $ readFile mdcFilePath
 
 
-injDetectorResponse :: Detector -> SOURCE_TYPE -> GPSTIME -> [(GPSTIME, Double)]
+injDetectorResponse :: Detector -> SOURCE_TYPE -> GPSTIME -> GWDATA
 injDetectorResponse detName srcType gps = do
   let detparam
         | detName == LIGO_Hanford = ligoHanford
@@ -42,14 +42,18 @@ injDetectorResponse detName srcType gps = do
         | otherwise = error "not recognized"
 
       (antennaPattern, tauS) =
-        fplusfcrossts detparam (longitude srcType) (latitude srcType) (psi srcType)
+        fplusfcrossts detparam (srcType^.longitude) (srcType^.latitude) (srcType^.psi)
 
       detresp = genDetectorResponse antennaPattern $ getPolarizations srcType
 
-      startGPSTime = fromIntegral (fst gps) + 1E-9 * fromIntegral (snd gps) + tauS
-      gpsTime = [startGPSTime+dt|dt<-[0, 1/(fs srcType)..]] :: [Double]
-      timetrain = map formatGPS gpsTime
-  zip timetrain detresp
+      startGPSTime' = fromIntegral (fst gps) + 1E-9 * fromIntegral (snd gps) + tauS
+  GWDATA { _detector=detName
+         , _dataType="SoftwareInjection"
+         , _samplingFrequency=srcType^.fs
+         , _startGPSTime = formatGPS startGPSTime'
+         , _stopGPSTime  = formatGPS $ startGPSTime'+(fromIntegral (length detresp)-1)/(srcType^.fs)
+         , _gwdata = detresp
+         }
 
 
 doInjection :: GWDATA -> GWDATA -> GWDATA
@@ -65,7 +69,7 @@ doInjection dat injdat = unsafePerformIO $ do
         | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
             = toList $ join [subVector 0 timeSlide vdata
                              , subVector (timeSlide-1) nvinjdata vdata + vinjdata
-                             , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata] :: [Double]
+                             , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata]
         | otherwise = error "Injection not succeeded"
           where nlen1 = nvinjdata - timeSlide
                 nvinjdata = dim vinjdata
