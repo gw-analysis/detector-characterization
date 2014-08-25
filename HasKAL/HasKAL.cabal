@@ -118,7 +118,8 @@ library
   build-depends:
        base >=4.6,
        process >=1.1,
-       gtk >=0.12,
+       gtk >=0.13,
+       text,
        regex-compat >=0.95,
        gloss >=1.8,
        -- fft >=0.1 && <=0.1.6,
