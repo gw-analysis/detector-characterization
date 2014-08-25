@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 19:34:09
+  * Last Modified: 2014/08/25 15:27:19
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -11,6 +11,7 @@ module HasKAL.GUI_Utils.GUI_RangeIMBH(
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
 import qualified Data.Maybe as DM
+import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -70,7 +71,7 @@ hasKalGuiIMR'Range = do
     widgetDestroy imrRangeWindow
   onClicked imrRangeExecute $ do
     putStrLn "Execute"
-    let imrDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) imrRangeDateCombo
+    let imrDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) imrRangeDateCombo
         imrGPS = HTG.timetuple2gps imrDate
         imrObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeObsTimeEntry :: Int
         imrMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd imrRangeMass1Entry :: Double

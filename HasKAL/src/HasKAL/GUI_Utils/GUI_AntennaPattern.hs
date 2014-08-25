@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_AntennaPattern.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/16 12:40:48
+  * Last Modified: 2014/08/25 14:58:18
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_AntennaPattern (
@@ -10,9 +10,9 @@ module HasKAL.GUI_Utils.GUI_AntennaPattern (
 
 import Graphics.UI.Gtk
 import qualified Data.Maybe as DM
+import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU
 import qualified Control.Monad as CM
-
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.DetectorUtils.Detector as HDD
@@ -72,7 +72,7 @@ hasKalGuiAntennaPattern = do
     widgetDestroy window
   onClicked executeButton $ do
     putStrLn "Execute"
-    let detectorStr = (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) detectorCombo
+    let detectorStr = (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) detectorCombo
         psiD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ psiEntry :: Double
         dPhiD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ phiEntry :: Double
         dThetaD = abs.read.SIOU.unsafePerformIO.entryGetText.snd $ thetaEntry :: Double

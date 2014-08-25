@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/13 16:03:51
+  * Last Modified: 2014/08/25 14:06:00
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -24,6 +24,7 @@ module HasKAL.GUI_Utils.GUI_Supplement(
 ) where
 
 import Graphics.UI.Gtk
+import qualified Data.Text as DT
 import qualified System.Environment as SE -- getEnv
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 import qualified Text.Regex as TR -- splitRegex, mkRegex
@@ -82,7 +83,7 @@ fileOpenButtonNewWithLabelDefault label defPath = do
 comboBoxNewAppendTexts :: [String] -> Int -> IO ComboBox
 comboBoxNewAppendTexts texts defNum = do
   xComboBox <- comboBoxNewText
-  mapM (comboBoxAppendText xComboBox) texts
+  mapM (comboBoxAppendText xComboBox) $ map DT.pack texts
   comboBoxSetActive xComboBox defNum
   return xComboBox
 

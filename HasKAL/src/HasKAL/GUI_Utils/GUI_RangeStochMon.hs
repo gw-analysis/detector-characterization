@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeStochMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/15 12:08:29
+  * Last Modified: 2014/08/25 14:29:56
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeStochMon (
@@ -11,6 +11,7 @@ module HasKAL.GUI_Utils.GUI_RangeStochMon (
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM
 import qualified Data.Maybe as DM
+import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU
 
 import qualified HasKAL.DetectorUtils.Detector as HDD
@@ -79,11 +80,11 @@ hasKalGuiStochMon = do
     widgetDestroy stochWindow
   onClicked stochExecute $ do
     putStrLn "Execute"
-    let stochDate = HGGS.dateStr2Tuple $ map (DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) stochDateCombo
+    let stochDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) stochDateCombo
         stochGPS = HTG.timetuple2gps stochDate
         stochObsTime = read.SIOU.unsafePerformIO.entryGetText.snd $ stochObsTimeEntry :: Int
-        stochDet1 = DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet1Combo
-        stochDet2 = DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet2Combo
+        stochDet1 = DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet1Combo
+        stochDet2 = DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet2Combo
         stochfMin = read.SIOU.unsafePerformIO.entryGetText.snd $ stochfMinEntry :: Double
         stochfMax = read.SIOU.unsafePerformIO.entryGetText.snd $ stochfMaxEntry :: Double
     putStrLn ("    GPS Time: " ++ stochGPS)
