@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 15:14:19
+  * Last Modified: 2014/08/25 18:09:07
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -10,8 +10,6 @@ module HasKAL.GUI_Utils.GUI_RangeInspiral(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
-import qualified Data.Maybe as DM
-import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -70,8 +68,8 @@ hasKalGuiInspiralRange = do
     widgetDestroy inspiralRangeWindow
   onClicked inspiralRangeExecute $ do
     putStrLn "Execute"
-    let inspDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) inspiralRangeDateCombo
-        inspGPS = HTG.timetuple2gps inspDate
+    inspDate <- CM.liftM HGGS.dateStr2Tuple $ mapM HGGS.comboBoxGetActiveString inspiralRangeDateCombo
+    let inspGPS = HTG.timetuple2gps inspDate
         inspObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeObsTimeEntry :: Int
         inspMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMass1Entry :: Double
         inspMass2 = read $ SIOU.unsafePerformIO $ entryGetText $ snd inspiralRangeMass2Entry :: Double

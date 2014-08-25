@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GlitchKleineWelle.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 15:10:00
+  * Last Modified: 2014/08/25 18:06:24
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
@@ -11,7 +11,6 @@ module HasKAL.GUI_Utils.GUI_GlitchKleineWelle(
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
 import qualified Data.Maybe as DM -- fromJust
-import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
@@ -116,8 +115,8 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
     let kwActiveLabels = HGGS.getActiveLabels kwChannelCButtons
         lwtColmunNum = length kwActiveLabels
         kwCasheFile = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd kleineWelleCacheOpener
-        kwDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) kleineWelleDateCombo
-        kwGpsTime = read $ HTG.timetuple2gps kwDate :: Integer
+    kwDate <- CM.liftM HGGS.dateStr2Tuple $ mapM HGGS.comboBoxGetActiveString kleineWelleDateCombo
+    let kwGpsTime = read $ HTG.timetuple2gps kwDate :: Integer
         kwObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleObsEntry :: Integer
         kwStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleStrideEntry :: Int
         kwSignificance = read $ SIOU.unsafePerformIO $ entryGetText $ snd kleineWelleSignificanceEntry :: Double

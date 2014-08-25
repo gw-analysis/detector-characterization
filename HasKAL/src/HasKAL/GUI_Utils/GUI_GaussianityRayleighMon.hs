@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 15:24:13
+  * Last Modified: 2014/08/25 17:58:05
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -11,7 +11,6 @@ module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
 import qualified Data.Maybe as DM -- fromJust
-import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
@@ -85,8 +84,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
   onClicked rayleighMonExecute $ do
     putStrLn "Execute"
     let rmCache = DM.fromJust $ SIOU.unsafePerformIO $ fileChooserGetFilename $ snd rayleighMonCacheOpener
-        rmDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) rayleighMonDateCombo
-        rmGPS = read $ HTG.timetuple2gps rmDate :: Integer
+    rmDate <- CM.liftM HGGS.dateStr2Tuple $ mapM HGGS.comboBoxGetActiveString rayleighMonDateCombo
+    let rmGPS = read $ HTG.timetuple2gps rmDate :: Integer
         rmObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonObsTimeEntry :: Integer
         rmSampling = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonSamplingEntry :: Double
         rmStride = read $ SIOU.unsafePerformIO $ entryGetText $ snd rayleighMonStrideEntry :: Int

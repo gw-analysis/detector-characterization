@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeStochMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 14:29:56
+  * Last Modified: 2014/08/25 18:14:13
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeStochMon (
@@ -10,8 +10,6 @@ module HasKAL.GUI_Utils.GUI_RangeStochMon (
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM
-import qualified Data.Maybe as DM
-import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU
 
 import qualified HasKAL.DetectorUtils.Detector as HDD
@@ -80,12 +78,12 @@ hasKalGuiStochMon = do
     widgetDestroy stochWindow
   onClicked stochExecute $ do
     putStrLn "Execute"
-    let stochDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) stochDateCombo
-        stochGPS = HTG.timetuple2gps stochDate
+    stochDate <- CM.liftM HGGS.dateStr2Tuple $ mapM HGGS.comboBoxGetActiveString stochDateCombo
+    let stochGPS = HTG.timetuple2gps stochDate
         stochObsTime = read.SIOU.unsafePerformIO.entryGetText.snd $ stochObsTimeEntry :: Int
-        stochDet1 = DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet1Combo
-        stochDet2 = DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd $ stochDet2Combo
-        stochfMin = read.SIOU.unsafePerformIO.entryGetText.snd $ stochfMinEntry :: Double
+    stochDet1 <- HGGS.comboBoxGetActiveString $ stochDet1Combo
+    stochDet2 <- HGGS.comboBoxGetActiveString $ stochDet2Combo
+    let stochfMin = read.SIOU.unsafePerformIO.entryGetText.snd $ stochfMinEntry :: Double
         stochfMax = read.SIOU.unsafePerformIO.entryGetText.snd $ stochfMaxEntry :: Double
     putStrLn ("    GPS Time: " ++ stochGPS)
     putStrLn ("    Obs Time: " ++ (show stochObsTime) )

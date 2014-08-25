@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeRingDown.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 14:16:54
+  * Last Modified: 2014/08/25 18:10:58
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
@@ -10,8 +10,6 @@ module HasKAL.GUI_Utils.GUI_RangeRingDown(
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
-import qualified Data.Maybe as DM
-import qualified Data.Text as DT
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -71,8 +69,8 @@ hasKalGuiRingDownRange = do
     widgetDestroy ringDownRangeWindow
   onClicked ringDownRangeExecute $ do
     putStrLn "Execute"
-    let ringDDate = HGGS.dateStr2Tuple $ map (DT.unpack.DM.fromJust.SIOU.unsafePerformIO.comboBoxGetActiveText.snd) ringDownRangeDateCombo
-        ringDGPS = HTG.timetuple2gps ringDDate
+    ringDDate <- CM.liftM HGGS.dateStr2Tuple $ mapM HGGS.comboBoxGetActiveString ringDownRangeDateCombo
+    let ringDGPS = HTG.timetuple2gps ringDDate
         ringDObsTime = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeObsTimeEntry :: Int
         ringDMass1 = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMass1Entry :: Double
         ringDMass2 = read $ SIOU.unsafePerformIO $ entryGetText $ snd ringDownRangeMass2Entry :: Double

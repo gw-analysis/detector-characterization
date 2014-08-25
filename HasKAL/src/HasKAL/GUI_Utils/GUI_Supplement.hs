@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_Supplement.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 14:06:00
+  * Last Modified: 2014/08/25 17:37:32
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
@@ -12,6 +12,7 @@ module HasKAL.GUI_Utils.GUI_Supplement(
   ,boxPackStartDefaultsPair
   ,fileOpenButtonNewWithLabelDefault
   ,comboBoxNewLabelAppendTexts
+  ,comboBoxGetActiveString
   ,dateComboNew
   ,amp2psd
   ,convert_StoD
@@ -24,6 +25,8 @@ module HasKAL.GUI_Utils.GUI_Supplement(
 ) where
 
 import Graphics.UI.Gtk
+import qualified Control.Monad as CM
+import qualified Data.Maybe as DM
 import qualified Data.Text as DT
 import qualified System.Environment as SE -- getEnv
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
@@ -92,6 +95,9 @@ comboBoxNewLabelAppendTexts label texts defNum = do
   xLabel <- labelNewWithMnemonic label
   xComboBox <- comboBoxNewAppendTexts texts defNum
   return (xLabel, xComboBox)
+
+comboBoxGetActiveString :: (Label, ComboBox) -> IO String
+comboBoxGetActiveString combo = CM.liftM (DT.unpack.DM.fromJust) $ comboBoxGetActiveText.snd $ combo
 
 dateComboNew :: (Int, Int, Int, Int, Int, Int, String) -> IO [(Label, ComboBox)]
 dateComboNew (year, month, day, hour, minute, second, tZone) = do
