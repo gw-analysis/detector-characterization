@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 
 module HasKAL.SimulationUtils.Injection.Signature where
 
