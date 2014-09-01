@@ -121,31 +121,24 @@ library
        gtk >=0.13,
        text,
        regex-compat >=0.95,
---       gloss >=1.8,
-       -- fft >=0.1 && <=0.1.6,
---       carray >=0.1,
---       random >=1.0,
        Chart <1.3,
        Chart-gtk <1.3,
        Chart-cairo <1.3,
        colour >=2.3,
        data-default-class >=0.0,
+       old-time,
        lens,
-       hmatrix,
-       hmatrix-special,
-       hmatrix-gsl,
+       hmatrix <0.16,
+       hmatrix-special <=0.2.0,
        vector,
        -- temporary,
-       HROOT ==0.8,
-       old-time,
+       HROOT==0.8.*,
        old-locale,
        time,
        split,
        containers,
        filepath,
        directory,
---       mtl,
---       semigroupoids,
        bindings-gsl
   -- Directories containing source files.
   hs-source-dirs:      src
@@ -163,7 +156,7 @@ executable loadFrameData
   hs-source-dirs: exe-src
   main-is:        loadFrameData.hs
   build-depends:
-    base
+    base >4.7
    ,HasKAL
 
    ,Chart < 1.3
@@ -171,8 +164,8 @@ executable loadFrameData
    ,Chart-gtk < 1.3
    ,colour
    ,data-default-class
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix <0.16
+   ,hmatrix-special <=0.2.0
    ,lens
 
 --   ,random
