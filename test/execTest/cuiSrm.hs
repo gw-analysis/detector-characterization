@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/08 19:32:15
+  * Last Modified: 2014/08/30 20:24:40
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -43,11 +43,15 @@ main = do
   let dT = 1.0                  -- SFTストライド[sec]
       dF = 16.0                 -- 周波数解像度[Hz]
       sT = 128 :: Int           -- チャンク幅[sec]
-      aveNum = 1024 :: Int      -- Sn(f)の平均回数
+      aveNum = 128 :: Int      -- Sn(f)の平均回数
       overlap = 1.0 - 1.0/8.0   -- 時間シフト幅(0 <= x < 1)
       method = SRM.LSM          -- Fitting方法
-      gps = 959201088           -- GPS時刻
-      cache = HGGS.haskalOpt ++ "/cachefiles/cachefile_LD.lst"
+      -- gps = 959201088           -- GPS時刻
+      -- cache = HGGS.haskalOpt ++ "/cachefiles/cachefile_LD.lst"
+      gps' = 1034554496
+      add = 0
+      gps = 1034554496 + add
+      cache = HGGS.haskalOpt ++ "/cachefiles/cliocache.lst"
 
   {--  与えられたパラメータから自動的に決まるもの  --}
   let nT = truncate $ fs * dT
@@ -56,7 +60,7 @@ main = do
       nF = truncate $ dF * dT
       chunck = truncate fs * sT
       nC = truncate $ (fromIntegral sT) * fs / (fromIntegral nT)
-      num = 8 :: Int
+      num = 4 :: Int
 
   {--  データ生成  --}
   rng <- RNG.newRngWithSeed seed
@@ -85,21 +89,34 @@ main = do
       return (snfs, hfs)
   -- LIGOデータ読み込み
     LigoS6 -> do
-      let snfs = getAvePsdFromGPS nT fs aveNum gps channel cache
+      let snfs = getAvePsdFromGPS nT fs aveNum gps' channel cache
       let hts = getDataFromGPS gps (fromIntegral $ sT * num) channel cache
       let hfs = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd nT fs) $ SRM.dataSplit nT 0 hts
       return (snfs, hfs)
 
   {--  nu探索  --}
   let nu = SRM.studentRayleighMon' method nC overlap nF snfs hfs
-  case plot of
-    X11 -> PG3.spectrogramX PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
-    PNG -> do
-      PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
-      return ()
-
+  -- case plot of
+  --   X11 -> PG3.spectrogramX PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
+  --   PNG -> do
+  --     PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
+  --     return ()
+  -- writeFile ("./result"++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
+  -- writeFile ("./result"++(show gps)++".txt") $ func1 $ drop (length [0, dF..fs/2]) $ timeFreqData [1920, 1920+dTau..] [0, dF..fs/2] nu
+  writeFile ("./ave"++(show gps')++".txt") $ func2 $ zip [0, dF..fs/2] snfs
 
 {--  データ整形用  --}
+showMultiColumn :: (Num a, Show a) => [[a]] -> String
+showMultiColumn = unlines.map (unwords.map show)
+
+func1 :: [(Double, Double, Double)] -> String
+func1 dat = showMultiColumn $ map t2l dat
+  where t2l (x, y, z) = [x, y, z]
+
+func2 :: [(Double, Double)] -> String
+func2 dat = showMultiColumn $ map t2l dat
+  where t2l (x, y) = [x, y]
+
 timeFreqData :: [Double] -> [Double] -> [[Double]] -> [(Double, Double, Double)]
 timeFreqData [] _ _ = []
 timeFreqData _ [] _ = []
