@@ -17,7 +17,7 @@ import Numeric.LinearAlgebra
 --import HasKAL.Constants.Constants
 import HasKAL.DetectorUtils.DetectorParam
 import HasKAL.DetectorUtils.Signature
-
+import HasKAL.WaveUtils.Signature
 
 speedofLight :: Double
 speedofLight = 299792458 -- meter/s

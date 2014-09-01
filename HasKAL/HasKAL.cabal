@@ -116,37 +116,37 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:
-       base >=4.6,
+       base >=4.7,
        process >=1.1,
        gtk >=0.13,
        text,
        regex-compat >=0.95,
-       gloss >=1.8,
+--       gloss >=1.8,
        -- fft >=0.1 && <=0.1.6,
-       carray >=0.1,
-       random >=1.0,
-       Chart >=1.1,
-       Chart-gtk >=1.1,
-       Chart-cairo >=1.1,
+--       carray >=0.1,
+--       random >=1.0,
+       Chart <1.3,
+       Chart-gtk <1.3,
+       Chart-cairo <1.3,
        colour >=2.3,
        data-default-class >=0.0,
-       lens >=3.10 && <=3.10.2,
-       hmatrix ==0.14.*,
+       lens,
+       hmatrix,
        hmatrix-special,
-       --hmatrix-gsl-stats,
+       hmatrix-gsl,
        vector,
        -- temporary,
        HROOT ==0.8,
-       old-time ==1.1.0.1,
-       old-locale ==1.0.0.5,
-       time ==1.4.0.1,
+       old-time,
+       old-locale,
+       time,
        split,
        containers,
        filepath,
        directory,
-       mtl ==2.1.2,
-       semigroupoids <= 4.0.1,
-       bindings-gsl <= 0.2.1
+--       mtl,
+--       semigroupoids,
+       bindings-gsl
   -- Directories containing source files.
   hs-source-dirs:      src
   extensions: DoAndIfThenElse,
@@ -163,23 +163,24 @@ executable loadFrameData
   hs-source-dirs: exe-src
   main-is:        loadFrameData.hs
   build-depends:
-    base ==4.6.*
+    base
    ,HasKAL
 
-   ,Chart >= 1.1
-   ,Chart-cairo
-   ,Chart-gtk
+   ,Chart < 1.3
+   ,Chart-cairo < 1.3
+   ,Chart-gtk < 1.3
    ,colour
    ,data-default-class
    ,hmatrix
+   ,hmatrix-gsl
    ,lens
 
-   ,random
-   ,carray
+--   ,random
+--   ,carray
 --   ,fft
-   ,gloss >= 1.7.8.4
+--   ,gloss >= 1.7.8.4
 
-  ghc-options:  -O2 -L/usr/lib -threaded -rtsopts -eventlog
+  ghc-options:  -O2 -threaded -rtsopts -eventlog
   extra-libraries:  Frame
 
 
