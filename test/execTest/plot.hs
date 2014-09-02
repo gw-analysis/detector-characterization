@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: plot.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/30 20:26:58
+  * Last Modified: 2014/09/01 21:20:27
   *******************************************-}
 
 import HasKAL.PlotUtils.HROOT.PlotGraph as PG
@@ -10,17 +10,17 @@ import HasKAL.Misc.StrictMapping as MSM
 
 main = do
 
-  -- dats <- MSM.forM' filelist $ \filename -> do
-  --   dat <- readFile filename
-  --   return $ map l2t $ readMultiColumn dat
+  dats <- MSM.forM' filelist $ \filename -> do
+    dat <- readFile filename
+    return $ map l2t $ readMultiColumn dat
 
-  -- PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon") "X11" $ concat dats
+  PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon") "X11" $ concat dats
 
-  dat <- readFile file
-  PG.plotX PG.LogXY PG.Line ("[Hz]","[V/rHz]") "Spectrum" $ map l2t' $ readMultiColumn dat
+  -- dat <- readFile file
+  -- PG.plotX PG.LogXY PG.Line ("[Hz]","[V/rHz]") "Spectrum" $ map l2t' $ readMultiColumn dat
 
 filelist :: [String]
-filelist = ["./result1034554112.txt",
+filelist = [--"./result1034554112.txt",
             "./result1034554496.txt",
             "./result1034554880.txt",
             "./result1034555264.txt",
