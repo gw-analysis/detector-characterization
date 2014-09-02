@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/30 20:24:40
+  * Last Modified: 2014/09/01 22:11:45
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -30,7 +30,7 @@ plot = X11
 
 {--  実データでは必要ないもの  --}
 nuTrue :: Double
-nuTrue = 15 -- 非ガウスさパラメータnu
+nuTrue = 20 -- 非ガウスさパラメータnu
 
 seed :: Integer
 seed = -1 -- 乱数の初期シード(負の値でUNIX Timeが入る)
@@ -49,7 +49,7 @@ main = do
       -- gps = 959201088           -- GPS時刻
       -- cache = HGGS.haskalOpt ++ "/cachefiles/cachefile_LD.lst"
       gps' = 1034554496
-      add = 0
+      add = 384 + 384 + 384 + 384
       gps = 1034554496 + add
       cache = HGGS.haskalOpt ++ "/cachefiles/cliocache.lst"
 
@@ -102,8 +102,7 @@ main = do
   --     PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
   --     return ()
   -- writeFile ("./result"++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
-  -- writeFile ("./result"++(show gps)++".txt") $ func1 $ drop (length [0, dF..fs/2]) $ timeFreqData [1920, 1920+dTau..] [0, dF..fs/2] nu
-  writeFile ("./ave"++(show gps')++".txt") $ func2 $ zip [0, dF..fs/2] snfs
+  writeFile ("./result"++(show gps)++".txt") $ func1 $ drop (length [0, dF..fs/2]) $ timeFreqData [1536, 1536+dTau..] [0, dF..fs/2] nu
 
 {--  データ整形用  --}
 showMultiColumn :: (Num a, Show a) => [[a]] -> String
