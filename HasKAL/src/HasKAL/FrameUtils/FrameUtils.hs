@@ -66,14 +66,16 @@ import HasKAL.FrameUtils.FileManipulation
 
 
 {-# LINE 66 "FrameUtils.hsc" #-}
+
+{-# LINE 67 "FrameUtils.hsc" #-}
 -- #include "stdio.h"
 
 type CFRVECTTYPES = (Word16)
-{-# LINE 69 "FrameUtils.hsc" #-}
-type CFRULONG     = (Word64)
 {-# LINE 70 "FrameUtils.hsc" #-}
-type CFRLONG      = (Int64)
+type CFRULONG     = (Word64)
 {-# LINE 71 "FrameUtils.hsc" #-}
+type CFRLONG      = (Int64)
+{-# LINE 72 "FrameUtils.hsc" #-}
 newtype FrVectOption = FrVectOption { unFrVectOption :: CInt }
     deriving (Eq,Show)
 
@@ -81,10 +83,10 @@ frvect_c       :: FrVectOption
 frvect_c       = FrVectOption 0
 frvect_2s      :: FrVectOption
 frvect_2s      = FrVectOption 1
-frvect_8r      :: FrVectOption
-frvect_8r      = FrVectOption 2
 frvect_4r      :: FrVectOption
 frvect_4r      = FrVectOption 3
+frvect_8r      :: FrVectOption
+frvect_8r      = FrVectOption 2
 frvect_4s      :: FrVectOption
 frvect_4s      = FrVectOption 4
 frvect_8s      :: FrVectOption
@@ -118,7 +120,7 @@ frvect_h16     = FrVectOption 14
 frvect_END     :: FrVectOption
 frvect_END     = FrVectOption 15
 
-{-# LINE 95 "FrameUtils.hsc" #-}
+{-# LINE 96 "FrameUtils.hsc" #-}
 
 data FrFile_partial
 data FrameH_partial = FrameH_partial { frameh_dt         :: CDouble
@@ -289,15 +291,18 @@ readFrame channel_Name framefile_Name = do
     ptr_v <- c_FrFileIGetV ifile channel fstart frlen
     v <- peek ptr_v
 
+
     let datatype = frvect_type v
     case datatype of
-        frvect_4r -> do
+ --       frvect_r4 -> do
+        3 -> do 
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
 --          return (CDoubleData (read (show array_vdata) :: [CDouble]))
           return (CDoubleData $ map realToFrac array_vdata)
-        frvect_8r -> do
+--        frvect_r8 -> do
+        2 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
@@ -367,30 +372,30 @@ getGPSTime frameFile = do
 {-- Storable Type for structure--}
 instance Storable FrameH_partial where
   sizeOf = const (192)
-{-# LINE 343 "FrameUtils.hsc" #-}
+{-# LINE 347 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke frameptr (FrameH_partial val_dt val_GTimeS val_GTimeN val_FrProcData val_FrRawData) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 40)) frameptr val_dt
-{-# LINE 346 "FrameUtils.hsc" #-}
-    ((\hsc_ptr -> pokeByteOff hsc_ptr 28)) frameptr val_GTimeS
-{-# LINE 347 "FrameUtils.hsc" #-}
-    ((\hsc_ptr -> pokeByteOff hsc_ptr 32)) frameptr val_GTimeN
-{-# LINE 348 "FrameUtils.hsc" #-}
-    ((\hsc_ptr -> pokeByteOff hsc_ptr 96)) frameptr val_FrProcData
-{-# LINE 349 "FrameUtils.hsc" #-}
-    ((\hsc_ptr -> pokeByteOff hsc_ptr 88)) frameptr val_FrRawData
 {-# LINE 350 "FrameUtils.hsc" #-}
+    ((\hsc_ptr -> pokeByteOff hsc_ptr 28)) frameptr val_GTimeS
+{-# LINE 351 "FrameUtils.hsc" #-}
+    ((\hsc_ptr -> pokeByteOff hsc_ptr 32)) frameptr val_GTimeN
+{-# LINE 352 "FrameUtils.hsc" #-}
+    ((\hsc_ptr -> pokeByteOff hsc_ptr 96)) frameptr val_FrProcData
+{-# LINE 353 "FrameUtils.hsc" #-}
+    ((\hsc_ptr -> pokeByteOff hsc_ptr 88)) frameptr val_FrRawData
+{-# LINE 354 "FrameUtils.hsc" #-}
   peek frameptr = do
     val_dt <- ((\hsc_ptr -> peekByteOff hsc_ptr 40)) frameptr
-{-# LINE 352 "FrameUtils.hsc" #-}
-    val_GTimeS <- ((\hsc_ptr -> peekByteOff hsc_ptr 28)) frameptr
-{-# LINE 353 "FrameUtils.hsc" #-}
-    val_GTimeN <- ((\hsc_ptr -> peekByteOff hsc_ptr 32)) frameptr
-{-# LINE 354 "FrameUtils.hsc" #-}
-    val_FrProcData <- ((\hsc_ptr -> peekByteOff hsc_ptr 96)) frameptr
-{-# LINE 355 "FrameUtils.hsc" #-}
-    val_FrRawData <- ((\hsc_ptr -> peekByteOff hsc_ptr 88)) frameptr
 {-# LINE 356 "FrameUtils.hsc" #-}
+    val_GTimeS <- ((\hsc_ptr -> peekByteOff hsc_ptr 28)) frameptr
+{-# LINE 357 "FrameUtils.hsc" #-}
+    val_GTimeN <- ((\hsc_ptr -> peekByteOff hsc_ptr 32)) frameptr
+{-# LINE 358 "FrameUtils.hsc" #-}
+    val_FrProcData <- ((\hsc_ptr -> peekByteOff hsc_ptr 96)) frameptr
+{-# LINE 359 "FrameUtils.hsc" #-}
+    val_FrRawData <- ((\hsc_ptr -> peekByteOff hsc_ptr 88)) frameptr
+{-# LINE 360 "FrameUtils.hsc" #-}
     return $ FrameH_partial {frameh_dt=val_dt, frameh_GTimeS=val_GTimeS
                             , frameh_GTimeN=val_GTimeN, frameh_frprocdata=val_FrProcData
                             , frameh_frrawdata=val_FrRawData}
@@ -398,7 +403,7 @@ instance Storable FrameH_partial where
 
 instance Storable FrVect_partial where
   sizeOf = const (240)
-{-# LINE 363 "FrameUtils.hsc" #-}
+{-# LINE 367 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke ptr_frvect (FrVect_partial val_type
                                   val_nData
@@ -410,42 +415,42 @@ instance Storable FrVect_partial where
                                   ptr_dataF
                                   ptr_dataD) = do
       ((\hsc_ptr -> pokeByteOff hsc_ptr 18))    ptr_frvect val_type
-{-# LINE 374 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 24))   ptr_frvect val_nData
-{-# LINE 375 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 64))      ptr_frvect ptr_dx
-{-# LINE 376 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 48))    ptr_frvect val_nDim
-{-# LINE 377 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 56))      ptr_frvect ptr_nx
 {-# LINE 378 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 72))  ptr_frvect val_startX
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 24))   ptr_frvect val_nData
 {-# LINE 379 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 200))   ptr_frvect val_GTime
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 64))      ptr_frvect ptr_dx
 {-# LINE 380 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 128))   ptr_frvect ptr_dataF
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 48))    ptr_frvect val_nDim
 {-# LINE 381 "FrameUtils.hsc" #-}
-      ((\hsc_ptr -> pokeByteOff hsc_ptr 136))   ptr_frvect ptr_dataD
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 56))      ptr_frvect ptr_nx
 {-# LINE 382 "FrameUtils.hsc" #-}
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 72))  ptr_frvect val_startX
+{-# LINE 383 "FrameUtils.hsc" #-}
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 200))   ptr_frvect val_GTime
+{-# LINE 384 "FrameUtils.hsc" #-}
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 128))   ptr_frvect ptr_dataF
+{-# LINE 385 "FrameUtils.hsc" #-}
+      ((\hsc_ptr -> pokeByteOff hsc_ptr 136))   ptr_frvect ptr_dataD
+{-# LINE 386 "FrameUtils.hsc" #-}
   peek ptr_frvect = do
       val_type    <- ((\hsc_ptr -> peekByteOff hsc_ptr 18))      ptr_frvect
-{-# LINE 384 "FrameUtils.hsc" #-}
-      val_nData   <- ((\hsc_ptr -> peekByteOff hsc_ptr 24))     ptr_frvect
-{-# LINE 385 "FrameUtils.hsc" #-}
-      ptr_dx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 64))        ptr_frvect
-{-# LINE 386 "FrameUtils.hsc" #-}
-      val_nDim    <- ((\hsc_ptr -> peekByteOff hsc_ptr 48))      ptr_frvect
-{-# LINE 387 "FrameUtils.hsc" #-}
-      ptr_nx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 56))        ptr_frvect
 {-# LINE 388 "FrameUtils.hsc" #-}
-      val_startX  <- ((\hsc_ptr -> peekByteOff hsc_ptr 72))    ptr_frvect
+      val_nData   <- ((\hsc_ptr -> peekByteOff hsc_ptr 24))     ptr_frvect
 {-# LINE 389 "FrameUtils.hsc" #-}
-      val_GTime   <- ((\hsc_ptr -> peekByteOff hsc_ptr 200))     ptr_frvect
+      ptr_dx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 64))        ptr_frvect
 {-# LINE 390 "FrameUtils.hsc" #-}
-      ptr_dataF   <- ((\hsc_ptr -> peekByteOff hsc_ptr 128))     ptr_frvect
+      val_nDim    <- ((\hsc_ptr -> peekByteOff hsc_ptr 48))      ptr_frvect
 {-# LINE 391 "FrameUtils.hsc" #-}
-      ptr_dataD   <- ((\hsc_ptr -> peekByteOff hsc_ptr 136))     ptr_frvect
+      ptr_nx      <- ((\hsc_ptr -> peekByteOff hsc_ptr 56))        ptr_frvect
 {-# LINE 392 "FrameUtils.hsc" #-}
+      val_startX  <- ((\hsc_ptr -> peekByteOff hsc_ptr 72))    ptr_frvect
+{-# LINE 393 "FrameUtils.hsc" #-}
+      val_GTime   <- ((\hsc_ptr -> peekByteOff hsc_ptr 200))     ptr_frvect
+{-# LINE 394 "FrameUtils.hsc" #-}
+      ptr_dataF   <- ((\hsc_ptr -> peekByteOff hsc_ptr 128))     ptr_frvect
+{-# LINE 395 "FrameUtils.hsc" #-}
+      ptr_dataD   <- ((\hsc_ptr -> peekByteOff hsc_ptr 136))     ptr_frvect
+{-# LINE 396 "FrameUtils.hsc" #-}
       return $ FrVect_partial { frvect_type     = val_type
                               , frvect_nData    = val_nData
                               , frvect_dx       = ptr_dx
@@ -459,31 +464,31 @@ instance Storable FrVect_partial where
 
 instance Storable FrProcData_partial where
   sizeOf = const (152)
-{-# LINE 405 "FrameUtils.hsc" #-}
+{-# LINE 409 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke frprocdataptr (FrProcData_partial ptr_data) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 16)) frprocdataptr ptr_data
-{-# LINE 408 "FrameUtils.hsc" #-}
+{-# LINE 412 "FrameUtils.hsc" #-}
   peek frprocdataptr = do
     ptr_data <- ((\hsc_ptr -> peekByteOff hsc_ptr 16)) frprocdataptr
-{-# LINE 410 "FrameUtils.hsc" #-}
+{-# LINE 414 "FrameUtils.hsc" #-}
     return $ FrProcData_partial {frprocdata_data = ptr_data}
 
 
 instance Storable C_FrAdcData where
   sizeOf = const (120)
-{-# LINE 415 "FrameUtils.hsc" #-}
+{-# LINE 419 "FrameUtils.hsc" #-}
   alignment = sizeOf
   poke ptr_FrAdcData (C_FrAdcData ptr_data val_sampleRate) = do
     ((\hsc_ptr -> pokeByteOff hsc_ptr 16)) ptr_FrAdcData ptr_data
-{-# LINE 418 "FrameUtils.hsc" #-}
+{-# LINE 422 "FrameUtils.hsc" #-}
     ((\hsc_ptr -> pokeByteOff hsc_ptr 88)) ptr_FrAdcData val_sampleRate
-{-# LINE 419 "FrameUtils.hsc" #-}
+{-# LINE 423 "FrameUtils.hsc" #-}
   peek ptr_FrAdcData = do
     ptr_data <- ((\hsc_ptr -> peekByteOff hsc_ptr 16)) ptr_FrAdcData
-{-# LINE 421 "FrameUtils.hsc" #-}
+{-# LINE 425 "FrameUtils.hsc" #-}
     val_sampleRate <- ((\hsc_ptr -> peekByteOff hsc_ptr 88)) ptr_FrAdcData
-{-# LINE 422 "FrameUtils.hsc" #-}
+{-# LINE 426 "FrameUtils.hsc" #-}
     return $ C_FrAdcData { fradc_data = ptr_data
                          , fradc_sampleRate = val_sampleRate
                          }

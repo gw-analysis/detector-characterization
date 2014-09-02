@@ -63,6 +63,7 @@ import HasKAL.FrameUtils.FileManipulation
 
 
 #include "FrameL.h"
+#include "FrVect.h"
 -- #include "stdio.h"
 
 type CFRVECTTYPES = (#type FRVECTTYPES)
@@ -74,8 +75,8 @@ newtype FrVectOption = FrVectOption { unFrVectOption :: CInt }
 #{enum FrVectOption, FrVectOption
     , frvect_c      = FR_VECT_C
     , frvect_2s     = FR_VECT_2S
-    , frvect_8r     = FR_VECT_8R
     , frvect_4r     = FR_VECT_4R
+    , frvect_8r     = FR_VECT_8R
     , frvect_4s     = FR_VECT_4S
     , frvect_8s     = FR_VECT_8S
     , frvect_8c     = FR_VECT_8C
@@ -262,15 +263,18 @@ readFrame channel_Name framefile_Name = do
     ptr_v <- c_FrFileIGetV ifile channel fstart frlen
     v <- peek ptr_v
 
+
     let datatype = frvect_type v
     case datatype of
-        frvect_4r -> do
+ --       frvect_r4 -> do
+        3 -> do 
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
 --          return (CDoubleData (read (show array_vdata) :: [CDouble]))
           return (CDoubleData $ map realToFrac array_vdata)
-        frvect_8r -> do
+--        frvect_r8 -> do
+        2 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
