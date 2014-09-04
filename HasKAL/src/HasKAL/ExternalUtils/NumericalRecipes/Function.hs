@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
-module HasKAL.ExternalUtils.NumericalRecipes.Functions
+module HasKAL.ExternalUtils.NumericalRecipes.Function
 ( nrToeplz
 ) where
 
