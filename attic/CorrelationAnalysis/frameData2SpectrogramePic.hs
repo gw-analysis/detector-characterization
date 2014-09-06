@@ -59,6 +59,8 @@ main = do
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM.plot PM.Linear PM.Line ("time[sec]","s(t)") channelName' fname plotdata1
 
+
+  -- plot lock flag
   --let channelName = "X1:CTR-LSC_TRX_OUT16"
   --let dfs = 16 ::Double
   let channelName = "X1:CTR-LSC_TRX_OUT_DQ"
@@ -67,7 +69,17 @@ main = do
   let data2  = map realToFrac (eval readData2)
       xdata2 = map (/dfs) $ take (length data2) [1,2..]
       plotdata2 = zip xdata2 data2
-  --print data2
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_lock_flag.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM.plot PM.Linear PM.Line ("time[sec]","lock flag") channelName' fname plotdata2
+
+  -- plot GW channel
+  let channelName = "X1:CTR-LSC_ETMX_OUT_DQ"
+  let dfs = 16384 ::Double
+  readData3 <- readFrame channelName (fileName)
+  let data3  = map realToFrac (eval readData3)
+      xdata3 = map (/dfs) $ take (length data3) [1,2..]
+      plotdata3 = zip xdata3 data3
+  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel.png"
+  let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  PM.plot PM.Linear PM.Line ("time[sec]","GW channel") channelName' fname plotdata3
