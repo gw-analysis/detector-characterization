@@ -1,10 +1,4 @@
-#Time-stamp: "2014-08-04 15:47:17 yuzurihara"
-
-# To compile, you must do follow command before make command
-#	cd ~/detector-characterization/HasKAL
-#	cabal install --only-dependencies
-#	cabal configure
-#	cabal build
+#Time-stamp: "2014-09-06 19:03:11 yuzurihara"
 
 CC=ghc
 HC=ghc -O2
@@ -13,7 +7,7 @@ OBJ1=check_correlation.hs
 OBJ2=generateHtml.hs HasKAL/MonitorUtils/CorrelationMon/CalCorrelation.hs
 OBJ3=frameReadCheck.hs
 
-#DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
+DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
 LIBLINK=-L/opt/work/libframe-8.21/lib -L/opt/work/root-5.34.19/lib/root -lFrame -lm
 INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root 
 #ROOTINC=-L/opt/work/root/include
@@ -26,7 +20,7 @@ TARGET=check_correlation generateHtml frameReadCheck
 all:$(TARGET)
 frameReadCheck:${OBJ3}
 	ln -fs ${HASKALPATH} ./
-	${HC} --make -o $@ $^ ${INCLINK} ${LIBLINK}
+	${HC} --make -o $@ $^ ${DEP} ${INCLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 #	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK} ${ROOTLIB} ${ROOTINC}
 
