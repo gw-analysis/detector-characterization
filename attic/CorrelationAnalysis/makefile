@@ -10,7 +10,7 @@ CC=ghc
 
 OBJ1=check_correlation.hs
 OBJ2=generateHtml.hs HasKAL/MonitorUtils/CorrelationMon/CalCorrelation.hs
-OBJ3=
+OBJ3=frameReadCheck.hs
 
 
 #INCLINK=-I/home/yuzu/src/libframe-8.20/include/
@@ -22,9 +22,13 @@ HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 
 #TARGET=testplot1
 #TARGET=testplot1 testplot2 testplot3
-TARGET=check_correlation generateHtml
+TARGET=check_correlation generateHtml frameReadCheck
 
 all:$(TARGET)
+frameReadCheck:${OBJ3}
+	ln -fs ${HASKALPATH} ./
+	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
 
 generateHtml:${OBJ2}
 	ln -fs ${HASKALPATH} ./
