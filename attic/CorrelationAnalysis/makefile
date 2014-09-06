@@ -17,17 +17,18 @@ OBJ3=frameReadCheck.hs
 #LIBLINK=-lstdc++ -lFrame -L/home/yuzu/src/libframe-8.20/include/
 LIBLINK=-lstdc++ -lm -lFrame
 
-FRAMEDATA=~/detector-characterization/optFiles/sample-data/test-1066392016-300.gwf
-HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
+ROOTLIB=-L/opt/work/root-5.34.19/lib/root
+ROOTINC=-I/opt/work/root-5.34.19/include/root
 
-#TARGET=testplot1
-#TARGET=testplot1 testplot2 testplot3
+#FRAMEDATA=~/detector-characterization/optFiles/sample-data/test-1066392016-300.gwf
+#HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
+
 TARGET=check_correlation generateHtml frameReadCheck
 
 all:$(TARGET)
 frameReadCheck:${OBJ3}
 	ln -fs ${HASKALPATH} ./
-	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK}
+	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK} ${ROOTLIB} ${ROOTINC}
 	@echo "*** Making $@ ***"
 
 generateHtml:${OBJ2}

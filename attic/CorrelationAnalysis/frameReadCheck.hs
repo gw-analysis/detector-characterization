@@ -21,6 +21,10 @@ import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
 
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as PM
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PM3
+import qualified HasKAL.PlotUtils.HROOT.Histogram as H
+--import qualified HasKAL.PlotUtils.HROOT.SignalHandlerHROOT as RSH
 
 main = do
 
@@ -39,4 +43,15 @@ main = do
  let channelName = "X1:CTR-PSL_SEIS_IN1_DQ" ::String
  let fs = 2048 :: Integer
 
- 
+
+ --readFrame :: String -> String -> IO(FrDataType [CDouble])
+ readData1 <- readFrame channelName (frameFileName)
+ let data1  = map realToFrac (eval readData1)
+     xdata1  = take (length data1) [1,2..]
+ --print $ zip xdata1 data1
+
+ -- plot check
+ --RSH.addSignalHandle
+ --PM.plotX PM.Linear PM.LinePoint ("c", "d") "b" "a" $ zip xdata1 data1
+
+ print "hoge"
