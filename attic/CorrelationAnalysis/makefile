@@ -7,29 +7,29 @@
 #	cabal build
 
 CC=ghc
+HC=ghc -O2
 
 OBJ1=check_correlation.hs
 OBJ2=generateHtml.hs HasKAL/MonitorUtils/CorrelationMon/CalCorrelation.hs
 OBJ3=frameReadCheck.hs
 
-
-#INCLINK=-I/home/yuzu/src/libframe-8.20/include/
-#LIBLINK=-lstdc++ -lFrame -L/home/yuzu/src/libframe-8.20/include/
-LIBLINK=-lstdc++ -lm -lFrame
-
-ROOTLIB=-L/opt/work/root-5.34.19/lib/root
-ROOTINC=-I/opt/work/root-5.34.19/include/root
+#DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
+LIBLINK=-L/opt/work/libframe-8.21/lib -L/opt/work/root-5.34.19/lib/root -lFrame -lm
+INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root 
+#ROOTINC=-L/opt/work/root/include
 
 #FRAMEDATA=~/detector-characterization/optFiles/sample-data/test-1066392016-300.gwf
-#HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
+HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 
 TARGET=check_correlation generateHtml frameReadCheck
 
 all:$(TARGET)
 frameReadCheck:${OBJ3}
 	ln -fs ${HASKALPATH} ./
-	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK} ${ROOTLIB} ${ROOTINC}
+	${HC} --make -o $@ $^ ${INCLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
+#	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK} ${ROOTLIB} ${ROOTINC}
+
 
 generateHtml:${OBJ2}
 	ln -fs ${HASKALPATH} ./

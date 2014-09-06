@@ -24,7 +24,7 @@ import HasKAL.FrameUtils.FrameUtils -- read Frame file
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as PM
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PM3
 import qualified HasKAL.PlotUtils.HROOT.Histogram as H
---import qualified HasKAL.PlotUtils.HROOT.SignalHandlerHROOT as RSH
+----import qualified HasKAL.PlotUtils.HROOT.SignalHandlerHROOT as RSH
 
 main = do
 
@@ -45,10 +45,10 @@ main = do
 
 
  --readFrame :: String -> String -> IO(FrDataType [CDouble])
- readData1 <- readFrame channelName (frameFileName)
- let data1  = map realToFrac (eval readData1)
-     xdata1  = take (length data1) [1,2..]
- --print $ zip xdata1 data1
+ --readData1--  <- readFrame channelName (frameFileName)
+ -- let data1  = map realToFrac (eval readData1)
+ --     xdata1  = take (length data1) [1,2..]
+ -- print $ zip xdata1 data1
 
  -- plot check
  --RSH.addSignalHandle

@@ -31,6 +31,7 @@ testPermutationTest:$(OBJ2)
 #- ar r libstatisticsUtils.a statisticsUtils.o
 
 libstatisticsUtils.a:$(PATH_STATISTICS)/$(OBJ3).c
+	ln -fs ../../HasKAL/src/HasKAL ./
 	gcc -c $(PATH_STATISTICS)/$(OBJ3).c
 	ar r  $@  $(OBJ3).o
 	@echo "*** Making $@ ***"
