@@ -63,7 +63,10 @@ main = do
  --PM.plotX PM.Linear PM.Line ("time[sec]","s(t)") "channelName" plotdata
 
  --spectrogram plot
- let dataSpect = SU.gwspectrogram ifs_harf ifs dfs dataChannel
+ --spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
+ --gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
+ --gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
+ let dataSpect = SU.gwspectrogram ifs_harf ifs_harf dfs dataChannel
  
  --print dataSpect
  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ ".png"
