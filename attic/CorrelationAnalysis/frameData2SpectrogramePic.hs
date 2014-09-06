@@ -32,11 +32,18 @@ import qualified HasKAL.SpectrumUtils.SpectrumUtils as SU
 main = do
 
  let frameFileName = ["/home/yuzurihara/frame/clio/X-R-1034657456-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657584-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657472-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657600-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657488-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657616-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657504-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657632-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657520-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657648-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657536-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657664-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657552-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657680-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657568-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657696-16.gwf"]
+ let startGPS = 456 :: Int
+     endGPS   = 696 :: Int
+     listGPS' = [startGPS,(startGPS+16)..endGPS]::[Int]
+     listGPS  = map show listGPS'
+ --print listGPS
+ let frameFileName' = map ("/home/yuzurihara/frame/clio/X-R-1034657"++) listGPS
+     frameFileName  = map (++ "-16.gwf") frameFileName'
  print frameFileName
 
  let channelName = "X1:CTR-PSL_SEIS_IN1_DQ" ::String
  let ifs = 2048 :: Int
-     ifs_harf = floor $ (fromIntegral ifs)/4.0
+     ifs_harf = floor $ (fromIntegral ifs)/2.0
      dfs = 2048.0 :: Double
 
  forM frameFileName $ \fileName -> do
@@ -46,9 +53,9 @@ main = do
   print $ (showFFloat (Just 0) getGpsTime "" )
   let dataChannel  = map realToFrac (eval readData1)
 
-  -- spectrogram
+  -- spectrogram of seismic data
   let dataSpect = SU.gwspectrogram ifs_harf ifs_harf dfs dataChannel
-  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ ".png"
+  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_spect.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM3.spectrogram LogYZ COLZ " " channelName' fname dataSpect
 
@@ -83,3 +90,12 @@ main = do
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM.plot PM.Linear PM.Line ("time[sec]","GW channel") channelName' fname plotdata3
+
+  -- spectrogram of GW channel
+  let dataSpect2 = SU.gwspectrogram ifs_harf ifs_harf dfs data3
+  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel_spect.png"
+  let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  PM3.spectrogram LogYZ COLZ " " channelName' fname dataSpect2
+  
+  
+  
