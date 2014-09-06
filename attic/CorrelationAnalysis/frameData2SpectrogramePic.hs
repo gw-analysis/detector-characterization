@@ -93,6 +93,10 @@ main = do
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM.plot PMOP.Linear PMOP.Line ("time[sec]","s(t)") channelName' fname plotdata1
 
+  let dataSpecSeis = SU.gwpsd dataChannel (length dataChannel) dfs
+      fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_sf.png"
+      channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","spectrum of seismic") channelName' fname dataSpecSeis
 
   -- plot lock flag
   --let channelName = "X1:CTR-LSC_TRX_OUT16"
@@ -129,10 +133,10 @@ main = do
   -- using FFT, spectrum of non-calibrated GW channel
   -- gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
   -- gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
-  let dataSpecGW = SU.gwpsd data3 (length data3) dfs
-      fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel_sf.png"
-      channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","interporated transfer function") channelName' fname dataSpecGW
+  --let dataSpecGW = SU.gwpsd data3 (length data3) dfs
+  --    fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel_sf.png"
+  --    channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  --PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","interporated transfer function") channelName' fname dataSpecGW
 
 
   -- using transfer function, calculate calibrated spectrum
