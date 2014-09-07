@@ -1,4 +1,4 @@
-#Time-stamp: "2014-09-08 04:39:37 yuzurihara"
+#Time-stamp: "2014-09-08 06:24:04 yuzurihara"
 
 CC=ghc
 HC=ghc -O2
@@ -11,6 +11,7 @@ OBJ5=frameData2CalibratedData.hs
 OBJ6=frameData2PassFiltered.hs
 OBJ7=spectrogram_check.hs
 OBJ8=filter_check_lpf.hs
+OBJ9=frameData2LPF_correlation.hs
 
 DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
 DEP2 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
@@ -21,9 +22,15 @@ INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root
 #FRAMEDATA=~/detector-characterization/optFiles/sample-data/test-1066392016-300.gwf
 HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 
-TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
+#TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
+TARGET=frameData2LPF_correlation
 
 all:$(TARGET)
+
+frameData2LPF_correlation:${OBJ9}
+	ln -fs ${HASKALPATH} ./
+	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
 
 filter_check_lpf:${OBJ8}
 	ln -fs ${HASKALPATH} ./
@@ -54,7 +61,6 @@ frameReadCheck:${OBJ3}
 	ln -fs ${HASKALPATH} ./
 	${HC} --make -o $@ $^ ${DEP} ${INCLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
-#	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK} ${ROOTLIB} ${ROOTINC}
 
 
 generateHtml:${OBJ2}
