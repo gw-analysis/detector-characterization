@@ -1,4 +1,4 @@
-#Time-stamp: "2014-09-08 06:24:04 yuzurihara"
+#Time-stamp: "2014-09-08 08:23:10 yuzurihara"
 
 CC=ghc
 HC=ghc -O2
