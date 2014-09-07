@@ -33,11 +33,6 @@ import qualified HasKAL.SpectrumUtils.SpectrumUtils as SU
 
 main = do
 
-
- -- fft check
- -- /home/yuzurihara/frame/clio/X-R-1034657456-16.gwf
-
-
  -- read data of 
  trfData' <- readFile "./modG_factor.txt"
  let trfDataf = map string2Double $ map (!!0) $ map words $ lines trfData'
@@ -57,14 +52,12 @@ main = do
  let channelName = "CLIO_transfer_function" ::String
  PM.plot PM.LogXY PM.Line ("freqnency [Hz]","transfer function") channelName fname $ zip trfDataf trfDataG
 
-
- --let frameFileName = ["/home/yuzurihara/frame/clio/X-R-1034657456-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657584-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657472-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657600-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657488-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657616-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657504-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657632-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657520-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657648-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657536-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657664-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657552-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657680-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657568-16.gwf","/home/yuzurihara/frame/clio/X-R-1034657696-16.gwf"]
- let startGPS = 456 :: Int
-     endGPS   = 696 :: Int
+ let startGPS = 7008 :: Int
+     endGPS   = 8000 :: Int
      listGPS' = [startGPS,(startGPS+16)..endGPS]::[Int]
      listGPS  = map show listGPS'
  --print listGPS
- let frameFileName' = map ("/home/yuzurihara/frame/clio/X-R-1034657"++) listGPS
+ let frameFileName' = map ("/home/yuzurihara/frame/clio/X-R-103465"++) listGPS
      frameFileName  = map (++ "-16.gwf") frameFileName'
  print frameFileName
 
@@ -73,6 +66,9 @@ main = do
      ifs_harf = floor $ (fromIntegral ifs)/2.0
      dfs = 2048.0 :: Double
 
+ --let frameFileName = ["/home/yuzurihara/frame/clio/X-R-1034657488-16.gwf"]
+
+ -- begin forM loop
  forM frameFileName $ \fileName -> do
   print fileName
   readData1 <- readFrame channelName (fileName)
@@ -81,7 +77,7 @@ main = do
   let dataChannel  = map realToFrac (eval readData1)
 
   -- spectrogram of seismic data
-  let dataSpect = SU.gwspectrogram ifs_harf ifs_harf dfs dataChannel
+  let dataSpect = SU.gwspectrogram ifs_harf ifs dfs dataChannel
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_spect.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " channelName' fname dataSpect
@@ -96,7 +92,7 @@ main = do
   let dataSpecSeis = SU.gwpsd dataChannel (length dataChannel) dfs
       fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_sf.png"
       channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","spectrum of seismic") channelName' fname dataSpecSeis
+  PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","spectrum of seismic") channelName' fname (take (16*ifs_harf) dataSpecSeis)
 
   -- plot lock flag
   --let channelName = "X1:CTR-LSC_TRX_OUT16"
@@ -124,7 +120,7 @@ main = do
   PM.plot PM.Linear PM.Line ("time[sec]","GW channel") channelName' fname plotdata3
 
   -- spectrogram of non-calibrated GW channel
-  let dataSpect2 = SU.gwspectrogram ifs_harf ifs_harf dfs data3
+  let dataSpect2 = SU.gwspectrogram ifs_harf ifs dfs data3
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel_spect.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " channelName' fname dataSpect2
@@ -168,7 +164,7 @@ main = do
   --print $ length trfDataG
   --print $ head $ reverse (map fst dataSpecGW)
 
-  
+ -- end forM loop  
   
 
 
