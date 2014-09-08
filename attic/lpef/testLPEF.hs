@@ -6,10 +6,12 @@
  - -LHasKAL/ExternalUtils/NumericalRecipes -ltoeplz -lFrame
  -}
 
-import HasKAL.ExternalUtils.NumericalRecipes.Functions
-import HasKAL.SignalProcessingUtils.Levinson
-import HasKAL.SignalProcessingUtils.LinearPrediction
+--import HasKAL.ExternalUtils.NumericalRecipes.Functions
+--import HasKAL.SignalProcessingUtils.Levinson
+import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.FilterType
+import HasKAL.SignalProcessingUtils.LinearPrediction
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.FrameUtils.FrameUtils
@@ -20,12 +22,23 @@ main = do
   ch <- getChannelList fname
   let [(chname,  _)]=ch
   fdata <- readFrame chname fname
-  let x = map realToFrac (eval fdata)
---      fre = [y/16384.0 |y<-[0.0..(realToFrac (length x) -1.0)]] :: [Double]
+  let x' = take (16384*10) $ map realToFrac (eval fdata)
+      (lpfNum,lpfDen) = butter 6 16384 50 High
+      x = iirFilter x' lpfNum lpfDen
+--  let x = map (\m->(!!m) (map realToFrac (eval fdata))) [1,5..2097152] 
+      t = [y/16384 |y<-[0.0..(realToFrac (length x) -1.0)]] :: [Double]
       psddat = gwpsd x 16384 16384
-      (whnbNum, whnbDenom) = lpefCoeff 10 $ snd.unzip $ psddat
-      whitenedx = firFilter x whnbDenom
-  print $ take 100 whnbDenom
+      (whnNum, whnDenom) = lpefCoeff 1000 $ map ((16384*16384)*) (snd.unzip $ psddat)
+--      whitenedx = firFilter x whnDenom
+      whitenedx = iirFilter x whnNum whnDenom
+--      whitenedx = iirFilter whitenedx' whnNum whnDenom
+      newpsd = gwpsd whitenedx 16384 16384
+--  print $ whnDenom
+--  print $ length x'
 --  HR.oPlot HR.LogXY HR.Line ("frequency", "Spectrum") ["before", "after"] "whiteningTest.eps" [psddat, zip (fst.unzip $ psddat) whitenedx]
---  HR.plot HR.LogXY HR.Line ("frequency", "Spectrum") "after" "whiteningTest.eps" $ zip (fst.unzip $ psddat) whitenedx
-  HR.plot HR.LogXY HR.Line ("frequency", "Spectrum") "after" "whiteningTest.eps" $ zip ([1..10]) whnbDenom
+--  HR.plot HR.Linear HR.Line ("time", "amplitude") "after" "whiteningTest.eps" $ zip t  whitenedx
+  HR.plot HR.LogXY HR.Line ("frequency", "Spectrum") "before" "whiteningTestbefore.eps" $ psddat --gwpsd whitenedx 16384 16384
+  HR.plot HR.LogXY HR.Line ("frequency", "Spectrum") "after" "whiteningTestbafter.eps" $ newpsd --gwpsd whitenedx 16384 16384
+
+
+

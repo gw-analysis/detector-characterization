@@ -6,21 +6,23 @@ module HasKAL.SignalProcessingUtils.LinearPrediction
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import Data.Complex()
+import Data.Array
 
 {- exposed functions -}
 lpefCoeff :: Int -> [Double] -> ([Double], [Double])
 lpefCoeff p psddat = do
   let sqrtpsddat = map sqrt psddat
-      r' = toList $ ifft $ applyRealtoComplex $ fromList sqrtpsddat
+      r' = toList $ ifft $ applyRealtoComplex $ fromList psddat
       r = take p r'
   (1:replicate p 0, levinson r p)
 
 
 
-levinson :: [COmplex Double] -> Int -> [Double]
+levinson :: [Complex Double] -> Int -> [Double]
 levinson r p = do
     let r' = array (0, nlen-1) $ zip [0..nlen-1] r
-    1:(map realPart $ elems.fst $ levinson' r' p)
+        irho=1/(snd $ (levinson' r' (p-1)))
+    1:(map realPart $ elems.fst $ levinson' r' (p-1))
     where nlen = length r
 
 
@@ -45,6 +47,7 @@ levinson' r p = (array (1,p) [ (k, a!(p,k)) | k <- [1..p] ], realPart (rho!p))
     ak k i | k==i      = -(r!k + sum [ a!(k-1,l) * r!(k-l) | l <- [1..(k-1)] ]) / rho!(k-1)
            | otherwise = a!(k-1,i) + a!(k,k) * (conjugate (a!(k-1,k-i)))
     rhok 1 = (1 - (abs (a!(1,1)))^(2::Int)) * r!0
+    rhok k = (1 - (abs (a!(k, k)))^(2::Int)) * rho!(k-1)
 
 
 
