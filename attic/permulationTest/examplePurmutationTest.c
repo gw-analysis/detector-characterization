@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "./HasKAL/StatisticsUtils/StatisticsUtils.h"
+#include "./HasKAL/StatisticsUtils/statisticsUtils.h"
 
 #define MAX_DATA 100000
 
