@@ -23,10 +23,11 @@ import Data.List (sort, foldl')
 
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
-  where freqV = toList $ linspace nfft (0, fs/2)
-        tV    = [1/fs*(fromIntegral nfft)/2*fromIntegral y | y<-[1..nt]]
-        spec = map (\m -> map snd $ gwpsd (toList $ subVector (m*noverlap) nfft (fromList x)) nfft fs) [0..(nt-1)] :: [[Double]]
-        nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral noverlap)
+  where freqV = take (div nfft 2) $ toList $ linspace nfft (0, fs)
+        tV    = [(fromIntegral nshift)/fs*fromIntegral y | y<-[1..(nt-1)]]
+        spec = map (\m -> (take (div nfft 2)).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft (fromList x)) nfft fs) [0..(nt-1)] :: [[Double]]
+        nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral nshift)
+        nshift = nfft -noverlap
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
