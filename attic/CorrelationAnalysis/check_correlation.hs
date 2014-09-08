@@ -13,7 +13,8 @@ import Numeric.LinearAlgebra  --subVector
 import Numeric --showFFloat
 import Control.Monad -- forM
 import System.Environment -- getArgs
-import System.Cmd -- system
+--import System.Cmd -- system
+import System.Process -- system
 import Data.List.Split -- splitOn
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation

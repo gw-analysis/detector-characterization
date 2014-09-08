@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/09/01 22:11:45
+  * Last Modified: 2014/09/06 17:28:25
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -16,11 +16,8 @@ import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS -- データ読み出�
 import qualified HasKAL.Misc.StrictMapping as HMS
 import qualified HasKAL.Misc.Flip3param as HMF 
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighMon as SRM
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
+--import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
-
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D
 
 data DType = Time | Freq | LigoS6 deriving (Eq, Show)
 data Plot = X11 | PNG deriving (Eq)
@@ -39,19 +36,20 @@ seed = -1 -- 乱数の初期シード(負の値でUNIX Timeが入る)
 {--  テストコード  --}
 main = do
   {--  GUIから与えるパラメータ  --}
-  (channel, fs, flag) <- CM.liftM paramCheck $ SE.getArgs
+  (channel, fs, flag, gps, gps') <- CM.liftM paramCheck $ SE.getArgs
   let dT = 1.0                  -- SFTストライド[sec]
-      dF = 16.0                 -- 周波数解像度[Hz]
+      dF = 8.0                 -- 周波数解像度[Hz]
       sT = 128 :: Int           -- チャンク幅[sec]
       aveNum = 128 :: Int      -- Sn(f)の平均回数
       overlap = 1.0 - 1.0/8.0   -- 時間シフト幅(0 <= x < 1)
-      method = SRM.LSM          -- Fitting方法
+      method = SRM.QUANT 0.99          -- Fitting方法
       -- gps = 959201088           -- GPS時刻
       -- cache = HGGS.haskalOpt ++ "/cachefiles/cachefile_LD.lst"
-      gps' = 1034554496
-      add = 384 + 384 + 384 + 384
-      gps = 1034554496 + add
-      cache = HGGS.haskalOpt ++ "/cachefiles/cliocache.lst"
+      -- gps' = 1034554496
+      -- add = 384 + 384 + 384 + 384
+      -- gps = 1034554496 + add
+      cache = HGGS.haskalOpt ++ "/cachefiles/testdata.lst"
+      fpath = "/home/yamamoto/workspace/result/QUANT0.99/base"++(show gps')++"/spectrogram"
 
   {--  与えられたパラメータから自動的に決まるもの  --}
   let nT = truncate $ fs * dT
@@ -101,8 +99,8 @@ main = do
   --   PNG -> do
   --     PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
   --     return ()
-  -- writeFile ("./result"++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
-  writeFile ("./result"++(show gps)++".txt") $ func1 $ drop (length [0, dF..fs/2]) $ timeFreqData [1536, 1536+dTau..] [0, dF..fs/2] nu
+  writeFile (fpath++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
+  
 
 {--  データ整形用  --}
 showMultiColumn :: (Num a, Show a) => [[a]] -> String
@@ -136,7 +134,7 @@ getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (r
 readFrame' :: String -> String -> IO [Double]
 readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
 
-paramCheck :: [String] -> (String, Double, DType)
-paramCheck [] = ("simF", 1024, Freq)
-paramCheck (x:[]) = ("simT", 1024, Time)
-paramCheck (x:y:_) = (x, read y, LigoS6)
+paramCheck :: [String] -> (String, Double, DType, Integer, Integer)
+paramCheck [] = ("simF", 1024, Freq, 0, 0)
+paramCheck (x:[]) = ("simT", 1024, Time, 0 , 0)
+paramCheck (x:y:z:w:_) = (x, read y, LigoS6, read z, read w)
