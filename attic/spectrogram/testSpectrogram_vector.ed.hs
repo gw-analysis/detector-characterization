@@ -10,10 +10,11 @@ main = do
       fs = 1024 :: Double
       nfft = 1024 :: Int
       noverlap = div nfft 2 :: Int
-      nt = truncate $ (fromIntegral (datlen-nfft)) /(fromIntegral noverlap)
-      spec = map (\m -> map snd $ gwpsd (toList $ subVector (m*noverlap) nfft x) nfft fs) [0..(nt-1)] :: [[Double]]
-      freqV = toList $ linspace nfft (0, fs/2)
-      tV = [1/fs*(fromIntegral nfft)/2*fromIntegral y|y <- [1..nt]]
+      nshift = nfft - noverlap
+      nt = truncate $ (fromIntegral (datlen-nfft)) /(fromIntegral nshift)
+      spec = map (\m -> (take (div nfft 2)).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft x) nfft fs) [0..(nt-1)] :: [[Double]]
+      freqV = take (div nfft 2) $ toList $ linspace nfft (0, fs)
+      tV = [(fromIntegral nshift)/fs*fromIntegral y|y <- [0..(nt-1)]]
       specdata = genTFData tV freqV spec
   print $ length tV
   print $ length freqV
