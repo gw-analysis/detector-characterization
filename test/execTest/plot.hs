@@ -1,33 +1,27 @@
 {-******************************************
   *     File Name: plot.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/09/01 21:20:27
+  * Last Modified: 2014/09/06 18:39:42
   *******************************************-}
 
-import HasKAL.PlotUtils.HROOT.PlotGraph as PG
 import HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
 import HasKAL.Misc.StrictMapping as MSM
 
 main = do
-
-  dats <- MSM.forM' filelist $ \filename -> do
+  
+  MSM.forM' filelist $ \filename -> do
     dat <- readFile filename
-    return $ map l2t $ readMultiColumn dat
+    PG3.spectrogram PG3.LogY PG3.COLZ "nu" ("SRMon") (filename++".png") $ map l2t $ readMultiColumn dat
 
-  PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon") "X11" $ concat dats
-
-  -- dat <- readFile file
-  -- PG.plotX PG.LogXY PG.Line ("[Hz]","[V/rHz]") "Spectrum" $ map l2t' $ readMultiColumn dat
+fpath = "/home/yamamoto/workspace/result/QUANT0.99/base842747904/"
 
 filelist :: [String]
-filelist = [--"./result1034554112.txt",
-            "./result1034554496.txt",
-            "./result1034554880.txt",
-            "./result1034555264.txt",
-            "./result1034555648.txt",
-            "./result1034556032.txt"]
-
-file = "./ave1034554496.txt"
+filelist = [--fpath++"spectrogram842743808.txt",
+            fpath++"spectrogram842747904.txt",
+            fpath++"spectrogram842752000.txt",
+            fpath++"spectrogram842756096.txt",
+            fpath++"spectrogram842760192.txt"]--,
+--            fpath++"842764288.txt"]
 
 l2t :: [Double] -> (Double, Double, Double)
 l2t [] = (0.0, 0.0, 0.0)

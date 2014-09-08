@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/07/15 16:50:33
+# Last Modified: 2014/09/06 11:44:38
 #******************************************#
 
 # compiler option
@@ -27,7 +27,7 @@ endif
 all: ${TAR}
 
 ${TAR2}: ${TAR2}.hs
-	${HC} --make -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} --make -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} 
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi
