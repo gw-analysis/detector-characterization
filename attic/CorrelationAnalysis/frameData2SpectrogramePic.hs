@@ -28,8 +28,10 @@ import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PM3
 import qualified HasKAL.PlotUtils.HROOT.SignalHandlerHROOT as RSH
 
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as SU
---import qualified HasKAL.SignalProcessingUtils.Interpolation as SPUI
---import qualified HasKAL.SignalProcessingUtils.InterpolationType as SPUIT
+import HasKAL.SpectrumUtils.GwPsdMethod
+import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.ButterWorth
+import HasKAL.SignalProcessingUtils.FilterType
 
 main = do
 
@@ -52,8 +54,8 @@ main = do
  let channelName = "CLIO_transfer_function" ::String
  PM.plot PM.LogXY PM.Line ("freqnency [Hz]","transfer function") channelName fname $ zip trfDataf trfDataG
 
- let startGPS = 7008 :: Int
-     endGPS   = 8000 :: Int
+ let startGPS = 7632 :: Int
+     endGPS   = 7696 :: Int
      listGPS' = [startGPS,(startGPS+16)..endGPS]::[Int]
      listGPS  = map show listGPS'
  --print listGPS
@@ -77,35 +79,35 @@ main = do
   let dataChannel  = map realToFrac (eval readData1)
 
   -- spectrogram of seismic data
-  let dataSpect = SU.gwspectrogram ifs_harf ifs dfs dataChannel
+  let dataSpect = SU.gwspectrogram ifs ifs dfs dataChannel
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_spect.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " channelName' fname dataSpect
 
   -- plot s(t)
-  let xdata1  = map (/dfs) $ take (length dataChannel) [1,2..]
-      plotdata1 = zip xdata1 (dataChannel)
-  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_vt.png"
-  let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PMOP.Linear PMOP.Line ("time[sec]","s(t)") channelName' fname plotdata1
+  -- let xdata1  = map (/dfs) $ take (length dataChannel) [1,2..]
+  --     plotdata1 = zip xdata1 (dataChannel)
+  -- let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_vt.png"
+  -- let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  -- PM.plot PMOP.Linear PMOP.Line ("time[sec]","s(t)") channelName' fname plotdata1
 
-  let dataSpecSeis = SU.gwpsd dataChannel (length dataChannel) dfs
-      fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_sf.png"
-      channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","spectrum of seismic") channelName' fname (take (16*ifs_harf) dataSpecSeis)
+  -- let dataSpecSeis = SU.gwpsd dataChannel (length dataChannel) dfs
+  --     fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_sf.png"
+  --     channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  -- PM.plot PMOP.LogXY PMOP.Line ("frequency [Hz]","spectrum of seismic") channelName' fname (take (16*ifs_harf) dataSpecSeis)
 
   -- plot lock flag
   --let channelName = "X1:CTR-LSC_TRX_OUT16"
   --let dfs = 16 ::Double
-  let channelName = "X1:CTR-LSC_TRX_OUT_DQ"
-  let dfs = 16384 ::Double
-  readData2 <- readFrame channelName (fileName)
-  let data2  = map realToFrac (eval readData2)
-      xdata2 = map (/dfs) $ take (length data2) [1,2..]
-      plotdata2 = zip xdata2 data2
-  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_lock_flag.png"
-  let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PMOP.Linear PMOP.Line ("time[sec]","lock flag") channelName' fname plotdata2
+  -- let channelName = "X1:CTR-LSC_TRX_OUT_DQ"
+  -- let dfs = 16384 ::Double
+  -- readData2 <- readFrame channelName (fileName)
+  -- let data2  = map realToFrac (eval readData2)
+  --     xdata2 = map (/dfs) $ take (length data2) [1,2..]
+  --     plotdata2 = zip xdata2 data2
+  -- let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_lock_flag.png"
+  -- let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  -- PM.plot PMOP.Linear PMOP.Line ("time[sec]","lock flag") channelName' fname plotdata2
 
 
   -- plot non-calibrated GW channel in time domain
@@ -115,12 +117,12 @@ main = do
   let data3  = map realToFrac (eval readData3)
       xdata3 = map (/dfs) $ take (length data3) [1,2..]
       plotdata3 = zip xdata3 data3
-  let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel.png"
-  let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
-  PM.plot PM.Linear PM.Line ("time[sec]","GW channel") channelName' fname plotdata3
+  -- let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel.png"
+  -- let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
+  -- PM.plot PM.Linear PM.Line ("time[sec]","GW channel") channelName' fname plotdata3
 
   -- spectrogram of non-calibrated GW channel
-  let dataSpect2 = SU.gwspectrogram ifs_harf ifs dfs data3
+  let dataSpect2 = SU.gwspectrogram ifs ifs dfs data3
   let fname =  (showFFloat (Just 0) getGpsTime "" ) ++ "_" ++ (channelName) ++ "_GWchannel_spect.png"
   let channelName' = (channelName) ++ "__" ++ (showFFloat (Just 0) getGpsTime "" ) :: String
   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " channelName' fname dataSpect2
