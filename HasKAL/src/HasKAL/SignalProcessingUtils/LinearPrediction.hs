@@ -7,22 +7,21 @@ import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import Data.Complex()
 import Data.Array
+-- import Prelude hiding (abs)
 
 {- exposed functions -}
 lpefCoeff :: Int -> [Double] -> ([Double], [Double])
 lpefCoeff p psddat = do
-  let sqrtpsddat = map sqrt psddat
-      r' = toList $ ifft $ applyRealtoComplex $ fromList psddat
-      r = take p r'
+  let r = [x | x:+_ <-toList $ ifft $ applyRealtoComplex $ fromList psddat]
   (1:replicate p 0, levinson r p)
 
 
 
-levinson :: [Complex Double] -> Int -> [Double]
+levinson :: [Double] -> Int -> [Double]
 levinson r p = do
-    let r' = array (0, nlen-1) $ zip [0..nlen-1] r
-        irho=1/(snd $ (levinson' r' (p-1)))
-    1:(map realPart $ elems.fst $ levinson' r' (p-1))
+    let r' = array (0, nlen-1) $ zip [0..nlen-1] [x:+0|x<-r]
+        irho=1/(snd $ (levinson' r' p))
+    1:(map realPart $ elems.fst $ levinson' r' p)
     where nlen = length r
 
 
