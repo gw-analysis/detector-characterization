@@ -67,7 +67,6 @@ main = do
       maxN = floor $ 0.01 * dfs ::Int
   --print maxN
 
-
   result <- forM [0,1..7] $ \rest ->do
    let dataFilteredDownSample = skipListByK 8 rest dataFiltered
    -- calculate correlation value

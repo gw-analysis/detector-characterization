@@ -1,9 +1,12 @@
--- Time-stamp: "2014-09-08 08:40:41 yuzurihara"
+-- Time-stamp: "2014-09-08 17:58:56 yuzurihara"
 module UsefulFunction (
        taple2string
        ,string2Int
        ,string2Double
        ,skipListByK
+       ,fst'
+       ,snd'
+       ,trd'
 ) where
 
 
