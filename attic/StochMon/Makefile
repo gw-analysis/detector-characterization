@@ -12,9 +12,9 @@ HC = ghc -O2
 USELIB=
 
 # program
-TAR1=teststoch
+TAR1=teststoch4
 TAR2=teststoch2
-#TAR3=gslHasKALTest
+TAR3=teststoch3
 TAR= ${TAR1} ${TAR2} ${TAR3}
 
 # link path
@@ -25,7 +25,7 @@ LIBS=`pkg-config --libs-only-l ${USELIB}`
 else
 CFLAGS=
 LDFLAGS=
-LIBS=-lgsl -lgslcblas -lstdc++ -lm -lFrame
+LIBS=-lgsl -lgslcblas -lstdc++ -lm -lFrame -L/opt/work/gsl/lib -I/opt/work/gsl/include -L/opt/work/root/lib -I/opt/work/root/include
 endif
 
 # compile rule
