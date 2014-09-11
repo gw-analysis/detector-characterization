@@ -24,6 +24,8 @@ main = do
   ch <- getChannelList fname
   let [(chname,  _)]=ch
   fdata <- readFrame chname fname
+  let y = take (16384*5) $ map realToFrac (eval fdata)
+
   let x = take (16384*5) $ map realToFrac (eval fdata)
       (lpfNum,lpfDen) = butter 6 16384 50 High
       --x = drop (6*3) $ take (length x' - 6*3) $ iirFilter x' lpfNum lpfDen
@@ -32,7 +34,7 @@ main = do
       psddat = gwpsd x 16384 16384
       (whnNum, whnDenom) = lpefCoeff nC $ map ((16384*16384)*) (snd.unzip $ psddat)
 
-      whitenedx = drop (nC*3) $ take (length x - nC*3) $ firFilter x whnDenom
+      whitenedx = drop (nC*3) $ take (length y - nC*3) $ firFilter y whnDenom
 --      whitenedx = drop (nC*3) $ take (length x - nC*3) $ iirFilter x whnNum whnDenom
 --      whitenedx = map (\i -> sum [whnDenom!!j * x!!(i-1-j) | j<-[0..nC-1]]) [nC..((length x)-nC)]
 --      whitenedx = iirFilter whitenedx' whnNum whnDenom
