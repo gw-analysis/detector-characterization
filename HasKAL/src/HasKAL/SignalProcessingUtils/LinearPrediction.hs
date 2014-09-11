@@ -1,29 +1,49 @@
 
 module HasKAL.SignalProcessingUtils.LinearPrediction
 ( lpefCoeff
+, levinson
+, whitening
 ) where
 
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import Data.Complex()
 import Data.Array
+import HasKAL.SignalProcessingUtils.WindowType
+import HasKAL.SignalProcessingUtils.WindowFunction
+import HasKAL.SignalProcessingUtils.Interpolation
+import HasKAL.SignalProcessingUtils.InterpolationType
+import HasKAL.SpectrumUtils.SpectrumUtils
+
 -- import Prelude hiding (abs)
 
 {- exposed functions -}
-lpefCoeff :: Int -> [Double] -> ([Double], ([Double], Double))
+lpefCoeff :: Int -> [Double] -> [Double]
 lpefCoeff p psddat = do
   let r = [x | x:+_ <-toList $ ifft $ applyRealtoComplex $ fromList psddat]
-  (1:replicate p 0, levinson r p)
+  levinson r p
 
 
-
-levinson :: [Double] -> Int -> ([Double], Double)
+levinson :: [Double] -> Int -> [Double]
 levinson r p = do
     let r' = array (0, nlen-1) $ zip [0..nlen-1] [x:+0|x<-r]
-    (1:(map realPart $ elems.fst $ levinson' r' p), snd $ (levinson' r' p))
+        (tmpcoef, rho) = levinson' r' p
+    1:(map ((/sqrt rho).realPart) $ elems tmpcoef)
     where nlen = length r
 
 
+whitening :: Int -> [Double] -> Int -> Double -> [Double] -> ([Double], [Double])
+whitening nC trainDat trainNfft samplingFrequency gwdat = do
+  let datLen = length gwdat
+      trainDatLen = length trainDat
+      (trainfV, trainpsd) = unzip $ gwpsd trainDat trainNfft samplingFrequency
+      trainpsdInterp = interpV trainfV trainpsd (toList $ linspace datLen (0,  samplingFrequency)) Linear
+      whnCoeff = lpefCoeff (nC-1) $ map ((fromIntegral datLen)*) trainpsdInterp
+
+  let fftGwdat = fft.toComplex $ (windowed (hanning datLen) (fromList gwdat),  constant 0 datLen)
+      fft_whnCoeff = mapVector magnitude $ fft $ join [fromList [x:+0|x<-whnCoeff], constant (0:+0) (datLen-nC)]
+      whnGwfft = toComplex (fft_whnCoeff*(mapVector realPart fftGwdat),  mapVector imagPart fftGwdat)
+  (toList $ mapVector realPart (ifft whnGwfft), whnCoeff)
 
 
 {- internal functions -}
