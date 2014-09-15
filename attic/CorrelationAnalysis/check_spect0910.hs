@@ -33,6 +33,12 @@ main = do
 
 -- let frameFileName = ["/home/yuzurihara/frame/clio/X-R-1034657664-16.gwf"]
 
+ let iDropbNumberGW = 10000::Int
+     iDropbNumberSEIS = 2500::Int
+
+ print iDropbNumberGW
+ print iDropbNumberSEIS
+
  forM frameFileName $ \fileName -> do
 
    let getGpsTime = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" fileName :: Int
@@ -48,28 +54,29 @@ main = do
        ifs_harf_harf = 4096::Int
        ifs_8 = 2048::Int
        ifs_16 = 1024::Int
-   readData2 <- readFrame channelName (fileName)
-   let data2  = map realToFrac (eval readData2)
-       tt = map (/dfs) $ take (length data2) [1,2..]
+   readDataGW <- readFrame channelName (fileName)
+   let dataGW  = map realToFrac (eval readDataGW)
+       ttGW = map (/dfs) $ take (length dataGW) [1,2..]
 
  ---------------------------------
  -- Band Pass Filter
  --------------------------------- 
    let n=4::Int
        flow  = 10::Double
-       fhigh = 106::Double
+       fhigh = 60::Double
    let (numCoeffHigh,denomCoeffHigh) = butter n dfs flow High :: ([Double], [Double])
-       dataFiltered = iirFilter data2 numCoeffHigh denomCoeffHigh
+       dataGWFiltered = iirFilter dataGW numCoeffHigh denomCoeffHigh
  
    let (numCoeffLow,denomCoeffLow) = butter n dfs fhigh Low :: ([Double], [Double])
-       dataFiltered' = iirFilter dataFiltered numCoeffLow denomCoeffLow
---       dataFiltered'' = take ((length dataFiltered') - n*8) $ drop (n*4) dataFiltered'
---       tt'            = take ((length dataFiltered') - n*8) $ drop (n*4) tt
-       dataFiltered'' = drop (10000) dataFiltered'
-       tt'            = drop (10000) tt
-   --PM.plotX PMOP.Linear PMOP.Line ("time[sec]","gw channel after BPF") (show getGpsTime) $ zip tt' dataFiltered''
-   --PM.plotX PMOP.Linear PMOP.Line ("time[sec]","gw channel after BPF") (show getGpsTime) $ zip tt data2
+       dataGWFiltered' = iirFilter dataGWFiltered numCoeffLow denomCoeffLow
+       dataGWFiltered'' = drop (iDropbNumberGW) dataGWFiltered'
+       ttGW'            = drop (iDropbNumberGW) ttGW
 
+   print $ length ttGW'
+   print $ length dataGWFiltered''
+   
+
+   PM.plotX PMOP.Linear PMOP.Line ("time[sec]","gw channel after BPF") (show getGpsTime) $ zip ttGW' dataGWFiltered''
    --print dataFiltered'
 
 
@@ -87,13 +94,15 @@ main = do
    ---------------------------------
    -- GW channel   spectrogram
    ---------------------------------   
-   let dataSpect = gwspectrogram (div ifs_8 2) ifs_8 dfs dataFiltered''
+   let dataGWSpect = gwspectrogram (div ifs_8 2) ifs_8 dfs dataGWFiltered''
    --let dataSpect = gwspectrogram (div ifs_harf_harf 2) ifs_harf_harf dfs dataFiltered''
    let fcut1 = 10.0::Double
        fcut2 = 60.0::Double
-       dataSpect' = filter (\x -> (snd' x) > fcut1 && (snd' x) < fcut2) dataSpect
+       dataGWSpect' = filter (\x -> (snd' x) > fcut1 && (snd' x) < fcut2) dataGWSpect
        fname = (showFFloat (Just 0) dgetGpsTime "" ) ++ "_" ++ (channelName) ++ "_gw_BPFiltered_" ++(show ifs_8) ++ "_" ++ (show fcut1) ++"_"++ (show fcut2) ++ ".png"
-   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " (show getGpsTime) fname dataSpect'
+   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " (show getGpsTime) fname dataGWSpect'
+
+
 
 
 
@@ -105,9 +114,11 @@ main = do
 
    let channelName = "X1:CTR-PSL_SEIS_IN1_DQ" ::String
    let dfs = 2048.0 ::Double
-   readData2 <- readFrame channelName (fileName)
-   let data2  = map realToFrac (eval readData2)
-       tt = map (/dfs) $ take (length data2) [1,2..]
+   readDataSEIS <- readFrame channelName (fileName)
+   let dataSEIS  = map realToFrac (eval readDataSEIS)
+       ttSEIS = map (/dfs) $ take (length dataSEIS) [1,2..]
+
+
 
  ---------------------------------
  -- Band Pass Filter
@@ -116,13 +127,16 @@ main = do
        flow = 80::Double
        fhigh = 300::Double
    let (numCoeffHigh,denomCoeffHigh) = butter n dfs flow High :: ([Double], [Double])
-       dataFiltered = iirFilter data2 numCoeffHigh denomCoeffHigh
+       dataSEISFiltered = iirFilter dataSEIS numCoeffHigh denomCoeffHigh
    let (numCoeffLow,denomCoeffLow) = butter n dfs fhigh Low :: ([Double], [Double])
-       dataFiltered' = iirFilter dataFiltered numCoeffLow denomCoeffLow
-       dataFiltered'' = take ((length dataFiltered') - n*8) $ drop (n*4) dataFiltered'
-       tt'            = take ((length dataFiltered') - n*8) $ drop (n*4) tt
-   --PM.plotX PMOP.Linear PMOP.Line ("time[sec]","seis channel after BPF") (show getGpsTime) $ zip tt' dataFiltered''
-   --PM.plotX PMOP.Linear PMOP.Line ("time[sec]","seis channel after BPF") (show getGpsTime) $ zip tt data2
+       dataSEISFiltered' = iirFilter dataSEISFiltered numCoeffLow denomCoeffLow
+       dataSEISFiltered'' = drop (iDropbNumberSEIS) dataSEISFiltered'
+       ttSEIS'            = drop (iDropbNumberSEIS) ttSEIS
+
+   
+   print $ length ttSEIS'
+   print $ length dataSEISFiltered''
+   PM.plotX PMOP.Linear PMOP.Line ("time[sec]","seis channel after BPF") (show getGpsTime) $ zip ttSEIS dataSEISFiltered''
 
 
  ---------------------------------
@@ -133,9 +147,36 @@ main = do
        ifs_harf = 1024::Int
        ifs_harf_harf = 512::Int
        ifs_8 = 256::Int
-   let dataSpect = gwspectrogram (div ifs_harf_harf 2) ifs_harf_harf dfs dataFiltered''
+   let dataSEISSpect = gwspectrogram (div ifs_harf_harf 2) ifs_harf_harf dfs dataSEISFiltered''
    let fcut1 = 10.0::Double
        fcut2 = 600::Double
-       dataSpect' = filter (\x -> (snd' x) > fcut1 && (snd' x) < fcut2) dataSpect
+       dataSEISSpect' = filter (\x -> (snd' x) > fcut1 && (snd' x) < fcut2) dataSEISSpect
        fname =  (showFFloat (Just 0) dgetGpsTime "" ) ++ "_" ++ (channelName) ++ "_seis_BPFiltered_" ++(show ifs_8) ++ "_" ++ (show fcut1) ++"_"++ (show fcut2) ++ ".png"
-   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " (show getGpsTime) fname dataSpect'
+   PM3.spectrogram PMOP.LogYZ PMOP.COLZ " " (show getGpsTime) fname dataSEISSpect'
+
+
+
+
+
+ -- ---------------------------------
+ -- -- output text data
+ -- ---------------------------------
+ --   let dfs  = 2048.0 ::Double
+ --       maxN = floor $ 0.01 * dfs ::Int
+ --   --print maxN
+
+ --   result <- forM [0,1..7] $ \rest ->do
+ --    let dataFilteredDownSample = skipListByK 8 rest dataGWFiltered
+ --    -- calculate correlation value
+ --    --takeCorrelation method x y maxN = case method of
+ --    --let rValueLst = takeCorrelation Peason data1 dataFilteredDownSample maxN
+ --    let rValueLst = takeCorrelation Peason dataGWFiltered dataFilteredDownSample maxN
+ --    let rValue = maximum rValueLst
+ --    --let rValue_10 = read (showFFloat (Just 10) rValue "")::Double
+ --    let maxValueIndex = correlationResult2pickupMaxValueIndex rValueLst dfs
+ --    let tapleCorrelationValue = (getGpsTime, rValue, rest + (fst maxValueIndex),(fromIntegral rest)/dfs + (snd maxValueIndex))
+ --    --print $ tapleCorrelationValue
+ --    return tapleCorrelationValue
+
+ --   --print result 
+ --   print $ maximum result
