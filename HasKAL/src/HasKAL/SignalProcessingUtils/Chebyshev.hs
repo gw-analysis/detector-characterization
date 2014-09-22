@@ -1,5 +1,6 @@
 module HasKAL.SignalProcessingUtils.Chebyshev
-( chebyshev1
+( module HasKAL.SignalProcessingUtils.FilterType
+, chebyshev1
 , filterPole
 )
 where

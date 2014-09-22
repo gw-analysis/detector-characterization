@@ -1,5 +1,7 @@
 module HasKAL.SignalProcessingUtils.WindowFunction
-( windowed
+
+( module HasKAL.SignalProcessingUtils.WindowType
+, windowed
 , hanning
 , blackman
 , hamming
