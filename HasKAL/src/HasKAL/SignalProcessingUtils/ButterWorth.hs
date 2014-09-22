@@ -12,7 +12,8 @@ in this example,
 
 
 module HasKAL.SignalProcessingUtils.ButterWorth
-( butter
+( module HasKAL.SignalProcessingUtils.FilterType
+, butter
 , filterPole
 , setN
 )
