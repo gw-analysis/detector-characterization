@@ -39,19 +39,19 @@ int iir_filter_core (double *input, unsigned inputlen, double num_coeff[], doubl
 
     for (inputidx=0;inputidx<inputlen;inputidx++){
         //-- Shift the delay register values.
-        for (k=filterlen;k>0;k--) {
+        for (k=filterlen-1;k>0;k--) {
             Reg[k] = Reg[k-1];
         }
 
         //-- denominator part
         Reg[0] = input[inputidx];
-        for (k=1;k<=filterlen;k++) {
+        for (k=1;k<filterlen;k++) {
             Reg[0] -= denom_coeff[k] * Reg[k];
         }
 
         //-- numerator part
         y = 0;
-        for (k=0;k<=filterlen;k++) {
+        for (k=0;k<filterlen;k++) {
             y += num_coeff[k] * Reg[k];
         }
         output[inputidx] = y;
