@@ -4,7 +4,7 @@ where
 
 import HasKAL.DetectorUtils.Detector
 import HasKAL.TimeUtils.Signature
-
+import Numeric.LinearAlgebra
 
 data WaveData = WaveData {
     detector :: Detector
@@ -16,10 +16,10 @@ data WaveData = WaveData {
   deriving (Show, Eq, Read)
 
 data WaveProperty = WaveProperty {
-    mean :: UV.Vector Double -> Double
-  , variance :: UV.Vector Double -> Double
-  , spectrum :: UV.Vector Double -> Double -> [(Double, Double)]
-  , spectrogram :: UV.Vector Double -> Double -> [(Double, Double, Double)]
+    mean :: Vector Double -> Double
+  , variance :: Vector Double -> Double
+  , spectrum :: Vector Double -> Double -> [(Double, Double)]
+  , spectrogram :: Vector Double -> Double -> [(Double, Double, Double)]
     }
     deriving (Show, Eq, Read)
 

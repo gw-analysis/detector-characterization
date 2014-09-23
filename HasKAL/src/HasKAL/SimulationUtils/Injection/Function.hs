@@ -67,9 +67,9 @@ doInjection dat injdat = unsafePerformIO $ do
 --        | timeSlide < 0 = vjoin [(subVector (timeSlide-1) nlen1 vinjdata + subVector 0 nlen1 vdata)
 --                               , subVector (nlen1-1) (nvinjdata-nlen1)]
         | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
-            = toList $ join [subVector 0 timeSlide vdata
-                             , subVector (timeSlide-1) nvinjdata vdata + vinjdata
-                             , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata]
+            = join [subVector 0 timeSlide vdata
+                   , subVector (timeSlide-1) nvinjdata vdata + vinjdata
+                   , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata]
         | otherwise = error "Injection not succeeded"
           where nlen1 = nvinjdata - timeSlide
                 nvinjdata = dim vinjdata

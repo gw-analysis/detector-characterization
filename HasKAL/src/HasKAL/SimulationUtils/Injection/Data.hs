@@ -9,4 +9,4 @@ data SOURCE_TYPE = SOURCE_TYPE
        , latitude :: Double
        , psi :: Double
        , fs :: Double
-       } deriving (Show)
+       } deriving (Show, Eq)

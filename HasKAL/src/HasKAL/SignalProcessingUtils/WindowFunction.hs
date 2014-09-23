@@ -13,6 +13,8 @@ where
 import Prelude hiding (cos)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Special
+import HasKAL.SignalProcessingUtils.WindowType
+
 
 windowed :: Vector Double -> Vector Double -> Vector Double
 windowed w x = w * x
