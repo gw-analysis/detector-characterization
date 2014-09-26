@@ -1,8 +1,9 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
 
 module HasKAL.SpectrumUtils.SpectrumUtils
-(  gwpsd
- , gwspectrogram
+( module HasKAL.SpectrumUtils.GwPsdMethod
+, gwpsd
+, gwspectrogram
 )
 where
 

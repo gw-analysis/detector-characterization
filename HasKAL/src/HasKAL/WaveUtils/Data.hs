@@ -2,6 +2,7 @@
 module HasKAL.WaveUtils.Data
 ( WaveData (..)
 , WaveProperty (..)
+, mkWaveData
 , mkLIGOWaveData
 , getWaveProperty
 ) where
@@ -29,6 +30,16 @@ data WaveProperty = WaveProperty
   , spectrum :: Vector Double -> Double -> [(Double, Double)]
   , spectrogram :: Vector Double -> Double -> [(Double, Double, Double)]
   }
+
+mkWaveData :: Detector -> String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
+mkWaveData det datatype fs startGPS stopGPS xs
+  = WaveData { detector = det
+             , dataType = datatype
+             , samplingFrequency = fs
+             , startGPSTime = startGPS
+             , stopGPSTime = stopGPS
+             , gwdata = xs
+             }
 
 
 mkLIGOWaveData :: String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData

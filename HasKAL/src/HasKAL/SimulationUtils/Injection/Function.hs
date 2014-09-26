@@ -10,7 +10,7 @@ module HasKAL.SimulationUtils.Injection.Function
 
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
-import System.IO.Unsafe
+import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad ()
 import Numeric.LinearAlgebra
 
@@ -58,18 +58,19 @@ injDetectorResponse detName srcType gps = do
 
 
 doInjection :: WaveData -> WaveData -> WaveData
-doInjection dat injdat = unsafePerformIO $ do
+doInjection dat injdat = do
   let tdat = fromIntegral (fst (startGPSTime dat))
         + 1E-9 * fromIntegral (snd (startGPSTime dat))::Double
       tinjdat = fromIntegral (fst (startGPSTime injdat))
         + 1E-9 * fromIntegral (snd (startGPSTime injdat))::Double
       timeSlide = floor $ (tinjdat - tdat)*(samplingFrequency dat)
-      newdat
+
+  let newdat
 --        | timeSlide < 0 = vjoin [(subVector (timeSlide-1) nlen1 vinjdata + subVector 0 nlen1 vdata)
 --                               , subVector (nlen1-1) (nvinjdata-nlen1)]
         | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
             = join [subVector 0 timeSlide vdata
-                   , subVector (timeSlide-1) nvinjdata vdata + vinjdata
+                   , add (subVector timeSlide nvinjdata vdata) vinjdata
                    , subVector (timeSlide+nvinjdata-1) (nvdata - nvinjdata - timeSlide) vdata]
         | otherwise = error "Injection not succeeded"
           where nlen1 = nvinjdata - timeSlide
@@ -77,7 +78,5 @@ doInjection dat injdat = unsafePerformIO $ do
                 nvdata = dim vdata
                 vinjdata = gwdata injdat :: Vector Double
                 vdata = gwdata dat  :: Vector Double
-      newGWData = dat
-      gwdata newGWData = newdat
-  return newGWData
+  mkWaveData (detector dat) (dataType dat) (samplingFrequency dat) (startGPSTime dat) (stopGPSTime dat) newdat
 
