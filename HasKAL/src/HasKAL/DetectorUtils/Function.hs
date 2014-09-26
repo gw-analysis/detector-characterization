@@ -38,7 +38,7 @@ fplusfcrossts detname phi theta psi = do
 
 genDetectorResponse :: AntennaPattern -> GravitationalWave -> Vector Double
 genDetectorResponse pol gw =
-  (scalar (fst pol)) * fromList (fst gw) + (scalar (snd pol)) * fromList (snd gw)
+  (scalar (fst pol)) * (fst gw) + (scalar (snd pol)) * (snd gw)
 
 
 

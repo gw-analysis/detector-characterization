@@ -1,37 +1,45 @@
 
 module HasKAL.WaveUtils.Data
-where
+( WaveData (..)
+, WaveProperty (..)
+, mkLIGOWaveData
+, getWaveProperty
+) where
+
 
 import HasKAL.DetectorUtils.Detector
 import HasKAL.TimeUtils.Signature
+import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra
 
-data WaveData = WaveData {
-    detector :: Detector
+
+data WaveData = WaveData
+  { detector :: Detector
   , dataType :: String
   , samplingFrequency :: Double
   , startGPSTime :: GPSTIME
   , stopGPSTime  :: GPSTIME
-  , gwdata :: TimeSeries}
-  deriving (Show, Eq, Read)
+  , gwdata :: TimeSeries
+  } deriving (Show, Eq, Read)
 
-data WaveProperty = WaveProperty {
-    mean :: Vector Double -> Double
+
+data WaveProperty = WaveProperty
+  { mean :: Vector Double -> Double
   , variance :: Vector Double -> Double
   , spectrum :: Vector Double -> Double -> [(Double, Double)]
   , spectrogram :: Vector Double -> Double -> [(Double, Double, Double)]
-    }
-    deriving (Show, Eq, Read)
+  }
 
 
-mkLIGOdataStructure :: String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
-mkLIGOdataStructure datatype fs startGPS stopGPS xs
-  = WaveData { LIGO_Hanford
-             , datatype
-             , fs
-             , startGPS
-             , stopGPS
-             xs}
+mkLIGOWaveData :: String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
+mkLIGOWaveData datatype fs startGPS stopGPS xs
+  = WaveData { detector = LIGO_Hanford
+             , dataType = datatype
+             , samplingFrequency = fs
+             , startGPSTime = startGPS
+             , stopGPSTime = stopGPS
+             , gwdata = xs
+             }
 
 
 getWaveProperty :: WaveData -> WaveProperty

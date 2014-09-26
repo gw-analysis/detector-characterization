@@ -3,30 +3,31 @@
 -}
 
 
-
 module HasKAL.SimulationUtils.Injection.Function
 ( injDetectorResponse
 , doInjection
 ) where
 
+import System.FilePath ((</>))
+import System.Directory (doesFileExist)
+import System.IO.Unsafe
+import Control.Monad ()
+import Numeric.LinearAlgebra
+
 import HasKAL.DetectorUtils
 import HasKAL.Misc.Environment (haskalOpt)
 import HasKAL.SimulationUtils.Injection.Signature
+import HasKAL.SimulationUtils.Injection.Data
 import HasKAL.TimeUtils.Signature
 import HasKAL.TimeUtils.Function (formatGPS)
-
-import System.FilePath ((</>))
-import System.Directory (doesFileExist)
-import Control.Monad ()
-import System.IO.Unsafe
-import Numeric.LinearAlgebra
 import HasKAL.WaveUtils.Data
 import HasKAL.WaveUtils.Signature
+
 
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType = unsafePerformIO $ do
   doesFileExist mdcFilePath  >>= \y ->
-    case y of True -> return (map (\x -> read x :: Double) dat, replicate (length dat) 0)
+    case y of True -> return (fromList (map (((hrss srcType)*).(\x -> read x :: Double)) dat), fromList (replicate (length dat) (0::Double)))
               False -> error "not recognized"
       where
         mdcFilePath = haskalOpt </> "MockDataChallenge" </> "Waveforms" </> (sigType srcType)
@@ -47,13 +48,13 @@ injDetectorResponse detName srcType gps = do
       detresp = genDetectorResponse antennaPattern $ getPolarizations srcType
 
       startGPSTime' = fromIntegral (fst gps) + 1E-9 * fromIntegral (snd gps) + tauS
-  WaveData { detector=detName
-         , dataType="SoftwareInjection"
-         , samplingFrequency=fs srcType
-         , startGPSTime = formatGPS startGPSTime'
-         , stopGPSTime  = formatGPS $ startGPSTime'+(fromIntegral (length detresp)-1)/(fs srcType)
-         , gwdata = detresp
-         }
+  WaveData { detector = detName
+           , dataType = "SoftwareInjection"
+           , samplingFrequency = fs srcType
+           , startGPSTime = formatGPS startGPSTime'
+           , stopGPSTime  = formatGPS $ startGPSTime'+(fromIntegral (dim detresp)-1)/(fs srcType)
+           , gwdata = detresp
+           }
 
 
 doInjection :: WaveData -> WaveData -> WaveData
@@ -74,8 +75,8 @@ doInjection dat injdat = unsafePerformIO $ do
           where nlen1 = nvinjdata - timeSlide
                 nvinjdata = dim vinjdata
                 nvdata = dim vdata
-                vinjdata = fromList $ gwdata injdat :: Vector Double
-                vdata = fromList $ gwdata dat  :: Vector Double
+                vinjdata = gwdata injdat :: Vector Double
+                vdata = gwdata dat  :: Vector Double
       newGWData = dat
       gwdata newGWData = newdat
   return newGWData

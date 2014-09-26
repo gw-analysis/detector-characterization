@@ -6,7 +6,7 @@ import HasKAL.TimeUtils.Signature
 import Control.Lens
 import HasKAL.WaveUtils.Signature
 
-type AntennaPattern = (Fplus,   Fcross)
+type AntennaPattern = (Fplus, Fcross)
 type Fplus = Double
 type Fcross= Double
 
