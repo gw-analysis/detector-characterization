@@ -27,8 +27,13 @@ import HasKAL.WaveUtils.Signature
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType = unsafePerformIO $ do
   doesFileExist mdcFilePath  >>= \y ->
-    case y of True -> return (fromList (map (((hrss srcType)*).(\x -> read x :: Double)) dat), fromList (replicate (length dat) (0::Double)))
-              False -> error "not recognized"
+    case y of 
+      True -> do 
+        let hp' = fromList (map (\x -> read x :: Double) dat)
+            hc = fromList (replicate (length dat) (0::Double))
+            hp = scale ((hrss srcType)/(norm2 hp')) hp'
+        return (hp,hc)
+      False -> error "not recognized"
       where
         mdcFilePath = haskalOpt </> "MockDataChallenge" </> "Waveforms" </> (sigType srcType)
         dat = lines $ unsafePerformIO $ readFile mdcFilePath
