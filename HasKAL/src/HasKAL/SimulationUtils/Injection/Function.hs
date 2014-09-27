@@ -6,13 +6,18 @@
 module HasKAL.SimulationUtils.Injection.Function
 ( injDetectorResponse
 , doInjection
+, doInjection'
 ) where
 
+import Control.DeepSeq (deepseq)
+import Control.Monad ()
+import Control.Monad.ST(ST)
+import System.IO.Unsafe (unsafePerformIO)
+import Data.Packed.ST
+import Numeric.LinearAlgebra
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
-import Control.Monad ()
-import Numeric.LinearAlgebra
 
 import HasKAL.DetectorUtils
 import HasKAL.Misc.Environment (haskalOpt)
@@ -84,4 +89,38 @@ doInjection dat injdat = do
                 vinjdata = gwdata injdat :: Vector Double
                 vdata = gwdata dat  :: Vector Double
   mkWaveData (detector dat) (dataType dat) (samplingFrequency dat) (startGPSTime dat) (stopGPSTime dat) newdat
+
+
+doInjection' :: WaveData -> WaveData -> WaveData
+doInjection' dat injdat
+  | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
+      = unsafePerformIO $ do 
+          deepseq (addInjsig timeSlide (gwdata dat) vinjdata) return ()
+          return dat 
+  | otherwise = error "Injection not succeeded"
+  where 
+--    vdata     = gwdata dat  :: Vector Double
+    nvdata    = dim (gwdata dat)
+    vinjdata  = gwdata injdat :: Vector Double
+    nvinjdata = dim vinjdata
+    tdat = fromIntegral (fst (startGPSTime dat))
+         + 1E-9 * fromIntegral (snd (startGPSTime dat))::Double
+    tinjdat = fromIntegral (fst (startGPSTime injdat))
+         + 1E-9 * fromIntegral (snd (startGPSTime injdat))::Double
+    timeSlide = floor $ (tinjdat - tdat)*(samplingFrequency dat)
+
+  
+addInjsig n v w = runSTVector $ do
+  v' <- unsafeThawVector v
+  mapM_ (\i -> addInjsigCore v' w (n+i) i) [0 .. nw-1]
+  return v'
+  where 
+    nw = dim w
+ 
+addInjsigCore :: STVector s Double -> Vector Double -> Int -> Int -> ST s ()
+addInjsigCore v w i j = modifyVector v i (+w@>j)
+  
+  
+
+
 
