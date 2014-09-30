@@ -6,12 +6,17 @@
 
 
 {-# LANGUAGE ForeignFunctionInterface #-}
-
+{-# INCLUDE "mine.h" #-}
 
 module HasKAL.ExternalUtils.Minepy.Mine
---(
---)
-where
+( mine_compute_score
+, mine_check_parameter
+, mine_mic
+, mine_mev
+, mine_mas_
+, mine_mcn
+, mine_mcn_general
+) where
 
 
 import Foreign.Ptr
@@ -24,8 +29,7 @@ import Foreign.Storable
 import System.IO.Unsafe (unsafePerformIO)
 
 
-#incude "mine.h"
-
+#include "mine.h"
 
 data C'Mine_problem = C'Mine_problem
   { n :: CInt
@@ -101,7 +105,7 @@ mine_mic :: Mine_score -> Double
 mine_mic score = unsafePerformIO $ do
   let n' = fromIntegral (n score) :: CInt
       m' = map fromIntegral (m score) :: [CInt]
-      mm'= map (\x -> map realToFrac) mm :: [[CDoouble]]
+      mm'= map (\x -> map realToFrac) (mm score) :: [[CDoouble]]
   out <- withArray n' m' $ \ptr'm -> do
     ptrPtr'mm <- sequence $ map (\x-> withArray n' x $ \ptr'mm -> return ptr'mm) mm'
     let aC'Mine_score = new (C'Mine_score{n=n', m=ptr'm, mm=ptrPtr'mm})
@@ -114,7 +118,7 @@ mine_mas :: Mine_score -> Double
 mine_mas score = unsafePerformIO $ do
   let n' = fromIntegral (n score) :: CInt
       m' = map fromIntegral (m score) :: [CInt]
-      mm'= map (\x -> map realToFrac) mm :: [[CDoouble]]
+      mm'= map (\x -> map realToFrac) (mm score) :: [[CDoouble]]
   out <- withArray n' m' $ \ptr'm -> do
     ptrPtr'mm <- sequence $ map (\x-> withArray n' x $ \ptr'mm -> return ptr'mm) mm'
     let aC'Mine_score = new (C'Mine_score{n=n', m=ptr'm, mm=ptrPtr'mm})
@@ -127,7 +131,7 @@ mine_mev :: Mine_score -> Double
 mine_mev score = unsafePerformIO $ do
   let n' = fromIntegral (n score) :: CInt
       m' = map fromIntegral (m score) :: [CInt]
-      mm'= map (\x -> map realToFrac) mm :: [[CDoouble]]
+      mm'= map (\x -> map realToFrac) (mm score) :: [[CDoouble]]
   out <- withArray n' m' $ \ptr'm -> do
     ptrPtr'mm <- sequence $ map (\x-> withArray n' x $ \ptr'mm -> return ptr'mm) mm'
     let aC'Mine_score = new (C'Mine_score{n=n', m=ptr'm, mm=ptrPtr'mm})
@@ -141,7 +145,7 @@ mine_mcn score y = unsafePerformIO $ do
   let y' = realToFrac y :: CDouble
       n' = fromIntegral (n score) :: CInt
       m' = map fromIntegral (n score) :: [CInt]
-      mm'= map (\x->map realToFrac) mm :: [[CDouble]]
+      mm'= map (\x->map realToFrac) (mm score) :: [[CDouble]]
   out <- withArray n' m' $ \ptr'm -> do
     ptrPtr'mm <- sequence $ map (\x->withArray n' x $ \ptr'mm -> return ptr'mm) mm'
     let aC'Mine_score = new (C'Mine_score{n=n', m=ptr'm, mm=ptrPtr'mm})
@@ -154,7 +158,7 @@ mine_mcn_general :: Mine_score -> Double
 mine_mcn_general score = unsafePerformIO $ do
   let n' = fromIntegral (n score) :: CInt
       m' = map fromIntegral (m score) :: [CInt]
-      mm'= map (\x -> map realToFrac) mm :: [[CDoouble]]
+      mm'= map (\x -> map realToFrac) (mm score) :: [[CDoouble]]
   out <- withArray n' m' $ \ptr'm -> do
     ptrPtr'mm <- sequence $ map (\x-> withArray n' x $ \ptr'mm -> return ptr'mm) mm'
     let aC'Mine_score = new(C'Mine_score{n=n', m=ptr'm, mm=ptrPtr'mm})
@@ -167,7 +171,7 @@ mine_mcn_general score = unsafePerformIO $ do
 -- structure
 
 instance Storable C'Mine_problem where
-  sizeOf = const #size struct mine_problem
+  sizeOf = const #size mine_problem
   alignment = sizeOf
   poke problem (C'Mine_problem val_n val_x val_y) = do
     (#poke struct mine_problem, n) problem val_n
@@ -201,14 +205,14 @@ instance Storable C'Mine_score where
   poke score (C'Mine_score val_n val_m val_mm) = do
     (#poke struct mine_score, n) score val_n
     (#poke struct mine_score, m) score val_m
-    (#poke struct mine_score, mm) score val_mm
+    (#poke struct mine_score, M) score val_mm
   peek score = do
     val_n  <- (#peek struct mine_score, n) score
     val_m  <- (#peek struct mine_score, m) score
-    val_mm <- (#peek struct mine_score, mm) score
+    val_mm <- (#peek struct mine_score, M) score
     return $ C'Mine_score { n = val_n
                           , m = val_m
-                          , mm=val mm}
+                          , mm = val mm}
 
 
 foreign import ccall unsafe "mine.h mine_compute_score"
