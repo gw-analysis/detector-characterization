@@ -3,8 +3,10 @@ module HasKAL.SignalProcessingUtils.LinearPrediction
 ( lpefCoeff
 , levinson
 , whitening
+, whiteningWaveData
 ) where
 
+import Data.Maybe
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import Data.Complex()
@@ -15,10 +17,8 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SignalProcessingUtils.Interpolation
 import HasKAL.SignalProcessingUtils.InterpolationType
 import HasKAL.SpectrumUtils.SpectrumUtils
+import HasKAL.WaveUtils.Data
  
---import Numeric.Conversion
-
--- import Prelude hiding (abs)
 
 {- exposed functions -}
 lpefCoeff :: Int -> [(Double,Double)] -> ([Double],Double)
@@ -42,8 +42,15 @@ levinson p r = do
 whitening :: ([Double],Double) -> [Double]-> [Double]
 whitening (whnb,rho) x = map (/sqrt rho) $ fir whnb x
 
+
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]
 --whiteningC (whnb,rho) x = map (/sqrt rho) $ firFilter x whnb
+
+
+whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
+whiteningWaveData (whnb,rho) x = do
+  let y = map (/sqrt rho) $ fir whnb (gwdata (toList x))
+  fromJust $ updateWaveDatagwdata x (fromList y)
 
 
 {- internal functions -}

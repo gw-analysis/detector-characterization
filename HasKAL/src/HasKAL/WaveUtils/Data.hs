@@ -57,3 +57,14 @@ getWaveProperty :: WaveData -> WaveProperty
 getWaveProperty x = undefined
 
 
+updateWaveDatagwdata :: WaveData -> TimeSeries -> Maybe WaveData
+updateWaveDatagwdata v w
+  | dim (gwdata v)==dim w 
+    = Just $ mkWaveData { detector = detector v
+                        , dataType = dataType v
+                        , samplingFrequency = samplingFrequency v
+                        , startGPSTime = startGPSTime v
+                        , stopGPSTime = stopGPSTime v
+                        , gwdata = w
+                        }
+  | otherwise Nothing
