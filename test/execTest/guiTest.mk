@@ -1,12 +1,13 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/05/29 11:23:29
+# Last Modified: 2014/10/01 18:59:00
 #******************************************#
 
 # compiler/option
 HC = ghc -O2
-LIBS = -lstdc++ -lFrame
+LDFLAGS = -L/opt/work/gsl/lib
+LIBS = -lstdc++ -lFrame -lgsl -lgslcblas
 
 # program
 TAR1 = guiTest
@@ -31,7 +32,7 @@ TEMP = ./*~ ${PREF}*~ \
 all: ${TARs}
 
 ${TAR1}: ${TAR1}.hs ${DEPs}
-	${HC} -o $@ $< ${LIBS}
+	${HC} -o $@ $< ${LDFLAGS} ${LIBS}
 
 clean:
 	rm -f ${TEMP}

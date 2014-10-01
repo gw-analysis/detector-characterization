@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 17:58:05
+  * Last Modified: 2014/10/01 19:16:51
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -17,7 +17,7 @@ import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
-import qualified HasKAL.PlotUtils.PlotUtils as HPP
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 import qualified HasKAL.Misc.Flip3param as HMF
 
@@ -45,8 +45,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonHBoxFClust <- hBoxNew True 5
   rayleighMonHBoxButtons <- hBoxNew True 5
 
-  rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/cachefile_20140702.lst"
-  rayleighMonDateCombo <- HGGS.dateComboNew (2014, 5, 17, 16, 15, 12, "JST")
+  rayleighMonCacheOpener <- HGGS.fileOpenButtonNewWithLabelDefault "Cache file" $ HGGS.haskalOpt ++ "/cachefiles/cliocache.lst"
+  rayleighMonDateCombo <- HGGS.dateComboNew (2012, 10, 18, 9, 25, 52, "JST")--Oct 18 00:25:52 2012
   rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
   rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "65536"
@@ -98,8 +98,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
 {--}
     let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) rmCache
         frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) rmCache
-        quantiles = HMRRM.rayleighMon' rmStride rmFClust rmSampling 0.95 snf frData
-    HPP.scatter_plot_2d "RayleighMon 0.95 quantile" "x" 2.0 (720,480) $ zip [0, dF..rmSampling/2] quantiles
+        quantiles = HMRRM.rayleighMon rmStride rmFClust rmSampling 0.95 snf frData
+    RPG.plotX RPG.Linear RPG.Point ("frequency [Hz]","Normalized noise level [/rHz]") "RayleighMon: p=0.95" $ zip [0, dF..rmSampling/2] quantiles
 {----}
 
   {--  Exit Process  --}
