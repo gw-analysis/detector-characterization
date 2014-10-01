@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: cuiSrm.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/09/06 17:28:25
+  * Last Modified: 2014/09/12 10:32:45
   *******************************************-}
 
 import qualified Control.Monad as CM
@@ -27,7 +27,7 @@ plot = X11
 
 {--  実データでは必要ないもの  --}
 nuTrue :: Double
-nuTrue = 20 -- 非ガウスさパラメータnu
+nuTrue = 64 -- 非ガウスさパラメータnu
 
 seed :: Integer
 seed = -1 -- 乱数の初期シード(負の値でUNIX Timeが入る)
@@ -38,8 +38,8 @@ main = do
   {--  GUIから与えるパラメータ  --}
   (channel, fs, flag, gps, gps') <- CM.liftM paramCheck $ SE.getArgs
   let dT = 1.0                  -- SFTストライド[sec]
-      dF = 8.0                 -- 周波数解像度[Hz]
-      sT = 128 :: Int           -- チャンク幅[sec]
+      dF = 16.0                 -- 周波数解像度[Hz]
+      sT = 1024 :: Int           -- チャンク幅[sec]
       aveNum = 128 :: Int      -- Sn(f)の平均回数
       overlap = 1.0 - 1.0/8.0   -- 時間シフト幅(0 <= x < 1)
       method = SRM.QUANT 0.99          -- Fitting方法
@@ -58,7 +58,7 @@ main = do
       nF = truncate $ dF * dT
       chunck = truncate fs * sT
       nC = truncate $ (fromIntegral sT) * fs / (fromIntegral nT)
-      num = 4 :: Int
+      num = 1 :: Int
 
   {--  データ生成  --}
   rng <- RNG.newRngWithSeed seed
@@ -99,8 +99,8 @@ main = do
   --   PNG -> do
   --     PG3.spectrogram PG3.Linear PG3.COLZ "nu" ("SRMon: "++channel) ("./fig/"++channel++".png") $ timeFreqData [0, dTau..] [0, dF..fs/2] nu
   --     return ()
-  writeFile (fpath++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
-  
+  -- writeFile (fpath++(show gps)++".txt") $ func1 $ timeFreqData [0, 0+dTau..] [0, dF..fs/2] nu
+  appendFile ("./"++(show nuTrue)++".txt") $ func2 $ zip [0, dF..fs/2] (nu !! 0)
 
 {--  データ整形用  --}
 showMultiColumn :: (Num a, Show a) => [[a]] -> String

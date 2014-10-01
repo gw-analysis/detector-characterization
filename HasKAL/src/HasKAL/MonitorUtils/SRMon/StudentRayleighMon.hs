@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 20:25:28
+  * Last Modified: 2014/09/11 21:09:07
   *******************************************-}
 
 -- Reference
@@ -106,7 +106,7 @@ getOptimalNuQuant pVal dat = snd $ minimum $ zip diff nu
         theoj = zipWith (HMF.flip312 HMSRF.hkalCdfStudentRayleighPinv pVal) sigma nu
         empij = last $ take (truncate (pVal * (realToFrac $ length dat))) $ quicksort dat :: Double
         sigma = map sqrt $ zipWith (/) (map (flip (-) 2.0) nu) nu
-        nu = [4.0, 5.0..100.0]
+        nu = [2.0, 2.1..100.0]
 
 freqClustering :: Int -> [[Double]] -> [[Double]]
 freqClustering n xss = DPM.toLists $ (DPM.reshape m) $ DPV.subVector 0 (l*m) $ DPM.flatten $ DPM.trans xm
