@@ -4,6 +4,8 @@ module HasKAL.SpectrumUtils.SpectrumUtils
 ( module HasKAL.SpectrumUtils.GwPsdMethod
 , gwpsd
 , gwspectrogram
+, gwpsdV
+, gwspectrogramV
 )
 where
 
@@ -22,6 +24,7 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 import Data.List (sort, foldl')
 
 
+{- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
   where freqV = take (div nfft 2) $ toList $ linspace nfft (0, fs)
@@ -30,8 +33,10 @@ gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
         nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral nshift)
         nshift = nfft -noverlap
 
+
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
 gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
+
 
 gwpsdCore :: PSDMETHOD -> [Double] -> Int -> Double -> WindowType -> [(Double, Double)]
 gwpsdCore method dat nfft fs w
@@ -39,16 +44,53 @@ gwpsdCore method dat nfft fs w
   | method==MedianAverage = gwpsdMedianAverageCore dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
+
 gwpsdWelch :: [Double]-> Int -> Double -> WindowType -> [(Double, Double)]
 gwpsdWelch dat nfft fs w = do
-  let ndat = length dat
+  let dat' = fromList dat
+      (fv, psdv) = gwpsdWelchV dat' nfft fs w
+  zip (toList fv) (toList psdv)
+
+
+gwpsdMedianAverageCore :: [Double] -> Int -> Double -> WindowType -> [(Double, Double)]
+gwpsdMedianAverageCore dat nfft fs w = do
+  let dat' = fromList dat
+      (fv, psdv) = gwpsdMedianAverageCoreV dat' nfft fs w
+  zip (toList fv) (toList psdv)
+
+
+{- in case of Vector data type -}
+gwspectrogramV :: Int -> Int -> Double -> Vector Double -> (Vector Double, Vector Double, [Vector Double])
+gwspectrogramV noverlap nfft fs x = (tV, freqV, spec)
+  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
+        tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..(nt-1)]]
+        spec = map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..(nt-1)] :: [Vector Double]
+        nt = floor $ (fromIntegral (dim x -nfft)) /(fromIntegral nshift)
+        nshift = nfft - noverlap
+        nfft2 = div nfft 2
+
+
+gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwpsdV dat nfft fs = gwpsdCoreV Welch dat nfft fs Hann
+
+
+gwpsdCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdCoreV method dat nfft fs w
+  | method==Welch = gwpsdWelchV dat nfft fs w
+  | method==MedianAverage = gwpsdMedianAverageCoreV dat nfft fs w
+  | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
+
+
+gwpsdWelchV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdWelchV dat nfft fs w = do
+  let ndat = dim dat
       maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
-      datlist = takesV (take maxitr (repeat nfft)) $ fromList dat
+      datlist = takesV (take maxitr (repeat nfft)) dat
       fft_val = applyFFT . applytoComplex . applyTuplify2 . applyWindow w $ datlist
       power =  map (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
       meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros nfft) power
       scale_psd = 1/(fromIntegral nfft * fs)
-  zip (toList $ linspace nfft (0, fs)) (toList $ scale scale_psd meanpower)
+  (linspace nfft (0, fs), scale scale_psd meanpower)
   where
     applyFFT :: [Vector (Complex Double)] -> [Vector (Complex Double)]
     applyFFT = map fft
@@ -61,8 +103,9 @@ gwpsdWelch dat nfft fs w = do
       | windowtype==Hann = map (windowed (hanning nfft))
       | otherwise = error "No such window implemented. Check WindowType.hs"
 
-gwpsdMedianAverageCore :: [Double] -> Int -> Double -> WindowType -> [(Double, Double)]
-gwpsdMedianAverageCore dat nfft fs w = do
+
+gwpsdMedianAverageCoreV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdMedianAverageCoreV dat nfft fs w = do
   let --ns = 2*(length dat) `div` nfft - 1 :: Int
       -- number of sample for overwrapping
       --delta = div (length dat) 2 :: Int
@@ -84,24 +127,25 @@ gwpsdMedianAverageCore dat nfft fs w = do
       medianAverageSpectrum = map (*scale_psd) medianList
 
       -- set corresponding frequency
-      fvec = toList $ linspace nfft (0, fs) :: [Double]
-  zip fvec medianAverageSpectrum
+      fvec = linspace nfft (0, fs) :: Vector Double
+  (fvec, fromList medianAverageSpectrum)
 
 
 --psdOdd:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
-psdOdd:: [Double] -> Int -> WindowType -> [Vector Double]
+psdOdd:: Vector Double -> Int -> WindowType -> [Vector Double]
 psdOdd dat nfft w = do
-  let ndat = length dat :: Int
+  let ndat = dim dat :: Int
       maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
-      datlist = takesV (take maxitr (repeat nfft)) $ fromList dat :: [Vector Double]
+      datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
 --      power = forM datlist $ \x -> calcPower x fs w
 --  forM power $ \x -> zipVector (linspace nfft (0, fs)) x
   map (\x -> calcPower x w) datlist
 
 --psdEven:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
-psdEven:: [Double] -> Int -> WindowType -> [Vector Double]
+psdEven:: Vector Double -> Int -> WindowType -> [Vector Double]
 psdEven dat' nfft w = do
-  let dat = drop (div nfft 2) dat'
+  let dat = subVector nfft2 (dim dat' - nfft2) dat'
+      nfft2 = div nfft 2
   psdOdd dat nfft w
 
 
