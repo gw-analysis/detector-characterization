@@ -42,8 +42,8 @@ mkWaveData det datatype fs startGPS stopGPS xs
              }
 
 
-mkLIGOWaveData :: String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
-mkLIGOWaveData datatype fs startGPS stopGPS xs
+mkLIGOHanfordWaveData :: String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
+mkLIGOHanfordWaveData datatype fs startGPS stopGPS xs
   = WaveData { detector = LIGO_Hanford
              , dataType = datatype
              , samplingFrequency = fs
@@ -59,7 +59,7 @@ getWaveProperty x = undefined
 
 updateWaveDatagwdata :: WaveData -> TimeSeries -> Maybe WaveData
 updateWaveDatagwdata v w
-  | dim (gwdata v)==dim w 
+  | dim (gwdata v)==dim w
     = Just $ mkWaveData { detector = detector v
                         , dataType = dataType v
                         , samplingFrequency = samplingFrequency v
