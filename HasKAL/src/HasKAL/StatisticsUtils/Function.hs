@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 
-module HasKAL.StatisticsUtils.Functions
+module HasKAL.StatisticsUtils.Function
 ( calculatePeasonCorrelation
 , permutationTestPeasonCorrelation
 , mean
