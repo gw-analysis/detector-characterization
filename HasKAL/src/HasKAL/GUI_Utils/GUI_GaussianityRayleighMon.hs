@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/01 19:45:20
+  * Last Modified: 2014/10/02 15:33:36
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -14,7 +14,7 @@ import qualified Data.Maybe as DM -- fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
-import qualified HasKAL.FrameUtils.FrameUtils as HFF
+import qualified HasKAL.FrameUtils.Functions as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
@@ -112,14 +112,11 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
 
 {-- Supplementary Functions --}
-readFrame' :: String -> String -> IO [Double]
-readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
-
 getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
 getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(HMF.flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
-  where datW = SIOU.unsafePerformIO $ mapM (readFrame' channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
+  where datW = SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
         gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
 
 getDataFromGPS :: Integer -> Integer -> String -> String -> [Double]
-getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (readFrame' channel) filelist
+getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) filelist
   where filelist = HFP.pickUpFileNameinFile gpsD (gpsD+obsD-1) cache
