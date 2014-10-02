@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/01 19:16:51
+  * Last Modified: 2014/10/01 19:45:20
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -13,6 +13,7 @@ import qualified Control.Monad as CM -- forM
 import qualified Data.Maybe as DM -- fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
+import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
@@ -50,7 +51,7 @@ hasKalGuiRayleighMon activeChannelLabels = do
   rayleighMonObsTimeEntry <- HGGS.entryNewWithLabelDefault "OBS Time [s]" "128"
   rayleighMonSamplingEntry <- HGGS.entryNewWithLabelDefault "fsample [Hz]" "16384.0"
   rayleighMonStrideEntry <- HGGS.entryNewWithLabelDefault "Stride Num" "65536"
-  rayleighMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "64"
+  rayleighMonFClustEntry <- HGGS.entryNewWithLabelDefault "f Clustering Num" "16"
   rayleighMonClose <- buttonNewWithLabel "Close"
   rayleighMonExecute <- buttonNewWithLabel "Execute"
 
@@ -99,7 +100,9 @@ hasKalGuiRayleighMon activeChannelLabels = do
     let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) rmCache
         frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) rmCache
         quantiles = HMRRM.rayleighMon rmStride rmFClust rmSampling 0.95 snf frData
-    RPG.plotX RPG.Linear RPG.Point ("frequency [Hz]","Normalized noise level [/rHz]") "RayleighMon: p=0.95" $ zip [0, dF..rmSampling/2] quantiles
+        theorem = RND.gslCdfRayleighPinv 0.95 1.0
+    RPG.oPlotX RPG.Linear RPG.LinePoint ("frequency [Hz]","Normalized noise level [/rHz]") "RayleighMon: p=0.95" $
+              [zip [0, dF..rmSampling/4] quantiles, zip [-1, rmSampling] $ repeat theorem]
 {----}
 
   {--  Exit Process  --}
