@@ -2,12 +2,16 @@
 
 module HasKAL.SpectrumUtils.SpectrumUtils
 ( module HasKAL.SpectrumUtils.GwPsdMethod
+, module HasKAL.SpectrumUtils.Signature
 , gwpsd
 , gwspectrogram
 , gwpsdV
 , gwspectrogramV
 )
 where
+
+{- Signature -}
+import HasKAL.SpectrumUtils.Signature
 
 {- For fft -}
 import Numeric.GSL.Fourier
@@ -60,11 +64,12 @@ gwpsdMedianAverageCore dat nfft fs w = do
 
 
 {- in case of Vector data type -}
-gwspectrogramV :: Int -> Int -> Double -> Vector Double -> (Vector Double, Vector Double, [Vector Double])
-gwspectrogramV noverlap nfft fs x = (tV, freqV, spec)
+gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
+gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
   where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
         tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..(nt-1)]]
-        spec = map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..(nt-1)] :: [Vector Double]
+        specgram = fromColumns
+          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..(nt-1)] :: Matrix Double
         nt = floor $ (fromIntegral (dim x -nfft)) /(fromIntegral nshift)
         nshift = nfft - noverlap
         nfft2 = div nfft 2
