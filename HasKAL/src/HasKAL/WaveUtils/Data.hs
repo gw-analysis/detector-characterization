@@ -6,11 +6,14 @@ module HasKAL.WaveUtils.Data
 , mkLIGOHanfordWaveData
 , getWaveProperty
 , updateWaveDatagwdata
+, dropWaveData
+, takeWaveData
 ) where
 
 
 import HasKAL.DetectorUtils.Detector
 import HasKAL.TimeUtils.Signature
+import HasKAL.TimeUtils.Function
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra
 
@@ -63,6 +66,24 @@ updateWaveDatagwdata v w
   | dim (gwdata v)==dim w
     = Just $ mkWaveData (detector v) (dataType v) (samplingFrequency v) (startGPSTime v) (stopGPSTime v) w
   | otherwise = Nothing
+
+
+dropWaveData :: Int -> WaveData -> WaveData
+dropWaveData n x = do
+  let t = (fromIntegral n) / (samplingFrequency x)
+      newstartGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
+      newgwdata = subVector n (dim (gwdata x) - n) (gwdata x)
+  mkWaveData (detector x) (dataType x) (samplingFrequency x) newstartGPSTime (stopGPSTime x) newgwdata
+
+
+takeWaveData :: Int -> WaveData -> WaveData
+takeWaveData n x = do
+  let t = (fromIntegral n) / (samplingFrequency x)
+      newstopGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
+      newgwdata = subVector 0 n (gwdata x)
+  mkWaveData (detector x) (dataType x) (samplingFrequency x) (startGPSTime x) newstopGPSTime newgwdata
+
+
 
 
 
