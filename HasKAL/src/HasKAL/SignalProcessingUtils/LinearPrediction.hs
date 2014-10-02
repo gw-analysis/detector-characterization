@@ -6,6 +6,7 @@ module HasKAL.SignalProcessingUtils.LinearPrediction
 , whiteningWaveData
 ) where
 
+import qualified Data.Vector.Storable as VS
 import Data.Maybe
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
@@ -50,7 +51,7 @@ whitening (whnb,rho) x = map (/sqrt rho) $ fir whnb x
 whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
 whiteningWaveData (whnb,rho) x = do
   let y = map (/sqrt rho) $ fir whnb $ toList (gwdata x)
-  fromJust $ updateWaveDatagwdata x (fromList y)
+  fromJust $ updateWaveDatagwdata x $ fromList y
 
 
 {- internal functions -}
