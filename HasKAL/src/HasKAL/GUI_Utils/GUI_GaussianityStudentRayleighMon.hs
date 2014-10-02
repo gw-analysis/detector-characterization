@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityStudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 18:03:33
+  * Last Modified: 2014/10/02 15:32:37
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon(
@@ -13,14 +13,14 @@ import qualified Control.Monad as CM -- forM
 import qualified Data.Maybe as DM --fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
-import qualified HasKAL.FrameUtils.FrameUtils as HFF -- 将来的には無くす
+import qualified HasKAL.FrameUtils.Functions as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.PlotUtils.PlotUtils as HPP
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighMon as SRM
 import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
-import qualified HasKAL.Misc.Flip3param as HMF -- HFFと一緒に無くす
+import qualified HasKAL.Misc.Flip3param as HMF
 
 {-- StudentRayleighMon Window 
 -- test code
@@ -125,14 +125,11 @@ format3dPlot _ [] _ = []
 format3dPlot _ _ [] = []
 format3dPlot (x:xs) ys (zs:zss) = zip3 [x,x..] ys zs ++ format3dPlot xs ys zss
 
-readFrame' :: String -> String -> IO [Double]
-readFrame' = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
-
 getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
 getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(HMF.flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
-  where datW = SIOU.unsafePerformIO $ mapM (readFrame' channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
+  where datW = SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
         gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
 
 getDataFromGPS :: Integer -> Integer -> String -> String -> [Double]
-getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (readFrame' channel) filelist
+getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) filelist
   where filelist = HFP.pickUpFileNameinFile gpsD (gpsD+obsD-1) cache

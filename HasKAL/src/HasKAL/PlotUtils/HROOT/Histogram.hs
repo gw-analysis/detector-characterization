@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: Histogram.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/08 13:44:22
+  * Last Modified: 2014/10/02 11:37:50
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.Histogram (
@@ -21,7 +21,6 @@ import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
 
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
-import HasKAL.PlotUtils.HROOT.PlotGraph
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
 
@@ -32,17 +31,17 @@ hist log xyLabel title fname param dat = histBase Over log [xyLabel] [title] fna
 histX :: LogOption -> (String, String) -> String -> (Int, Double, Double) -> [Double] -> IO ()
 histX log xyLabel title param dat = hist log xyLabel title "X11" param dat
 
-oHist :: LogOption -> (String, String) -> [String] -> String -> [(Int, Double, Double)] -> [[Double]] -> IO ()
-oHist log xyLabel titles fname params dats = histBase Over log [xyLabel] titles fname params dats
+oHist :: LogOption -> (String, String) -> String -> String -> [(Int, Double, Double)] -> [[Double]] -> IO ()
+oHist log xyLabel title fname params dats = histBase Over log [xyLabel] (repeat title) fname params dats
 
-oHistX :: LogOption -> (String, String) -> [String] -> [(Int, Double, Double)] -> [[Double]] -> IO ()
-oHistX log xyLabel titles params dats = histBase Over log [xyLabel] titles "X11" params dats
+oHistX :: LogOption -> (String, String) -> String -> [(Int, Double, Double)] -> [[Double]] -> IO ()
+oHistX log xyLabel title params dats = oHist log xyLabel title "X11" params dats
 
 dHist :: LogOption -> [(String, String)] -> [String] -> String -> [(Int, Double, Double)] -> [[Double]] -> IO ()
 dHist log xyLabels titles fname params dats = histBase Divide log xyLabels titles fname params dats
 
 dHistX :: LogOption -> [(String, String)] -> [String] -> [(Int, Double, Double)] -> [[Double]] -> IO ()
-dHistX log xyLabels titles params dats = histBase Divide log xyLabels titles "X11" params dats
+dHistX log xyLabels titles params dats = dHist log xyLabels titles "X11" params dats
 
 {-- Internal Functions --}
 histBase :: MultiPlot -> LogOption -> [(String, String)] -> [String] -> String -> [(Int, Double, Double)] -> [[Double]] -> IO ()

@@ -1,14 +1,13 @@
 {-******************************************
   *     File Name: SignalHandlerHROOT.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/12 16:20:15
+  * Last Modified: 2014/10/02 13:35:49
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.SignalHandlerHROOT (
   addSignalHandle
 ) where
 
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
 import qualified Foreign.C.Types as FCT
 import qualified Data.IORef as DIO
 import qualified System.IO.Unsafe as SIOU

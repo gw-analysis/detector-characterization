@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotGraph.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/08 12:04:59
+  * Last Modified: 2014/10/02 14:37:53
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph (
@@ -35,11 +35,11 @@ plot log mark xyLable title fname dat = plotBase Over log mark [xyLable] [title]
 plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [(Double, Double)] -> IO ()
 plotX log mark xyLable title dat = plot log mark xyLable title "X11" dat
 
-oPlot :: LogOption -> PlotTypeOption -> (String, String) -> [String] -> String -> [[(Double, Double)]] -> IO ()
-oPlot log mark xyLable titles fname dats = plotBase Over log mark [xyLable] titles fname dats
+oPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> [[(Double, Double)]] -> IO ()
+oPlot log mark xyLable title fname dats = plotBase Over log mark [xyLable] (repeat title) fname dats
 
-oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> [String] -> [[(Double, Double)]] -> IO ()
-oPlotX log mark xyLable titles dats = oPlot log mark xyLable titles "X11" dats
+oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [[(Double, Double)]] -> IO ()
+oPlotX log mark xyLable title dats = oPlot log mark xyLable title "X11" dats
 
 dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
 dPlot log mark xyLables titles fname dats = plotBase Divide log mark xyLables titles fname dats
