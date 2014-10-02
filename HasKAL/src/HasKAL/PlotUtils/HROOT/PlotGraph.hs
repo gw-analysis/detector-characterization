@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotGraph.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 14:37:53
+  * Last Modified: 2014/10/02 18:19:49
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph (
@@ -27,30 +27,31 @@ import qualified System.IO.Unsafe as SIOU
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
+import qualified HasKAL.PlotUtils.HROOT.SetRangeHROOT as RSR
 
 {-- External Functions --}
-plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> [(Double, Double)] -> IO ()
-plot log mark xyLable title fname dat = plotBase Over log mark [xyLable] [title] fname [dat]
+plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
+plot log mark xyLable title fname range dat = plotBase Over log mark [xyLable] [title] fname [range] [dat]
 
-plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [(Double, Double)] -> IO ()
-plotX log mark xyLable title dat = plot log mark xyLable title "X11" dat
+plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
+plotX log mark xyLable title range dat = plot log mark xyLable title "X11" range dat
 
-oPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> [[(Double, Double)]] -> IO ()
-oPlot log mark xyLable title fname dats = plotBase Over log mark [xyLable] (repeat title) fname dats
+oPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
+oPlot log mark xyLable title fname range dats = plotBase Over log mark [xyLable] (repeat title) fname (repeat range) dats
 
-oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> [[(Double, Double)]] -> IO ()
-oPlotX log mark xyLable title dats = oPlot log mark xyLable title "X11" dats
+oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
+oPlotX log mark xyLable title range dats = oPlot log mark xyLable title "X11" range dats
 
-dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
-dPlot log mark xyLables titles fname dats = plotBase Divide log mark xyLables titles fname dats
+dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+dPlot log mark xyLables titles fname ranges dats = plotBase Divide log mark xyLables titles fname ranges dats
   
-dPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [[(Double, Double)]] -> IO ()
-dPlotX log mark xyLables titles dats = dPlot log mark xyLables titles "X11" dats
+dPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+dPlotX log mark xyLables titles ranges dats = dPlot log mark xyLables titles "X11" ranges dats
 
 
 {-- Internal Functions --}
-plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [[(Double, Double)]] -> IO ()
-plotBase multi log mark xyLables titles fname dats = do
+plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+plotBase multi log mark xyLables titles fname ranges dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   HRS.setLog' tCan log
@@ -60,6 +61,8 @@ plotBase multi log mark xyLables titles fname dats = do
   setColors' tGras [2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth 2) tGras -- Lineの太さ(2に固定)
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
+  CM.zipWithM_ RSR.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+
 
   case multi of -- :: IO ()
     Over -> do 

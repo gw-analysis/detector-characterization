@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 15:33:36
+  * Last Modified: 2014/10/02 18:38:26
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -14,7 +14,7 @@ import qualified Data.Maybe as DM -- fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
-import qualified HasKAL.FrameUtils.Functions as HFF
+import qualified HasKAL.FrameUtils.Function as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
@@ -101,8 +101,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
         frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) rmCache
         quantiles = HMRRM.rayleighMon rmStride rmFClust rmSampling 0.95 snf frData
         theorem = RND.gslCdfRayleighPinv 0.95 1.0
-    RPG.oPlotX RPG.Linear RPG.LinePoint ("frequency [Hz]","Normalized noise level [/rHz]") "RayleighMon: p=0.95" $
-              [zip [0, dF..rmSampling/4] quantiles, zip [-1, rmSampling] $ repeat theorem]
+    RPG.oPlotX RPG.Linear RPG.LinePoint ("frequency [Hz]","Normalized noise level [/rHz]") "RayleighMon: p=0.95"
+            ((0,0),(0,0)) $ [zip [0, dF..rmSampling/4] quantiles, zip [-1, rmSampling] $ repeat theorem]
 {----}
 
   {--  Exit Process  --}

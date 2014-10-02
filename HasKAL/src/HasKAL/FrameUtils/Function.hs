@@ -1,10 +1,10 @@
 {-******************************************
   *     File Name: Functions.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 15:38:55
+  * Last Modified: 2014/10/02 18:39:10
   *******************************************-}
 
-module HasKAL.FrameUtils.Functions (
+module HasKAL.FrameUtils.Function (
    readFrame
   ,readFrameV
   ,readFrameFromGPS

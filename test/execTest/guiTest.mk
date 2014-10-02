@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/10/01 18:59:00
+# Last Modified: 2014/10/02 18:45:39
 #******************************************#
 
 # compiler/option
@@ -23,6 +23,8 @@ DEPs = ${PREF}_Utils.hs \
        ${PREF}_GlitchKleineWelle.hs \
        ${PREF}_GaussianityRayleighMon.hs
 
+CSRC = ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
+
 # temp file
 TEMP = ./*~ ${PREF}*~ \
        ./*.o ${PREF}*.o \
@@ -32,7 +34,7 @@ TEMP = ./*~ ${PREF}*~ \
 all: ${TARs}
 
 ${TAR1}: ${TAR1}.hs ${DEPs}
-	${HC} -o $@ $< ${LDFLAGS} ${LIBS}
+	${HC} -o $@ $< ${CSRC} ${LDFLAGS} ${LIBS}
 
 clean:
 	rm -f ${TEMP}
