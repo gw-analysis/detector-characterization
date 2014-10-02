@@ -5,6 +5,7 @@ module HasKAL.WaveUtils.Data
 , mkWaveData
 , mkLIGOHanfordWaveData
 , getWaveProperty
+, updateWaveDatagwdata
 ) where
 
 
@@ -62,3 +63,6 @@ updateWaveDatagwdata v w
   | dim (gwdata v)==dim w
     = Just $ mkWaveData (detector v) (dataType v) (samplingFrequency v) (startGPSTime v) (stopGPSTime v) w
   | otherwise = Nothing
+
+
+
