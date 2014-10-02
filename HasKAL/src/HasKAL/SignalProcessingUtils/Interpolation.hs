@@ -1,7 +1,7 @@
 
 module HasKAL.SignalProcessingUtils.Interpolation
   ( module HasKAL.SignalProcessingUtils.InterpolationType
-    interp
+  , interp
   , interpV
   ) where
 
