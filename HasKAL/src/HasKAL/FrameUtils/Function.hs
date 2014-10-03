@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: Functions.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/03 17:08:45
+  * Last Modified: 2014/10/03 17:20:09
   *******************************************-}
 
 module HasKAL.FrameUtils.Function (
@@ -9,6 +9,7 @@ module HasKAL.FrameUtils.Function (
   ,readFrameV
   ,readFrameFromGPS
 --  ,readFrameUntilGPS
+  ,readFrameWaveData
 ) where
 
 import qualified Control.Monad as CM
