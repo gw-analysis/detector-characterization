@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
 
 module HasKAL.SpectrumUtils.SpectrumUtils
-( module HasKAL.SpectrumUtils.GwPsdMethod
+( module HasKAL.SpectrumUtils.Function
+, module HasKAL.SpectrumUtils.GwPsdMethod
 , module HasKAL.SpectrumUtils.Signature
 , gwpsd
 , gwspectrogram
@@ -12,6 +13,7 @@ where
 
 {- Signature -}
 import HasKAL.SpectrumUtils.Signature
+import HasKAL.SpectrumUtils.Function
 
 {- For fft -}
 import Numeric.GSL.Fourier
