@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: Functions.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/03 17:20:09
+  * Last Modified: 2014/10/03 18:01:29
   *******************************************-}
 
 module HasKAL.FrameUtils.Function (
@@ -45,12 +45,13 @@ readFrameFromGPS gpsTime obsTime channel cache = do
 
 readFrameWaveData :: HDD.Detector -> Integer -> Integer -> String -> String -> IO HWD.WaveData
 readFrameWaveData detector gpsTime obsTime channel cache = do
+  let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   fs <- HFF.getSamplingFrequency (head fileNames) channel
   fileGPS <- CM.liftM HTF.deformatGPS $ HFF.getGPSTime $ head fileNames
   let startGPS = case ((fromIntegral gpsTime) - fileGPS) <= 0 of
         True -> fileGPS
-        False -> (truncate $ fs * ((fromIntegral gpsTime) - fileGPS)) / fs + fileGPS
-      endGPS = (truncate $ fs * (fromIntegral obsTime)) / fs + startGPS
+        False -> fromIntegral (truncate $ fs * ((fromIntegral gpsTime) - fileGPS)) / fs + fileGPS
+      endGPS = fromIntegral (truncate $ fs * (fromIntegral obsTime)) / fs + startGPS
   soft <- readFrameFromGPS gpsTime obsTime channel cache
-  return $ mkWaveData detector "test dayo" fs (deformatGPS startGPS) (deformatGPS endGPS) soft
+  return $ HWD.mkWaveData detector "test dayo" fs (HTF.formatGPS startGPS) (HTF.formatGPS endGPS) $ DPV.fromList soft
   

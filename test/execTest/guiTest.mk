@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: guiTest.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/10/02 18:45:39
+# Last Modified: 2014/10/03 17:42:44
 #******************************************#
 
 # compiler/option
@@ -23,7 +23,7 @@ DEPs = ${PREF}_Utils.hs \
        ${PREF}_GlitchKleineWelle.hs \
        ${PREF}_GaussianityRayleighMon.hs
 
-CSRC = ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
+CSRC = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 
 # temp file
 TEMP = ./*~ ${PREF}*~ \

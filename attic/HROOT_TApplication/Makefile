@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/10/02 14:09:30
+# Last Modified: 2014/10/03 14:54:43
 #******************************************#
 
 # compiler option
@@ -12,8 +12,7 @@ USELIB =
 
 # program
 TAR = plotTest
-DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc \
-      ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
+DEP = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 
 # link path
 ifneq (${USELIB},)
