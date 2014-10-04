@@ -1,23 +1,33 @@
 {-******************************************
-  *     File Name: SetRangeHROOT.hs
+  *     File Name: AppendFunctionHROOT.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:28:19
+  * Last Modified: 2014/10/04 21:12:35
   *******************************************-}
 
-module HasKAL.PlotUtils.HROOT.SetRangeHROOT (
-  setXRangeUser
+module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
+  setGrid
+ ,addSignalHandle
+ ,setXRangeUser
  ,setYRangeUser
  ,setXYRangeUser
 ) where
 
+import qualified Data.IORef as DIO
 import qualified Foreign.C.Types as FCT
 import qualified Foreign.Ptr as FP
 import qualified Foreign.Marshal.Utils as FMU
 import qualified FFICXX.Runtime.Cast as FRC
 import qualified Foreign.ForeignPtr as FFP
 import qualified HROOT as HR
+import qualified System.IO.Unsafe as SIOU
 
 {--  External Functions  --}
+setGrid :: HR.TCanvas -> IO ()
+setGrid canvas = do
+  let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
+  dummy <- FFP.withForeignPtr ptr'canvas c'SetGrid 
+  return ()
+
 setXRangeUser :: HR.TGraph -> (Double, Double) -> IO ()
 setXRangeUser tGra (min, max) = do
   axis <- HR.tGraphGetXaxis tGra
@@ -33,6 +43,12 @@ setXYRangeUser tGra ((xMin, xMax), (yMin, yMax)) = do
   setXRangeUser tGra $ (xMin, xMax)
   setYRangeUser tGra $ (yMin, yMax)
 
+addSignalHandle :: IO ()
+addSignalHandle = do
+  DIO.readIORef $ SIOU.unsafePerformIO globalSignalHandle
+  return ()
+-- 外部にダミー変数を見せないように `()' で返す
+
 {--  Internal Functions  --}
 setRangeUser :: HR.TAxis -> (Double, Double) -> IO ()
 setRangeUser axis (min, max) = do
@@ -44,5 +60,15 @@ setRangeUser axis (min, max) = do
     False -> do
       return ()
 
+globalSignalHandle :: IO (DIO.IORef FCT.CInt)
+globalSignalHandle = do
+  dummy <- c'AddSignalHandle
+  DIO.newIORef dummy
+-- dummy: 複数回呼んだときに起こる不具合を回避するためのダミー変数
+
+
 {--  Foreign Functions  --}
+foreign import ccall "hSetGrid" c'SetGrid :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
 foreign import ccall "SetRangeUser" c'SetRangeUser :: FP.Ptr (FRC.Raw HR.TAxis) -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
+foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
+

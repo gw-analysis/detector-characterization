@@ -1,13 +1,13 @@
 {-******************************************
   *     File Name: plotTest.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:36:12
+  * Last Modified: 2014/10/04 21:18:08
   *******************************************-}
 
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as PM
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PM3
 import qualified HasKAL.PlotUtils.HROOT.Histogram as H
-import qualified HasKAL.PlotUtils.HROOT.SignalHandlerHROOT as RSH
+import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
 
 main :: IO ()
 main = do
@@ -16,9 +16,9 @@ main = do
       range = ((0,0),(0,20))
       ranges = [((-10,60),(-10,60)),((10,30),(10,30)),((10,50),(20,40))]
 
-  RSH.addSignalHandle
-  PM.oPlotX PM.Linear PM.LinePoint ("X jiku","Y jiku") "Daimei" range $ [zip xs xs, zip xs ys] 
-  PM.dPlotX PM.Linear PM.LinePoint (repeat ("X jiku","Y jiku")) (repeat "Daimei") ranges $ [zip xs xs, zip xs xs, zip xs xs]
+  HAF.addSignalHandle
+  PM.oPlotX PM.Linear PM.LinePoint 2 ("X jiku","Y jiku") 0.05 "Daimei" range $ [zip xs xs, zip xs ys] 
+  -- PM.dPlotX PM.Linear PM.LinePoint 2 (repeat ("X jiku","Y jiku")) 0.06 (repeat "Daimei") ranges $ [zip xs xs, zip xs xs, zip xs xs]
 
 timeFreqData :: [Double] -> [Double] -> [[Double]] -> [(Double, Double, Double)]
 timeFreqData [] _ _ = []

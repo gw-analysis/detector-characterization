@@ -1,12 +1,14 @@
 {-******************************************
   *     File Name: PlotGraph.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:19:49
+  * Last Modified: 2014/10/04 21:14:09
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph (
    LogOption(Linear, LogX, LogY, LogXY)
   ,PlotTypeOption(Line, Point, LinePoint, PointLine, Dot)
+  ,easyPlot
+  ,easyPlotX
   ,plot -- plot in file 
   ,plotX -- plot on X11
   ,oPlot -- overplot in file
@@ -26,43 +28,52 @@ import qualified System.IO.Unsafe as SIOU
 
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
-import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
-import qualified HasKAL.PlotUtils.HROOT.SetRangeHROOT as RSR
+import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
+--import qualified HasKAL.PlotUtils.HROOT.SetRangeHROOT as HAF
+
 
 {-- External Functions --}
-plot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
-plot log mark xyLable title fname range dat = plotBase Over log mark [xyLable] [title] fname [range] [dat]
+easyPlot :: LogOption -> String -> [(Double, Double)] -> IO ()
+easyPlot log fname dat = plot log Line 2 ("x axis", "y axis") 0.05 "HasKAL Plot" fname ((0,0),(0,0)) dat
 
-plotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
-plotX log mark xyLable title range dat = plot log mark xyLable title "X11" range dat
+easyPlotX :: LogOption -> [(Double, Double)] -> IO ()
+easyPlotX log dat = easyPlot log "X11" dat
 
-oPlot :: LogOption -> PlotTypeOption -> (String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
-oPlot log mark xyLable title fname range dats = plotBase Over log mark [xyLable] (repeat title) fname (repeat range) dats
+plot :: LogOption -> PlotTypeOption -> Int -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
+plot log mark lineWidth xyLable labelSize title fname range dat = plotBase Over log mark lineWidth [xyLable] labelSize [title] fname [range] [dat]
 
-oPlotX :: LogOption -> PlotTypeOption -> (String, String) -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
-oPlotX log mark xyLable title range dats = oPlot log mark xyLable title "X11" range dats
+plotX :: LogOption -> PlotTypeOption -> Int -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double)] -> IO ()
+plotX log mark lineWidth xyLable labelSize title range dat = plot log mark lineWidth xyLable labelSize title "X11" range dat
 
-dPlot :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
-dPlot log mark xyLables titles fname ranges dats = plotBase Divide log mark xyLables titles fname ranges dats
+oPlot :: LogOption -> PlotTypeOption -> Int -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
+oPlot log mark lineWidth xyLable labelSize title fname range dats = plotBase Over log mark lineWidth [xyLable] labelSize (repeat title) fname (repeat range) dats
+
+oPlotX :: LogOption -> PlotTypeOption -> Int -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> [[(Double, Double)]] -> IO ()
+oPlotX log mark lineWidth xyLable labelSize title range dats = oPlot log mark lineWidth xyLable labelSize title "X11" range dats
+
+dPlot :: LogOption -> PlotTypeOption -> Int -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+dPlot log mark lineWidth xyLables labelSize titles fname ranges dats = plotBase Divide log mark lineWidth xyLables labelSize titles fname ranges dats
   
-dPlotX :: LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
-dPlotX log mark xyLables titles ranges dats = dPlot log mark xyLables titles "X11" ranges dats
+dPlotX :: LogOption -> PlotTypeOption -> Int -> [(String, String)] -> Double -> [String] -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+dPlotX log mark lineWidth xyLables labelSize titles ranges dats = dPlot log mark lineWidth xyLables labelSize titles "X11" ranges dats
+
 
 
 {-- Internal Functions --}
-plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> [(String, String)] -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
-plotBase multi log mark xyLables titles fname ranges dats = do
+plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> Int -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
+plotBase multi log mark lineWidth xyLables labelSize titles fname ranges dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  HAF.setGrid tCan
   HRS.setLog' tCan log
 
   tGras <- CM.forM dats $ \dat -> HR.newTGraph (toEnum $ length dat) (getPtrX dat) (getPtrY dat)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
   setColors' tGras [2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
-  mapM (flip HR.setLineWidth 2) tGras -- Lineの太さ(2に固定)
+  mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
-  CM.zipWithM_ RSR.setXYRangeUser tGras ranges -- range (X軸, Y軸)
-
+  CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+  mapM (flip setLabelSize' labelSize) tGras -- font size
 
   case multi of -- :: IO ()
     Over -> do 
@@ -76,6 +87,7 @@ plotBase multi log mark xyLables titles fname ranges dats = do
   HRS.runOrSave' tCan tApp fname
   CM.mapM HR.delete tGras
   HR.delete tCan
+
 
 
 {--  Supplementary Functions for TGraph --}
@@ -106,6 +118,13 @@ color2cint color
   | color == YELLOW = 5
   | color == PINK   = 6
   | color == CYAN   = 7
+
+setLabelSize' :: HR.TGraph -> Double -> IO ()
+setLabelSize' tGra size = do
+  xAxis <- HR.tGraphGetXaxis tGra
+  yAxis <- HR.tGraphGetYaxis tGra
+  mapM_ (flip HR.setLabelSize $ realToFrac size) [xAxis, yAxis]
+  mapM_ (flip HR.setTitleSize $ realToFrac size) [xAxis, yAxis]
 
 {-- Supplementary Functions for Foreign Types --}
 str2cstr :: String -> FCS.CString

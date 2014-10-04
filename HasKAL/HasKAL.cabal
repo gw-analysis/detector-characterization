@@ -83,8 +83,7 @@ library
     HasKAL.PlotUtils.HROOT.Histogram,
     HasKAL.PlotUtils.HROOT.PlotGraph,
     HasKAL.PlotUtils.HROOT.PlotGraph3D,
-    HasKAL.PlotUtils.HROOT.SetRangeHROOT,
-    HasKAL.PlotUtils.HROOT.SignalHandlerHROOT,
+    HasKAL.PlotUtils.HROOT.AppendFunctionHROOT,
     HasKAL.PlotUtils.HROOT.Supplement,
     HasKAL.PlotUtils.PlotUtils,
     -- HasKAL.PlotUtils.PlotUtilsHROOT,
@@ -114,8 +113,7 @@ library
   -- other-modules:
   C-sources:
     src/HasKAL/SignalProcessingUtils/filterFunctions.c
-    src/HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
-    src/HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
+    src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
     -- "extern C" しているのでCとして扱っておそらく大丈夫
 
   -- Other library packages from which modules are imported.
