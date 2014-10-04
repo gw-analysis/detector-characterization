@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeIMBH.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:42:29
+  * Last Modified: 2014/10/04 21:35:13
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeIMBH(
@@ -86,8 +86,7 @@ hasKalGuiIMR'Range = do
     {-- Monitor tool --}
     imrDist <- CM.forM [imrMass1, imrMass1+10..imrMass2] $ \mass ->
       return $ HMRIMBHD.distImbh mass mass detData
-    RPG.plotX  RPG.LogXY RPG.Line ("m1 = m2 [M_sol]", "Distance [Mpc]") "IMBH Range"
-           ((0,0),(0,0)) $ zip [imrMass1,imrMass1+10..imrMass2] imrDist
+    RPG.plotX  RPG.LogXY RPG.Line 2 ("m1 = m2 [M_sol]", "Distance [Mpc]") 0.05 "IMBH Range" ((0,0),(0,0)) $ zip [imrMass1,imrMass1+10..imrMass2] imrDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}

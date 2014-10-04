@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeStochMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:42:06
+  * Last Modified: 2014/10/04 21:39:39
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeStochMon (
@@ -93,8 +93,7 @@ hasKalGuiStochMon = do
     putStrLn ("  f max [Hz]: " ++ (show stochfMax) )
     let freqs = [stochfMin..stochfMax] :: [Double]
         h2omega = RSS.h2omega_sens_allf (3*365*86400) (read stochDet1) (read stochDet2) 0.05 0.95 freqs
-    RPG.plotX RPG.LogXY RPG.Line ("frequency [Hz]","h2omega") ("StochMon: ("++stochDet1++", "++stochDet2++")")
-           ((0,0),(0,0)) $ zip freqs h2omega
+    RPG.plotX RPG.LogXY RPG.Line 2 ("frequency [Hz]","h2omega") 0.05 ("StochMon: ("++stochDet1++", "++stochDet2++")") ((0,0),(0,0)) $ zip freqs h2omega
 
   onDestroy stochWindow mainQuit
   widgetShowAll stochWindow

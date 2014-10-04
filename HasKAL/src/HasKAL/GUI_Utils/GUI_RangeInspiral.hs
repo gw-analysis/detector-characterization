@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeInspiral.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:41:23
+  * Last Modified: 2014/10/04 21:37:17
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeInspiral(
@@ -85,8 +85,7 @@ hasKalGuiInspiralRange = do
     {-- Monitor tool --}
     inspDist <- CM.forM [inspMass1, inspMass1+2..inspMass2] $ \mass ->
       return $ HMRIRD.distInspiral mass mass detData
-    RPG.plotX RPG.LogXY RPG.Line ("m1 = m2 [M_sol]", "Distance [Mpc]") "Inspiral Range"
-           ((0,0),(0,0)) $ zip [inspMass1,inspMass1+2..inspMass2] inspDist
+    RPG.plotX RPG.LogXY RPG.Line 2 ("m1 = m2 [M_sol]", "Distance [Mpc]") 0.05 "Inspiral Range" ((0,0),(0,0)) $ zip [inspMass1,inspMass1+2..inspMass2] inspDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}

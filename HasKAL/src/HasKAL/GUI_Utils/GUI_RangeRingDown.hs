@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_RangeRingDown.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 18:41:44
+  * Last Modified: 2014/10/04 21:38:54
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
@@ -86,8 +86,7 @@ hasKalGuiRingDownRange = do
     {-- Monitor tool --}
     ringDDist <- CM.forM [ringDMass1, 10.0*ringDMass1..ringDMass2] $ \mass -> 
       return $ HMRIRD.distRingdown mass detData
-    RPG.plotX  RPG.LogXY RPG.Line ("mass [M_sol]", "Distance [Mpc]") "Ringdown Range"
-           ((0,0),(0,0)) $ zip [ringDMass1, 10.0*ringDMass1..ringDMass2] ringDDist
+    RPG.plotX  RPG.LogXY RPG.Line 2 ("mass [M_sol]", "Distance [Mpc]") 0.05 "Ringdown Range" ((0,0),(0,0)) $ zip [ringDMass1, 10.0*ringDMass1..ringDMass2] ringDDist
     {-- End of Monitor Tool --}
 
   {--  Exit Process  --}
