@@ -16,7 +16,7 @@ import System.Directory (doesDirectoryExist, getDirectoryContents, getCurrentDir
 import System.FilePath ((</>))
 import Data.List.Split (splitOn)
 import Numeric.LinearAlgebra
-
+import System.IO.Unsafe (unsafePerformIO)
 
 getRecursiveFileSystem:: FilePath -> IO [FilePath]
 getRecursiveFileSystem topdir = do
@@ -39,7 +39,7 @@ extractstartGPStime :: String -> Integer
 extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
 
 loadASCIIdata :: FilePath -> [[Double]]
-loadASCIIdata x = fmap (map ((map (\x->read x :: Double)).words)) $ fmap splitLines $ readFile
+loadASCIIdata x = unsafePerformIO $ fmap (map ((map (\x->read x :: Double)).words)) $ fmap splitLines $ readFile
 
 loadASCIIdataM :: FilePath -> Matrix Double
 loadASCIIdataM x = unsafePerformIO $ do
