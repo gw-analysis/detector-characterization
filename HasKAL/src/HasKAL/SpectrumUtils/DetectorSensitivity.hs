@@ -1,5 +1,6 @@
 module HasKAL.SpectrumUtils.DetectorSensitivity
-  (ifonoisepsd
+  ( module HasKAL.DetectorUtils.Detector
+  , ifonoisepsd
   ) where
 
 
