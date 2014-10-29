@@ -39,7 +39,7 @@ extractstartGPStime :: String -> Integer
 extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
 
 loadASCIIdata :: FilePath -> [[Double]]
-loadASCIIdata x = unsafePerformIO $ fmap (map ((map (\x->read x :: Double)).words)) $ fmap splitLines $ readFile
+loadASCIIdata x = unsafePerformIO $ fmap (map (map (\x->read x :: Double).words). splitLines) (readFile x)
 
 loadASCIIdataM :: FilePath -> Matrix Double
 loadASCIIdataM x = unsafePerformIO $ do
