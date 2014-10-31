@@ -1,4 +1,4 @@
-#Time-stamp: "2014-10-31 10:26:59 yuzurihara"
+#Time-stamp: "2014-10-31 20:15:20 yuzurihara"
 
 CC=ghc
 HC=ghc -O2
@@ -32,9 +32,14 @@ HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 #TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
 #TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
 
-TARGET=outputCorrelatedData2Text
+TARGET=outputCorrelatedData2Text  outputCorrelateRawData2Text
 
 all:$(TARGET)
+
+outputCorrelateRawData2Text: outputCorrelateRawData2Text.hs 
+	ln -fs ${HASKALPATH} ./
+	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
 
 outputCorrelatedData2Text:${OBJ14}
 	ln -fs ${HASKALPATH} ./
