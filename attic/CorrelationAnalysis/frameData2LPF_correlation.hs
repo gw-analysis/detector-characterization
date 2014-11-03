@@ -59,9 +59,7 @@ main = do
       dataFiltered = iirFilter data2 numCoeffLow denomCoeffLow
  
 -- let fname =  (show n) ++ "_lpf_GWchannel.png"
--- PM.oPlot PMOP.Linear PMOP.Line ("time [sec]", "v(t)") (repeat "check for filted data") fname $ [zip tt data1, zip tt dataFiltered]
 -- let fname =  "op_" ++ (show n) ++ "_lpf_GWchannel.png"
---  PM.plot PMOP.Linear PMOP.Line ("time [sec]", "v(t)") ("check for filted data") fname $ zip tt data1
 
   let dfs  = 2048.0 ::Double
       maxN = floor $ 0.01 * dfs ::Int

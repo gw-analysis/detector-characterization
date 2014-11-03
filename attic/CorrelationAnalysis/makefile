@@ -1,4 +1,4 @@
-#Time-stamp: "2014-09-16 06:06:41 yuzurihara"
+#Time-stamp: "2014-10-31 20:15:20 yuzurihara"
 
 CC=ghc
 HC=ghc -O2
@@ -16,10 +16,11 @@ OBJ10=devidedData2Correlation.hs
 OBJ11=check_spect0908.hs
 OBJ12=check_spect09082.hs
 OBJ13=check_spect0910.hs
+OBJ14=outputCorrelatedData2Text.hs 
 
 
-
-DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerROOT.cc
+DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
+      ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
 DEP2 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
 LIBLINK=-L/opt/work/libframe-8.21/lib -L/opt/work/root-5.34.19/lib/root -lFrame -lm
 INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root 
@@ -29,9 +30,21 @@ INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root
 HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
 
 #TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
-TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
+#TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
+
+TARGET=outputCorrelatedData2Text  outputCorrelateRawData2Text
 
 all:$(TARGET)
+
+outputCorrelateRawData2Text: outputCorrelateRawData2Text.hs 
+	ln -fs ${HASKALPATH} ./
+	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
+
+outputCorrelatedData2Text:${OBJ14}
+	ln -fs ${HASKALPATH} ./
+	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
 
 check_spect0910:${OBJ13}
 	ln -fs ${HASKALPATH} ./
@@ -55,7 +68,7 @@ devidedData2Correlation:${OBJ10}
 
 frameData2LPF_correlation:${OBJ9}
 	ln -fs ${HASKALPATH} ./
-	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	${HC} --make -o $@ $^ ${DEP2} ${DEP} ${INCLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
 filter_check_lpf:${OBJ8}
