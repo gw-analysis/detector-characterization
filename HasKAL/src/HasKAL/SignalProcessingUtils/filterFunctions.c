@@ -83,22 +83,23 @@ int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned f
 
 
 
-int fir_filter_core (double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned length, double *output){
+int fir_filter_core (double *input, unsigned inputlen, double fir_coeff[], double fir_buffer[], unsigned *index, unsigned filterlen, double *output){
 
     unsigned idx, oidx;
 
     for (oidx=0;oidx<inputlen;oidx++){
 
         fir_buffer[*index]        = input[oidx];
-        fir_buffer[*index+length] = input[oidx];
+        fir_buffer[*index+filterlen] = input[oidx];
 
-        *index=*index+1;
-        if(*index==length) *index=0;
+        if(*index==filterlen) *index=0;
 
-        for (idx=0;idx<length;idx++){
+        for (idx=0;idx<filterlen;idx++){
             output[oidx] = output[oidx]
-                + fir_coeff[idx]*fir_buffer[*index+idx];
+                + fir_coeff[idx]*fir_buffer[*index+filterlen-idx];
         }
+        *index=*index+1;
+
 
     }
 
