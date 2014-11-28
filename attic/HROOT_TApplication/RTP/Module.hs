@@ -1,11 +1,12 @@
 {-******************************************
   *     File Name: Module.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/11/28 15:10:22
+  * Last Modified: 2014/11/28 17:37:21
   *******************************************-}
 
 module Module (
    rtPlot
+  ,rtHist
   ,rtPlot3D
 ) where
 
@@ -31,7 +32,7 @@ rtHist (nBin, xMin, xMax) dat = do
 
   CM.forM (zip [1..] dat) $ \(num, lambda) -> do
     fill1 tH1d (realToFrac lambda)
-    case (mod num 100) of
+    case (mod num 1024) of
       0 -> do
         CF.modified tCan
         CF.update tCan
