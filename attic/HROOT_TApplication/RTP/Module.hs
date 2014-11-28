@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: Module.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/11/11 15:57:51
+  * Last Modified: 2014/11/28 15:10:22
   *******************************************-}
 
 module Module (
@@ -19,8 +19,8 @@ import HROOT
 import HasKAL.PlotUtils.HROOT.Supplement as HRS
 import CFunction as CF
 
-rtPlot :: (Int, Double, Double) -> [Double] -> IO ()
-rtPlot (nBin, xMin, xMax) dat = do
+rtHist :: (Int, Double, Double) -> [Double] -> IO ()
+rtHist (nBin, xMin, xMax) dat = do
   tApp <- HRS.newTApp' "X11"
   tCan <- newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
 
@@ -43,6 +43,29 @@ rtPlot (nBin, xMin, xMax) dat = do
 
   delete tH1d
   delete tCan
+
+rtPlot :: [(Double, Double)] -> IO ()
+rtPlot dat = do
+  tApp <- HRS.newTApp' "X11"
+  tCan <- newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+
+  tH1d <- newTH1D (str2cstr "Time Series") (str2cstr "title") (toEnum.length $ dat) (realToFrac.fst.head $ dat) (realToFrac.fst.last $ dat)
+  draw tH1d $ str2cstr $ show "hoge"
+
+  CM.forM (zip [1..] dat) $ \(num, lambda) -> do
+    setBinContent1 tH1d (toEnum num) $ realToFrac $ (DPV.fromList $ map snd dat) @> (num -1)
+    case (mod num 256) of
+      0 -> do
+        CF.modified tCan
+        CF.update tCan
+      _ -> return ()
+  
+  setFillColor tH1d 0
+  HRS.runOrSave' tCan tApp "X11"
+
+  delete tH1d
+  delete tCan
+
 
 rtPlot3D :: [(Double, Double, Double)] -> IO ()
 rtPlot3D dats = do
