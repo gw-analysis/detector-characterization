@@ -13,8 +13,8 @@ USELIB=
 
 # program
 TAR1=test
-TAR2=
-TAR3=
+TAR2=simulation
+TAR3=test2
 TAR= ${TAR1} ${TAR2} ${TAR3}
 
 # link path
@@ -33,8 +33,8 @@ endif
 # compile rule
 all: ${TAR}
 
-${TAR1}: ${TAR1}.hs
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR1}: ${TAR1}.hs HasKAL/SignalProcessingUtils/filterFunctions.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} 
 
 ${TAR2}: ${TAR2}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
