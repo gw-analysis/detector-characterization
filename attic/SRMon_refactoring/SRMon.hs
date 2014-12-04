@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: SRMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/04 13:12:11
+  * Last Modified: 2014/12/04 15:15:22
   *******************************************-}
 
 module SRMon (
@@ -14,6 +14,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M
 import qualified Control.Monad as CM
+
+import MatrixSupplement
 
 -- HasKAL
 import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as SRF
@@ -43,24 +45,6 @@ whiteningSpectrogram snf hfs = mapColumns1 whiteningSpectrum snf hfs
 
 whiteningSpectrum :: Vector Double -> Vector Double -> Vector Double
 whiteningSpectrum snf hf = V.zipWith (/) hf snf
-
--- matrix supply
-mapRows0 :: (Unbox a) => (Vector a -> a) -> Matrix a -> Vector a
-mapRows0 fx mat = unsafePerformIO $ forM idxV $ \idx -> return $ fx $ takeRow idx mat
-  where idxV = fromList [0..(rows mat)-1]
-
-mapColumns0 :: (Unbox a) => (Vector a -> a) -> Matrix a -> Vector a
-mapColumns0 fx mat = unsafePerformIO $ forM idxV $ \idx -> return $ fx $ takeColumn idx mat
-  where idxV = fromList [0..(cols mat)-1]
-
-mapRows1 :: (Unbox a) => (Vector a -> Vector a -> Vector a) -> Vector a -> Matrix a -> Matrix a
-mapRows1 fx vec mat = fromRows $ unsafePerformIO $ CM.forM idxL $ \idx -> return $ fx vec $ takeRow idx mat
-  where idxL = [0..(rows mat)-1]
-
-mapColumns1 :: (Unbox a) => (Vector a -> Vector a -> Vector a) -> Vector a -> Matrix a -> Matrix a
-mapColumns1 fx vec mat = fromColumns $ unsafePerformIO $ CM.forM idxL $ \idx -> return $ fx vec $ takeColumn idx mat
-  where idxL = [0..(cols mat)-1]
-
 
 
 -- unbox vector

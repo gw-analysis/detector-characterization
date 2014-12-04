@@ -1,24 +1,24 @@
 {-******************************************
   *     File Name: test.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/04 13:10:34
+  * Last Modified: 2014/12/04 15:15:56
   *******************************************-}
 
-import qualified HasKAL.FrameUtils.FrameUtils as HFF -- データ読み出し
 import qualified Control.Monad as CM
-
-import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
-import qualified HasKAL.SpectrumUtils.Function as HSF
-import qualified HasKAL.Misc.Flip3param as HMF 
 
 import Data.Matrix.Unboxed as UM
 import Data.Vector.Unboxed as UV
-import Data.Packed.Vector as SV
 import Data.Packed.Matrix as SM
+import Data.Packed.Vector as SV
+
+import HasKAL.FrameUtils.Function
+import HasKAL.Misc.Flip3param (flip231)
+import HasKAL.PlotUtils.HROOT.PlotGraph3D
+import HasKAL.SpectrumUtils.Function
+import HasKAL.SpectrumUtils.SpectrumUtils
 
 import SRMon
-
-import HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
+import MatrixSupplement
 
 main = do
   let channel = "L1:LOSC-STRAIN"
@@ -29,39 +29,19 @@ main = do
       shift = 16
       clusteringF = 16
 
-  data1 <- readFrame' channel "/home/yamamoto/L-L1_LOSC_4_V1-842743808-4096.gwf"
-  data2 <- readFrame' channel "/home/yamamoto/L-L1_LOSC_4_V1-842747904-4096.gwf"
+  data1 <- readFrameV channel "/home/yamamoto/L-L1_LOSC_4_V1-842743808-4096.gwf"
+  data2 <- readFrameV channel "/home/yamamoto/L-L1_LOSC_4_V1-842747904-4096.gwf"
 
-  let snf = slice 0 (truncate $ fsample/2) $ convert $ snd $ HMF.flip231 HSS.gwpsdV nT fsample $ convert $ slice 0 (nT*aveN) $ UV.fromList data1
-      hfs = convertS2U $ trd' $ HSS.gwspectrogramV 0 nT fsample $ convert $ UV.fromList data2
+  let snf = slice 0 (truncate $ fsample/2) $ convert $ snd $ flip231 gwpsdV nT fsample $ subVector 0 (nT*aveN) data1
+      hfs = convertS2U $ trd' $ gwspectrogramV 0 nT fsample data2
 
       nus = timeShift (srMonM 0.99) chunck shift clusteringF (UV.map sqrt snf) (UM.map ((*(sqrt 2.0)).sqrt) hfs)
      
-      nus' = timeFreqData [0,16..] [16,32..2048] $ UM.toLists $ tr nus
+      nus' = plotFormatedSpectogram (SV.fromList [0,16..3968], SV.fromList [16,32..2048], convertU2S nus)
 
   spectrogramX LogY COLZ "nu" "SRMon" nus'
 
-trd' :: HSS.Spectrogram -> SM.Matrix Double
+trd' :: Spectrogram -> SM.Matrix Double
 trd' (tV, fV, specM) = specM
   
-
-readFrame' :: String -> String -> IO [Double]
-readFrame' = (CM.liftM ((Prelude.map realToFrac).HFF.eval).).HFF.readFrame
-
-timeFreqData :: [Double] -> [Double] -> [[Double]] -> [(Double, Double, Double)]
-timeFreqData [] _ _ = []
-timeFreqData _ [] _ = []
-timeFreqData _ _ [] = []
-timeFreqData (x:xs) ys (zs:zss) = Prelude.zip3 [x,x..] ys zs Prelude.++ timeFreqData xs ys zss
-
-
-convertS2U :: SM.Matrix Double -> UM.Matrix Double
-convertS2U mat = fromVector rowN colN$ convert $ SM.flatten mat
-  where rowN = SM.rows mat
-        colN = SM.cols mat
-
-convertU2S :: UM.Matrix Double -> SM.Matrix Double
-convertU2S mat = SM.reshape colN $ convert $ UM.flatten mat
-  where colN = UM.cols mat
-
 
