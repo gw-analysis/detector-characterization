@@ -1,13 +1,12 @@
 {-******************************************
   *     File Name: SRMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/03 21:42:30
+  * Last Modified: 2014/12/04 13:12:11
   *******************************************-}
 
 module SRMon (
    timeShift
   ,srMonM
-  ,whiteningSpectrogram
 ) where
 
 import Data.List (sort)
@@ -22,28 +21,25 @@ import qualified HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions as SRF
 -- for refactoring code
 import qualified Data.List as L (sort, last, take , length, minimum, zip)
 
-timeShift :: (Matrix Double -> Vector Double) -> Int -> Int -> Int -> Vector Double -> Matrix Double -> [Vector Double]
+timeShift :: (Matrix Double -> Vector Double) -> Int -> Int -> Int -> Vector Double -> Matrix Double -> Matrix Double
 timeShift fx chunck shift clusteringF snf mat = do
-  unsafePerformIO $ CM.forM [0, shift..rows wMat - chunck] $ \idx -> do
-    let submat = subMatrix (idx, idx+chunck-1) (0, cols wMat - 1) wMat
-        clusmat = frequencyClusteringM clusteringF submat
-    return $ fx $ clusmat
+  fromColumns $ unsafePerformIO $ CM.forM [0, shift..cols wMat - chunck] $ \idx -> do
+    return $ fx $ frequencyClusteringM clusteringF $ subMatrix (0, rows wMat - 1) (idx, idx+chunck-1) wMat
   where wMat = whiteningSpectrogram snf mat
 
 -- unbox matrix
 srMonM :: Double -> Matrix Double -> Vector Double
-srMonM pVal dataFs = mapColumns0 (getNuV pVal) $ dataFs
+srMonM pVal dataFs = mapRows0 (getNuV pVal) $ dataFs
 
---- xm = fromLists [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]] :: Matrix Double
 frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
-frequencyClusteringM num mat = tr $ fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ tr mat
-  where newCol = num * oldRow
+frequencyClusteringM num mat = fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ mat
+  where newCol = num * oldCol
         newRow = oldRow*oldCol `div` newCol
         oldCol = cols mat
         oldRow = rows mat
 
 whiteningSpectrogram :: Vector Double -> Matrix Double -> Matrix Double
-whiteningSpectrogram snf hfs = mapRows1 whiteningSpectrum snf hfs
+whiteningSpectrogram snf hfs = mapColumns1 whiteningSpectrum snf hfs
 
 whiteningSpectrum :: Vector Double -> Vector Double -> Vector Double
 whiteningSpectrum snf hf = V.zipWith (/) hf snf
@@ -64,7 +60,6 @@ mapRows1 fx vec mat = fromRows $ unsafePerformIO $ CM.forM idxL $ \idx -> return
 mapColumns1 :: (Unbox a) => (Vector a -> Vector a -> Vector a) -> Vector a -> Matrix a -> Matrix a
 mapColumns1 fx vec mat = fromColumns $ unsafePerformIO $ CM.forM idxL $ \idx -> return $ fx vec $ takeColumn idx mat
   where idxL = [0..(cols mat)-1]
-
 
 
 
