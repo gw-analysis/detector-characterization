@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: PlotGraph3D.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/10 22:19:26
+  * Last Modified: 2014/12/04 19:20:47
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
@@ -11,11 +11,17 @@ module HasKAL.PlotUtils.HROOT.PlotGraph3D (
   ,spectrogramX
   ,skyMap
   ,skyMapX
+  ,spectrogramM
+  ,spectrogramMX
+  ,skyMapM
+  ,skyMapMX
 ) where
 
 import qualified Control.Monad as CM
 import Data.Packed.Vector((@>))
 import qualified Data.Packed.Vector as DPV
+import Data.Packed.Matrix((@@>),(><))
+import qualified Data.Packed.Matrix as DPM
 import qualified Foreign.C.String as FCS
 import qualified Foreign.Storable as FS
 import qualified Foreign.C.Types as FCT
@@ -28,6 +34,9 @@ import qualified HasKAL.Misc.CoastData as MCD
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
+
+import HasKAL.SpectrumUtils.Signature
+import HasKAL.SpectrumUtils.Function
 
 data OptBG = NONE | COAST deriving (Eq)
 
@@ -44,6 +53,18 @@ skyMap log mark zLabel title fname dats = plot3dBase COAST log mark ("longitude 
 skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
 skyMapX log mark zLabel title dats = skyMap log mark zLabel title "X11" dats
 
+spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> Spectrogram -> IO ()
+spectrogramM log mark zLabel title fname dats = plot3dBaseM NONE log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
+
+spectrogramMX :: LogOption -> PlotTypeOption3D -> String -> String -> Spectrogram -> IO ()
+spectrogramMX log mark zLabel title dats = spectrogramM log mark zLabel title "X11" dats
+
+skyMapM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> Spectrogram -> IO ()
+skyMapM log mark zLabel title fname dats = plot3dBaseM COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
+
+skyMapMX :: LogOption -> PlotTypeOption3D -> String -> String -> Spectrogram -> IO ()
+skyMapMX log mark zLabel title dats = skyMapM log mark zLabel title "X11" dats
+
 {-- Internal Functions --}
 plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> [(Double, Double, Double)] -> IO ()
 plot3dBase wmap log mark xyzLabel title fname dats = do
@@ -56,6 +77,28 @@ plot3dBase wmap log mark xyzLabel title fname dats = do
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
   CM.forM [1..xNum-1] $ \idxX -> CM.forM [1..yNum-1] $ \idxY ->
     HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ (DPV.fromList $ map trd' dats) @> ((idxY-1) + (idxX-1) * yNum)
+  setXYZLabel' tH2d xyzLabel
+  HR.setStats tH2d 0
+
+  HR.draw tH2d $ str2cstr $ show mark
+  case wmap of NONE  -> return ()
+               COAST -> oPlotCoastLine
+
+  HRS.runOrSave' tCan tApp fname
+  HR.delete tH2d
+  HR.delete tCan
+
+plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> Spectrogram -> IO ()
+plot3dBaseM wmap log mark xyzLabel title fname (tV, fV, specM) = do
+  tApp <- HRS.newTApp' fname
+  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
+  HRS.setLog' tCan log
+    
+  let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
+      (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
+  tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
+  CM.forM [1..xNum-1] $ \idxX -> CM.forM [1..yNum-1] $ \idxY ->
+    HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
 
@@ -111,3 +154,5 @@ snd' (x, y, z) = y
 
 trd' :: (a, b, c) -> c
 trd' (x, y, z) = z
+
+        

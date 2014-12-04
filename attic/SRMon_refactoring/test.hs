@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: test.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/04 18:15:34
+  * Last Modified: 2014/12/04 19:21:04
   *******************************************-}
 
 import Data.Packed.Vector as SV
@@ -29,5 +29,5 @@ main = do
       hfs = gwspectrogramV 0 stride fsample data2 -- Spectrogram h(t, f)
       nus = timeShift (srMonM 0.99) fsample stride chunckN shiftN clusteringN snf hfs -- nu(t, f)
 
-  spectrogramX LogY COLZ "nu" "SRMon" $ plotFormatedSpectogram nus
+  spectrogramMX LogY COLZ "nu" "SRMon" nus
 
