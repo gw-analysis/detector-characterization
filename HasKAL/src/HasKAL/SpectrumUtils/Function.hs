@@ -6,6 +6,10 @@ module HasKAL.SpectrumUtils.Function
 ( plotFormatedSpectogram
 , updateMatrixElement
 , updateSpectrogramSpec
+, lengthTime
+, lengthFreq
+, getSpectrum
+, getTimeEvolution
 ) where
 
 import Control.Monad.ST (ST)
@@ -34,4 +38,18 @@ updateSpectrogramSpec s m = (t, f, m)
   where (t, _, _) = s
         (_, f, _) = s
 
+lengthTime :: Spectrogram -> Int
+lengthTime (_, _, specgram) = cols specgram
 
+lengthFreq :: Spectrogram -> Int
+lengthFreq (_, _, specgram) = rows specgram
+
+getSpectrum :: Int -> Spectrogram -> Spectrum
+getSpectrum n (_, freqV, specgram) = do
+  let specV = flatten $ takeColumns 1 $ dropColumns n specgram
+  (freqV, specV)
+
+getTimeEvolution :: Int -> Spectrogram -> Spectrum
+getTimeEvolution n (tV, _, specgram) = do
+  let evolV = flatten $ takeRows 1 $ dropRows n specgram
+  (tV, evolV)
