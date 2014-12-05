@@ -1,13 +1,14 @@
 {-******************************************
   *     File Name: Functions.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/03 18:01:29
+  * Last Modified: 2014/12/05 17:33:42
   *******************************************-}
 
 module HasKAL.FrameUtils.Function (
    readFrame
   ,readFrameV
   ,readFrameFromGPS
+  ,readFrameFromGPS'V
 --  ,readFrameUntilGPS
   ,readFrameWaveData
 ) where
@@ -37,6 +38,10 @@ readFrameFromGPS gpsTime obsTime channel cache = do
         False -> truncate $ ((fromIntegral gpsTime) - fileGPS) * fs
       length = truncate $ fs * (fromIntegral obsTime)
   CM.liftM ((take length).(drop headNum).concat) $ mapM (readFrame channel) fileNames
+
+readFrameFromGPS'V :: Integer -> Integer -> String -> String -> IO (DPV.Vector Double)
+readFrameFromGPS'V gpsTime obsTime channel cache = 
+  CM.liftM DPV.fromList $ readFrameFromGPS gpsTime obsTime channel cache
 
 -- readFrameUntilGPS :: Integer -> Integer -> String -> String -> IO [Double]
 -- readFrameUntilGPS gpsTime obsTime channel cache = do
