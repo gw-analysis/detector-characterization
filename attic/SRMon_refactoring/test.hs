@@ -1,17 +1,15 @@
 {-******************************************
   *     File Name: test.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/04 19:21:04
+  * Last Modified: 2014/12/05 17:02:15
   *******************************************-}
 
-import Data.Packed.Vector as SV
+import Data.Packed.Vector (subVector)
 
-import HasKAL.FrameUtils.Function
+import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
-import HasKAL.SpectrumUtils.SpectrumUtils
-
-import SRMon
-import MatrixSupplement
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
+import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
 
 main = do
   let channel = "L1:LOSC-STRAIN"
@@ -27,7 +25,7 @@ main = do
 
   let snf = gwpsdV (subVector 0 (stride*aveN) data1) stride fsample -- Averaged Spectrum Sn(f)
       hfs = gwspectrogramV 0 stride fsample data2 -- Spectrogram h(t, f)
-      nus = timeShift (srMonM 0.99) fsample stride chunckN shiftN clusteringN snf hfs -- nu(t, f)
+      nus = studentRayleighMonV (QUANT 0.99) fsample stride chunckN shiftN clusteringN snf hfs -- nu(t, f)
 
   spectrogramMX LogY COLZ "nu" "SRMon" nus
 
