@@ -1,7 +1,7 @@
 /******************************************
  *     File Name: AppendFunction.h
  *        Author: Takahiro Yamamoto
- * Last Modified: 2014/10/04 20:59:08
+ * Last Modified: 2014/12/06 00:19:22
  ******************************************/
 
 #ifndef I_GUARD_APPENDFUNCTION_H
@@ -16,6 +16,8 @@
 extern "C" {
   int SetRangeUser(TAxis *axis, double min, double max);
   int hSetGrid(TCanvas *canvas);
+  int cModified(TCanvas *canvas);
+  int cUpdate(TCanvas *canvas);
 }
 
 class MySignalHandler : public TSignalHandler{

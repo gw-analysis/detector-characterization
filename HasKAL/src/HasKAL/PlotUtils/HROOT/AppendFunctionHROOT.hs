@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: AppendFunctionHROOT.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/04 21:12:35
+  * Last Modified: 2014/12/06 00:21:00
   *******************************************-}
 
 module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
@@ -10,6 +10,8 @@ module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
  ,setXRangeUser
  ,setYRangeUser
  ,setXYRangeUser
+ ,modified
+ ,update
 ) where
 
 import qualified Data.IORef as DIO
@@ -43,6 +45,18 @@ setXYRangeUser tGra ((xMin, xMax), (yMin, yMax)) = do
   setXRangeUser tGra $ (xMin, xMax)
   setYRangeUser tGra $ (yMin, yMax)
 
+modified :: HR.TCanvas -> IO ()
+modified canvas = do
+  let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
+  dummy <- FFP.withForeignPtr ptr'canvas c'Modified
+  return ()
+
+update :: HR.TCanvas -> IO ()
+update canvas = do
+  let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
+  dummy <- FFP.withForeignPtr ptr'canvas c'Update
+  return ()
+
 addSignalHandle :: IO ()
 addSignalHandle = do
   DIO.readIORef $ SIOU.unsafePerformIO globalSignalHandle
@@ -70,5 +84,7 @@ globalSignalHandle = do
 {--  Foreign Functions  --}
 foreign import ccall "hSetGrid" c'SetGrid :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
 foreign import ccall "SetRangeUser" c'SetRangeUser :: FP.Ptr (FRC.Raw HR.TAxis) -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
+foreign import ccall "cModified" c'Modified :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
+foreign import ccall "cUpdate" c'Update :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
 foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
 

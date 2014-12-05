@@ -1,7 +1,7 @@
 /******************************************
  *     File Name: AppendFunction.cc
  *        Author: Takahiro Yamamoto
- * Last Modified: 2014/10/04 21:17:46
+ * Last Modified: 2014/12/06 00:18:24
  ******************************************/
 
 #include "AppendFunction.h"
@@ -19,10 +19,21 @@ extern "C" {
     return 0;
   }
 
+  int cModified(TCanvas *canvas){
+    canvas->Modified();
+    return 0;
+  }
+
+  int cUpdate(TCanvas *canvas){
+    canvas->Update();
+    return 0;
+  }
+
   int AddSignalHandle (){
     gSystem->AddSignalHandler(new MySignalHandler(kSigInterrupt) );
     return 0; // Haskell上で必要なダミーの返り値(C++で使う場合はvoidで良い)
   }
+
 }
 
 Bool_t MySignalHandler::Notify(){
