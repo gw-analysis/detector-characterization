@@ -1,10 +1,10 @@
 {-******************************************
-  *     File Name: FitMethod.hs
+  *     File Name: Signature.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/11 17:54:50
+  * Last Modified: 2014/12/05 15:31:20
   *******************************************-}
 
-module HasKAL.MonitorUtils.SRMon.FitMethod (
+module HasKAL.MonitorUtils.SRMon.Signature (
    FitMethod(LSM, MLE, QUANT)
 ) where
 
