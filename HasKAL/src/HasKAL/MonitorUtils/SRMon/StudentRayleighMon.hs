@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: StudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 16:59:55
+  * Last Modified: 2014/12/06 02:24:40
   *******************************************-}
 
 -- Reference
@@ -28,6 +28,7 @@ import HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
 
+{-- Expose Functions --}
 studentRayleighMon :: FitMethod -> Double -> Int -> Int -> Int -> Int -> 
   [(Double, Double)] -> [(Double, Double, Double)] -> [(Double, Double, Double)]
 studentRayleighMon method fsample stride chunck shift clusteringF snf hfs = plotFormatedSpectogram $
@@ -47,6 +48,14 @@ studentRayleighMonV method fsample stride chunck shift clusteringF (freqV1, spec
   (convert newTV, convert newFV, convertU2S newSpecM)
 
 
+{-- Internal Functions --}
+srMonM :: FitMethod -> Matrix Double -> Vector Double
+srMonM method dataFs
+  | method == LSM = error "Not Implemented yet."
+  | method == MLE = error "Not Implemented yet."
+  | method == (QUANT pVal) = mapRows0 (getNuQuantV pVal) dataFs
+  where (QUANT pVal) = method
+
 frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
 frequencyClusteringM num mat = fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ mat
   where newCol = num * oldCol
@@ -60,15 +69,8 @@ whiteningSpectrogram snf hfs = mapCols1 whiteningSpectrum snf hfs
 whiteningSpectrum :: Vector Double -> Vector Double -> Vector Double
 whiteningSpectrum snf hf = V.zipWith (/) hf snf
 
--- Unbox function
-srMonM :: FitMethod -> Matrix Double -> Vector Double
-srMonM method dataFs
-  | method == LSM = error "Not Implemented yet."
-  | method == MLE = error "Not Implemented yet."
-  | method == (QUANT pVal) = mapRows0 (getNuQuantV pVal) dataFs
-  where (QUANT pVal) = method
 
-
+----  Quantile Base Estimator
 getNuQuantV :: Double -> Vector Double -> Double
 getNuQuantV pVal dataF = getClosestValueV e t
   where e = empiricalQuantileV pVal dataF

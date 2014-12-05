@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityStudentRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 17:49:48
+  * Last Modified: 2014/12/06 02:19:05
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon(
@@ -14,7 +14,6 @@ import qualified Data.Maybe as DM --fromJust
 import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.FrameUtils.Function as HFF
-import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as PG3
 import qualified HasKAL.TimeUtils.GPSfunction as HTG

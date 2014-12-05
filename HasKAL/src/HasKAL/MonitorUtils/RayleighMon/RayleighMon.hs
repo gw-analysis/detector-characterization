@@ -1,58 +1,76 @@
 {-******************************************
   *     File Name: RayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/01 18:49:52
+  * Last Modified: 2014/12/06 02:10:36
   *******************************************-}
 
-module HasKAL.MonitorUtils.RayleighMon.RayleighMon(
+module HasKAL.MonitorUtils.RayleighMon.RayleighMon (
    rayleighMon
---  ,rayleighMon'
---  ,getEmpiricalQuantile
+  ,rayleighMonV
 ) where
 
-import qualified Foreign.Storable as FS
-import qualified Data.Packed.Vector as DPV
-import qualified Data.List as DL
+import Data.List (sort)
+import System.IO.Unsafe (unsafePerformIO)
+import Data.Vector.Unboxed as V
+import Data.Matrix.Unboxed as M hiding ((!))
+import qualified Control.Monad as CM (forM)
 
-import qualified HasKAL.Misc.Flip3param as HMF
-import qualified HasKAL.SpectrumUtils.SpectrumUtils as HSS
+import HasKAL.Misc.UMatrixMapping
+import HasKAL.SpectrumUtils.Signature
+import HasKAL.SpectrumUtils.Function
+import HasKAL.ExternalUtils.GSL.RandomNumberDistributions (gslCdfRayleighPinv)
 
-{-- Core Functions --}
----- param1: データストライド dT
----- param2: データストライド dF
----- param3: サンプリング fs
----- param4: quantile p(x)
----- param5: 両側平均スペクトル Sn(f)
----- param6: 時系列データ n(t)
----- return: quantile x(p=p0, f_{j})
-rayleighMon :: Int -> Int -> Double -> Double -> [Double] -> [Double] -> [Double]
-rayleighMon numT numF fsample pVal snf datT = map (getEmpiricalQuantile pVal) $ (dataSplit (numF*(length datFW)) 0).concat.DL.transpose $ datFW
-  where datFW = map (map (*(sqrt 2.0)) ) $ map (flip (zipWith (/)) (map sqrt snf)) datF
-        datF = map (map sqrt) $ map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 datT
----- param1: データストライド dT
----- param2: データストライド dF
----- param3: サンプリング fs
----- param4: quantile p(x)
----- param5: 時系列データ n(t)
----- return: quantile x(p=p0, f_{j})
-rayleighMon' :: Int -> Int -> Double -> Double -> [Double] -> [Double]
-rayleighMon' numT numF fsample pVal datT = map (getEmpiricalQuantile pVal) $ (dataSplit (numF*(length datF)) 0).concat.DL.transpose $ datF
-  where datF = map (map snd) $ map (HMF.flip231 HSS.gwpsd numT fsample) $ dataSplit numT 0 datT
+{-- Expose Functions --}
+rayleighMon :: [Double] -> Double -> Int -> Int -> [(Double, Double)] -> [(Double, Double, Double)] -> [([(Double, Double)], [(Double, Double)])]
+rayleighMon pVals fsample stride fClust snf hfs = fromSpectrumPair $
+  rayleighMonV pVals fsample stride fClust (toSpectrum snf) (toSpectrogram hfs)
+    where fromSpectrumPair xs = unsafePerformIO $ CM.forM xs $ \(x,y) -> return $ (fromSpectrum x, fromSpectrum y)
 
-{-- Supplementary Functions --}
----- param1: quantile
----- param2: データセット n(f_j)
----- return: quantile x(p)
-getEmpiricalQuantile :: Double -> [Double] -> Double
-getEmpiricalQuantile pVal dat = last $ take (truncate (pVal * (realToFrac $ length dat))) $ quicksort dat
+rayleighMonV :: [Double] -> Double -> Int -> Int -> Spectrum -> Spectrogram -> [(Spectrum, Spectrum)]
+rayleighMonV pVals fsample stride fClust (freqV1, specV1) (tV2, freqV2, specM2) = do
+  let snf' = V.map sqrt $ convert $ specV1
+      hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2
+      wMat = whiteningSpectrogram snf' hfs'
+      df = fromIntegral fClust * fsample / fromIntegral stride
+      newFV = fromList [df, df*2 .. df * fromIntegral ((V.length $ convert freqV2)`div`fClust)]
+  unsafePerformIO $ CM.forM pVals $ \pVal -> do
+        let noiseLv = rMonM pVal $ frequencyClusteringM fClust wMat
+            theorem = gslCdfRayleighPinv pVal 1.0
+            theoremV = (convert $ fromList [0.0, V.last newFV], convert $ fromList [theorem, theorem])
+        return $ ((convert newFV, convert noiseLv), theoremV)
 
-quicksort :: (Ord a) => [a] -> [a]
-quicksort [] = []
-quicksort (x:xs) = 
-  let smallerOrEqual = [ a | a <- xs, a <= x]
-      larger = [a | a <- xs, a > x]
-  in quicksort smallerOrEqual ++ [x] ++ quicksort larger
+runningRayleighMonV :: Double -> Double -> Int -> Int -> Int -> Int -> Spectrum -> Spectrogram -> Spectrogram
+runningRayleighMonV pVal fsample stride chunck shift fClust (freqV1, specV1) (tV2, freqV2, specM2) = do
+  let snf' = V.map sqrt $ convert $ specV1
+      hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2
+      wMat = whiteningSpectrogram snf' hfs'
+      dt = fromIntegral (shift*stride) / fsample
+      df = fromIntegral fClust * fsample / fromIntegral stride
+      newSpecM = fromColumns $ unsafePerformIO $ CM.forM [0, shift..cols wMat - chunck] $ \idx -> do
+        return $ rMonM pVal $ frequencyClusteringM fClust $ subMatrix (0, rows wMat - 1) (idx, idx+chunck-1) wMat
+      newTV = fromList [0, dt .. dt * fromIntegral (cols newSpecM - 1)]
+      newFV = fromList [df, df*2 .. df * fromIntegral (rows newSpecM)]
+  (convert newTV, convert newFV, convertU2S newSpecM)
 
-dataSplit :: (FS.Storable a) => Int -> Int -> [a] -> [[a]]
-dataSplit n m xs = map DPV.toList $ map (HMF.flip231 DPV.subVector n $ DPV.fromList xs) $ [0, (n-m)..(length xs)-n]
 
+{-- Internal Functions --}
+rMonM :: Double -> Matrix Double -> Vector Double
+rMonM pVal datM = mapRows0 (getEmpiricalQuantile pVal) datM
+
+frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
+frequencyClusteringM num mat = fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ mat
+  where newCol = num * oldCol
+        newRow = oldRow*oldCol `div` newCol
+        oldCol = cols mat
+        oldRow = rows mat
+
+whiteningSpectrogram :: Vector Double -> Matrix Double -> Matrix Double
+whiteningSpectrogram snf hfs = mapCols1 whiteningSpectrum snf hfs
+
+whiteningSpectrum :: Vector Double -> Vector Double -> Vector Double
+whiteningSpectrum snf hf = V.zipWith (/) hf snf
+
+getEmpiricalQuantile :: Double -> Vector Double -> Double
+getEmpiricalQuantile pVal datV = V.head $ V.drop (pIdx-1) $ sort4Vec datV
+  where pIdx = truncate $ pVal * (fromIntegral $ V.length datV)
+        sort4Vec = fromList.sort.V.toList

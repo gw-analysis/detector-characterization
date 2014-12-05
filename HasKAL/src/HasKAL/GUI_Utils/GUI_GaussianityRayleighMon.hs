@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/04 21:26:43
+  * Last Modified: 2014/12/06 02:17:08
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -15,10 +15,9 @@ import qualified System.IO.Unsafe as SIOU -- unsafePerformIO
 
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
 import qualified HasKAL.FrameUtils.Function as HFF
-import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.GUI_Utils.GUI_Supplement as HGGS
-import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as HMRRM
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph as RPG
+import qualified HasKAL.MonitorUtils.RayleighMon.RayleighMon as RM
+import HasKAL.PlotUtils.HROOT.PlotGraph
 import qualified HasKAL.TimeUtils.GPSfunction as HTG
 import qualified HasKAL.Misc.Flip3param as HMF
 
@@ -97,11 +96,12 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("    fsample: " ++ (show rmSampling) )
     putStrLn ("     stride: " ++ (show rmStride) )
 {--}
-    let snf = getAvePsdFromGPS rmStride rmSampling 32 rmGPS (activeChannelLabels !! 0) rmCache
-        frData = getDataFromGPS rmGPS rmObsTime (activeChannelLabels !! 0) rmCache
-        quantiles = HMRRM.rayleighMon rmStride rmFClust rmSampling 0.95 snf frData
-        theorem = RND.gslCdfRayleighPinv 0.95 1.0
-    RPG.oPlotX RPG.Linear RPG.LinePoint 1 ("frequency [Hz]","Normalized noise level [/rHz]") 0.05 "RayleighMon: p=0.95" ((0,0),(0,0)) $ [zip [0, dF..rmSampling/4] quantiles, zip [-1, rmSampling] $ repeat theorem]
+    snt <- HFF.readFrameFromGPS'V rmGPS rmObsTime (activeChannelLabels!!0) rmCache
+    let snf = HSS.gwpsdV snt rmStride rmSampling
+    hts <- HFF.readFrameFromGPS'V rmGPS rmObsTime (activeChannelLabels!!0) rmCache
+    let hfs = HSS.gwspectrogramV 0 rmStride rmSampling hts
+        quant = RM.rayleighMonV [0.5,0.9,0.95,0.99] rmSampling rmStride rmFClust snf hfs
+    oPlotXV LogXY LinePoint 2 ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
 {----}
 
   {--  Exit Process  --}
@@ -111,11 +111,6 @@ hasKalGuiRayleighMon activeChannelLabels = do
 
 
 {-- Supplementary Functions --}
-getAvePsdFromGPS :: Int -> Double -> Int -> Integer -> String -> String -> [Double]
-getAvePsdFromGPS numT fs aveNum gpsD channel cache = map snd.(HMF.flip231 HSS.gwpsd numT fs).(take $ aveNum*numT).concat $ datW
-  where datW = SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) $ HFP.pickUpFileNameinFile gpsW (gpsD-1) cache
-        gpsW = (-) gpsD $ ceiling $ (fromIntegral $ aveNum*numT) / fs
+concatPair [] = []
+concatPair (x:xs) = [fst x, snd x] ++ concatPair xs
 
-getDataFromGPS :: Integer -> Integer -> String -> String -> [Double]
-getDataFromGPS gpsD obsD channel cache = concat $ SIOU.unsafePerformIO $ mapM (HFF.readFrame channel) filelist
-  where filelist = HFP.pickUpFileNameinFile gpsD (gpsD+obsD-1) cache
