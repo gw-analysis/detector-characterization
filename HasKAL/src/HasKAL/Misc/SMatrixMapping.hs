@@ -1,10 +1,11 @@
 {-******************************************
   *     File Name: SMatrixMapping.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 16:28:55
+  * Last Modified: 2014/12/05 16:35:26
   *******************************************-}
 
-module SMatrixMapping (
+-- map functions for Storable Matrix
+module HasKAL.Misc.SMatrixMapping (
    convertS2U
   ,convertU2S
   ,mapRows0

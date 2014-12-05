@@ -1,10 +1,11 @@
 {-******************************************
   *     File Name: UMatrixMapping.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 16:29:05
+  * Last Modified: 2014/12/05 16:35:12
   *******************************************-}
 
-module UMatrixMapping (
+-- map functions for Unboxed Matrix
+module HasKAL.Misc.UMatrixMapping (
    convertS2U
   ,convertU2S
   ,mapRows0
