@@ -1,7 +1,7 @@
 {-******************************************
   *     File Name: GUI_GaussianityRayleighMon.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 02:17:08
+  * Last Modified: 2014/12/06 12:18:40
   *******************************************-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
@@ -101,7 +101,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
     hts <- HFF.readFrameFromGPS'V rmGPS rmObsTime (activeChannelLabels!!0) rmCache
     let hfs = HSS.gwspectrogramV 0 rmStride rmSampling hts
         quant = RM.rayleighMonV [0.5,0.9,0.95,0.99] rmSampling rmStride rmFClust snf hfs
-    oPlotXV LogXY LinePoint 2 ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
+        colors = [RED,RED,GREEN,GREEN,BLUE,BLUE,PINK,PINK]
+    oPlotXV LogXY LinePoint 2 colors ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
 {----}
 
   {--  Exit Process  --}
