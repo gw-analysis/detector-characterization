@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_Supplement.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 17:37:32
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_Supplement
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+some useful functions
+
+-}
 
 module HasKAL.GUI_Utils.GUI_Supplement(
    HME.haskalOpt

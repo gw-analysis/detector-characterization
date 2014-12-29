@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_RangeStochMon.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 12:22:01
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_RangeStochMon
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+GUI of Stochastic Range Monitor
+
+-}
 
 module HasKAL.GUI_Utils.GUI_RangeStochMon (
    hasKalGuiStochMon

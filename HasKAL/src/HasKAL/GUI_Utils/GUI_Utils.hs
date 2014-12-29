@@ -1,8 +1,16 @@
-{-******************************************************************
-  *     File Name: GUI_Utils.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/16 12:52:34
-  ******************************************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_Utils
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+HasKAL GUI 
+
+-}
 
 module HasKAL.GUI_Utils.GUI_Utils
   (hasKalGuiTop

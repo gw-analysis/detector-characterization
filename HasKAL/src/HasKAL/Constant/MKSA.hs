@@ -1,12 +1,18 @@
-{-******************************************
-  *     File Name: MKSA.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/21 19:21:08
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.Constant.MKSA
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
 
--- Reference
----- [1] ``GSL Reference Manual'' http://www.gnu.org/software/gsl/manual/html_node/
----- [2] "gsl/gsl_const_mksa.h"
+Physical constant in MKSA unit
+
+- [1] "GSL Reference Manual"  http://www.gnu.org/software/gsl/manual/html_node/
+- [2] "gsl/gsl_const_mksa.h"
+-}
 
 {-# LANGUAGE ForeignFunctionInterface, CApiFFI #-}
 
@@ -20,23 +26,23 @@ module HasKAL.Constant.MKSA (
 
 import Foreign.C.Types
 
--- Speed of light [m/s]
+-- | Speed of light [m/s]
 hasKAL_const_mksa_speed_of_light :: Double
 hasKAL_const_mksa_speed_of_light = realToFrac c_const_mksa_speed_of_light
 
--- gravitational constant [m^3/kg/s^2]
+-- | gravitational constant [m^3/kg/s^2]
 hasKAL_const_mksa_gravitational_constant :: Double
 hasKAL_const_mksa_gravitational_constant = realToFrac c_const_mksa_gravitational_constant
 
--- 1 light year [m]
+-- | 1 light year [m]
 hasKAL_const_mksa_light_year :: Double
 hasKAL_const_mksa_light_year = realToFrac c_const_mksa_light_year
 
--- 1 parsec [m]
+-- | 1 parsec [m]
 hasKAL_const_mksa_parsec :: Double
 hasKAL_const_mksa_parsec = realToFrac c_const_mksa_parsec
 
--- solor mass [kg]
+-- | solor mass [kg]
 hasKAL_const_mksa_solar_mass :: Double
 hasKAL_const_mksa_solar_mass = realToFrac c_const_mksa_solar_mass
 

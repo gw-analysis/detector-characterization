@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: EXTKleineWelle.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:55:45
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+LAL function
+- [1] L. Blackburn, "KleineWelle Technical Document", LIGO-T060221-00-Z
+-}
 
 module HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
   (execKleineWelle
@@ -18,7 +26,21 @@ import qualified Control.Monad as CM -- forM
 import qualified HasKAL.ExternalUtils.LAL.Lwtprint as HELL
 
 
-execKleineWelle :: Int -> String -> Double -> Double -> Double -> Int -> [String] -> Int -> Int -> Int -> String -> String -> Integer -> [String] -> IO [String]
+execKleineWelle :: Int -- ^ stride [sec]
+                -> String -- ^ basename
+                -> Double -- ^ duration
+                -> Double -- ^ significance
+                -> Double -- ^ threshold
+                -> Int -- ^ decimate factor
+                -> [String] -- ^ channel list
+                -> Int -- ^ low freq cut off
+                -> Int -- ^ high freq cut off
+                -> Int -- ^ ???
+                -> String -- ^ opt file name
+                -> String -- ^ list file
+                -> Integer -- ^ GPS time [sec]
+                -> [String] -- ^ kleienWelle table
+                -> IO [String]
 execKleineWelle kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor glitchActiveLabels kwLowCutOff kwHighCutOff kwUnowen_2 optFilePref listFile kwGpsTime kwActiveLabels = do
   generateOptKW kwStride kwBasename kwTransientDuration kwSignificance kwThreshold kwDecimateFactor kwLowCutOff kwHighCutOff kwUnowen_2 optFilePref glitchActiveLabels
   coreKleineWelle optFilePref listFile glitchActiveLabels

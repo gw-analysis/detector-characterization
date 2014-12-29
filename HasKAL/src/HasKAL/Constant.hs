@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: Constant.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/21 19:29:20
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.Constant
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+Physical constant
+
+-}
 
 module HasKAL.Constant (
    module HasKAL.Constant.MKSA

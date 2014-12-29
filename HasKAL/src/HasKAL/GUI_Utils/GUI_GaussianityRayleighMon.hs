@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_GaussianityRayleighMon.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 12:18:40
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_GaussianityRayleighMon
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+fGUI of Rayleigh Monitor
+
+-}
 
 module HasKAL.GUI_Utils.GUI_GaussianityRayleighMon(
    hasKalGuiRayleighMon

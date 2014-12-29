@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_AntennaPattern.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/25 17:45:00
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_AntennaPattern
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+GUI of Antenna Pattern
+
+-}
 
 module HasKAL.GUI_Utils.GUI_AntennaPattern (
    hasKalGuiAntennaPattern

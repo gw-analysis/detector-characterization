@@ -1,8 +1,15 @@
-{-******************************************
-  *     File Name: StudentRayleighThreshold.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/01 18:15:47
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+Threshold of Student Rayleigh Distribution
+-}
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold (
    studentThreshold
@@ -18,10 +25,9 @@ import HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions
 
 
 {--  External Functions  --}
--- param1: gaussianでの閾値
--- param2: 非ガウスさ nu
--- return: student-tでの閾値
-studentThreshold :: Double -> Double -> Double
+studentThreshold :: Double -- ^ threshold on Gaussian
+                 -> Double -- ^ nu
+                 -> Double -- ^ threshold on student-t
 studentThreshold threshold nu = studentThreshold' (gaussianProb threshold) nu
 
 

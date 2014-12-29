@@ -1,8 +1,15 @@
-{-******************************************
-  *     File Name: Functions.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 17:33:42
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.FrameUtils.Functions
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+Frame IO functions
+-}
 
 module HasKAL.FrameUtils.Function (
    readFrame
@@ -22,13 +29,23 @@ import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.TimeUtils.Function as HTF
 import qualified HasKAL.WaveUtils.Data as HWD
 
-readFrame :: String -> String -> IO [Double]
+-- | read frame data in List
+readFrame :: String -- ^ channel name
+          -> String -- ^ file name
+          -> IO [Double]
 readFrame = (CM.liftM ((map realToFrac).HFF.eval).).HFF.readFrame
 
-readFrameV :: String -> String -> IO (DPV.Vector Double)
+-- | read frame data in Vector
+readFrameV :: String -- ^ channel name
+           -> String -- ^ file name
+           -> IO (DPV.Vector Double)
 readFrameV = (CM.liftM (DPV.fromList.(map realToFrac).HFF.eval).).HFF.readFrame
 
-readFrameFromGPS :: Integer -> Integer -> String -> String -> IO [Double]
+readFrameFromGPS :: Integer -- ^ start GPS [sec]
+                 -> Integer -- ^ length [sec]
+                 -> String -- ^ channel name
+                 -> String -- ^ file name
+                 -> IO [Double]
 readFrameFromGPS gpsTime obsTime channel cache = do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   fs <- HFF.getSamplingFrequency (head fileNames) channel
@@ -39,7 +56,11 @@ readFrameFromGPS gpsTime obsTime channel cache = do
       length = truncate $ fs * (fromIntegral obsTime)
   CM.liftM ((take length).(drop headNum).concat) $ mapM (readFrame channel) fileNames
 
-readFrameFromGPS'V :: Integer -> Integer -> String -> String -> IO (DPV.Vector Double)
+readFrameFromGPS'V :: Integer -- ^ start GPS [sec]
+                   -> Integer -- ^ length [sec]
+                   -> String -- ^ channel name
+                   -> String -- ^ file name
+                   -> IO (DPV.Vector Double)
 readFrameFromGPS'V gpsTime obsTime channel cache = 
   CM.liftM DPV.fromList $ readFrameFromGPS gpsTime obsTime channel cache
 
@@ -48,7 +69,13 @@ readFrameFromGPS'V gpsTime obsTime channel cache =
 --   let fileNames = HFP.pickUpFileNameinFile (gpsTime - obsTime) (gpsTime - 1) cache
 --   CM.liftM concat $ mapM (readFrame channel) fileNames
 
-readFrameWaveData :: HDD.Detector -> Integer -> Integer -> String -> String -> IO HWD.WaveData
+-- | read frame data in WaveData format
+readFrameWaveData :: HDD.Detector 
+                  -> Integer -- ^ start GPS [sec]
+                  -> Integer -- ^ length [sec]
+                  -> String -- ^ channel name
+                  -> String -- ^ file name
+                  -> IO HWD.WaveData
 readFrameWaveData detector gpsTime obsTime channel cache = do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   fs <- HFF.getSamplingFrequency (head fileNames) channel

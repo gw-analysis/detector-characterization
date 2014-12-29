@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GlobalTApplication.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/08/06 18:57:50
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.PlotUtils.PlotUtils.HROOT.GlobalTApplication
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+FFI TApplication Class
+
+-}
 
 module HasKAL.PlotUtils.HROOT.GlobalTApplication (
    gTApp

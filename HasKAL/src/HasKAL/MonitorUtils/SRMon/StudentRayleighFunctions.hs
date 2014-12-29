@@ -1,12 +1,17 @@
-{-******************************************
-  *     File Name: StudentRayleighFunctions.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 15:38:36
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
 
--- Reference
----- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
----- [2] ``GSL Reference Manual'', Edition 1.16 
+Student Rayleigh Functions
+
+- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
+-}
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions (
    hkalRanStudentRayleighPdf
@@ -20,44 +25,42 @@ import Numeric.GSL.Special.Gamma (gamma)
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
 
 {--  External Functions  --}
--- Student-RayleighのProbability Density Function: [1] Eq.(A18)
----- param1: sigma
----- param2: 自由度 nu
----- param3: 確率変数 x
-hkalRanStudentRayleighPdf :: Double -> Double -> Double -> Double
+-- | \[1\] Eq.(A18)
+hkalRanStudentRayleighPdf :: Double -- ^ sigma
+                          -> Double -- ^ nu
+                          -> Double -- ^ x
+                          -> Double -- ^ p(x)
 hkalRanStudentRayleighPdf sigma nu x = (*) aX $ RND.gslRanFdistPdf pX 2.0 nu
   where aX = x / sigma / sigma
         pX = x * x / 2.0 / sigma / sigma
 
--- Student-RayleighのCumulative Distribution Function(下側): [1] Eq.(A19)
----- param1: sigma
----- param2: 自由度 nu
----- param3: 確率変数 x
-hkalCdfStudentRayleighP :: Double -> Double -> Double -> Double
+-- | \[1\] Eq.(A19)
+hkalCdfStudentRayleighP :: Double -- ^ sigma
+                        -> Double -- ^ nu
+                        -> Double -- ^ x
+                        -> Double -- ^ P(x)
 hkalCdfStudentRayleighP sigma nu x = hkalCdfFdistP pX nu --RND.gslCdfFdistP pX 2.0 nu
   where pX = x * x / 2.0 / sigma / sigma
 
--- Student-RayleighのCumulative Distribution Function(上側)
----- param1: sigma
----- param2: 自由度 nu
----- param3: 確率変数 x
-hkalCdfStudentRayleighQ :: Double -> Double -> Double -> Double
+hkalCdfStudentRayleighQ :: Double -- ^ sigma
+                        -> Double -- ^ nu
+                        -> Double -- ^ x
+                        -> Double -- ^ Q(x)
 hkalCdfStudentRayleighQ sigma nu x = 1.0 - hkalCdfStudentRayleighP sigma nu x
 
--- Student-RayleighのQuantile Function(下側): [1] Eq.(A20)
----- param1: sigma
----- param2: 自由度 nu
----- param3: 累積確率 p
-hkalCdfStudentRayleighPinv :: Double -> Double -> Double -> Double
+-- | \[1\] Eq.(A20)
+hkalCdfStudentRayleighPinv :: Double -- ^ sigma
+                           -> Double -- ^ nu
+                           -> Double -- ^ P(x)
+                           -> Double -- ^ x
 hkalCdfStudentRayleighPinv sigma nu p = sqrt $ norm * qOfFdist
   where norm = 2.0 * sigma *sigma
         qOfFdist = hkalCdfFdistPinv p nu --RND.gslCdfFdistPinv p 2.0 nu
 
--- Student-RayleighのQuantile Function(上側)
----- param1: sigma
----- param2: 自由度 nu
----- param3: 累積確率 p
-hkalCdfStudentRayleighQinv :: Double -> Double -> Double -> Double
+hkalCdfStudentRayleighQinv :: Double -- ^ sigma
+                           -> Double -- ^ nu
+                           -> Double -- ^ Q(x)
+                           -> Double -- ^ x
 hkalCdfStudentRayleighQinv sigma nu p = hkalCdfStudentRayleighPinv sigma nu (1.0 - p)
 
 

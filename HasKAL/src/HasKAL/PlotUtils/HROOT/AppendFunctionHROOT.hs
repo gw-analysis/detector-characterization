@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: AppendFunctionHROOT.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 00:21:00
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.PlotUtils.PlotUtils.HROOT.AppendFunctionHROOT
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+FFI some functions
+
+-}
 
 module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
   setGrid

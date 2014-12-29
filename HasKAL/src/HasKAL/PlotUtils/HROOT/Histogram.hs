@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: Histogram.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/10/02 11:37:50
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.PlotUtils.PlotUtils.HROOT.Histogram
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+Histogram tool
+
+-}
 
 module HasKAL.PlotUtils.HROOT.Histogram (
    LogOption(Linear, LogX, LogY, LogXY)

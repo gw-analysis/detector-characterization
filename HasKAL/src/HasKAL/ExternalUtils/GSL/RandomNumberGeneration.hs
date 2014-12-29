@@ -1,11 +1,17 @@
-{-******************************************
-  *     File Name: RandomNumberGeneration.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/23 18:39:19
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.ExternalUtils.GSL.RandomNumberDistributions
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
 
--- Reference
----- [1] ``GSL Reference Manual'', Edition 1.14, Chapter 18
+Distribution functions
+
+- [1] "GSL Reference Manual"  http://www.gnu.org/software/gsl/manual/html_node/
+-}
 
 module HasKAL.ExternalUtils.GSL.RandomNumberGeneration (
    GSLRng(..)
@@ -39,7 +45,9 @@ newtype GSLRngType = ToRngType (FP.Ptr())
 newRng :: IO GSLRng
 newRng = newRngCore gslRngMt19937
 
-newRngWithSeed :: Integer -> IO GSLRng
+-- | when seed is negative value, initial seed become unix time
+newRngWithSeed :: Integer -- ^ seed
+               -> IO GSLRng
 newRngWithSeed  rSeed = do
   rng <- newRng
   case rSeed >= 0 of True -> gslRngSet rng rSeed

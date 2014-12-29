@@ -1,14 +1,17 @@
-{-******************************************
-  *     File Name: StudentRayleighMon.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 02:24:40
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighMon
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
 
--- Reference
----- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
+student-Rayleigh monitor
 
--- Test code
----- detector-characterization/attic/SRMon_refactoring/test.hs
+- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
+-}
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
    FitMethod(LSM, MLE, QUANT)
@@ -29,12 +32,27 @@ import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
 
 {-- Expose Functions --}
-studentRayleighMon :: FitMethod -> Double -> Int -> Int -> Int -> Int -> 
-  [(Double, Double)] -> [(Double, Double, Double)] -> [(Double, Double, Double)]
+studentRayleighMon :: FitMethod
+                   -> Double -- ^ sampling rate [Hz]
+                   -> Int -- ^ stride
+                   -> Int -- ^ chunck size
+                   -> Int -- ^ time shift
+                   -> Int -- ^ df
+                   -> [(Double, Double)] -- ^ averaged spectrum Sn(f)
+                   -> [(Double, Double, Double)] -- ^ spectrogram h(t, f)
+                   -> [(Double, Double, Double)] -- ^ nu(t, f)
 studentRayleighMon method fsample stride chunck shift clusteringF snf hfs = plotFormatedSpectogram $
   studentRayleighMonV method fsample stride chunck shift clusteringF (toSpectrum snf) (toSpectrogram hfs)
 
-studentRayleighMonV :: FitMethod -> Double -> Int -> Int -> Int -> Int -> Spectrum -> Spectrogram -> Spectrogram
+studentRayleighMonV :: FitMethod 
+                    -> Double -- ^ sampling rate [Hz]
+                    -> Int -- ^ stride
+                    -> Int -- ^ chunck size
+                    -> Int -- ^ time shift
+                    -> Int -- ^ df
+                    -> Spectrum -- ^ averaged spectrum Sn(f)
+                    -> Spectrogram -- ^ h(t, f)
+                    -> Spectrogram -- ^ nu(t, f)
 studentRayleighMonV method fsample stride chunck shift clusteringF (freqV1, specV1) (tV2, freqV2, specM2) = do
   let snf' = V.map sqrt $ convert $ specV1
       hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2

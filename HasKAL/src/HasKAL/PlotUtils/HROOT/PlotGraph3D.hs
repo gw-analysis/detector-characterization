@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: PlotGraph3D.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/04 19:20:47
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.PlotUtils.PlotUtils.HROOT.PlotGraph3D
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+3D plot tool
+
+-}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
    LogOption(Linear, LogX, LogY, LogZ, LogXY, LogXZ, LogYZ, LogXYZ)

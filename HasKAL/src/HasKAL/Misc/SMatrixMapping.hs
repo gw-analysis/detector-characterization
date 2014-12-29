@@ -1,10 +1,16 @@
-{-******************************************
-  *     File Name: SMatrixMapping.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/05 16:35:26
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.Misc.SMatrixMapping
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
 
--- map functions for Storable Matrix
+map functions for Storable Matrix
+-}
+
 module HasKAL.Misc.SMatrixMapping (
    convertS2U
   ,convertU2S
@@ -28,11 +34,13 @@ import qualified Data.Vector.Unboxed as V
 import qualified Data.Matrix.Unboxed as M
 
 {-- matrix type converter --}
+-- | Convert from Storalbe Matrix to Unboxed Matrix
 convertS2U :: (Element a, V.Unbox a) => Matrix a -> M.Matrix a
 convertS2U mat = M.fromVector rowNum colNum $ V.convert $ flatten mat
   where rowNum = rows mat
         colNum = cols mat
 
+-- | Convert from Unboxed Matrix to Storable Matrix
 convertU2S :: (V.Unbox a, Element a) => Matrix a -> Matrix a
 convertU2S mat = reshape colNum $ V.convert $ flatten mat
   where colNum = cols mat

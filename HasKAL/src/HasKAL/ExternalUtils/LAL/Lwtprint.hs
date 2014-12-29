@@ -1,8 +1,15 @@
-{-******************************************
-  *     File Name: Lwtprint.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/06/18 20:54:32
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.ExternalUtils.LAL.Lwtprint
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+LAL function
+-}
 
 module HasKAL.ExternalUtils.LAL.Lwtprint
   (execLwtprint
@@ -12,7 +19,49 @@ module HasKAL.ExternalUtils.LAL.Lwtprint
 import qualified System.Process as SP -- readProcess
 import qualified Control.Monad as CM -- forM
 
-execLwtprint :: [String] -> String -> Integer -> Int -> [String] -> IO [String]
+-- | KleineWelle tabel:
+--
+-- * ifo 
+--
+-- * peak_time
+--
+-- * peak_time_ns
+--
+-- * start_time
+--
+-- * start_time_ns
+--
+-- * duration
+--
+-- * search
+--
+-- * central_freq
+--
+-- * channel
+--
+-- * amplitude
+--
+-- * snr
+--
+-- * confidence 
+--
+-- * chisq
+--
+-- * chisq_dof
+--
+-- * bandwidth
+--
+-- * event_id
+--
+-- * process_id
+--
+-- * table
+execLwtprint :: [String] -- ^ channel list
+             -> String -- ^ prefix name
+             -> Integer -- ^ GPS Time [sec]
+             -> Int -- ^ Stride [sec]
+             -> [String] -- ^ kleineWelle table
+             -> IO [String]
 execLwtprint glitchActiveLabels kwBasename kwGpsTime kwStride kwActiveLabels = do
    CM.forM [0..(length glitchActiveLabels)-1] $ \lambda -> do
       let tempGps = kwGpsTime + (fromIntegral kwStride)

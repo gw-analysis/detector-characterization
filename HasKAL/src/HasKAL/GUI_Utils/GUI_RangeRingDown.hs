@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_RangeRingDown.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 12:22:18
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_RangeRingDown
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+GUI of Ring Down Range Monitor
+
+-}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
    hasKalGuiRingDownRange

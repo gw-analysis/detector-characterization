@@ -1,8 +1,15 @@
-{-******************************************
-  *     File Name: RayleighMon.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/06 02:10:36
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.MonitorUtils.RayleighMon.RayleighMon
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+RayleighMonitor Function
+-}
 
 module HasKAL.MonitorUtils.RayleighMon.RayleighMon (
    rayleighMon
@@ -21,12 +28,26 @@ import HasKAL.SpectrumUtils.Function
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions (gslCdfRayleighPinv)
 
 {-- Expose Functions --}
-rayleighMon :: [Double] -> Double -> Int -> Int -> [(Double, Double)] -> [(Double, Double, Double)] -> [([(Double, Double)], [(Double, Double)])]
+-- | rayleigh monitor
+rayleighMon :: [Double] -- ^ p values
+            -> Double -- ^ sampling rate [Hz]
+            -> Int -- ^ stride 
+            -> Int -- ^ df
+            -> [(Double, Double)] -- ^ averaged spectrum Sn(f)
+            -> [(Double, Double, Double)] -- ^ spectrogram h(t, f)
+            -> [([(Double, Double)], [(Double, Double)])]
 rayleighMon pVals fsample stride fClust snf hfs = fromSpectrumPair $
   rayleighMonV pVals fsample stride fClust (toSpectrum snf) (toSpectrogram hfs)
     where fromSpectrumPair xs = unsafePerformIO $ CM.forM xs $ \(x,y) -> return $ (fromSpectrum x, fromSpectrum y)
 
-rayleighMonV :: [Double] -> Double -> Int -> Int -> Spectrum -> Spectrogram -> [(Spectrum, Spectrum)]
+-- | rayleigh monitor (vector I/O)
+rayleighMonV :: [Double] -- ^ pValues
+             -> Double -- ^ sampling rate [Hz]
+             -> Int -- ^ stride
+             -> Int -- ^ df
+             -> Spectrum -- ^ averaged spectrum Sn(f)
+             -> Spectrogram -- ^ spectrogram h(t, f)
+             -> [(Spectrum, Spectrum)]
 rayleighMonV pVals fsample stride fClust (freqV1, specV1) (tV2, freqV2, specM2) = do
   let snf' = V.map sqrt $ convert $ specV1
       hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2

@@ -1,8 +1,16 @@
-{-******************************************
-  *     File Name: GUI_CorrelationMon.hs
-  *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/12/09 19:09:26
-  *******************************************-}
+{-# HADDOCK Markdown #-}
+{- |
+Module      : HasKAL.GUI_Utils.GUI_CorrelationMon
+Description : This is documentation tests.
+Copyright   : (c) WhoAmI, 2014
+License     : ???
+Maintainer  : hoge@hoge.com
+Stability   : test
+Portability : POSIX
+
+GUI of Correlation Monitor
+
+-}
 
 module HasKAL.GUI_Utils.GUI_CorrelationMon (
   hasKalGuiCorrMon
@@ -74,7 +82,7 @@ hasKalGuiCorrMon activeChannelLabels = do
     let corr't = takeCorrelation Peason sig1 sig2 10
     putStrLn ("### Not Implemented yet. ###")
     print $ corr't
-    plotX LinearPoint Line 1 BLUE ("Time [sec]", "Correlation") 0.05 "CorrelationMon" ((0,0),(0,0)) $ zip [0..] corr't
+    plotX Linear Line 1 BLUE ("Time [sec]", "Correlation") 0.05 "CorrelationMon" ((0,0),(0,0)) $ zip [0..] corr't
     {----} 
   {-- Exit Process --}
   onDestroy cWindow mainQuit
