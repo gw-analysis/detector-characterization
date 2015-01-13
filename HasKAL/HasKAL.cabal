@@ -49,6 +49,9 @@ cabal-version:       >=1.8
 library
   -- Modules exported by the library.
   exposed-modules:
+    HasKAL.Constant,
+    HasKAL.Constant.CGSM,
+    HasKAL.Constant.MKSA,
     HasKAL.DetectorUtils.Detector,
     HasKAL.DetectorUtils.DetectorParam,
     HasKAL.DetectorUtils.Function,
@@ -60,6 +63,8 @@ library
     HasKAL.FrameUtils.Function,
     HasKAL.FrameUtils.PickUpFileName,
     HasKAL.FrameUtils.FileManipulation,
+    HasKAL.GUI_Utils.GUI_AntennaPattern,
+    HasKAL.GUI_Utils.GUI_CorrelationMon,
     HasKAL.GUI_Utils.GUI_GaussianityRayleighMon,
     HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon,
     HasKAL.GUI_Utils.GUI_GlitchKleineWelle,
@@ -68,13 +73,17 @@ library
     HasKAL.GUI_Utils.GUI_RangeRingDown,
     HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
+    HasKAL.Misc.CoastData,
     HasKAL.Misc.Environment,
     HasKAL.Misc.Flip3param,
     HasKAL.Misc.StrictMapping,
+    HasKAL.Misc.SMatrixMapping,
+    HasKAL.Misc.UMatrixMapping,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
     HasKAL.MonitorUtils.RangeMon.IMBH,
     HasKAL.MonitorUtils.RayleighMon.RayleighMon,
+    HasKAL.MonitorUtils.SRMon.Signature,
     HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions,
     HasKAL.MonitorUtils.SRMon.StudentRayleighMon,
     HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold,
@@ -103,6 +112,7 @@ library
     HasKAL.SimulationUtils.Injection.Function,
     HasKAL.SimulationUtils.Injection.Signature,
     HasKAL.SpectrumUtils.SpectrumUtils,
+    HasKAL.SpectrumUtils.Function,
     HasKAL.SpectrumUtils.DetectorSensitivity,
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.TimeUtils.GPSfunction,
@@ -141,6 +151,7 @@ library
        containers,
        filepath,
        directory,
+       matrices >= 0.3,
        bindings-gsl
   -- Directories containing source files.
   hs-source-dirs:      src
