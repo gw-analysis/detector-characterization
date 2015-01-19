@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
 Description : This is documentation tests.

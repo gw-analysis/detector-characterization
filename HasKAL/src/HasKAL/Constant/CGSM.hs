@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.Constant.CGSM
 Description : This is documentation tests.

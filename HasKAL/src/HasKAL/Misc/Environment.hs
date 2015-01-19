@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.Misc.Environment
 Description : This is documentation tests.

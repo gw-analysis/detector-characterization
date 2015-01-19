@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.GUI_Utils.GUI_RangeInspiral
 Description : This is documentation tests.

@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.Misc.Flip3param
 Description : This is documentation tests.

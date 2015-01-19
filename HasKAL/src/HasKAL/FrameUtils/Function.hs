@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.FrameUtils.Functions
 Description : This is documentation tests.

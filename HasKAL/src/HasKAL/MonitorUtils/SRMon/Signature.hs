@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.MonitorUtils.SRMon.Signature
 Description : This is documentation tests.

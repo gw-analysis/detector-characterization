@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.Misc.SMatrixMapping
 Description : This is documentation tests.

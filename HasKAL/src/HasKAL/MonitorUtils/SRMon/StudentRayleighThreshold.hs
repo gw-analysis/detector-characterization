@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold
 Description : This is documentation tests.

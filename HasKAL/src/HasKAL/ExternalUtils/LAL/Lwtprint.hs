@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.ExternalUtils.LAL.Lwtprint
 Description : This is documentation tests.

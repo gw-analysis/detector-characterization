@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 Description : This is documentation tests.

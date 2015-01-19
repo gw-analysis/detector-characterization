@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 Description : This is documentation tests.

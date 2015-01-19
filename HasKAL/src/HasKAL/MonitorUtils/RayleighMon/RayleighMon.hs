@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.MonitorUtils.RayleighMon.RayleighMon
 Description : This is documentation tests.

@@ -1,4 +1,3 @@
-{-# HADDOCK Markdown #-}
 {- |
 Module      : HasKAL.GUI_Utils.GUI_CorrelationMon
 Description : This is documentation tests.
