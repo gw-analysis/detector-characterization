@@ -140,10 +140,10 @@ library
        data-default-class >=0.0,
        old-time,
        lens,
-       hmatrix <0.16,
-       hmatrix-special <=0.2.0,
+       hmatrix >=0.16,
+       hmatrix-special,
+       hmatrix-gsl,
        vector,
-       -- temporary,
        HROOT==0.8.*,
        old-locale,
        time,
@@ -152,6 +152,8 @@ library
        filepath,
        directory,
        matrices >= 0.3,
+       fficxx-runtime,
+       deepseq,
        bindings-gsl
   -- Directories containing source files.
   hs-source-dirs:      src
@@ -171,20 +173,16 @@ executable loadFrameData
   build-depends:
     base >4.7
    ,HasKAL
-
    ,Chart < 1.3
    ,Chart-cairo < 1.3
    ,Chart-gtk < 1.3
    ,colour
    ,data-default-class
-   ,hmatrix <0.16
-   ,hmatrix-special <=0.2.0
+   ,hmatrix >=0.16
+   ,hmatrix-gsl
+   ,hmatrix-special
    ,lens
 
---   ,random
---   ,carray
---   ,fft
---   ,gloss >= 1.7.8.4
 
   ghc-options:  -O2 -threaded -rtsopts -eventlog
   extra-libraries:  Frame
