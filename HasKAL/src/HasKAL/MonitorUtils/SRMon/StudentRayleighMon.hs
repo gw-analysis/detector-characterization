@@ -22,7 +22,7 @@ module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
 import Data.List (sort)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
-import Data.Matrix.Unboxed as M hiding ((!))
+import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
 
 import HasKAL.Misc.UMatrixMapping
@@ -75,7 +75,7 @@ srMonM method dataFs
   where (QUANT pVal) = method
 
 frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
-frequencyClusteringM num mat = fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ mat
+frequencyClusteringM num mat = fromVector (newRow, newCol) $ slice 0 (newCol*newRow) $ flatten $ mat
   where newCol = num * oldCol
         newRow = oldRow*oldCol `div` newCol
         oldCol = cols mat

@@ -36,7 +36,7 @@ import qualified Data.Matrix.Unboxed as M
 {-- matrix type converter --}
 -- | Convert from Storalbe Matrix to Unboxed Matrix
 convertS2U :: (Element a, V.Unbox a) => Matrix a -> M.Matrix a
-convertS2U mat = M.fromVector rowNum colNum $ V.convert $ flatten mat
+convertS2U mat = M.fromVector (rowNum, colNum) $ V.convert $ flatten mat
   where rowNum = rows mat
         colNum = cols mat
 

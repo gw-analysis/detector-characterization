@@ -19,7 +19,7 @@ module HasKAL.MonitorUtils.RayleighMon.RayleighMon (
 import Data.List (sort)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
-import Data.Matrix.Unboxed as M hiding ((!))
+import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
 
 import HasKAL.Misc.UMatrixMapping
@@ -79,7 +79,7 @@ rMonM :: Double -> Matrix Double -> Vector Double
 rMonM pVal datM = mapRows0 (getEmpiricalQuantile pVal) datM
 
 frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
-frequencyClusteringM num mat = fromVector newRow newCol $ slice 0 (newCol*newRow) $ flatten $ mat
+frequencyClusteringM num mat = fromVector (newRow, newCol) $ slice 0 (newCol*newRow) $ flatten $ mat
   where newCol = num * oldCol
         newRow = oldRow*oldCol `div` newCol
         oldCol = cols mat
