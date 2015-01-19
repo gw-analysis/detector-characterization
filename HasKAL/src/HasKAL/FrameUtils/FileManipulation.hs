@@ -16,6 +16,7 @@ import System.Directory (doesDirectoryExist, getDirectoryContents, getCurrentDir
 import System.FilePath ((</>))
 import Data.List.Split (splitOn)
 import Numeric.LinearAlgebra
+import Numeric.GSL.LinearAlgebra (fromFile, fileDimensions)
 import System.IO.Unsafe (unsafePerformIO)
 
 getRecursiveFileSystem:: FilePath -> IO [FilePath]
