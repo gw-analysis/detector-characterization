@@ -59,8 +59,8 @@ main = do
       values = [[(LogValue x, LogValue y)|(x,y)<- zip fvec (map sqrt powerspectrum)]]
 
 --  renderableToWindow (toRenderable layout) 640 480
-  renderableToPNGFile (toRenderable layout) 640 480  "test_magnetic.png"
-
+-- renderableToPNGFile (toRenderable layout) 640 480  "test_magnetic.png"
+  renderableToFile (FileOptions (640,480) PNG) "test_magnetic.png" (toRenderable layout)
 
 
 {-

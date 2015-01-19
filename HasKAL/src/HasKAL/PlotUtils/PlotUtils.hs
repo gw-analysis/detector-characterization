@@ -49,7 +49,7 @@ scatter_plot_2d str_title str_legend lwidth windowSize dat =
 
 scatter_plot_2d_png :: String -> String -> Double -> FilePath -> [(Double,Double)] -> IO (PickFn ())
 scatter_plot_2d_png str_title str_legend lwidth plotfname dat =
-    renderableToFile def (scatter_plot_2d_internal str_title str_legend lwidth dat) plotfname
+    renderableToFile def plotfname (scatter_plot_2d_internal str_title str_legend lwidth dat)
 
 scatter_plot_3d :: String -> String -> Double -> (Int,Int) -> [(Double,Double,Double)] -> IO ()
 scatter_plot_3d str_title str_legend lwidth windowSize dat =
@@ -57,7 +57,7 @@ scatter_plot_3d str_title str_legend lwidth windowSize dat =
 
 scatter_plot_3d_png :: String -> String -> Double -> FilePath -> [(Double,Double,Double)] -> IO (PickFn ())
 scatter_plot_3d_png str_title str_legend lwidth plotfname dat =
-    renderableToFile def (scatter_plot_3d_internal str_title str_legend lwidth dat) plotfname
+    renderableToFile def plotfname (scatter_plot_3d_internal str_title str_legend lwidth dat)
 
 
 
@@ -70,7 +70,7 @@ scatter_plot_2d_internal str_title str_legend lwidth dat = toRenderable layout
            $ layout_title_style . font_size .~ 20
            $ layout_background .~ solidFillStyle (opaque white)
            $ layout_left_axis_visibility . axis_show_ticks .~ False
-           $ setLayoutForeground (opaque black)
+           $ layout_foreground .~ (opaque black)
            $ layout_x_axis . laxis_title .~ "x"
            $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 20
            $ layout_x_axis . laxis_title_style . font_size .~ 20
@@ -100,7 +100,7 @@ scatter_plot_3d_internal str_title str_legend lwidth dat = toRenderable layout
            $ layout_title_style . font_size .~ 20
            $ layout_background .~ solidFillStyle (opaque white)
            $ layout_left_axis_visibility . axis_show_ticks .~ False
-           $ setLayoutForeground (opaque black)
+           $ layout_foreground .~ (opaque black)
            $ layout_x_axis . laxis_title .~ "x"
            $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 20
            $ layout_x_axis . laxis_title_style . font_size .~ 20

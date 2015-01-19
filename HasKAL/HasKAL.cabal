@@ -133,9 +133,9 @@ library
        gtk >=0.13,
        text,
        regex-compat >=0.95,
-       Chart >=1.2 && <1.3,
-       Chart-gtk >=1.2 && <1.3,
-       Chart-cairo >=1.2 && <1.3,
+       Chart >=1.3,
+       Chart-gtk >=1.3,
+       Chart-cairo >=1.3,
        colour >=2.3,
        data-default-class >=0.0,
        old-time,
@@ -173,9 +173,9 @@ executable loadFrameData
   build-depends:
     base >4.7
    ,HasKAL
-   ,Chart < 1.3
-   ,Chart-cairo < 1.3
-   ,Chart-gtk < 1.3
+   ,Chart >= 1.3
+   ,Chart-cairo >= 1.3
+   ,Chart-gtk >= 1.3
    ,colour
    ,data-default-class
    ,hmatrix >=0.16
