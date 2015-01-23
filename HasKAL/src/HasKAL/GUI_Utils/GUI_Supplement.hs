@@ -75,8 +75,8 @@ entryNewWithLabelDefault label defVal = do
   return (xLabel, xEntry)
 
 boxPackStartDefaultsPair x (a, b) = do
-  boxPackStartDefaults x a
-  boxPackStartDefaults x b
+  boxPackStart x a PackGrow 0
+  boxPackStart x b PackGrow 0
 
 fileOpenButtonNewWithDefault :: String -> IO FileChooserButton
 fileOpenButtonNewWithDefault path = do

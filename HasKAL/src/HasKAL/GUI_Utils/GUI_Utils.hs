@@ -66,13 +66,13 @@ hasKalGuiTop = do
   scrolledWindowSetPolicy topSubSystemScroll PolicyAutomatic PolicyAutomatic
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults topSubSystemButtonBox) topSubSystemCheckButtons -- insert sub system buttons in button box
+  mapM (\x -> boxPackStart topSubSystemButtonBox x PackGrow 0) topSubSystemCheckButtons -- insert sub system buttons in button box
   scrolledWindowAddWithViewport topSubSystemScroll topSubSystemButtonBox -- insert button box in scroll window
-  boxPackStartDefaults topSubSystemVbox topSubSystemScroll -- insert vbox in scroll window
-  boxPackStartDefaults topSubSystemVbox topMonitorVbox -- create small vbox
-  mapM (boxPackStartDefaults topMonitorVbox) topMonitorButtons -- insert monitor buttons in vbox
-  boxPackStartDefaults topMonitorVbox topExitVbox -- create small vbox
-  boxPackStartDefaults topExitVbox topExitButton -- insert exit button in vbox
+  boxPackStart topSubSystemVbox topSubSystemScroll PackGrow 0 -- insert vbox in scroll window
+  boxPackStart topSubSystemVbox topMonitorVbox PackGrow 0 -- create small vbox
+  mapM (\x -> boxPackStart topMonitorVbox x PackGrow 0) topMonitorButtons -- insert monitor buttons in vbox
+  boxPackStart topMonitorVbox topExitVbox PackGrow 0 -- create small vbox
+  boxPackStart topExitVbox topExitButton PackGrow 0 -- insert exit button in vbox
 
   {--  Select Glitch Monitor --}
   onClicked (topMonitorButtons !! 0) $ do
@@ -152,12 +152,12 @@ hasKalGuiGlitch activeSubSystemlabels = do
   scrolledWindowSetPolicy glitchChannelScroll PolicyAutomatic PolicyAutomatic
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults glitchChannelBBox) glitchChannelCButtons
+  mapM (\x -> boxPackStart glitchChannelBBox x PackGrow 0) glitchChannelCButtons
   scrolledWindowAddWithViewport glitchChannelScroll glitchChannelBBox
-  boxPackStartDefaults glitchVBox glitchChannelScroll
-  boxPackStartDefaults glitchVBox glitchVBox2
-  mapM (boxPackStartDefaults glitchVBox2) glitchMonitorButtons
-  boxPackStartDefaults glitchVBox2 glitchCloseButton
+  boxPackStart glitchVBox glitchChannelScroll PackGrow 0
+  boxPackStart glitchVBox glitchVBox2 PackGrow 0
+  mapM (\x -> boxPackStart glitchVBox2 x PackGrow 0) glitchMonitorButtons
+  boxPackStart glitchVBox2 glitchCloseButton PackGrow 0
 
    {--  Select Glitch Monitor --}
   onClicked (glitchMonitorButtons !! 0) $ do
@@ -217,12 +217,12 @@ hasKalGuiGaussianity activeSubSystemlabels = do
   scrolledWindowSetPolicy gaussianityChannelScroll PolicyAutomatic PolicyAutomatic
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults gaussianityChannelBBox) gaussianityChannelCButtons
+  mapM (\x -> boxPackStart gaussianityChannelBBox x PackGrow 0) gaussianityChannelCButtons
   scrolledWindowAddWithViewport gaussianityChannelScroll gaussianityChannelBBox
-  boxPackStartDefaults gaussianityVBox gaussianityChannelScroll
-  boxPackStartDefaults gaussianityVBox gaussianityVBox2
-  mapM (boxPackStartDefaults gaussianityVBox2) gaussianityMonitorButtons
-  boxPackStartDefaults gaussianityVBox2 gaussianityCloseButton
+  boxPackStart gaussianityVBox gaussianityChannelScroll PackGrow 0
+  boxPackStart gaussianityVBox gaussianityVBox2 PackGrow 0
+  mapM (\x -> boxPackStart gaussianityVBox2 x PackGrow 0) gaussianityMonitorButtons
+  boxPackStart gaussianityVBox2 gaussianityCloseButton PackGrow 0
 
    {--  Select RayleighMon  --}
   onClicked (gaussianityMonitorButtons !! 0) $ do
@@ -277,9 +277,9 @@ hasKalGuiRangeMon = do
                        containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  boxPackStartDefaults rangeMonVBox rangeMonVBox2
-  mapM (boxPackStartDefaults rangeMonVBox2) rangeMonButtons
-  boxPackStartDefaults rangeMonVBox2 rangeMonCloseButton
+  boxPackStart rangeMonVBox rangeMonVBox2 PackGrow 0
+  mapM (\x -> boxPackStart rangeMonVBox2 x PackGrow 0) rangeMonButtons
+  boxPackStart rangeMonVBox2 rangeMonCloseButton PackGrow 0
 
   {--  Select Range Monitor  --}
   onClicked (rangeMonButtons !! 0) $ do
@@ -325,9 +325,9 @@ hasKalGuiMessage messageTitle messageSentence = do
                     containerChild := messageSentenceVBox,
                     containerBorderWidth := 20 ]
 
-  boxPackStartDefaults messageSentenceVBox messageTitleLabel
-  boxPackStartDefaults messageSentenceVBox messageSentenceLabel
-  boxPackStartDefaults messageSentenceVBox messageCloseButton
+  boxPackStart messageSentenceVBox messageTitleLabel PackGrow 0
+  boxPackStart messageSentenceVBox messageSentenceLabel PackGrow 0
+  boxPackStart messageSentenceVBox messageCloseButton PackGrow 0
 
   {--  Execute  --}
   onClicked messageCloseButton $ do
@@ -365,9 +365,9 @@ hasKalGuiTemporary = do
                        containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  boxPackStartDefaults tempVBox tempVBox2
-  mapM (boxPackStartDefaults tempVBox2) tempButtons
-  boxPackStartDefaults tempVBox2 tempCloseButton
+  boxPackStart tempVBox tempVBox2 PackGrow 0
+  mapM (\x -> boxPackStart tempVBox2 x PackGrow 0) tempButtons
+  boxPackStart tempVBox2 tempCloseButton PackGrow 0
 
   {--  Select Range Monitor  --}
   onClicked (tempButtons !! 0) $ do

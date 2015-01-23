@@ -59,16 +59,16 @@ hasKalGuiIMR'Range = do
                       containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults imrRangeVBox) imrRangeHBoxDate
+  mapM (\x -> boxPackStart imrRangeVBox x PackGrow 0) imrRangeHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair imrRangeHBoxDate $ imrRangeDateCombo
-  boxPackStartDefaults imrRangeVBox imrRangeHBoxObsTime
+  boxPackStart imrRangeVBox imrRangeHBoxObsTime PackGrow 0
   HGGS.boxPackStartDefaultsPair imrRangeHBoxObsTime imrRangeObsTimeEntry
-  boxPackStartDefaults imrRangeVBox imrRangeHBoxMass1
+  boxPackStart imrRangeVBox imrRangeHBoxMass1 PackGrow 0
   HGGS.boxPackStartDefaultsPair imrRangeHBoxMass1 imrRangeMass1Entry
-  boxPackStartDefaults imrRangeVBox imrRangeHBoxMass2
+  boxPackStart imrRangeVBox imrRangeHBoxMass2 PackGrow 0
   HGGS.boxPackStartDefaultsPair imrRangeHBoxMass2 imrRangeMass2Entry
-  boxPackStartDefaults imrRangeVBox imrRangeHBoxButtons
-  mapM (boxPackStartDefaults imrRangeHBoxButtons) [imrRangeClose, imrRangeExecute]
+  boxPackStart imrRangeVBox imrRangeHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart imrRangeHBoxButtons x PackGrow 0) [imrRangeClose, imrRangeExecute]
 
   {--  Execute  --}
   onClicked imrRangeClose $ do

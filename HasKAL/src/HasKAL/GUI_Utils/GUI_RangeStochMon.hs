@@ -64,20 +64,20 @@ hasKalGuiStochMon = do
                       containerBorderWidth := 20 ]
 
   {-- Arrange object in window --}
-  mapM (boxPackStartDefaults stochVBox) stochHBoxDate
+  mapM (\x -> boxPackStart stochVBox x PackGrow 0) stochHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair stochHBoxDate $ stochDateCombo
-  boxPackStartDefaults stochVBox stochHBoxObsTime
+  boxPackStart stochVBox stochHBoxObsTime PackGrow 0
   HGGS.boxPackStartDefaultsPair stochHBoxObsTime stochObsTimeEntry
-  boxPackStartDefaults stochVBox stochHBoxDet1
+  boxPackStart stochVBox stochHBoxDet1 PackGrow 0
   HGGS.boxPackStartDefaultsPair stochHBoxDet1 stochDet1Combo
-  boxPackStartDefaults stochVBox stochHBoxDet2
+  boxPackStart stochVBox stochHBoxDet2 PackGrow 0
   HGGS.boxPackStartDefaultsPair stochHBoxDet2 stochDet2Combo
-  boxPackStartDefaults stochVBox stochHBoxfMin
+  boxPackStart stochVBox stochHBoxfMin PackGrow 0
   HGGS.boxPackStartDefaultsPair stochHBoxfMin stochfMinEntry
-  boxPackStartDefaults stochVBox stochHBoxfMax
+  boxPackStart stochVBox stochHBoxfMax PackGrow 0
   HGGS.boxPackStartDefaultsPair stochHBoxfMax stochfMaxEntry
-  boxPackStartDefaults stochVBox stochHBoxButtons
-  mapM (boxPackStartDefaults stochHBoxButtons) [stochClose, stochExecute]
+  boxPackStart stochVBox stochHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart stochHBoxButtons x PackGrow 0) [stochClose, stochExecute]
 
   {--  Execute --}
   onClicked stochClose $ do

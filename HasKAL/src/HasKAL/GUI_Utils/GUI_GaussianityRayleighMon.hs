@@ -69,20 +69,20 @@ hasKalGuiRayleighMon activeChannelLabels = do
                       containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxCache
+  boxPackStart rayleighMonVBox rayleighMonHBoxCache PackGrow 0
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxCache rayleighMonCacheOpener
-  mapM (boxPackStartDefaults rayleighMonVBox) rayleighMonHBoxDate
+  mapM (\x -> boxPackStart rayleighMonVBox x PackGrow 0) rayleighMonHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair rayleighMonHBoxDate $ rayleighMonDateCombo
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxObsTime
+  boxPackStart rayleighMonVBox rayleighMonHBoxObsTime PackGrow 0
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxObsTime rayleighMonObsTimeEntry
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxSampling
+  boxPackStart rayleighMonVBox rayleighMonHBoxSampling PackGrow 0
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxSampling rayleighMonSamplingEntry
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxStride
+  boxPackStart rayleighMonVBox rayleighMonHBoxStride PackGrow 0
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxStride rayleighMonStrideEntry
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxFClust
+  boxPackStart rayleighMonVBox rayleighMonHBoxFClust PackGrow 0
   HGGS.boxPackStartDefaultsPair rayleighMonHBoxFClust rayleighMonFClustEntry
-  boxPackStartDefaults rayleighMonVBox rayleighMonHBoxButtons
-  mapM (boxPackStartDefaults rayleighMonHBoxButtons) [rayleighMonClose, rayleighMonExecute]
+  boxPackStart rayleighMonVBox rayleighMonHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart rayleighMonHBoxButtons x PackGrow 0) [rayleighMonClose, rayleighMonExecute]
 
   {--  Execute --}
   onClicked rayleighMonClose $ do

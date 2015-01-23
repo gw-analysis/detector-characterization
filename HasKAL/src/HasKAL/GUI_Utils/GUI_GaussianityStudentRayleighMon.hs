@@ -71,24 +71,24 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
                       containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  boxPackStartDefaults srMonVBox srMonHBoxCache
+  boxPackStart srMonVBox srMonHBoxCache PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxCache srMonCacheOpener
-  mapM (boxPackStartDefaults srMonVBox) srMonHBoxDate
+  mapM (\x -> boxPackStart srMonVBox x PackGrow 0) srMonHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair srMonHBoxDate $ srMonDateCombo
-  boxPackStartDefaults srMonVBox srMonHBoxObsTime
+  boxPackStart srMonVBox srMonHBoxObsTime PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxObsTime srMonObsTimeEntry
-  boxPackStartDefaults srMonVBox srMonHBoxChunck
+  boxPackStart srMonVBox srMonHBoxChunck PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxChunck srMonChunckEntry
-  boxPackStartDefaults srMonVBox srMonHBoxOverlap
+  boxPackStart srMonVBox srMonHBoxOverlap PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxOverlap srMonOverlapEntry
-  boxPackStartDefaults srMonVBox srMonHBoxSampling
+  boxPackStart srMonVBox srMonHBoxSampling PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxSampling srMonSamplingEntry
-  boxPackStartDefaults srMonVBox srMonHBoxStride
+  boxPackStart srMonVBox srMonHBoxStride PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxStride srMonStrideEntry
-  boxPackStartDefaults srMonVBox srMonHBoxFClust
+  boxPackStart srMonVBox srMonHBoxFClust PackGrow 0
   HGGS.boxPackStartDefaultsPair srMonHBoxFClust srMonFClustEntry
-  boxPackStartDefaults srMonVBox srMonHBoxButtons
-  mapM (boxPackStartDefaults srMonHBoxButtons) [srMonClose, srMonExecute]
+  boxPackStart srMonVBox srMonHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart srMonHBoxButtons x PackGrow 0) [srMonClose, srMonExecute]
 
   {--  Execute --}
   onClicked srMonClose $ do

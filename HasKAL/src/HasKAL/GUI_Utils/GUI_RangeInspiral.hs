@@ -59,15 +59,15 @@ hasKalGuiInspiralRange = do
                       containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults inspiralRangeVBox) inspiralRangeHBoxDate
+  mapM (\x -> boxPackStart inspiralRangeVBox x PackGrow 0) inspiralRangeHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair inspiralRangeHBoxDate $ inspiralRangeDateCombo
   HGGS.boxPackStartDefaultsPair inspiralRangeHBoxObsTime inspiralRangeObsTimeEntry
-  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass1
+  boxPackStart inspiralRangeVBox inspiralRangeHBoxMass1 PackGrow 0
   HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMass1 inspiralRangeMass1Entry
-  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxMass2
+  boxPackStart inspiralRangeVBox inspiralRangeHBoxMass2 PackGrow 0
   HGGS.boxPackStartDefaultsPair inspiralRangeHBoxMass2 inspiralRangeMass2Entry
-  boxPackStartDefaults inspiralRangeVBox inspiralRangeHBoxButtons
-  mapM (boxPackStartDefaults inspiralRangeHBoxButtons) [inspiralRangeClose, inspiralRangeExecute]
+  boxPackStart inspiralRangeVBox inspiralRangeHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart inspiralRangeHBoxButtons x PackGrow 0) [inspiralRangeClose, inspiralRangeExecute]
 
   {--  Execute  --}
   onClicked inspiralRangeClose $ do

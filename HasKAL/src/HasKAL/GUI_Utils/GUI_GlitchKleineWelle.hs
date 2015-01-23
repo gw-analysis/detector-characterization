@@ -91,30 +91,30 @@ hasKalGuiKleineWelle kleineWelleActiveLabels = do
   scrolledWindowSetPolicy kleineWelleChannelScroll PolicyAutomatic PolicyAutomatic
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults kwChannelBBox) kwChannelCButtons
+  mapM (\x -> boxPackStart kwChannelBBox x PackGrow 0) kwChannelCButtons
   scrolledWindowAddWithViewport kwChannelScroll kwChannelBBox
-  boxPackStartDefaults kleineWelleHBoxScroll kwChannelScroll
-  boxPackStartDefaults kleineWelleHBoxScroll kleineWelleVBox2
+  boxPackStart kleineWelleHBoxScroll kwChannelScroll PackGrow 0
+  boxPackStart kleineWelleHBoxScroll kleineWelleVBox2 PackGrow 0
 
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxCache
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxCache PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxCache kleineWelleCacheOpener
-  mapM (boxPackStartDefaults kleineWelleVBox2) kleineWelleHBoxDate
+  mapM (\x -> boxPackStart kleineWelleVBox2 x PackGrow 0) kleineWelleHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair kleineWelleHBoxDate $ kleineWelleDateCombo
 
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxObs
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxObs PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxObs kleineWelleObsEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxStride
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxStride PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxStride kleineWelleStrideEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxSignificance
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxSignificance PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxSignificance kleineWelleSignificanceEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxThreshold
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxThreshold PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxThreshold kleineWelleThresholdEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxLowCutOff
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxLowCutOff PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxLowCutOff kleineWelleLowCutOffEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxHighCutOff
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxHighCutOff PackGrow 0
   HGGS.boxPackStartDefaultsPair kleineWelleHBoxHighCutOff kleineWelleHighCutOffEntry
-  boxPackStartDefaults kleineWelleVBox2 kleineWelleHBoxExecute
-  mapM (boxPackStartDefaults kleineWelleHBoxExecute) [kleineWelleClose, kleineWelleExecute]
+  boxPackStart kleineWelleVBox2 kleineWelleHBoxExecute PackGrow 0
+  mapM (\x -> boxPackStart kleineWelleHBoxExecute x PackGrow 0) [kleineWelleClose, kleineWelleExecute]
 
   {--  Execute --}
   onClicked kleineWelleExecute $ do

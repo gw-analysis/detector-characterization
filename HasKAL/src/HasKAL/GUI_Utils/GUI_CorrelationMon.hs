@@ -54,14 +54,14 @@ hasKalGuiCorrMon activeChannelLabels = do
                containerBorderWidth := 20 ]
 
   {-- Arrange object in window --}
-  boxPackStartDefaults cVBox cHBoxCache
+  boxPackStart cVBox cHBoxCache PackGrow 0
   GS.boxPackStartDefaultsPair cHBoxCache cCacheOpener
-  mapM (boxPackStartDefaults cVBox) cHBoxDate
+  mapM (\x -> boxPackStart cVBox x PackGrow 0) cHBoxDate
   zipWithM GS.boxPackStartDefaultsPair cHBoxDate cDateCombo
-  boxPackStartDefaults cVBox cHBoxObsTime
+  boxPackStart cVBox cHBoxObsTime PackGrow 0
   GS.boxPackStartDefaultsPair cHBoxObsTime cObsTimeEntry
-  boxPackStartDefaults cVBox cHBoxButtons
-  mapM (boxPackStartDefaults cHBoxButtons) cButtons
+  boxPackStart cVBox cHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart cHBoxButtons x PackGrow 0) cButtons
 
   {-- Execute --}
   onClicked (cButtons !! 0) $ do

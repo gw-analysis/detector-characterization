@@ -60,16 +60,16 @@ hasKalGuiAntennaPattern = do
               containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  boxPackStartDefaults vBox hBoxDetector
+  boxPackStart vBox hBoxDetector PackGrow 0
   HGGS.boxPackStartDefaultsPair hBoxDetector detectorCombo
-  boxPackStartDefaults vBox hBoxPsi
+  boxPackStart vBox hBoxPsi PackGrow 0
   HGGS.boxPackStartDefaultsPair hBoxPsi psiEntry
-  boxPackStartDefaults vBox hBoxPhi
+  boxPackStart vBox hBoxPhi PackGrow 0
   HGGS.boxPackStartDefaultsPair hBoxPhi phiEntry
-  boxPackStartDefaults vBox hBoxTheta
+  boxPackStart vBox hBoxTheta PackGrow 0
   HGGS.boxPackStartDefaultsPair hBoxTheta thetaEntry
-  boxPackStartDefaults vBox hBoxButtons
-  mapM (boxPackStartDefaults hBoxButtons) [closeButton, executeButton]
+  boxPackStart vBox hBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart hBoxButtons x PackGrow 0) [closeButton, executeButton]
 
   {--  Execute  --}
   onClicked closeButton $ do

@@ -59,16 +59,16 @@ hasKalGuiRingDownRange = do
                       containerBorderWidth := 20 ]
 
   {--  Arrange object in window  --}
-  mapM (boxPackStartDefaults ringDownRangeVBox) ringDownRangeHBoxDate
+  mapM (\x -> boxPackStart ringDownRangeVBox x PackGrow 0) ringDownRangeHBoxDate
   CM.zipWithM HGGS.boxPackStartDefaultsPair ringDownRangeHBoxDate $ ringDownRangeDateCombo
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxObsTime
+  boxPackStart ringDownRangeVBox ringDownRangeHBoxObsTime PackGrow 0
   HGGS.boxPackStartDefaultsPair ringDownRangeHBoxObsTime ringDownRangeObsTimeEntry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass1
+  boxPackStart ringDownRangeVBox ringDownRangeHBoxMass1 PackGrow 0
   HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMass1 ringDownRangeMass1Entry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxMass2
+  boxPackStart ringDownRangeVBox ringDownRangeHBoxMass2 PackGrow 0
   HGGS.boxPackStartDefaultsPair ringDownRangeHBoxMass2 ringDownRangeMass2Entry
-  boxPackStartDefaults ringDownRangeVBox ringDownRangeHBoxButtons
-  mapM (boxPackStartDefaults ringDownRangeHBoxButtons) [ringDownRangeClose, ringDownRangeExecute]
+  boxPackStart ringDownRangeVBox ringDownRangeHBoxButtons PackGrow 0
+  mapM (\x -> boxPackStart ringDownRangeHBoxButtons x PackGrow 0) [ringDownRangeClose, ringDownRangeExecute]
 
   {--  Execute  --}
   onClicked ringDownRangeClose $ do
