@@ -6,7 +6,7 @@
 import System.Random
 import System.IO.Unsafe (unsafePerformIO)
 
-
+main :: IO([((Int, Int), [Double], [Double], [Double], Double)])
 main = do
 
   let w = 0.5 :: Double
@@ -30,15 +30,15 @@ main = do
   return $ pso i0 m d w c1 c2 initdata g
 
 -- | perform particle swarm optimization
-pso :: Int
-    -> Int
-    -> Int
-    -> Double
-    -> Double
-    -> Double
-    -> [((Int, Int), [Double], [Double], [Double], Double)]
-    -> [Double]
-    -> [((Int, Int), [Double], [Double], [Double], Double)]
+pso :: Int    -- ^ Max iteration number
+    -> Int    -- ^ # of particles
+    -> Int    -- ^ degrees of parameter space
+    -> Double -- ^ inertia weight parameter
+    -> Double -- ^ cognitive weight
+    -> Double -- ^ social weight
+    -> [((Int, Int), [Double], [Double], [Double], Double)] -- ^ particle data
+    -> [Double] -- ^ local best position of each particle
+    -> [((Int, Int), [Double], [Double], [Double], Double)] -- ^ output : updated particle data
 pso 0 _ _ _ _ _ _ _ = []
 pso i0 m d w c1 c2 pdata g = do
   let updatedpdata = (map (update (i0-1) pdata) [1..m])
@@ -59,12 +59,10 @@ pso i0 m d w c1 c2 pdata g = do
    in  updatedpdata ++ pso (i0-2) m d w c1 c2 updatedpdata updatedg
 
 -- | likelihood function
--- |
 likelihood :: [Double] -> Double
 likelihood x = ((x!!0)-0.5)**2 + ((x!!1)-0.5)**2
 
 -- | get (max value, index) from comaring two values
--- |
 maxWindx :: ((Int, Int), [Double], [Double], [Double], Double)
          -> ((Int, Int), [Double], [Double], [Double], Double)
          -> ((Int, Int), [Double], [Double], [Double], Double)
@@ -75,16 +73,11 @@ maxWindx (sa, xa, va, pa, a) (sb, xb, vb, pb, b)
   | otherwise = error "check input type"
 
 -- | get (max value, index) in a list
--- |
 maxList :: [((Int, Int), [Double], [Double], [Double], Double)]
         -> ((Int, Int), [Double], [Double], [Double], Double)
 maxList [] = error "empty"
 maxList [x] = x
 maxList (x:xs) = maxWindx x (maxList xs)
-
--- | add element to a list
-addElem :: ((Int,Int), [[Double]]) -> [((Int,Int), [[Double]])] -> [((Int,Int), [[Double]])]
-addElem x xs = undefined
 
 -- | one element list to a value
 singleList :: [((Int, Int), [Double], [Double], [Double], Double)]
