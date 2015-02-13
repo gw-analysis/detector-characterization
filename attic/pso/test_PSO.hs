@@ -9,9 +9,9 @@ import System.IO.Unsafe (unsafePerformIO)
 main :: IO([((Int, Int), [Double], [Double], [Double], Double)])
 main = do
 
-  let w = 0.5 :: Double
-      c1 = 1.0 :: Double
-      c2 = 1.0 :: Double
+  let w = 1 :: Double
+      c1 = 2.0 :: Double
+      c2 = 2.0 :: Double
       d = 2 :: Int
       m = 3 :: Int
       i0 = 10 :: Int
@@ -40,8 +40,8 @@ pso :: Int    -- ^ Max iteration number
     -> [Double] -- ^ local best position of each particle
     -> [((Int, Int), [Double], [Double], [Double], Double)] -- ^ output : updated particle data
 pso 0 _ _ _ _ _ _ _ = []
-pso i0 m d w c1 c2 pdata g = do
-  let updatedpdata = (map (update (i0-1) pdata) [1..m])
+pso n m d w c1 c2 pdata g = do
+  let updatedpdata = map (update n pdata) [1..m]
       update n dat i = ((n, i), updatedx, updatedv, updatedp, newl)
         where
         (_, x, v, p, _) = singleList [((n, i), a, b, c, d)|((n', i'), a, b, c, d)<-dat,i'==i, n'==n]
@@ -56,7 +56,7 @@ pso i0 m d w c1 c2 pdata g = do
                             |((n', ind), a, b, c, d) <- updatedpdata, ind==i
                             ]
       (_,  updatedg,  _,  _, _) = maxList updatedpdata
-   in  updatedpdata ++ pso (i0-2) m d w c1 c2 updatedpdata updatedg
+   in  pso (n-1) m d w c1 c2 updatedpdata updatedg ++ pdata
 
 -- | likelihood function
 likelihood :: [Double] -> Double
