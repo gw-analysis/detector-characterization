@@ -9,14 +9,13 @@ import System.IO.Unsafe (unsafePerformIO)
 type Particle = ((Int,  Int),  [Double],  [Double],  [Double],  Double)
 type GlobalParticle = (Int, [Double])
 
-
 main :: IO ([Particle], [GlobalParticle])
 main = do
   let w = 1 :: Double
       c1 = 2.0 :: Double
       c2 = 2.0 :: Double
       d = 2 :: Int
-      m = 3 :: Int
+      m = 2 :: Int
       i0 = 3 :: Int
 
       -- | create initial data
@@ -29,8 +28,6 @@ main = do
           lr = likelihood x
           p = x
   return $ pso i0 m d w c1 c2 initdata
-
-
 
 -- | perform particle swarm optimization
 pso :: Int    -- ^ Max iteration number
@@ -45,8 +42,8 @@ pso :: Int    -- ^ Max iteration number
 pso n m d w c1 c2 pdata = runState go g
   where
     (_, gval, _, _, _) = maxList pdata
-    g = [(n, gval)]
-    go = psoState n m d w c1 c2 pdata  :: State [GlobalParticle] [Particle]
+    g = [(n, gval)] :: [GlobalParticle]
+    go = psoState n m d w c1 c2 pdata
 
 psoState :: Int
          -> Int
@@ -57,35 +54,36 @@ psoState :: Int
          -> [Particle]
          -> State [GlobalParticle] [Particle]
 psoState n m d w c1 c2 pdata = do
-  g <- get
-  let phist= concat $ for [n, n-1..0] $ \n' -> do
-      concat $ for [1..m] $ \i -> do
-        let (_, x, v, p, _) = singleList [ ((n, j), a, b, c, d)
-                                         | ((n, j), a, b, c, d)<-pdata, j==i, n==n'
-                                         ]
-        let g' = snd (g!!0)
-            updatedv = map (\i->do
-              let r1 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
-                  r2 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
-               in w*v!!i + c1*r1*(p!!i-x!!i) + c2*r2*(g'!!i-x!!i)
-              )[0..d-1]
-            updatedx = map (\i->x!!i + updatedv!!i) [0..d-1]
-            newl = likelihood updatedx
-            (_, _, _, updatedp, _) = maxList [pdata!!0, ((n', i),updatedx,updatedv,updatedx,newl)]
-            values = ((n', i), updatedx, updatedv, updatedp, newl)
-        (values:pdata)
-  let (_, updatedgval, _, _, _) = maxList phist
-  put ((n, updatedgval):g)
-  state $ \s ->  (phist, s)
-
+  loop n m d w c1 c2 pdata
+    where
+      loop 0 _ _ _ _ _ _ = return []
+      loop n m d w c1 c2 pdata = do
+        g <- get
+        let phist = for [1..m] $ \i -> do
+             let (_, x, v, p, _) = singleList [ ((n', j), a, b, c, d)
+                                              | ((n', j), a, b, c, d)<-pdata, j==i, n'==n
+                                              ]
+             let g' = snd (g!!0)
+                 updatedv = map (\i -> do
+                   let r1 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
+                       r2 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
+                    in w*v!!i + c1*r1*(p!!i-x!!i) + c2*r2*(g'!!i-x!!i)
+                   )[0..d-1]
+                 updatedx = map (\i -> x!!i + updatedv!!i) [0..d-1]
+                 newl = likelihood updatedx
+                 (_, _, _, updatedp, _) = maxList [pdata!!0, ((n, i),updatedx,updatedv,updatedx,newl)]
+              in ((n-1, i), updatedx, updatedv, updatedp, newl)
+        let (_, updatedgval, _, _, _) = maxList (phist++pdata)
+        put ((n-1, updatedgval):g)
+        nextphist <- loop (n-1) m d w c1 c2 (phist++pdata)
+        return $ nextphist ++ phist
 
 -- | define for
 for = flip map
 
-
 -- | likelihood function
 likelihood :: [Double] -> Double
-likelihood x = ((x!!0)-0.5)**2 + ((x!!1)-0.5)**2
+likelihood x = -(((x!!0)-0.5)**2 + ((x!!1)-0.5)**2)
 
 -- | get (max value, index) from comaring two values
 maxWindx :: Particle
