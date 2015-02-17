@@ -8,7 +8,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 type Particle = ((Int,  Int),  [Double],  [Double],  [Double],  Double)
 type GlobalParticle = (Int, [Double], Double)
-
+type Likelihood = [Double] -> Double
 main :: IO ([Particle], [GlobalParticle])
 main = do
   let w = 1 :: Double
@@ -27,7 +27,11 @@ main = do
           v = map (\_->unsafePerformIO $ getStdRandom $ randomR (-1, 1) :: Double) [1..d]
           lr = likelihood x
           p = x
-  return $ pso i0 m d w c1 c2 initdata
+  return $ pso i0 m d w c1 c2 initdata likelihood
+
+-- | likelihood function
+likelihood :: [Double] -> Double
+likelihood x = -(((x!!0)-0.5)**2 + ((x!!1)-0.5)**2)
 
 -- | perform particle swarm optimization
 pso :: Int    -- ^ Max iteration number
@@ -37,13 +41,14 @@ pso :: Int    -- ^ Max iteration number
     -> Double -- ^ cognitive weight
     -> Double -- ^ social weight
     -> [Particle] -- ^ particle data
+    -> Likelihood
     -> ([Particle], [GlobalParticle])
        -- ^ output : updated particle data
-pso n m d w c1 c2 pdata = runState go g
+pso n m d w c1 c2 pdata likelihood = runState go g
   where
     (_, gval, _, _, gl) = maxList pdata
     g = [(n, gval, gl)] :: [GlobalParticle]
-    go = psoState n m d w c1 c2 pdata
+    go = psoState n m d w c1 c2 pdata likelihood
 
 psoState :: Int
          -> Int
@@ -52,12 +57,13 @@ psoState :: Int
          -> Double
          -> Double
          -> [Particle]
+         -> Likelihood
          -> State [GlobalParticle] [Particle]
-psoState n m d w c1 c2 pdata = do
-  loop n m d w c1 c2 pdata
+psoState n m d w c1 c2 pdata likelihood = do
+  loop n m d w c1 c2 pdata likelihood
     where
-      loop 0 _ _ _ _ _ _ = return []
-      loop n m d w c1 c2 pdata = do
+      loop 0 _ _ _ _ _ _ _ = return []
+      loop n m d w c1 c2 pdata likelihood = do
         g <- get
         let phist = for [1..m] $ \i -> do
              let (_, x, v, p, _) = singleList [ ((n', j), a, b, c, d)
@@ -78,15 +84,11 @@ psoState n m d w c1 c2 pdata = do
         case (abs updatedgl < 0.1) of
           True -> return $ phist ++ pdata
           False -> do
-            nextphist <- loop (n-1) m d w c1 c2 (phist++pdata)
+            nextphist <- loop (n-1) m d w c1 c2 (phist++pdata) likelihood
             return $ nextphist ++ phist
 
 -- | define for
 for = flip map
-
--- | likelihood function
-likelihood :: [Double] -> Double
-likelihood x = -(((x!!0)-0.5)**2 + ((x!!1)-0.5)**2)
 
 -- | get (max value, index) from comaring two values
 maxWindx :: Particle
