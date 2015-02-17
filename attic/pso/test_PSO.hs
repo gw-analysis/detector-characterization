@@ -7,7 +7,7 @@ import System.Random
 import System.IO.Unsafe (unsafePerformIO)
 
 type Particle = ((Int,  Int),  [Double],  [Double],  [Double],  Double)
-type GlobalParticle = (Int, [Double])
+type GlobalParticle = (Int, [Double], Double)
 
 main :: IO ([Particle], [GlobalParticle])
 main = do
@@ -41,8 +41,8 @@ pso :: Int    -- ^ Max iteration number
        -- ^ output : updated particle data
 pso n m d w c1 c2 pdata = runState go g
   where
-    (_, gval, _, _, _) = maxList pdata
-    g = [(n, gval)] :: [GlobalParticle]
+    (_, gval, _, _, gl) = maxList pdata
+    g = [(n, gval, gl)] :: [GlobalParticle]
     go = psoState n m d w c1 c2 pdata
 
 psoState :: Int
@@ -63,7 +63,7 @@ psoState n m d w c1 c2 pdata = do
              let (_, x, v, p, _) = singleList [ ((n', j), a, b, c, d)
                                               | ((n', j), a, b, c, d)<-pdata, j==i, n'==n
                                               ]
-             let g' = snd (g!!0)
+             let g' = snd' (g!!0)
                  updatedv = map (\i -> do
                    let r1 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
                        r2 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
@@ -73,10 +73,13 @@ psoState n m d w c1 c2 pdata = do
                  newl = likelihood updatedx
                  (_, _, _, updatedp, _) = maxList [pdata!!0, ((n, i),updatedx,updatedv,updatedx,newl)]
               in ((n-1, i), updatedx, updatedv, updatedp, newl)
-        let (_, updatedgval, _, _, _) = maxList (phist++pdata)
-        put ((n-1, updatedgval):g)
-        nextphist <- loop (n-1) m d w c1 c2 (phist++pdata)
-        return $ nextphist ++ phist
+        let (_, updatedgval, _, _, updatedgl) = maxList (phist++pdata)
+        put ((n-1, updatedgval, updatedgl):g)
+        case (abs updatedgl < 0.1) of
+          True -> return $ phist ++ pdata
+          False -> do
+            nextphist <- loop (n-1) m d w c1 c2 (phist++pdata)
+            return $ nextphist ++ phist
 
 -- | define for
 for = flip map
@@ -108,4 +111,14 @@ singleList :: [Particle]
 singleList [] = error "empty"
 singleList [x] = x
 singleList _ = error "not correct"
+
+-- | three element tuple
+fst' :: (a, b, c) -> a
+fst' (x, _, _) = x
+snd' :: (a, b, c) -> b
+snd' (_, y, _) = y
+thd' :: (a, b, c) -> c
+thd' (_, _, z) = z
+
+
 
