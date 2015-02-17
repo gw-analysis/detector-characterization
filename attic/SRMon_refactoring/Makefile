@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/12/05 16:49:45
+# Last Modified: 2015/02/17 15:03:38
 #******************************************#
 
 # compiler option
@@ -9,7 +9,7 @@ CC = gcc -O2 -Wall -Wextra
 HC = ghc -O2
 
 # use library
-USELIB=libframe
+USELIB=libframe gsl
 
 # program
 TAR1= test
@@ -25,7 +25,7 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs
+${TAR1}: ${TAR1}.hs ./HasKAL/PlotUtils/HROOT/AppendFunction.cc ./HasKAL/SignalProcessingUtils/filterFunctions.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:

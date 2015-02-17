@@ -58,8 +58,9 @@ studentRayleighMonV method fsample stride chunck shift clusteringF (freqV1, spec
       wMat = whiteningSpectrogram snf' hfs'
       dt = fromIntegral (shift*stride) / fsample
       df = fromIntegral clusteringF * fsample / fromIntegral stride
-      newSpecM = fromColumns $ unsafePerformIO $ CM.forM [0, shift..cols wMat - chunck] $ \idx -> do
-        return $ srMonM method $ frequencyClusteringM clusteringF $ subMatrix (0, rows wMat - 1) (idx, idx+chunck-1) wMat
+  let newSpecM = fromColumns $ unsafePerformIO $ CM.forM [0, shift..cols wMat - chunck] $ \idx -> do
+        let subM = subMatrix (0, idx) (rows wMat - 1, idx+chunck-1) wMat
+        return $ srMonM method $ frequencyClusteringM clusteringF $ subM
       newTV = fromList [0, dt .. dt * fromIntegral (cols newSpecM - 1)]
       newFV = fromList [df, df*2 .. df * fromIntegral (rows newSpecM)]
   (convert newTV, convert newFV, convertU2S newSpecM)
