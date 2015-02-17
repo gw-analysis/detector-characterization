@@ -8,9 +8,14 @@ import Control.Monad.State
 import System.Random
 import System.IO.Unsafe (unsafePerformIO)
 
-type Particle = ((Int,  Int),  [Double],  [Double],  [Double],  Double)
-type GlobalParticle = (Int, [Double], Double)
-type Likelihood = [Double] -> Double
+type Position = [Double]
+type Velocity = [Double]
+type LocalBest= [Double]
+type Iteration= Int
+type ParticleID=Int
+type Particle = ((Iteration, ParticleID), Position, Velocity, LocalBest, Double)
+type GlobalParticle = (Iteration, Position, Double)
+type Likelihood = Position -> Double
 
 
 -- | perform particle swarm optimization
@@ -18,12 +23,11 @@ pso :: Int    -- ^ Max iteration number
     -> Int    -- ^ # of particles
     -> Int    -- ^ degrees of parameter space
     -> Double -- ^ inertia weight parameter
-    -> Double -- ^ cognitive weight
-    -> Double -- ^ social weight
+    -> Double -- ^ cognitive weight parameter
+    -> Double -- ^ social weight parameter
     -> [Particle] -- ^ particle data
-    -> Likelihood -- ^ likelihood function :: [Double]->Double
-    -> ([Particle], [GlobalParticle])
-       -- ^ output : updated particle data
+    -> Likelihood -- ^ likelihood function :: Position->Double
+    -> ([Particle], [GlobalParticle]) -- ^ output : updated particle data
 pso n m d w c1 c2 pdata likelihood = runState go g
   where
     (_, gval, _, _, gl) = maxList pdata
@@ -44,6 +48,7 @@ psoState n m d w c1 c2 pdata likelihood = do
     where
       loop 0 _ _ _ _ _ _ _ = return []
       loop n m d w c1 c2 pdata likelihood = do
+        -- | obtain State value
         g <- get
         let phist = for [1..m] $ \i -> do
              let (_, x, v, p, _) = singleList [ ((n', j), a, b, c, d)
@@ -53,14 +58,20 @@ psoState n m d w c1 c2 pdata likelihood = do
                  updatedv = map (\i -> do
                    let r1 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
                        r2 = unsafePerformIO $ getStdRandom $ randomR (0, 1) :: Double
+                    -- | velocity update rule
                     in w*v!!i + c1*r1*(p!!i-x!!i) + c2*r2*(g'!!i-x!!i)
                    )[0..d-1]
+                 -- | position udate rule
                  updatedx = map (\i -> x!!i + updatedv!!i) [0..d-1]
                  newl = likelihood updatedx
+                 -- | update local best particle
                  (_, _, _, updatedp, _) = maxList [pdata!!0, ((n, i),updatedx,updatedv,updatedx,newl)]
               in ((n-1, i), updatedx, updatedv, updatedp, newl)
+        -- | update global best particle
         let (_, updatedgval, _, _, updatedgl) = maxList (phist++pdata)
+        -- | update State value
         put ((n-1, updatedgval, updatedgl):g)
+        -- | iteration-termination threshold
         case (abs updatedgl < 0.1) of
           True -> return $ phist ++ pdata
           False -> do
