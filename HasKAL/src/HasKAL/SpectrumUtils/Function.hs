@@ -33,7 +33,7 @@ plotFormatedSpectogram (tV, freqV, specgram) = do
 
 toSpectrogram :: [(Double, Double, Double)] -> Spectrogram
 toSpectrogram spec = (tV, freqV, specgram)
-  where specgram = trans.(reshape $ dim tV).fromList $ css
+  where specgram = (reshape $ dim tV).fromList $ css
         freqV = fromList.nub $ bs
         tV = fromList.nub $ as      
         (as, bs, css) = unzip3 spec
