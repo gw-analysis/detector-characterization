@@ -112,6 +112,7 @@ data FrVect_partial = FrVect_partial { frvect_type    :: CFRVECTTYPES
                                      , frvect_nx      :: Ptr CFRULONG
                                      , frvect_startX  :: CDouble
                                      , frvect_GTime   :: CDouble
+                                     , frvect_dataS   :: Ptr CShort
                                      , frvect_dataF   :: Ptr CFloat
                                      , frvect_dataD   :: Ptr CDouble
                                      }
@@ -279,6 +280,11 @@ readFrame channel_Name framefile_Name = do
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
           return (CDoubleData array_vdata)
+        1 -> do
+          array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+          c_FrVectFree ptr_v
+          c_FrFileIEnd ifile
+          return (CDoubleData $ map fromIntegral array_vdata)
 
 
 
@@ -372,6 +378,7 @@ instance Storable FrVect_partial where
                                   ptr_nx
                                   val_startX
                                   val_GTime
+                                  ptr_dataS
                                   ptr_dataF
                                   ptr_dataD) = do
       (#poke struct FrVect, type)    ptr_frvect val_type
@@ -381,6 +388,7 @@ instance Storable FrVect_partial where
       (#poke struct FrVect, nx)      ptr_frvect ptr_nx
       (#poke struct FrVect, startX)  ptr_frvect val_startX
       (#poke struct FrVect, GTime)   ptr_frvect val_GTime
+      (#poke struct FrVect, dataS)   ptr_frvect ptr_dataS
       (#poke struct FrVect, dataF)   ptr_frvect ptr_dataF
       (#poke struct FrVect, dataD)   ptr_frvect ptr_dataD
   peek ptr_frvect = do
@@ -391,6 +399,7 @@ instance Storable FrVect_partial where
       ptr_nx      <- (#peek struct FrVect, nx)        ptr_frvect
       val_startX  <- (#peek struct FrVect, startX)    ptr_frvect
       val_GTime   <- (#peek struct FrVect, GTime)     ptr_frvect
+      ptr_dataS   <- (#peek struct FrVect, dataS)     ptr_frvect
       ptr_dataF   <- (#peek struct FrVect, dataF)     ptr_frvect
       ptr_dataD   <- (#peek struct FrVect, dataD)     ptr_frvect
       return $ FrVect_partial { frvect_type     = val_type
@@ -400,6 +409,7 @@ instance Storable FrVect_partial where
                               , frvect_nx       = ptr_nx
                               , frvect_startX   = val_startX
                               , frvect_GTime    = val_GTime
+                              , frvect_dataS    = ptr_dataS
                               , frvect_dataF    = ptr_dataF
                               , frvect_dataD    = ptr_dataD }
 
