@@ -9,3 +9,4 @@ cabal-dev
 .virthualenv
 .DS_Store
 *~
+FrameUtils.hs
