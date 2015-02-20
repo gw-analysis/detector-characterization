@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/02/17 15:03:38
+# Last Modified: 2015/02/20 15:53:48
 #******************************************#
 
 # compiler option
@@ -12,8 +12,10 @@ HC = ghc -O2
 USELIB=libframe gsl
 
 # program
-TAR1= test
+TAR1= testRUN007
 TARs= ${TAR1}
+DEPs= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc \
+      ./HasKAL/SignalProcessingUtils/filterFunctions.c
 
 # link path
 ifneq (${USELIB},)
@@ -25,7 +27,7 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ./HasKAL/PlotUtils/HROOT/AppendFunction.cc ./HasKAL/SignalProcessingUtils/filterFunctions.c
+${TAR1}: ${TAR1}.hs ${DEPs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
