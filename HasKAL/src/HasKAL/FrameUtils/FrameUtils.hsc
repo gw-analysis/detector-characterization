@@ -130,7 +130,7 @@ eval (CDoubleData a) = a
 
 
 {-- Functions to manipulate frame-formated files --}
-writeFrame :: String -> String -> String -> String -> CDouble -> CDouble -> CDouble -> [CFloat] -> IO()
+writeFrame :: String -> String -> String -> String -> CDouble -> CDouble -> CDouble -> [CDouble] -> IO()
 writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate startGPS dt xs = do
 
     let nData = (truncate sampleRate)*(truncate dt) :: CFRLONG
@@ -153,7 +153,7 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
     frprocdata <- peek ptr_frprocdata
     ptr_frvectdata <- return $ frprocdata_data frprocdata
     frvectdata <- peek ptr_frvectdata
-    ptr_frvectdataf <- return $ frvect_dataF frvectdata
+    ptr_frvectdatad <- return $ frvect_dataD frvectdata
     -- poke (advancePtr ptr_frvectdataf 1) (2134::CFloat)--worked, too
 
     let len = length xs
@@ -162,7 +162,7 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
     ys' <- peekArray len ys
 --    print . show $ take 10 ys'
     let nData' = (truncate sampleRate)*(truncate dt) :: Int
-    copyArray ptr_frvectdataf ys nData'
+    copyArray ptr_frvectdatad ys nData'
     let startGPS' = truncate startGPS :: CUInt
         startGPSN = 0 :: CUInt
         ptr_frrawdata = nullPtr
@@ -268,7 +268,7 @@ readFrame channel_Name framefile_Name = do
     let datatype = frvect_type v
     case datatype of
  --       frvect_r4 -> do
-        3 -> do 
+        3 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
