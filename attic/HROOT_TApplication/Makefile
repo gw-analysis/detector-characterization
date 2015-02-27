@@ -1,14 +1,14 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2014/10/03 14:54:43
+# Last Modified: 2015/02/27 15:33:27
 #******************************************#
 
 # compiler option
 HC = ghc -O2
 
 # use library
-USELIB = 
+USELIB = libframe
 
 # program
 TAR = plotTest
