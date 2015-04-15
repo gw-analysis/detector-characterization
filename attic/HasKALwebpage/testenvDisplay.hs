@@ -3,15 +3,15 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils (getChannelList, getGPSTime)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV, Spectrogram)
 --import HasKAL.SpectrumUtils.Function (plotFormatedSpectogram)
 import Control.Monad (forM_, liftM)
 import Data.List (isSuffixOf, isInfixOf)
-import Data.Packed.Vector (toList, fromList, subVector, dim)
+import Data.Packed.Vector (fromList, subVector, dim)
 import System.Environment (getArgs)
 import System.Process (rawSystem)
 import System.Directory (createDirectoryIfMissing)
-
+import qualified Numeric.LinearAlgebra as NL
 
 main :: IO ()
 main = do
@@ -48,10 +48,8 @@ allChannelPlot savePath filename = do
        let (ys, zs) = gwpsdV xs (dim xs) fs
        plotV LogXY Line 1 BLUE ("[Hz]", "[V^2/Hz]") 0.04 channel plotpsdfname
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) zs)
---       spectrogram LogY COLZ " " ("Spectrogram") plotspefname $ gwspectrogram 0 (truncate fs) fs (toList xs)
-       spectrogramM LogY COLZ " " ("Spectrogram") plotspefname $ gwspectrogramV 0 (truncate fs) fs xs
---         $ plotFormatedSpectogram
---         $ gwspectrogramV 0 (truncate fs) fs xs
+       spectrogramM LogYZ COLZ " " (channel) plotspefname
+         $ setRange 3 1024 $ gwspectrogramV 0 (truncate fs) fs xs
        let plotfnameLatest | (isInfixOf "ADC1" channel) == True = savePathLatest++"SeisEW_TS_Latest.jpg"
                            | (isInfixOf "ADC2" channel) == True = savePathLatest++"SeisNS_TS_Latest.jpg"
                            | (isInfixOf "ADC3" channel) == True = savePathLatest++"SeisZ_TS_Latest.jpg"
@@ -84,8 +82,17 @@ allChannelPlot savePath filename = do
        _<- rawSystem "ln" ["-s", plotspefname, plotspefnameLatest]
        return ()
 
-
+dropLastSlash :: String -> String
 dropLastSlash s = take (length s -1) s
 
+
+setRange :: Double -> Double -> Spectrogram -> Spectrogram
+setRange flow fhigh spec = do
+  let (tv, fv, p) = spec
+      flowIndex = head $ NL.find (>=flow) fv
+      nrow = NL.rows p
+      (tv', fv', p') = (tv, subVector flowIndex (nrow-flowIndex) fv, NL.dropRows flowIndex p)
+      fhighIndex = last $ NL.find (<=fhigh) fv'
+  (tv', subVector 0 fhighIndex fv', NL.takeRows fhighIndex p')
 
 
