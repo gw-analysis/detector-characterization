@@ -49,7 +49,7 @@ data OptBG = NONE | COAST deriving (Eq)
 
 {--  External Functions  --}
 spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
-spectrogram log mark zLabel title fname dats = plot3dBase NONE log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
+spectrogram log mark zLabel title fname dats = plot3dBase NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname dats
 
 spectrogramX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
 spectrogramX log mark zLabel title dats = spectrogram log mark zLabel title "X11" dats
@@ -61,7 +61,7 @@ skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double
 skyMapX log mark zLabel title dats = skyMap log mark zLabel title "X11" dats
 
 spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> Spectrogram -> IO ()
-spectrogramM log mark zLabel title fname dats = plot3dBaseM NONE log mark ("Time [sec]", "Frequency [Hz]", zLabel) title fname dats
+spectrogramM log mark zLabel title fname dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname dats
 
 spectrogramMX :: LogOption -> PlotTypeOption3D -> String -> String -> Spectrogram -> IO ()
 spectrogramMX log mark zLabel title dats = spectrogramM log mark zLabel title "X11" dats
@@ -78,7 +78,7 @@ plot3dBase wmap log mark xyzLabel title fname dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
-    
+
   let (xNum, yNum) = getNum dats
       (xMin, xMax, yMin, yMax) = getDataEdge dats
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
@@ -100,7 +100,7 @@ plot3dBaseM wmap log mark xyzLabel title fname (tV, fV, specM) = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
-    
+
   let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
       (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
@@ -162,4 +162,4 @@ snd' (x, y, z) = y
 trd' :: (a, b, c) -> c
 trd' (x, y, z) = z
 
-        
+
