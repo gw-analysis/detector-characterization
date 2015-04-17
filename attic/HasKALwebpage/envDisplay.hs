@@ -32,7 +32,7 @@ allChannelPlot savePath filename = do
   gTimeS <- liftM (show.fst) $ getGPSTime filename
 --  chList <- liftM ((take 8).filter ((==4).length).fst) $ getChannelList filename
   chList' <- getChannelList filename
-  let chList = take 8 [(channel, fs)|(channel, fs)<-chList', length channel ==4]
+  let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
     let plotfname = savePath++channel++"_TS-"++gTimeS++".jpg"
         plotpsdfname = savePath++channel++"_PSD-"++gTimeS++".jpg"
