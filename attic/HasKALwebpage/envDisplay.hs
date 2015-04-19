@@ -12,6 +12,7 @@ import System.Environment (getArgs)
 import System.Process (rawSystem)
 import System.Directory (createDirectoryIfMissing)
 import qualified Numeric.LinearAlgebra as NL
+import System.PosixCompat.Files (fileExist, removeLink, createSymbolicLink)
 
 main :: IO ()
 main = do
@@ -59,7 +60,9 @@ allChannelPlot savePath filename = do
                            | (isInfixOf "MIC" channel)   == True = savePathLatest++"MIC_TS_Latest.jpg"
                            | (isInfixOf "REF" channel)   == True = savePathLatest++"DAQ_TS_Latest.jpg"
                            | otherwise = error "no such channel"
-       _<- rawSystem "ln" ["-fs", plotfname, plotfnameLatest]
+       --_<- rawSystem "ln" ["-fs", plotfname, plotfnameLatest]
+       updateLatestImage plotfname plotfnameLatest
+
        let plotpsdfnameLatest | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest++"SeisEW_PSD_Latest.jpg"
                               | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest++"SeisNS_PSD_Latest.jpg"
                               | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest++"SeisZ_PSD_Latest.jpg"
@@ -69,7 +72,8 @@ allChannelPlot savePath filename = do
                               | (isInfixOf "MIC" channel)   == True = savePathLatest++"MIC_PSD_Latest.jpg"
                               | (isInfixOf "REF" channel)   == True = savePathLatest++"DAQ_PSD_Latest.jpg"
                               | otherwise = error "no such channel"
-       _<- rawSystem "ln" ["-fs", plotpsdfname, plotpsdfnameLatest]
+       updateLatestImage plotpsdfname plotpsdfnameLatest
+
        let plotspefnameLatest | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest++"SeisEW_SPE_Latest.jpg"
                               | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest++"SeisNS_SPE_Latest.jpg"
                               | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest++"SeisZ_SPE_Latest.jpg"
@@ -79,8 +83,18 @@ allChannelPlot savePath filename = do
                               | (isInfixOf "MIC" channel)   == True = savePathLatest++"MIC_SPE_Latest.jpg"
                               | (isInfixOf "REF" channel)   == True = savePathLatest++"DAQ_SPE_Latest.jpg"
                               | otherwise = error "no such channel"
-       _<- rawSystem "ln" ["-fs", plotspefname, plotspefnameLatest]
-       return ()
+       updateLatestImage plotspefname plotspefnameLatest
+
+
+updateLatestImage :: String -> String -> IO()
+updateLatestImage original latestLink = do
+  fileExists <- fileExist latestLink
+  case (fileExists) of
+    True -> do
+      removeLink latestLink
+      createSymbolicLink original latestLink
+    False -> createSymbolicLink original latestLink
+
 
 dropLastSlash :: String -> String
 dropLastSlash s = take (length s -1) s
