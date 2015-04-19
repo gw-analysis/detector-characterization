@@ -46,7 +46,7 @@ allChannelPlot savePath filename = do
      False -> do
        plotV Linear Line 1 BLUE ("[s]", "[V]") 0.05 channel plotfname
          ((0,0),(0,0)) $ (fromList [1/fs,2/fs..32], xs)
-       let (ys, zs) = gwpsdV xs (dim xs) fs
+       let (ys, zs) = gwpsdV xs (truncate fs) fs
        plotV LogXY Line 1 BLUE ("[Hz]", "[V/rHz]") 0.04 channel plotpsdfname
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) (sqrt zs))
        spectrogramM LogYZ COLZ " " (channel) plotspefname

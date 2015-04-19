@@ -25,15 +25,14 @@ main = do
       duration = read (args !! 1) :: Integer
       cachefile = args !! 2
   case (length args) of
-   0 -> error "Usage: envDisplay frameFilename"
-   _ -> allChannelPlot savePath startgps duration cachefile
+   3 -> allChannelPlot savePath startgps duration cachefile
+   _ -> error "Usage: envDisplay GPStime Duration framecache"
 
 
-
-allChannelPlot :: String -- save path of png file ("/path/to/dir/")
+allChannelPlot :: String -- save path of jpg file ("/path/to/dir/")
                -> Integer
                -> Integer
-               -> String -- framecache file "/path/to/data/hoge.gwf"
+               -> String -- framecache file "/path/to/data/framecache"
                -> IO ()
 allChannelPlot savePath startGPS duration fcache = do
   let gTimeS = show startGPS
@@ -54,7 +53,7 @@ allChannelPlot savePath startGPS duration fcache = do
      False -> do
        plotV Linear Line 1 BLUE ("[s]", "[V]") 0.05 channel plotfname
          ((0,0),(0,0)) $ (fromList [1/fs,2/fs..(fromInteger duration)], xs)
-       let (ys, zs) = gwpsdV xs (dim xs) fs
+       let (ys, zs) = gwpsdV xs (truncate fs) fs
        plotV LogXY Line 1 BLUE ("[Hz]", "[V/rHz]") 0.05 channel plotpsdfname
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) (sqrt zs))
        spectrogramM LogYZ COLZ " " (channel) plotspefname
