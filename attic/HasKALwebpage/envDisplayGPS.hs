@@ -10,22 +10,22 @@ import Control.Monad (forM_, liftM)
 import Data.List (isSuffixOf, isInfixOf)
 import Data.Packed.Vector (fromList, subVector, dim)
 import System.Environment (getArgs)
-import System.Process (rawSystem)
+--import System.Process (rawSystem)
 import System.Directory (createDirectoryIfMissing)
 import qualified Numeric.LinearAlgebra as NL
 import Data.String.Utils (replace)
-
+import System.FilePath ((</>))
 
 main :: IO ()
 main = do
-  let savePath = "/play/kagra/detector-characterization/attic/HasKALwebpage/env_images/"
-  createDirectoryIfMissing True savePath
+  let homePath= "/play/kagra/detector-characterization/attic/HasKALwebpage"
+--      savePath = homePath </> "env_images"
   args <- getArgs
   let startgps = read (args !! 0) :: Integer
       duration = read (args !! 1) :: Integer
       cachefile = args !! 2
   case (length args) of
-   3 -> allChannelPlot savePath startgps duration cachefile
+   3 -> allChannelPlot homePath startgps duration cachefile
    _ -> error "Usage: envDisplay GPStime Duration framecache"
 
 
@@ -34,17 +34,19 @@ allChannelPlot :: String -- save path of jpg file ("/path/to/dir/")
                -> Integer
                -> String -- framecache file "/path/to/data/framecache"
                -> IO ()
-allChannelPlot savePath startGPS duration fcache = do
+allChannelPlot homePath startGPS duration fcache = do
   let gTimeS = show startGPS
       durationS = show duration
+      savePath = homePath </> "env_images"
+  createDirectoryIfMissing True savePath
 --  chList <- liftM ((take 8).filter ((==4).length).fst) $ getChannelList filename
-      datafiles = pickUpFileNameinFile startGPS (startGPS + duration - 1) fcache
+  let datafiles = pickUpFileNameinFile startGPS (startGPS + duration - 1) fcache
   chList' <- getChannelList (head datafiles)
   let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
-    let plotfname = savePath++channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
-        plotpsdfname = savePath++channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
-        plotspefname = savePath++channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
+    let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
+        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
+        plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
     xs <- readFrameFromGPS'V startGPS duration channel fcache
     case (isSuffixOf "-RAW" channel) of
      True -> do
@@ -60,9 +62,9 @@ allChannelPlot savePath startGPS duration fcache = do
          $ setRange 3 1024 $ gwspectrogramV 0 (truncate fs) fs xs
 
 -- | generate an event display page
-  contents <- readFile "template.html"
+  contents <- readFile $ homePath </> "template.html"
   let updatedContents = updateWebPage (genTarget savePath gTimeS durationS chList) contents
-      newhtml = "index-"++(show startGPS)++"-"++(show duration)++".html"
+      newhtml = homePath </> "index-"++(show startGPS)++"-"++(show duration)++".html"
   writeFile newhtml updatedContents
 
 
@@ -71,9 +73,9 @@ genTarget :: String -> String -> String -> [(String, Double)] -> [(String, Strin
 genTarget _ _ _ [] = []
 genTarget savePath gTimeS durationS (ch:chList) = do
   let (channel, _) = ch
-      plotfname = savePath++channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
-      plotpsdfname = savePath++channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
-      plotspefname = savePath++channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
+      plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
+      plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
+      plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
 
 
   let targetTS | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_TS"
