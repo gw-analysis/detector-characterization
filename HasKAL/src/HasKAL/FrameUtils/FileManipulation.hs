@@ -3,6 +3,7 @@ module HasKAL.FrameUtils.FileManipulation
 , getCurrentDirectory
 , genFileList
 , extractstartGPStime
+, extractDataLength
 , loadASCIIdata
 , loadASCIIdataM
 , loadASCIIdataCV
@@ -38,6 +39,9 @@ genFileList fileName absDir = do
 
 extractstartGPStime :: String -> Integer
 extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
+
+extractDataLength :: String -> Integer
+extractDataLength x = read $ (!!3) $ splitOn "-" $ head $ splitOn "." $ last $ splitOn "/" x :: Integer
 
 loadASCIIdata :: FilePath -> [[Double]]
 loadASCIIdata x = unsafePerformIO $ fmap (map (map (\x->read x :: Double).words). splitLines) (readFile x)
