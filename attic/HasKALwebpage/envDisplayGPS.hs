@@ -11,10 +11,12 @@ import Data.List (isSuffixOf, isInfixOf)
 import Data.Packed.Vector (fromList, subVector, dim)
 import System.Environment (getArgs)
 --import System.Process (rawSystem)
-import System.Directory (createDirectoryIfMissing)
+import System.Directory (createDirectoryIfMissing, copyFile, removeFile)
 import qualified Numeric.LinearAlgebra as NL
 import Data.String.Utils (replace)
 import System.FilePath ((</>))
+import System.PosixCompat.Files (fileExist)
+import HasKAL.TimeUtils.GPSfunction (gps2time)
 
 main :: IO ()
 main = do
@@ -29,7 +31,7 @@ main = do
    _ -> error "Usage: envDisplay GPStime Duration framecache"
 
 
-allChannelPlot :: String -- save path of jpg file ("/path/to/dir/")
+allChannelPlot :: String -- save path of.png file ("/path/to/dir/")
                -> Integer
                -> Integer
                -> String -- framecache file "/path/to/data/framecache"
@@ -44,9 +46,9 @@ allChannelPlot homePath startGPS duration fcache = do
   chList' <- getChannelList (head datafiles)
   let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
-    let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
-        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
-        plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
+    let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
+        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
+        plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
     xs <- readFrameFromGPS'V startGPS duration channel fcache
     case (isSuffixOf "-RAW" channel) of
      True -> do
@@ -63,19 +65,21 @@ allChannelPlot homePath startGPS duration fcache = do
 
 -- | generate an event display page
   contents <- readFile $ homePath </> "template.html"
-  let updatedContents = updateWebPage (genTarget savePath gTimeS durationS chList) contents
+  updatetarget <- genTarget savePath gTimeS durationS chList
+  let updatedContents = updateWebPage updatetarget $ updateWebPage (updateTime "GPS_TIME" startGPS) contents
       newhtml = homePath </> "index-"++(show startGPS)++"-"++(show duration)++".html"
   writeFile newhtml updatedContents
 
+updateTime :: String -> Integer -> [(String, String)]
+updateTime timePlaceHolder gpstime = [(timePlaceHolder, gps2time gpstime)]
 
-
-genTarget :: String -> String -> String -> [(String, Double)] -> [(String, String)]
-genTarget _ _ _ [] = []
+genTarget :: String -> String -> String -> [(String, Double)] -> IO [(String, String)]
+genTarget _ _ _ [] = return []
 genTarget savePath gTimeS durationS (ch:chList) = do
   let (channel, _) = ch
-      plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".jpg"
-      plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".jpg"
-      plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".jpg"
+      plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
+      plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
+      plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
 
 
   let targetTS | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_TS"
@@ -87,6 +91,7 @@ genTarget savePath gTimeS durationS (ch:chList) = do
                | (isInfixOf "MIC" channel)   == True = "MIC_TS"
                | (isInfixOf "REF" channel)   == True = "DAQ_TS"
                | otherwise = error "no such channel"
+  updateLatestImage plotfname targetTS
   let targetPSD | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_PSD"
                 | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_PSD"
                 | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_PSD"
@@ -96,6 +101,7 @@ genTarget savePath gTimeS durationS (ch:chList) = do
                 | (isInfixOf "MIC" channel)   == True = "MIC_PSD"
                 | (isInfixOf "REF" channel)   == True = "DAQ_PSD"
                 | otherwise = error "no such channel"
+  updateLatestImage plotpsdfname targetPSD
   let targetSPE | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_SPE"
                 | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_SPE"
                 | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_SPE"
@@ -105,15 +111,23 @@ genTarget savePath gTimeS durationS (ch:chList) = do
                 | (isInfixOf "MIC" channel)   == True = "MIC_SPE"
                 | (isInfixOf "REF" channel)   == True = "DAQ_SPE"
                 | otherwise = error "no such channel"
+  updateLatestImage plotspefname targetSPE
+  oldList <- genTarget savePath gTimeS durationS chList
+  return $ [(targetTS, plotfname), (targetPSD, plotpsdfname), (targetSPE, plotspefname)]++oldList
 
-  [(targetTS, plotfname), (targetPSD, plotpsdfname), (targetSPE, plotspefname)]++genTarget savePath gTimeS durationS chList
-
+updateLatestImage :: String -> String -> IO()
+updateLatestImage original latest = do
+  fileExists <- fileExist latest
+  case (fileExists) of
+    True -> do
+      removeFile latest
+      copyFile original latest
+    False -> copyFile original latest
 
 updateWebPage :: [(String, String)] -> String -> String
 updateWebPage [] contents = contents
 updateWebPage (target:targets) contents = do
   replace (fst target) (snd target) $ updateWebPage targets contents
-
 
 setRange :: Double -> Double -> Spectrogram -> Spectrogram
 setRange flow fhigh spec = do

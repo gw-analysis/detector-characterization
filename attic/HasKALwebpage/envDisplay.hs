@@ -3,6 +3,7 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils (getChannelList, getGPSTime)
+import HasKAL.FrameUtils.FileManipulation (extractDataLength)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV, Spectrogram)
 --import HasKAL.SpectrumUtils.Function (plotFormatedSpectogram)
 import Control.Monad (forM_, liftM)
@@ -12,7 +13,10 @@ import System.Environment (getArgs)
 import System.Directory (createDirectoryIfMissing, copyFile, removeFile)
 import qualified Numeric.LinearAlgebra as NL
 import System.PosixCompat.Files (fileExist, removeLink, createSymbolicLink)
+import Data.String.Utils (replace)
 import System.FilePath ((</>))
+import System.IO.Unsafe (unsafePerformIO)
+import HasKAL.TimeUtils.GPSfunction (gps2time)
 
 main :: IO ()
 main = do
@@ -35,13 +39,13 @@ allChannelPlot homePath filename = do
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
   gTimeS <- liftM (show.fst) $ getGPSTime filename
---  chList <- liftM ((take 8).filter ((==4).length).fst) $ getChannelList filename
+  let durationS = show $ extractDataLength filename
   chList' <- getChannelList filename
   let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
-    let plotfname = savePath </> channel++"_TS-"++gTimeS++".jpg"
-        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++".jpg"
-        plotspefname = savePath </> channel++"_SPE-"++gTimeS++".jpg"
+    let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
+        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
+        plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
     xs <- readFrameV channel filename
     case (isSuffixOf "-RAW" channel) of
      True -> do
@@ -55,40 +59,98 @@ allChannelPlot homePath filename = do
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) (sqrt zs))
        spectrogramM LogYZ COLZ " " (channel) plotspefname
          $ setRange 3 1024 $ gwspectrogramV 0 (truncate fs) fs xs
-       let plotfnameLatest | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_TS_Latest.jpg"
-                           | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_TS_Latest.jpg"
-                           | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_TS_Latest.jpg"
-                           | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_TS_Latest.jpg"
-                           | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_TS_Latest.jpg"
-                           | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_TS_Latest.jpg"
-                           | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_TS_Latest.jpg"
-                           | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_TS_Latest.jpg"
-                           | otherwise = error "no such channel"
-       --_<- rawSystem "ln" ["-fs", plotfname, plotfnameLatest]
-       updateLatestImage plotfname plotfnameLatest
+-- | generate an event display page
+  contents <- readFile $ homePath </> "template.html"
+  updatetarget <- genTargetLatest savePath savePathLatest gTimeS durationS chList
 
-       let plotpsdfnameLatest | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_PSD_Latest.jpg"
-                              | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_PSD_Latest.jpg"
-                              | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_PSD_Latest.jpg"
-                              | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_PSD_Latest.jpg"
-                              | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_PSD_Latest.jpg"
-                              | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_PSD_Latest.jpg"
-                              | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_PSD_Latest.jpg"
-                              | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_PSD_Latest.jpg"
-                              | otherwise = error "no such channel"
-       updateLatestImage plotpsdfname plotpsdfnameLatest
+  let updatedContents = updateWebPage updatetarget $ updateWebPage (updateTime "GPS_TIME" (read gTimeS :: Integer)) contents
+      newhtml = homePath </> "index.html"
+  writeFile newhtml updatedContents
 
-       let plotspefnameLatest | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_SPE_Latest.jpg"
-                              | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_SPE_Latest.jpg"
-                              | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_SPE_Latest.jpg"
-                              | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_SPE_Latest.jpg"
-                              | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_SPE_Latest.jpg"
-                              | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_SPE_Latest.jpg"
-                              | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_SPE_Latest.jpg"
-                              | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_SPE_Latest.jpg"
-                              | otherwise = error "no such channel"
-       updateLatestImage plotspefname plotspefnameLatest
 
+updateTime :: String -> Integer -> [(String, String)]
+updateTime timePlaceHolder gpstime = [(timePlaceHolder, gps2time gpstime)]
+
+genTargetLatest :: String -> String -> String -> String -> [(String, Double)] -> IO [(String, String)]
+genTargetLatest _ _ _ _ [] = return []
+genTargetLatest savePath savePathLatest gTimeS durationS (ch:chList) = do
+  let (channel, _) = ch
+      plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
+      plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
+      plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
+
+
+  let targetTS | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_TS"
+               | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_TS"
+               | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_TS"
+               | (isInfixOf "MAG_Y" channel) == True = "MagEW_TS"
+               | (isInfixOf "MAG_X" channel) == True = "MagNS_TS"
+               | (isInfixOf "MAG_Z" channel) == True = "MagZ_TS"
+               | (isInfixOf "MIC" channel)   == True = "MIC_TS"
+               | (isInfixOf "REF" channel)   == True = "DAQ_TS"
+               | otherwise = error "no such channel"
+  let targetPSD | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_PSD"
+                | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_PSD"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_PSD"
+                | (isInfixOf "MAG_Y" channel) == True = "MagEW_PSD"
+                | (isInfixOf "MAG_X" channel) == True = "MagNS_PSD"
+                | (isInfixOf "MAG_Z" channel) == True = "MagZ_PSD"
+                | (isInfixOf "MIC" channel)   == True = "MIC_PSD"
+                | (isInfixOf "REF" channel)   == True = "DAQ_PSD"
+                | otherwise = error "no such channel"
+  let targetSPE | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_SPE"
+                | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_SPE"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_SPE"
+                | (isInfixOf "MAG_Y" channel) == True = "MagEW_SPE"
+                | (isInfixOf "MAG_X" channel) == True = "MagNS_SPE"
+                | (isInfixOf "MAG_Z" channel) == True = "MagZ_SPE"
+                | (isInfixOf "MIC" channel)   == True = "MIC_SPE"
+                | (isInfixOf "REF" channel)   == True = "DAQ_SPE"
+                | otherwise = error "no such channel"
+
+  let latestTS | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_TS_Latest.png"
+               | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_TS_Latest.png"
+               | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_TS_Latest.png"
+               | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_TS_Latest.png"
+               | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_TS_Latest.png"
+               | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_TS_Latest.png"
+               | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_TS_Latest.png"
+               | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_TS_Latest.png"
+               | otherwise = error "no such channel"
+  updateLatestImage plotfname latestTS
+
+  let latestPSD | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_PSD_Latest.png"
+                | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_PSD_Latest.png"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_PSD_Latest.png"
+                | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_PSD_Latest.png"
+                | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_PSD_Latest.png"
+                | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_PSD_Latest.png"
+                | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_PSD_Latest.png"
+                | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_PSD_Latest.png"
+                | otherwise = error "no such channel"
+  updateLatestImage plotpsdfname latestPSD
+  let latestSPE | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_SPE_Latest.png"
+                | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_SPE_Latest.png"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_SPE_Latest.png"
+                | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_SPE_Latest.png"
+                | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_SPE_Latest.png"
+                | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_SPE_Latest.png"
+                | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_SPE_Latest.png"
+                | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_SPE_Latest.png"
+                | otherwise = error "no such channel"
+  updateLatestImage plotspefname latestSPE
+
+  oldlist <- genTargetLatest savePath savePathLatest gTimeS durationS chList
+  return $ [(targetTS, latestTS), (targetPSD, latestPSD), (targetSPE, latestSPE)]++oldlist
+
+genLatestImage :: String -> String -> IO()
+genLatestImage fromimage toimage = do
+  updateLatestImage fromimage toimage
+
+updateWebPage :: [(String, String)] -> String -> String
+updateWebPage [] contents = contents
+updateWebPage (target:targets) contents = do
+  replace (fst target) (snd target) $ updateWebPage targets contents
 
 updateLatestImage' :: String -> String -> IO()
 updateLatestImage' original latestLink = do
@@ -107,10 +169,6 @@ updateLatestImage original latest = do
       removeFile latest
       copyFile original latest
     False -> copyFile original latest
-
-
-dropLastSlash :: String -> String
-dropLastSlash s = take (length s -1) s
 
 
 setRange :: Double -> Double -> Spectrogram -> Spectrogram
