@@ -3,7 +3,7 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils (getChannelList, getGPSTime)
-import HasKAL.FrameUtils.FileManipulation (extractDataLength)
+import HasKAL.FrameUtils.FileManipulation (extractDataLengthfromFilename)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV, Spectrogram)
 --import HasKAL.SpectrumUtils.Function (plotFormatedSpectogram)
 import Control.Monad (forM_, liftM)
@@ -39,7 +39,7 @@ allChannelPlot homePath filename = do
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
   gTimeS <- liftM (show.fst) $ getGPSTime filename
-  let durationS = show $ extractDataLength filename
+  let durationS = show $ extractDataLengthfromFilename filename
   chList' <- getChannelList filename
   let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
