@@ -4,6 +4,8 @@ module HasKAL.FrameUtils.FileManipulation
 , genFileList
 , extractstartGPStime
 , extractDataLength
+, extractstartGPStimefromFilename
+, extractDataLengthfromFilename
 , loadASCIIdata
 , loadASCIIdataM
 , loadASCIIdataCV
@@ -42,6 +44,12 @@ extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
 
 extractDataLength :: String -> Integer
 extractDataLength x = read $ (!!3) $ splitOn "-" $ head $ splitOn "." $ last $ splitOn "/" x :: Integer
+
+extractstartGPStimefromFilename :: String -> Integer
+extractstartGPStimefromFilename x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
+
+extractDataLengthfromFilename :: String -> Integer
+extractDataLengthfromFilename x = read $ (!!3) $ splitOn "-" $ head $ splitOn "." $ last $ splitOn "/" x :: Integer
 
 loadASCIIdata :: FilePath -> [[Double]]
 loadASCIIdata x = unsafePerformIO $ fmap (map (map (\x->read x :: Double).words). splitLines) (readFile x)
