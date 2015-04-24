@@ -17,6 +17,7 @@ module HasKAL.MonitorUtils.RangeMon.InspiralRingdownSnr
        ,snrRingdown
        )where
 
+import HasKAL.Constant.MKSA
 import HasKAL.SpectrumUtils.DetectorSensitivity
 import HasKAL.DetectorUtils.Detector
 import Numeric.LinearAlgebra
@@ -24,19 +25,19 @@ import Numeric.LinearAlgebra
 
  -- 光速の定義
 c :: Vector Double
-c  = 2.99*(10**8)
+c  = fromList hasKAL_const_mksa_speed_of_light
 
  -- 万有引力定数の定義
 g :: Vector Double
-g = 6.67*(10**( - 11))
+g = fromList hasKAL_const_mksa_gravitational_constant
 
  -- 太陽質量[kg]
 msolar :: Vector Double
-msolar = 1.989*(10**30)
+msolar = fromList hasKAL_const_mksa_solar_mass
 
  -- Mpc[m]
 megapc :: Vector Double
-megapc = 3.085677*(10**22)
+megapc = fromList (hasKAL_const_mksa_parsec * 10**(6))
 
 
  --- integratedInpiral:インスパイラルのSNRの被積分関数を定義

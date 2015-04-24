@@ -30,23 +30,23 @@ module HasKAL.MonitorUtils.RangeMon.InspiralRingdownSnrQuanta
 
 import Numeric.LinearAlgebra
 import Data.List
-
+import HasKAL.Constant.MKSA
 
  -- 光速の定義[m/s]
 c :: Double
-c  = 2.99*(10**8)
+c  = hasKAL_const_mksa_speed_of_light
 
  -- 万有引力定数の定義[m^3 kg^-1 s^-2]
 g :: Double
-g = 6.67*(10**( - 11))
+g = hasKAL_const_mksa_gravitational_constant
 
  -- 太陽質量[kg]
 msolar :: Double
-msolar = 1.989*(10**30)
+msolar = hasKAL_const_mksa_solar_mass
 
  -- Mpc[m]
 megapc :: Double
-megapc = 3.085677*(10**22)
+megapc = hasKAL_const_mksa_parsec * 10**(6)
 
 
  --- snrInspiral:インスパイラルのSNRを計算する準備をしSNRを返す
