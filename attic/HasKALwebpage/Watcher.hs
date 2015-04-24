@@ -8,14 +8,15 @@ import System.Exit
 import System.IO.Error
 import Filesystem.Path
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
+import EventDisplayXend
+import Data
 
-
-watch :: String -> IO ()
-watch dir = do
+watch :: Param -> String -> IO ()
+watch param dir = do
 --  dir <- getWorkingDirectory
   withManager $ \manager -> do
     watchDir manager (decodeString dir) (const True)
-      $ \event -> print.encodeString $ eventPath event
+      $ \event -> channelPlot param (encodeString $ eventPath event) >>= genWebPage
 
     waitBreak
   where
