@@ -91,9 +91,7 @@ genWebPage param chList = do
       newhtml = homePath </> "index.html"
   writeFile newhtml updatedContents
 
-
 replace old new = intercalate new . splitOn old
-
 
 setRange :: Double -> Double -> Spectrogram -> Spectrogram
 setRange flow fhigh spec = do
@@ -103,8 +101,6 @@ setRange flow fhigh spec = do
       (tv', fv', p') = (tv, subVector flowIndex (nrow-flowIndex) fv, NL.dropRows flowIndex p)
       fhighIndex = last $ NL.find (<=fhigh) fv'
   (tv', subVector 0 fhighIndex fv', NL.takeRows fhighIndex p')
-
-
 
 updateTime :: String -> Integer -> [(String, String)]
 updateTime timePlaceHolder gpstime = [(timePlaceHolder, gps2time gpstime)]
@@ -116,8 +112,6 @@ genTargetLatest savePath savePathLatest gTimeS durationS (ch:chList) = do
       plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
       plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
       plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
-
-
   let targetTS | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_TS"
                | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_TS"
                | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_TS"
@@ -145,7 +139,6 @@ genTargetLatest savePath savePathLatest gTimeS durationS (ch:chList) = do
                 | (isInfixOf "MIC" channel)   == True = "MIC_SPE"
                 | (isInfixOf "REF" channel)   == True = "DAQ_SPE"
                 | otherwise = error "no such channel"
-
   let latestTS | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_TS_Latest.png"
                | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_TS_Latest.png"
                | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_TS_Latest.png"
@@ -156,7 +149,6 @@ genTargetLatest savePath savePathLatest gTimeS durationS (ch:chList) = do
                | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_TS_Latest.png"
                | otherwise = error "no such channel"
   updateLatestImage plotfname latestTS
-
   let latestPSD | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_PSD_Latest.png"
                 | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_PSD_Latest.png"
                 | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_PSD_Latest.png"
