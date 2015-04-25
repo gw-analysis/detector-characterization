@@ -4,6 +4,8 @@ module EventDisplayXend
 ( channelPlot
 , genWebPage
 , Param
+, channelPlot'
+, genWebPage'
 ) where
 
 
@@ -28,7 +30,7 @@ import Data.List.Split (splitOn)
 import Data
 
 {- generate plots of channels in a given frame file -}
-channelPlot ::  Param             -- | setting parameter
+channelPlot :: Param             -- | setting parameter
             -> String             -- | frame file
             -> IO ChanOutPut
 channelPlot param filename = do
@@ -79,7 +81,6 @@ genWebPage param = do
       gTimeS = gpstime param
   contents <- readFile $ homePath </> "template.html"
   updatetarget <- genTargetLatest param chList
-
   let updatedContents = updateWebPage updatetarget $ updateWebPage (updateTime "GPS_TIME" (read gTimeS :: Integer)) contents
       newhtml = homePath </> "index.html"
   writeFile newhtml updatedContents
@@ -198,4 +199,122 @@ updateLatestImage original latest = do
       removeFile latest
       copyFile original latest
     False -> copyFile original latest
+
+
+
+channelPlot' :: Param             -- | setting parameter
+             -> String             -- | frame file
+             -> IO ChanOutPut
+channelPlot' param filename = do
+  let homePath = sethome param
+      savePath = setsave param
+      savePathLatest = setsaveLatest param
+      chList = channellist param
+      ext = filetype param
+  createDirectoryIfMissing True savePath
+  createDirectoryIfMissing True savePathLatest
+  gTimeS <- liftM (show.fst) $ getGPSTime filename
+  let durationS = show $ extractDataLengthfromFilename filename
+--  chList' <- getChannelList filename
+  forM_ chList $ \(channel, fs) -> do
+    let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++ext
+        plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++ext
+        plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++ext
+    xs <- readFrameV channel filename
+    case (isSuffixOf "-RAW" channel) of
+     True -> putStrLn "dummy plot of RAW data"
+     False -> putStrLn "dummy plot of data"
+  return $ ChanOutPut { inherit = Param
+                          { sethome=homePath
+                          , setsave=savePath
+                          , setsaveLatest=savePathLatest
+                          , channellist=chList
+                          , filetype=ext
+                          }
+                      , gpstime = gTimeS
+                      , dt = durationS
+                      }
+
+genWebPage' :: ChanOutPut
+            -> IO ()
+genWebPage' param = do
+  let inheritParam = inherit param
+      homePath = sethome inheritParam
+      chList = channellist inheritParam
+      gTimeS = gpstime param
+  contents <- readFile $ homePath </> "template.html"
+  updatetarget <- genTargetLatest' param chList
+  let updatedContents = updateWebPage updatetarget $ updateWebPage (updateTime "GPS_TIME" (read gTimeS :: Integer)) contents
+      newhtml = homePath </> "index.html"
+  writeFile newhtml updatedContents
+
+genTargetLatest' :: ChanOutPut -> [(String, Double)] -> IO [(String, String)]
+genTargetLatest' _ [] = return []
+genTargetLatest' param (ch:chList) = do
+  let inheritParam = inherit param
+      savePath = setsave inheritParam
+      savePathLatest = setsaveLatest inheritParam
+      ext = filetype inheritParam
+      gTimeS = gpstime param
+      durationS = dt param
+  let (channel, _) = ch
+      plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++ext
+      plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++ext
+      plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++ext
+  let targetTS | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_TS"
+               | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_TS"
+               | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_TS"
+               | (isInfixOf "MAG_Y" channel) == True = "MagEW_TS"
+               | (isInfixOf "MAG_X" channel) == True = "MagNS_TS"
+               | (isInfixOf "MAG_Z" channel) == True = "MagZ_TS"
+               | (isInfixOf "MIC" channel)   == True = "MIC_TS"
+               | (isInfixOf "REF" channel)   == True = "DAQ_TS"
+               | otherwise = error "no such channel"
+  let targetPSD | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_PSD"
+                | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_PSD"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_PSD"
+                | (isInfixOf "MAG_Y" channel) == True = "MagEW_PSD"
+                | (isInfixOf "MAG_X" channel) == True = "MagNS_PSD"
+                | (isInfixOf "MAG_Z" channel) == True = "MagZ_PSD"
+                | (isInfixOf "MIC" channel)   == True = "MIC_PSD"
+                | (isInfixOf "REF" channel)   == True = "DAQ_PSD"
+                | otherwise = error "no such channel"
+  let targetSPE | (isInfixOf "ACC_NO2_Y" channel) == True = "SeisEW_SPE"
+                | (isInfixOf "ACC_NO2_X" channel) == True = "SeisNS_SPE"
+                | (isInfixOf "ACC_NO2_Z" channel) == True = "SeisZ_SPE"
+                | (isInfixOf "MAG_Y" channel) == True = "MagEW_SPE"
+                | (isInfixOf "MAG_X" channel) == True = "MagNS_SPE"
+                | (isInfixOf "MAG_Z" channel) == True = "MagZ_SPE"
+                | (isInfixOf "MIC" channel)   == True = "MIC_SPE"
+                | (isInfixOf "REF" channel)   == True = "DAQ_SPE"
+                | otherwise = error "no such channel"
+  let latestTS | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_TS_Latest"++ext
+               | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_TS_Latest"++ext
+               | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_TS_Latest"++ext
+               | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_TS_Latest"++ext
+               | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_TS_Latest"++ext
+               | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_TS_Latest"++ext
+               | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_TS_Latest"++ext
+               | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_TS_Latest"++ext
+               | otherwise = error "no such channel"
+  let latestPSD | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_PSD_Latest"++ext
+                | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_PSD_Latest"++ext
+                | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_PSD_Latest"++ext
+                | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_PSD_Latest"++ext
+                | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_PSD_Latest"++ext
+                | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_PSD_Latest"++ext
+                | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_PSD_Latest"++ext
+                | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_PSD_Latest"++ext
+                | otherwise = error "no such channel"
+  let latestSPE | (isInfixOf "ACC_NO2_Y" channel) == True = savePathLatest </> "SeisEW_SPE_Latest"++ext
+                | (isInfixOf "ACC_NO2_X" channel) == True = savePathLatest </> "SeisNS_SPE_Latest"++ext
+                | (isInfixOf "ACC_NO2_Z" channel) == True = savePathLatest </> "SeisZ_SPE_Latest"++ext
+                | (isInfixOf "MAG_Y" channel) == True = savePathLatest </> "MagEW_SPE_Latest"++ext
+                | (isInfixOf "MAG_X" channel) == True = savePathLatest </> "MagNS_SPE_Latest"++ext
+                | (isInfixOf "MAG_Z" channel) == True = savePathLatest </> "MagZ_SPE_Latest"++ext
+                | (isInfixOf "MIC" channel)   == True = savePathLatest </> "MIC_SPE_Latest"++ext
+                | (isInfixOf "REF" channel)   == True = savePathLatest </> "DAQ_SPE_Latest"++ext
+                | otherwise = error "no such channel"
+  oldlist <- genTargetLatest param chList
+  return $ [(targetTS, latestTS), (targetPSD, latestPSD), (targetSPE, latestSPE)]++oldlist
 
