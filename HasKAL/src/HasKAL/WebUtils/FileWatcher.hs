@@ -12,13 +12,13 @@ import HasKAL.WebUtils.EventDisplayXend
 import HasKAL.WebUtils.Data
 import System.Process (rawSystem)
 
-watchNewfile :: Param -> String -> IO ()
-watchNewfile param webhome watchdir = do
+watchNewfile :: Param -> String -> String -> IO ()
+watchNewfile param webhomedir watchdir = do
 --  dir <- getWorkingDirectory
   withManager $ \manager -> do
     watchDir manager (decodeString watchdir) (const True)
       $ \event -> do rawSystem "./envDisplay" [webhomedir, encodeString $ eventPath event]
-                     print "updating webpage"
+                     print "event display updated."
 --      $ \event -> channelPlot' param (encodeString $ eventPath event) >>= genWebPage'
 
     waitBreak
