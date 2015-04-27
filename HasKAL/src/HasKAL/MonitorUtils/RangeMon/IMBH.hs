@@ -1,11 +1,11 @@
 module HasKAL.MonitorUtils.RangeMon.IMBH
-(
-  calcEta
-, calcTotalmass
-, rhoImbh
-, rhodistImbh
-, distImbh
-)
+-- (
+--   calcEta
+-- , calcTotalmass
+-- , rhoImbh
+-- , rhodistImbh
+-- , distImbh
+-- )
 where
 
 
