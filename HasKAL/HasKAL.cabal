@@ -120,6 +120,7 @@ library
     HasKAL.TimeUtils.Signature,
     HasKAL.TimeUtils.TimeConvert
     HasKAL.WaveUtils
+    HasKAL.WebUtils
 
   -- Modules included in this library but not exported.
   -- other-modules:
