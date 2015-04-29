@@ -24,7 +24,7 @@ import System.PosixCompat.Files (fileExist, removeLink, createSymbolicLink)
 import System.FilePath ((</>))
 --import System.IO.Unsafe (unsafePerformIO)
 import HasKAL.TimeUtils.GPSfunction (gps2time)
-import Data.List (isInfixOf, intercalate)
+import Data.List (isSuffixOf, isInfixOf, intercalate)
 import Data.List.Split (splitOn)
 import HasKAL.WebUtils.Data
 
