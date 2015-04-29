@@ -119,6 +119,7 @@ library
     HasKAL.TimeUtils.GPSfunction,
     HasKAL.TimeUtils.Signature,
     HasKAL.TimeUtils.TimeConvert
+    HasKAL.WaveUtils
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -155,7 +156,14 @@ library
        matrices >= 0.3,
        fficxx-runtime,
        deepseq,
-       bindings-gsl
+       bindings-gsl,
+       async,
+       hinotify,
+       system-filepath,
+       system-fileio,
+       fsnotify,
+       unix-compat
+
   -- Directories containing source files.
   hs-source-dirs:      src
   extensions: DoAndIfThenElse,
