@@ -163,7 +163,8 @@ library
        system-filepath,
        system-fileio,
        fsnotify,
-       unix-compat
+       unix-compat,
+       MissingH
 
   -- Directories containing source files.
   hs-source-dirs:      src
