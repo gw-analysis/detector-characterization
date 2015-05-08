@@ -164,6 +164,7 @@ library
        system-fileio,
        fsnotify,
        unix-compat,
+       cgi,
        MissingH
 
   -- Directories containing source files.
