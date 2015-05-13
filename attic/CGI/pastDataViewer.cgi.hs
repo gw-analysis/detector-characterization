@@ -8,17 +8,12 @@ Stability   : test
 Portability : POSIX
 GUI of Antenna Pattern
 -}{-
-  * Last Modified: 2015/05/13 23:21:58
+  * Last Modified: 2015/05/13 23:30:46
 -}
 
 import Network.CGI
 --import HasKAL.TimeUtils.GPSfunction
 
-pngpath :: String
-pngpath = "http://seikai.hep.osaka-cu.ac.jp/~chino/env_images/"
-
-cgihome :: String
-cgihome = "http://seikai.hep.osaka-cu.ac.jp/~chino/cgi-bin/pastDataViewer.cgi"
 
 inputForm :: String -> String
 inputForm script = concat [
