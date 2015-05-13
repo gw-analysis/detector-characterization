@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 GUI of Antenna Pattern
 -}{-
-  * Last Modified: 2015/05/13 23:47:42
+  * Last Modified: 2015/05/13 23:52:08
 -}
 
 import Network.CGI
@@ -50,9 +50,9 @@ putName gps channel = concat ["<Hr><h3> Channel: ", channel, "</h3>",
 putNames :: String -> [String] -> String
 putNames gps channels = header ++ (concat $ map (putName gps) channels) ++ footer
   where header = concat ["<h1>Past Data Viewer</h1>", "<h2>GPS Time: ", gps, "</h2>"]
-        footer = concat ["<Hr>[<a href=\"./pastDataViewer?gps=", (show $ (read gps) - 32), uriCh, "\">&lt; Prev</a>] ",
-                         " [<a href=\"./pastDataViewer\">Back</a>] ",
-                         " [<a href=\"./pastDataViewer?gps=", (show $ (read gps) + 32), uriCh, "\">Next &gt;</a>]"
+        footer = concat ["<Hr>[<a href=\"./pastDataViewer.cgi?gps=", (show $ (read gps) - 32), uriCh, "\">&lt; Prev</a>] ",
+                         " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
+                         " [<a href=\"./pastDataViewer.cgi?gps=", (show $ (read gps) + 32), uriCh, "\">Next &gt;</a>]"
                         ]
         uriCh = concat $ zipWith (++) (repeat "&channel=") channels
                  
