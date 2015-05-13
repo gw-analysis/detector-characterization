@@ -8,12 +8,13 @@ Stability   : test
 Portability : POSIX
 GUI of Antenna Pattern
 -}{-
-  * Last Modified: 2015/05/13 23:30:46
+  * Last Modified: 2015/05/13 23:47:42
 -}
 
 import Network.CGI
---import HasKAL.TimeUtils.GPSfunction
 
+pngpath :: String
+pngpath = "../env_images/"
 
 inputForm :: String -> String
 inputForm script = concat [
@@ -33,7 +34,7 @@ inputForm script = concat [
 
 putName :: String -> String -> String
 putName gps channel = concat ["<Hr><h3> Channel: ", channel, "</h3>",
-                              "<a href=\"", pngpath, channel, "_TS-", gps, "-32.png\">",
+                              "<nobr><a href=\"", pngpath, channel, "_TS-", gps, "-32.png\">",
                               "<img alt=\"\" src=\"", pngpath, channel, "_TS-", gps, "-32.png\"",
                               imgstyle,
                               "<a href=\"", pngpath, channel, "_PSD-", gps, "-32.png\">",
@@ -41,7 +42,7 @@ putName gps channel = concat ["<Hr><h3> Channel: ", channel, "</h3>",
                               imgstyle,
                               "<a href=\"", pngpath, channel, "_SPE-", gps, "-32.png\">",
                               "<img alt=\"\" src=\"", pngpath, channel, "_SPE-", gps, "-32.png\"",
-                              imgstyle,"<br><br><br>"
+                              imgstyle,"</nobr><br><br><br>"
                              ]
   where imgstyle = "style=\"border: 0px solid ; width: 300px;\"></a>"
 
@@ -49,9 +50,9 @@ putName gps channel = concat ["<Hr><h3> Channel: ", channel, "</h3>",
 putNames :: String -> [String] -> String
 putNames gps channels = header ++ (concat $ map (putName gps) channels) ++ footer
   where header = concat ["<h1>Past Data Viewer</h1>", "<h2>GPS Time: ", gps, "</h2>"]
-        footer = concat ["<Hr>[<a href=\"", cgihome, "?gps=", (show $ (read gps) - 32), uriCh, "\">&lt; Prev</a>] ",
-                         " [<a href=\"", cgihome, "\">Back</a>] ",
-                         " [<a href=\"", cgihome, "?gps=", (show $ (read gps) + 32), uriCh, "\">Next &gt;</a>]"
+        footer = concat ["<Hr>[<a href=\"./pastDataViewer?gps=", (show $ (read gps) - 32), uriCh, "\">&lt; Prev</a>] ",
+                         " [<a href=\"./pastDataViewer\">Back</a>] ",
+                         " [<a href=\"./pastDataViewer?gps=", (show $ (read gps) + 32), uriCh, "\">Next &gt;</a>]"
                         ]
         uriCh = concat $ zipWith (++) (repeat "&channel=") channels
                  
