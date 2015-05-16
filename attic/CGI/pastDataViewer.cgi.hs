@@ -70,8 +70,8 @@ html gps channels plottypes script = concat [
   "</head><body>",
   "<h1>Past Data Viewer</h1>",
   body gps channels plottypes script,
-  "<p>Real time quick look page: <a href=\"../index.html\">here</a><br><br><p>",
-  "<small><Hr><footer>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></footer></small>",
+  "<br><br><Hr><footer><p>Real time quick look page: <a href=\"../index.html\">here</a><br><p>",
+  "<small>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></small></footer>",
   "</body></html>"]
 
 cgiMain :: CGI CGIResult
