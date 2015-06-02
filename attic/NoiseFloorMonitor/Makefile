@@ -12,10 +12,11 @@ HC = ghc -O2
 USELIB=
 
 # program
-TAR1=test
-TAR2=simulation
-TAR3=test2
-TAR= ${TAR1} ${TAR2} ${TAR3}
+TAR1=test_nfm
+TAR2=estimateThreshold
+TAR3=checkGaussian
+TAR4=test
+TAR= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
 
 # link path
 ifneq (${USELIB},)
@@ -39,6 +40,8 @@ ${TAR1}: ${TAR1}.hs HasKAL/SignalProcessingUtils/filterFunctions.c
 ${TAR2}: ${TAR2}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 ${TAR3}: ${TAR3}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR4}: ${TAR4}.hs HasKAL/SignalProcessingUtils/filterFunctions.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
