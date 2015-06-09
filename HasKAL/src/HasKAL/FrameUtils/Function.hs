@@ -13,6 +13,8 @@ Frame IO functions
 module HasKAL.FrameUtils.Function (
    readFrame
   ,readFrameV
+  ,geneTimeVect
+  ,addTimeVect
   ,readFrameFromGPS
   ,readFrameFromGPS'V
 --  ,readFrameUntilGPS
@@ -25,6 +27,7 @@ import qualified Data.Packed.Vector as DPV
 import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
 import qualified HasKAL.FrameUtils.PickUpFileName as HFP
+import qualified HasKAL.SpectrumUtils.Signature as HSS
 import qualified HasKAL.TimeUtils.Function as HTF
 import qualified HasKAL.WaveUtils.Data as HWD
 
@@ -39,6 +42,13 @@ readFrameV :: String -- ^ channel name
            -> String -- ^ file name
            -> IO (DPV.Vector Double)
 readFrameV = (CM.liftM (DPV.fromList.(map realToFrac).HFF.eval).).HFF.readFrame
+
+
+geneTimeVect :: Int -> Double -> DPV.Vector Double
+geneTimeVect ndata fs = DPV.fromList [0, 1/fs..(fromIntegral ndata - 1)/fs]
+
+addTimeVect :: Double -> DPV.Vector Double -> HSS.Spectrum
+addTimeVect fs dat = (geneTimeVect (DPV.dim dat) fs, dat)
 
 readFrameFromGPS :: Integer -- ^ start GPS [sec]
                  -> Integer -- ^ length [sec]
