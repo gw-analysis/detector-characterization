@@ -336,15 +336,16 @@ getSamplingFrequencyCore frameFile channelName gpsTime = do
 
 
 
-getGPSTime :: String -> IO (Int, Int)
+getGPSTime :: String -> IO (Int, Int, Double)
 getGPSTime frameFile = do
     frameFile' <- newCString frameFile
     ifile <- c_FrFileINew frameFile'
     ptr_frameH <- c_FrameRead ifile
     val_frameH <- peek ptr_frameH
-    val_GTimeS <-  return $ frameh_GTimeS val_frameH
-    val_GTimeN <-  return $ frameh_GTimeN val_frameH
-    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN)
+    val_GTimeS <- return $ frameh_GTimeS val_frameH
+    val_GTimeN <- return $ frameh_GTimeN val_frameH
+    val_dt     <- return $ frameh_dt val_frameH
+    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN, val_dt)
 
 
 {-- Storable Type for structure--}
