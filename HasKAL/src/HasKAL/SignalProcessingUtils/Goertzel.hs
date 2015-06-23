@@ -15,7 +15,7 @@ goertzel vec fs f = do
   let y' = iir (goertzelCoeff fs nvec f) vec
       yn = VS.last y'
       ym = y' VS.! (nvec-2)
-      y = (yn - cos (2*pi*k/nvec') * ym) :+ (- sin (2*pi*k/nvec'))
+      y = (yn - cos (2*pi*k/nvec') * ym) :+ (- sin (2*pi*k/nvec') * ym)
   (f, y)
   where
     nvec = VS.length vec
