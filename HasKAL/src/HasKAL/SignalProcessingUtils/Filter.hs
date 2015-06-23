@@ -42,18 +42,18 @@ module HasKAL.SignalProcessingUtils.Filter
   , filtfilt
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, unsafeWith)
+import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0)
 import Foreign.C.Types
 -- import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
-import UnsafeCoerce (unsafeCoerce)
+import Unsafe.Coerce (unsafeCoerce)
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
-  let ilen = dim input
+  let ilen = VS.length inputV
       flen = length numCoeff
       inputV' = unsafeCoerce inputV :: VS.Vector CDouble
       numCoeff' = d2cd numCoeff
@@ -111,7 +111,8 @@ iirCore input ilen numCoeff denomCoeff flen
    withArray denomCoeff $ \ptrDenomCoeff ->
    allocaArray ilen $ \ptrOutput ->
    do c_iir_filter ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrOutput
-      ptrOutput >>= \foreignptrOutput -> unsafeFromForeignPtr0 foreignptrOutput ilen
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
             wflen = itow32 flen
 
