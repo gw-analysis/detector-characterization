@@ -36,18 +36,29 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 
 module HasKAL.SignalProcessingUtils.Filter
-  (
-  iirFilter,
-  firFilter,
-  filtfilt
+  ( iir
+  , iirFilter
+  , firFilter
+  , filtfilt
   ) where
 
+import qualified Data.Vector.Storable as VS (Vector, unsafeWith)
 import Foreign.C.Types
 -- import Foreign.C.String
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
+import UnsafeCoerce (unsafeCoerce)
 
+iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
+iir (numCoeff, denomCoeff) inputV = do
+  let ilen = dim input
+      flen = length numCoeff
+      inputV' = unsafeCoerce inputV :: VS.Vector CDouble
+      numCoeff' = d2cd numCoeff
+      denomCoeff' = d2cd denomCoeff
+  unsafeCoerce $ iirCore inputV' ilen numCoeff' denomCoeff' flen
 
 
 iirFilter :: [Double] -> [Double] -> [Double] -> [Double]
@@ -92,6 +103,18 @@ filtfilt input numCoeff denomCoeff = do
 -------------  Internal Functions  -----------------------------
 cumsum :: [Double] -> [Double]
 cumsum = scanl1 (+)
+
+iirCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+iirCore input ilen numCoeff denomCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray numCoeff $ \ptrNumCoeff ->
+   withArray denomCoeff $ \ptrDenomCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_iir_filter ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrOutput
+      ptrOutput >>= \foreignptrOutput -> unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
 
 iirFilterCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble]
 iirFilterCore input ilen numCoeff denomCoeff flen
