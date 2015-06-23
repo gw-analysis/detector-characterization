@@ -15,20 +15,18 @@ goertzel vec fs f = do
   let y' = iir (goertzelCoeff fs nvec f) vec
       yn = VS.last y'
       ym = y' VS.! (nvec-2)
-      y = (yn - cos (2*pi*k/nvec') * ym) :+ (- sin (2*pi*k/nvec'))
+      y = (yn - cos (2*pi*k/nvec') * ym) :+ (- sin (2*pi*k/nvec') * ym)
   (f, y)
   where
     nvec = VS.length vec
     nvec' = fromIntegral nvec :: Double
-    k = fromIntegral $ round $ f/fs*fromIntegral nvec :: Double
+    k = f/fs*fromIntegral nvec :: Double
 
 
 goertzelCoeff :: Double -> Int -> Double -> ([Double], [Double])
-goertzelCoeff fs n f = ([1,0, 0], [1, -2*cos (2*pi*k'/n'), 1])
-  where k = round $ f/fs*n' :: Int
+goertzelCoeff fs n f = ([1,0, 0], [1, -2*cos (2*pi*k/n'), 1])
+  where k = f/fs*n' :: Double
         n' = fromIntegral n :: Double
-        k' = fromIntegral k :: Double
-
 
 
 
