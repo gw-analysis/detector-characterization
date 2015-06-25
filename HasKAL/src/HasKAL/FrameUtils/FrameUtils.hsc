@@ -304,6 +304,7 @@ getChannelListCore frameFile gpsTime = do
     let channelList = lines channelList''
         adcChannelList = map takeChannelandFs $ filter (isPrefixOf "ADC") channelList
         procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
+    c_FrFileIEnd ifile
     return $ concat [procChannelList, adcChannelList]
 
 takeChannelandFs :: String -> (String, Double)
@@ -327,12 +328,14 @@ getSamplingFrequencyCore frameFile channelName gpsTime = do
     v <- peek ptr_v
     dt' <- peekArray 1 (frvect_dx v)
     let dt = realToFrac (dt'!!0) :: Double
+    c_FrVectFree ptr_v
+    c_FrFileIEnd ifile
     return $ sampleRateIt dt
     where
       sampleRateIt dt
         | rate>=1.0 = fromIntegral $ floor $ rate + 0.5
         | rate<1.0  = rate
-        where rate = 1.0 / dt
+        where rate = 1.0 / dt :: Double
 
 
 
@@ -345,7 +348,8 @@ getGPSTime frameFile = do
     val_GTimeS <- return $ frameh_GTimeS val_frameH
     val_GTimeN <- return $ frameh_GTimeN val_frameH
     val_dt     <- return $ frameh_dt val_frameH
-    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN, val_dt)
+    c_FrFileIEnd ifile
+    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
 
 
 {-- Storable Type for structure--}
