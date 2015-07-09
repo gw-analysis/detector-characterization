@@ -33,7 +33,8 @@ import Data.List                  (isInfixOf)
 import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
-import HasKAL.FrameUtils.FrameUtils
+import HasKAL.FrameUtils.FrameUtils hiding (readFrame)
+import HasKAL.FrameUtils.Function (readFrame)
 
 import qualified Data.Packed.Vector as DPV
 import Control.Monad
@@ -54,17 +55,17 @@ kagraDataPoint gpstime chname = do
           ]
 
 
-kagraDataGet :: Int -> Int -> String -> IO DPV.Vector Double
+kagraDataGet :: Int -> Int -> String -> IO (DPV.Vector Double)
 kagraDataGet gpsstrt duration chname = do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
   let headfile = head flist
   fs <- getSamplingFrequency headfile chname
-  let (gpstimeSec, gpstimeNano, dt) = getGPSTime headfile
-      headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+  (gpstimeSec, gpstimeNano, dt) <- getGPSTime headfile
+  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
         then 0
         else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
       nduration = floor $ fromIntegral duration * fs
-  liftM (DPV.fromList $ take nduration.drop headNum.concat) $ mapM (readFrame chname) fileNames
+  liftM (DPV.fromList.take nduration.drop headNum.concat) $ mapM (readFrame chname) flist
 
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
