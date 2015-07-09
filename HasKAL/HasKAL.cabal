@@ -53,6 +53,10 @@ library
     HasKAL.Constant.CGSM,
     HasKAL.Constant.MKSA,
     HasKAL.DataBaseUtils,
+    HasKAL.DataBaseUtils.Function,
+    HasKAL.DataBaseUtils.Framedb,
+    HasKAL.DataBaseUtils.DataBaseAdmin,
+    HasKAL.DataBaseUtils.DataSource,
     HasKAL.DetectorUtils.Detector,
     HasKAL.DetectorUtils.DetectorParam,
     HasKAL.DetectorUtils.Function,
@@ -121,7 +125,12 @@ library
     HasKAL.TimeUtils.Signature,
     HasKAL.TimeUtils.TimeConvert,
     HasKAL.WaveUtils,
-    HasKAL.WebUtils
+    HasKAL.WaveUtils.Data,
+    HasKAL.WaveUtils.Signature,
+    HasKAL.WebUtils,
+    HasKAL.WebUtils.Data,
+    HasKAL.WebUtils.EventDisplayXend,
+    HasKAL.WebUtils.FileWatcher
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -202,10 +211,27 @@ executable loadFrameData
    ,hmatrix-gsl
    ,hmatrix-special
    ,lens
-
-
   ghc-options:  -O2 -threaded -rtsopts -eventlog
   extra-libraries:  Frame
 
+
+executable kagraDataFind
+  hs-source-dirs: exe-src
+  main-is:        kagraDataFind.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable kagraDataPoint
+  hs-source-dirs: exe-src
+  main-is:        kagraDataPoint.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
 
 
