@@ -52,6 +52,7 @@ library
     HasKAL.Constant,
     HasKAL.Constant.CGSM,
     HasKAL.Constant.MKSA,
+    HasKAL.DataBaseUtils,
     HasKAL.DetectorUtils.Detector,
     HasKAL.DetectorUtils.DetectorParam,
     HasKAL.DetectorUtils.Function,
@@ -118,8 +119,8 @@ library
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.TimeUtils.GPSfunction,
     HasKAL.TimeUtils.Signature,
-    HasKAL.TimeUtils.TimeConvert
-    HasKAL.WaveUtils
+    HasKAL.TimeUtils.TimeConvert,
+    HasKAL.WaveUtils,
     HasKAL.WebUtils
 
   -- Modules included in this library but not exported.
@@ -165,7 +166,14 @@ library
        fsnotify,
        unix-compat,
        cgi,
-       MissingH
+       MissingH,
+       HDBC,
+       HDBC-session,
+       relational-query-HDBC,
+       relational-query,
+       HDBC-mysql,
+       template-haskell,
+       names-th
 
   -- Directories containing source files.
   hs-source-dirs:      src
