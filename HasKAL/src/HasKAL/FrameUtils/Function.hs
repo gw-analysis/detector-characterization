@@ -58,7 +58,8 @@ readFrameFromGPS :: Integer -- ^ start GPS [sec]
 readFrameFromGPS gpsTime obsTime channel cache = do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   fs <- HFF.getSamplingFrequency (head fileNames) channel
-  fileGPS <- CM.liftM HTF.deformatGPS $ HFF.getGPSTime $ head fileNames
+  (gpsS,gpsN,_) <- HFF.getGPSTime $ head fileNames
+  let fileGPS = HTF.deformatGPS (gpsS,gpsN)
   let headNum = case ((fromIntegral gpsTime) - fileGPS) <= 0 of
         True -> 0
         False -> truncate $ ((fromIntegral gpsTime) - fileGPS) * fs
@@ -88,7 +89,8 @@ readFrameWaveData :: HDD.Detector
 readFrameWaveData detector gpsTime obsTime channel cache = do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   fs <- HFF.getSamplingFrequency (head fileNames) channel
-  fileGPS <- CM.liftM HTF.deformatGPS $ HFF.getGPSTime $ head fileNames
+  (gpsS,gpsN,_) <- HFF.getGPSTime $ head fileNames
+  let fileGPS = HTF.deformatGPS (gpsS,gpsN)
   let startGPS = case ((fromIntegral gpsTime) - fileGPS) <= 0 of
         True -> fileGPS
         False -> fromIntegral (truncate $ fs * ((fromIntegral gpsTime) - fileGPS)) / fs + fileGPS
