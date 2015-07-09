@@ -21,9 +21,9 @@ import Data.List (isInfixOf, (!!))
 import Data.Int (Int32)
 
 import Control.Monad (forM_)
-import DataSource (connect)
-import Framedb (Framedb, framedb, tableOfFramedb)
-import qualified Framedb
+import HasKAL.DataBaseUtils.DataSource (connect)
+import HasKAL.DataBaseUtils.Framedb (Framedb, framedb, tableOfFramedb)
+import qualified HasKAL.DataBaseUtils.Framedb as Framedb
 
 import System.Process (rawSystem)
 import System.Environment (getArgs)

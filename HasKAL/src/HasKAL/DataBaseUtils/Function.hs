@@ -62,9 +62,9 @@ kagraDataGet gpsstrt duration chname = do
   let (gpstimeSec, gpstimeNano, dt) = getGPSTime headfile
       headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
         then 0
-        else floor $ fromIntegral (fromIntegral gpsstrt - gpsTimeSec) * fs
+        else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
       nduration = floor $ fromIntegral duration * fs
-  liftM (DPV.fromList $ take nduration.drop headNum.concat) $ mapM (readFrame channel) fileNames
+  liftM (DPV.fromList $ take nduration.drop headNum.concat) $ mapM (readFrame chname) fileNames
 
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
