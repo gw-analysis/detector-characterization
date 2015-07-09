@@ -40,7 +40,9 @@ channelPlot param filename = do
       ext = filetype param
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
-  gTimeS <- liftM (show.fst) $ getGPSTime filename
+--  gTimeS <- liftM (show.fst) $ getGPSTime filename
+  (gTimeS', _, _) <- getGPSTime filename
+  let gTimeS = show gTimeS' :: String
   let durationS = show $ extractDataLengthfromFilename filename
 --  chList' <- getChannelList filename
   forM_ chList $ \(channel, fs) -> do
@@ -212,7 +214,9 @@ channelPlot' param filename = do
       ext = filetype param
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
-  gTimeS <- liftM (show.fst) $ getGPSTime filename
+--  gTimeS <- liftM (show.fst) $ getGPSTime filename
+  (gTimeS', _, _) <- getGPSTime filename
+  let gTimeS = show gTimeS' :: String
   let durationS = show $ extractDataLengthfromFilename filename
 --  chList' <- getChannelList filename
   forM_ chList $ \(channel, fs) -> do
