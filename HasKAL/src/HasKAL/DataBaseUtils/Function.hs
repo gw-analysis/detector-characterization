@@ -2,6 +2,7 @@
 
 module HasKAL.DataBaseUtils.Function
 ( kagraDataFind
+, kagraDataGet
 , kagraDataPoint
 , kagraDataFindCore
 , kagraDataPointCore
@@ -33,26 +34,40 @@ import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
 
+import qualified Data.Packed.Vector as DPV
+import Control.Monad
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO [String]
 kagraDataFind gpsstrt duration chname = do
   flist <- kagraDataFindCore gpsstrt duration chname
-  return $ [ u
-           | (Just u) <- flist
-           ]
+  return  [ u
+          | (Just u) <- flist
+          ]
 
 
 kagraDataPoint :: Int32 -> String -> IO [String]
 kagraDataPoint gpstime chname = do
   flist <- kagraDataPointCore gpstime chname
-  return $ [ x
-           | (Just x) <- flist
-           ]
+  return  [ x
+          | (Just x) <- flist
+          ]
+
+
+kagraDataGet :: Int -> Int -> (String, Double) -> IO DPV.Vector Double
+kagraDataGet gpsstrt duration (chname, fs) = do
+  flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
+  let headfile = head flist
+      (gpstimeSec, gpstimeNano, dt) = getGPSTime headfile
+      headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+        then 0
+        else floor $ fromIntegral (fromIntegral gpsstrt - gpsTimeSec) * fs
+      nduration = floor $ fromIntegral duration * fs
+  liftM (DPV.fromList $ take nduration.drop headNum.concat) $ mapM (readFrame channel) fileNames
 
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
 kagraDataFindCore gpsstrt duration chname =
-  handleSqlError' $ withConnectionIO connect $ \conn -> do
+  handleSqlError' $ withConnectionIO connect $ \conn ->
 --  setSqlMode conn
   outputResults conn core
   where
@@ -78,7 +93,7 @@ kagraDataFindCore gpsstrt duration chname =
 
 kagraDataPointCore :: Int32 -> String -> IO [Maybe String]
 kagraDataPointCore gpstime chname =
-  handleSqlError' $ withConnectionIO connect $ \conn -> do
+  handleSqlError' $ withConnectionIO connect $ \conn ->
 --  setSqlMode conn
   outputResults conn core
   where
