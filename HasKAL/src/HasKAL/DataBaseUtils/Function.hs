@@ -33,6 +33,7 @@ import Data.List                  (isInfixOf)
 import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
+import HasKAL.FrameUtils.FrameUtils
 
 import qualified Data.Packed.Vector as DPV
 import Control.Monad
@@ -53,11 +54,12 @@ kagraDataPoint gpstime chname = do
           ]
 
 
-kagraDataGet :: Int -> Int -> (String, Double) -> IO DPV.Vector Double
-kagraDataGet gpsstrt duration (chname, fs) = do
+kagraDataGet :: Int -> Int -> String -> IO DPV.Vector Double
+kagraDataGet gpsstrt duration chname = do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
   let headfile = head flist
-      (gpstimeSec, gpstimeNano, dt) = getGPSTime headfile
+  fs <- getSamplingFrequency headfile chname
+  let (gpstimeSec, gpstimeNano, dt) = getGPSTime headfile
       headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
         then 0
         else floor $ fromIntegral (fromIntegral gpsstrt - gpsTimeSec) * fs
