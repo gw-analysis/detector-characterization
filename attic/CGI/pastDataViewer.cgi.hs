@@ -8,26 +8,43 @@ Stability   : test
 Portability : POSIX
 GUI of Antenna Pattern
 -}{-
-  * Last Modified: 2015/05/16 19:03:47
+  * Last Modified: 2015/07/10 22:43:17
 -}
 
 import Network.CGI
+import Control.Monad (forM_, liftM)
+import System.Directory (doesFileExist)
+import System.IO.Unsafe (unsafePerformIO)
+import Data.Maybe (fromJust)
+import qualified Data.Vector.Storable as V (fromList, length)
+
+import HasKAL.SpectrumUtils.SpectrumUtils
+import HasKAL.PlotUtils.HROOT.PlotGraph
+import HasKAL.PlotUtils.HROOT.PlotGraph3D
+import HasKAL.SpectrumUtils.Function
+import HasKAL.DataBaseUtils.Function
+import HasKAL.TimeUtils.GPSfunction
+import CommonForm
 
 pngpath :: String
 pngpath = "../env_images/"
 
+xendCh :: [String]
+xendCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
+         ,"K1:PEM-EX_ACC_NO2_Y_FLOOR"
+         ,"K1:PEM-EX_ACC_NO2_Z_FLOOR"
+         ,"K1:PEM-EX_MAG_X_FLOOR"
+         ,"K1:PEM-EX_MAG_Y_FLOOR"
+         ,"K1:PEM-EX_MAG_Z_FLOOR"
+         ,"K1:PEM-EX_MIC_FLOOR"
+         ]
+
 inputForm :: String -> String
 inputForm script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
-  "<p>GPS Time: <input type=\"text\" name=\"gps\" value=\"1115097401\" /></p>",
-  "<h3> Channel: </h3>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_X_FLOOR\">K1:PEM-EX_ACC_NO2_X_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_Y_FLOOR\">K1:PEM-EX_ACC_NO2_Y_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_Z_FLOOR\">K1:PEM-EX_ACC_NO2_Z_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_X_FLOOR\">K1:PEM-EX_MAG_X_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_Y_FLOOR\">K1:PEM-EX_MAG_Y_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_Z_FLOOR\">K1:PEM-EX_MAG_Z_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MIC_FLOOR\">K1:PEM-EX_MIC_FLOOR</p>",
+  dateForm,
+  "<p>Duration: <input type=\"text\" name=\"duration\" value=\"32\" size=\"5\" /> sec.</p>",
+  channelForm xendCh,
   "<h3> Type: </h3>",
   "<p><input type=\"checkbox\" name=\"plottype\" value=\"TS\" checked=\"checked\">Time Series</p>",
   "<p><input type=\"checkbox\" name=\"plottype\" value=\"PSD\" checked=\"checked\">Spectrum</p>",
@@ -35,55 +52,87 @@ inputForm script = concat [
   "<input type=\"submit\" value=\"plot view\" />",
   "</form>"]
 
-putName :: String -> String -> [String] -> String
-putName gps channel plottypes = concat ["<Hr><h3> Channel: ", channel, "</h3>"] ++ (concat $ map func plottypes) ++ "<br><br><br>"
-  where imgstyle = "style=\"border: 0px solid ; width: 300px;\"></a>"
-        func s = concat ["<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-32.png\">",
-                         "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-32.png\"",
-                         imgstyle,"</nobr>"]
+putName :: String -> String -> [String] -> String -> String
+putName gps duration plottypes channel = concat [
+  "<Hr><h3> Channel: ", channel, "</h3>",
+  (concat $ map func plottypes),
+  "<br><br><br>"]
+  where func s = concat [
+          "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\">",
+          "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\"",
+          "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
 
+putNames :: String -> String -> [String] -> [String] -> String
+putNames gps duration plottypes channels = concat [
+  "<h2>GPS Time: ", gps, "</h2>",
+  (concat $ map (putName gps duration plottypes) channels),
+  "<Hr>[<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) - (read duration)), uris, "\">&lt; Prev</a>] ",
+  " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
+  " [<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) + (read duration)), uris, "\">Next &gt;</a>]"
+  ]
+  where uris = "&duration=" ++ duration
+               ++ (concat $ zipWith (++) (repeat "&channel=") channels)
+               ++ (concat $ zipWith (++) (repeat "&plottype=") plottypes)
 
-putNames :: String -> [String] -> [String] -> String
-putNames gps channels plottypes = header ++ (concat $ map (\x -> (putName gps) x plottypes) channels) ++ footer
-  where header = concat ["<h2>GPS Time: ", gps, "</h2>"]
-        footer = concat ["<Hr>[<a href=\"./pastDataViewer.cgi?gps=", (show $ (read gps) - 32), uriCh, uriPt, "\">&lt; Prev</a>] ",
-                         " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
-                         " [<a href=\"./pastDataViewer.cgi?gps=", (show $ (read gps) + 32), uriCh, uriPt, "\">Next &gt;</a>]"
-                        ]
-        uriCh = concat $ zipWith (++) (repeat "&channel=") channels
-        uriPt = concat $ zipWith (++) (repeat "&plottype=") plottypes
-                 
-body :: Maybe String -> [String] -> [String] -> String -> String
-body gps channels plottypes script =
-    case (gps, channels, plottypes) of
-     (Just "", _, _) -> inputForm script
-     (_, [], _) -> inputForm script
-     (_, _, []) -> inputForm script
-     (Just x, y, z)  -> putNames x y z
-     (_, _, _) -> inputForm script
-
-html :: Maybe String -> [String] -> [String] -> String -> String
-html gps channels plottypes script = concat [
-  "<html>",
-  "<head><title>Past Data Viewer</title>",
-  "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">",
-  "</head><body>",
-  "<h1>Past Data Viewer</h1>",
-  body gps channels plottypes script,
-  "<br><br><Hr><footer><p>Real time quick look page: <a href=\"../index.html\">here</a><br><p>",
-  "<small>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></small></footer>",
-  "</body></html>"]
+monMain :: String -> String -> [String] -> String -> IO ()
+monMain gps duration pts ch = do
+  datMaybe <- kagraDataGet (read gps) (read duration) ch
+  case datMaybe of
+   Nothing -> return ()
+   _ -> do
+     let dat = fromJust datMaybe
+     forM_ pts $ \pt -> do
+       pngExist <- doesFileExist $ pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png"
+       case pngExist of
+        True -> return ()
+        False -> do
+          case pt of
+           "TS" -> do
+             let tvec = V.fromList $ take (V.length dat) [0,1/2048..]
+             plotV Linear Line 1 BLUE ("s", "") 0.05 pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0),(0,0)) (tvec, dat)
+           "PSD" -> do
+             let fs = 2048
+                 hfs = gwpsdV dat (truncate fs) fs
+             plotV LogXY Line 1 BLUE ("Hz", "/rHz") 0.05 pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0),(0,0)) hfs
+           "SPE" -> do
+             let fs = 2048
+                 hfs = gwspectrogramV 0 (truncate fs) fs dat
+             spectrogramM LogZ COLZ "/rHz" pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") hfs
+               
+body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
+body gps duration plottypes channels script =
+  unsafePerformIO $ case (gps, duration, plottypes, channels) of
+     (Just "", _, _, _) -> return $ inputForm script
+     (_, Just "", _, _) -> return $ inputForm script
+     (_, _, [], _) -> return $ inputForm script
+     (_, _, _, []) -> return $ inputForm script
+     (Just x, Just y, z, w) -> do
+       mapM_ (monMain x y z) w
+       return $ putNames x y z w
+     (_, _, _, _) -> return $ inputForm script
 
 cgiMain :: CGI CGIResult
 cgiMain = do
   setHeader "Content-type" "text/html; charset = UTF-8"
   script <- scriptName
-  gps <- getInput "gps"
-  channels <- getMultiInput "channel"
+  date <- getInput "Date"
+  gps <- case date of
+    Just "GPS" -> getInput "gps"
+    Just "Local" -> do
+      year <- getInput "year"
+      month <- getInput "month"
+      day <- getInput "day"
+      hour <- getInput "hour"
+      minute <- getInput "minute"
+      second <- getInput "second"
+      local <- getInput "local"
+      return $ Just $ time2gps $ (fromJust year)++"-"++(fromJust month)++"-"++(fromJust day)++" "
+        ++(fromJust hour)++":"++(fromJust minute)++":"++(fromJust second)++" "++(fromJust local)
+    _ -> return $ Just ""
+  duration <- getInput "duration"
   plottypes <- getMultiInput "plottype"
-  output $ html gps channels plottypes script
-
-
+  channels <- getMultiInput "channel"
+  output $ hkalFrame "Past Data Viewer" $ body gps duration plottypes channels script
 
 main :: IO ()
 main = runCGI (handleErrors cgiMain)

@@ -10,8 +10,8 @@ CHMOD_CMD:=/bin/chmod
 
 all : ${TAR1} ${TAR2}
 
-${TAR1} : ${TAR1}.hs
-	${HC} -o $@ $^
+${TAR1} : ${TAR1}.hs ${DEP}
+	${HC} -o $@ $^ -lFrame
 	${CHMOD_CMD} 755 $@
 
 ${TAR2} : ${TAR2}.hs ${DEP}
