@@ -182,7 +182,8 @@ library
        relational-query,
        HDBC-mysql,
        template-haskell,
-       names-th
+       names-th,
+       transformers
 
   -- Directories containing source files.
   hs-source-dirs:      src
