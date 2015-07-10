@@ -9,6 +9,7 @@ main = do
   let gpsstrt = read (head args) :: Int32
       chname = args !! 1 :: String
   statement <- kagraDataPoint gpsstrt chname
-  print statement
-
+  case statement of
+    Nothing -> print "Nothing"
+    Just x -> print x
 

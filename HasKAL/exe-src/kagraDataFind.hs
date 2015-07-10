@@ -10,7 +10,9 @@ main = do
       duration = read (args !! 1) :: Int32
       chname = args !! 2 :: String
   statement <- kagraDataFind gpsstrt duration chname
-  print statement
+  case statement of
+    Nothing -> print "Nothing"
+    Just x -> print x
 
 
 
