@@ -6,9 +6,9 @@ License     : ???
 Maintainer  : Takahiro Yamamoto %mail%
 Stability   : test
 Portability : POSIX
-GUI of Antenna Pattern
+
 -}{-
-  * Last Modified: 2015/05/16 19:18:19
+  * Last Modified: 2015/07/10 22:56:55
 -}
 
 import Network.CGI

@@ -6,9 +6,9 @@ License     : ???
 Maintainer  : Takahiro Yamamoto %mail%
 Stability   : test
 Portability : POSIX
-GUI of Antenna Pattern
+
 -}{-
-  * Last Modified: 2015/06/09 14:43:37
+  * Last Modified: 2015/07/10 22:56:55
 -}
 
 import qualified Data.Vector.Storable as V (length)
