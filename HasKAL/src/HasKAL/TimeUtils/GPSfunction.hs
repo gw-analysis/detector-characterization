@@ -16,6 +16,8 @@ Modified by T.Yokozawa, Jun.18.2014
    Make timetuple2gps
 Modified by T.Yokozawa, Jun.24.2014
    Make mjd2gps' (preliminary)
+Modified by T.Yamamoto, Jul.7. 2014
+   change table file from "tai-utc.dat" to "TaiUtc.hs"
 -}
 
 
@@ -41,12 +43,14 @@ import Data.Time.Format
 import System.Locale
 import Data.Maybe
 import System.Time
-import HasKAL.Misc.Environment
+--TY import HasKAL.Misc.Environment
+import HasKAL.TimeUtils.TaiUtc
 
 {-# NOINLINE theLeapSecondTable #-}
 theLeapSecondTable :: LeapSecondTable
-theLeapSecondTable = parseTAIUTCDATFile $ unsafePerformIO $
-  readFile $ haskalOpt ++ "/timeTable/tai-utc.dat"
+theLeapSecondTable = parseTAIUTCDATFile taiTable
+--TY theLeapSecondTable = parseTAIUTCDATFile $ unsafePerformIO $
+--TY   readFile $ haskalOpt ++ "/timeTable/tai-utc.dat"
 --  readFile "./HasKAL/TimeUtils/tai-utc.dat"
 --TY  readFile "./tai-utc.dat"
 
