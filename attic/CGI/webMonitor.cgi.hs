@@ -8,64 +8,101 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/10 22:56:55
+  * Last Modified: 2015/07/12 17:28:27
 -}
 
 import Network.CGI
-import Control.Monad (forM_)
+import Control.Monad (forM_, liftM)
+import Data.Maybe (fromJust)
 import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Vector.Storable as V (concat)
 
 import HasKAL.SpectrumUtils.SpectrumUtils
+import HasKAL.FrameUtils.FrameUtils
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SpectrumUtils.Function
-import HasKAL.FrameUtils.Function
+import HasKAL.TimeUtils.GPSfunction
+import HasKAL.DataBaseUtils.Function
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon
+import CommonForm
 
 pngpath :: String
 pngpath = "../mon_images/"
 
+xendCh :: [String]
+xendCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
+         ,"K1:PEM-EX_ACC_NO2_Y_FLOOR"
+         ,"K1:PEM-EX_ACC_NO2_Z_FLOOR"
+         ,"K1:PEM-EX_MAG_X_FLOOR"
+         ,"K1:PEM-EX_MAG_Y_FLOOR"
+         ,"K1:PEM-EX_MAG_Z_FLOOR"
+         ,"K1:PEM-EX_MIC_FLOOR"
+         ]
+
 inputForm :: String -> String
 inputForm script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
-  "<p>GPS Time: <input type=\"text\" name=\"gps\" value=\"1115097401\" /></p>",
-  "<h3> Channel: </h3>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_X_FLOOR\">K1:PEM-EX_ACC_NO2_X_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_Y_FLOOR\">K1:PEM-EX_ACC_NO2_Y_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_ACC_NO2_Z_FLOOR\">K1:PEM-EX_ACC_NO2_Z_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_X_FLOOR\">K1:PEM-EX_MAG_X_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_Y_FLOOR\">K1:PEM-EX_MAG_Y_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MAG_Z_FLOOR\">K1:PEM-EX_MAG_Z_FLOOR</p>",
-  "<p><input type=\"checkbox\" name=\"channel\" value=\"K1:PEM-EX_MIC_FLOOR\">K1:PEM-EX_MIC_FLOOR</p>",
+  dateForm,
+  channelForm Multi xendCh,
   "<h3> Monitor: </h3>",
-  "<p><input type=\"checkbox\" name=\"monitor\" value=\"RM\">RayleighMon</p>",
-  "<p><input type=\"checkbox\" name=\"monitor\" value=\"SRM\">StudentRayleighMon</p>",
+  "<p><input type=\"checkbox\" name=\"monitor\" value=\"RM\" checked=\"checked\">RayleighMon</p>",
+  "<p><input type=\"checkbox\" name=\"monitor\" value=\"SRM\" >StudentRayleighMon</p>",
   "<input type=\"submit\" value=\"view\" />",
   "</form>"]
 
-putName :: String -> String -> [String] -> String
-putName gps channel monitors = concat ["<Hr><h3> Channel: ", channel, "</h3>"] ++ (concat $ map func monitors) ++ "<br><br><br>"
-  where imgstyle = "style=\"border: 0px solid ; width: 300px;\"></a>"
-        func s = concat ["<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-128.png\">",
-                         "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-128.png\"",
-                         imgstyle,"</nobr>"]
-
+putName :: String -> [String] -> String -> String
+putName gps monitors channel = concat [
+  "<Hr><h3> Channel: ", channel, "</h3>",
+  (concat $ map func monitors),
+  "<br><br><br>"]
+  where func s = concat [
+          "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\">",
+          "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\"",
+          "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
 
 putNames :: String -> [String] -> [String] -> String
-putNames gps channels monitors = header ++ (concat $ map (\x -> (putName gps) x monitors) channels) ++ footer
-  where header = concat ["<h2>GPS Time: ", gps, "</h2>"]
-        footer = concat ["<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uriCh, uriMo, "\">&lt; Prev</a>] ",
-                         " [<a href=\"./webMonitor.cgi\">Back</a>] ",
-                         " [<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) + 32), uriCh, uriMo, "\">Next &gt;</a>]"
-                        ]
-        uriCh = concat $ zipWith (++) (repeat "&channel=") channels
-        uriMo = concat $ zipWith (++) (repeat "&monitor=") monitors
+putNames gps monitors channels = concat [
+  "<h2>GPS Time: ", gps, "</h2>",
+  (concat $ map (putName gps monitors) channels),
+  "<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
+  " [<a href=\"./webMonitor.cgi\">Back</a>] ",
+  " [<a href=\"./webMonitor.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"
+  ]
+  where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
+               ++ (concat $ zipWith (++) (repeat "&monitor=") monitors)
                  
+monMain :: String -> [String] -> String -> IO ()
+monMain gps mons ch = do
+  datMaybe <- kagraDataGet (read gps) (read "128") ch
+  case datMaybe of
+   Nothing -> return ()
+   _ -> do
+     let dat = fromJust datMaybe
+     fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
+     forM_ mons $ \mon -> do
+       pngExist <- doesFileExist $ pngpath++ch++"_"++mon++"-"++gps++"-"++"128"++".png"
+       case pngExist of
+        True -> return ()
+        False -> do
+          case mon of
+           "RM" -> do
+             let snf = gwpsdV dat (truncate fs) fs
+                 hfs = gwspectrogramV 0 (truncate fs) fs dat
+                 qv = rayleighMonV [0.5, 0.9, 0.95, 0.99] fs (truncate fs) 16 snf hfs
+             oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK, GREEN, GREEN] ("[Hz]", "Normalized NoiseLv.") 0.05 mon
+               (pngpath++ch++"_"++mon++"-"++gps++"-"++"128"++".png") ((0,0),(0,6)) (concat $ map (\(x, y) -> [x, y]) qv)
+           "SRM" -> do
+             let snf = gwpsdV dat (truncate fs) fs
+                 hfs = gwspectrogramV 0 (truncate fs) fs dat
+                 nus = studentRayleighMonV (QUANT 0.95) fs (truncate fs) 64 64 16 snf hfs
+             plotV Linear LinePoint 1 BLUE ("[Hz]", "nu") 0.05 mon
+               (pngpath++ch++"_"++mon++"-"++gps++"-"++"128"++".png") ((0,0),(0,0)) (getSpectrum 0 nus)
+
 body :: Maybe String -> [String] -> [String] -> String -> String
-body gps channels monitors script =
-    unsafePerformIO $ case (gps, channels, monitors) of
+body gps monitors channels script =
+    unsafePerformIO $ case (gps, monitors, channels) of
                        (Just "", _, _) -> return $ inputForm script
                        (_, [], _) -> return $ inputForm script
                        (_, _, []) -> return $ inputForm script
@@ -74,66 +111,28 @@ body gps channels monitors script =
                          return $ putNames x y z
                        (_, _, _) -> return $ inputForm script
 
-html :: Maybe String -> [String] -> [String] -> String -> String
-html gps channels monitors script = concat [
-  "<html>",
-  "<head><title>Web Monitor</title>",
-  "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">",
-  "</head><body>",
-  "<h1>Web Monitor</h1>",  
-  body gps channels monitors script,
-  "<br><br><Hr><footer><p>Real time quick look page: <a href=\"../index.html\">here</a><br><p>",
-  "<small>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></small></footer>",
-  "</body></html>"]
-
 cgiMain :: CGI CGIResult
 cgiMain = do
   setHeader "Content-type" "text/html; charset = UTF-8"
   script <- scriptName
-  gps <- getInput "gps"
-  channels <- getMultiInput "channel"
+  date <- getInput "Date"
+  gps <- case date of
+    Just "GPS" -> getInput "gps"
+    Just "Local" -> do
+      year <- getInput "year"
+      month <- getInput "month"
+      day <- getInput "day"
+      hour <- getInput "hour"
+      minute <- getInput "minute"
+      second <- getInput "second"
+      local <- getInput "local"
+      return $ Just $ time2gps $ (fromJust year)++"-"++(fromJust month)++"-"++(fromJust day)++" "
+        ++(fromJust hour)++":"++(fromJust minute)++":"++(fromJust second)++" "++(fromJust local)
+    _ -> return $ Just ""
   monitors <- getMultiInput "monitor"  
-  output $ html gps channels monitors script
-
-monMain :: String -> [String] -> String -> IO ()
-monMain gps chs mon
-  | mon == "SRM" = srmMain gps chs
-  | mon == "RM"  = rmMain gps chs
-
-srmMain :: String -> [String] -> IO ()
-srmMain gps chs = do
-  forM_ chs $ \ch -> do
-    pngExist <- doesFileExist $ pngpath++ch++"_SRM-"++gps++"-128.png"
-    gwfExist <- doesFileExist $ "/data/kagra/xend/R0202/K-K1_R-"++gps++"-32.gwf"
-    case (pngExist, gwfExist) of
-     (False, True) -> do
-       let gpss = map show [(read gps), (read gps)+32..(read gps)+96]
-       dats <- mapM (\x -> readFrameV ch $ "/data/kagra/xend/R0202/K-K1_R-"++x++"-32.gwf") gpss
-       let dat = V.concat dats
-       let snf = gwpsdV dat 512 2048
-           hfs = gwspectrogramV 0 512 2048 dat
-           nus = studentRayleighMonV (QUANT 0.95) 2048 512 256 256 4 snf hfs
-       plotV Linear LinePoint 1 BLUE ("[Hz]", "nu") 0.05 "srmon" (pngpath++ch++"_SRM-"++gps++"-128.png") ((0,0),(0,0)) (getSpectrum 0 nus)
-     (_,_) -> return ()
-    
-rmMain :: String -> [String] -> IO ()
-rmMain gps chs = do
-  forM_ chs $ \ch -> do
-    pngExist <- doesFileExist $ pngpath++ch++"_RM-"++gps++"-128.png"
-    gwfExist <- doesFileExist $ "/data/kagra/xend/R0202/K-K1_R-"++gps++"-32.gwf"
-    case (pngExist, gwfExist) of
-     (False, True) -> do
-       let gpss = map show [(read gps), (read gps)+32..(read gps)+96]
-       dats <- mapM (\x -> readFrameV ch $ "/data/kagra/xend/R0202/K-K1_R-"++x++"-32.gwf") gpss
-       let dat = V.concat dats
-       let snf = gwpsdV dat 512 2048
-           hfs = gwspectrogramV 0 512 2048 dat
-           qv = rayleighMonV [0.5, 0.9, 0.95, 0.99] 2048 512 4 snf hfs
-       oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK, GREEN, GREEN] ("[Hz]", "Normalized Noise Lv.") 0.05 "rmon" (pngpath++ch++"_RM-"++gps++"-128.png") ((0,0),(0,6)) (concat $ map pair2list qv)
-     (_,_) -> return ()
-
-pair2list :: (a, a) -> [a]
-pair2list (x,y) = [x,y]
+  channels <- getMultiInput "channel"
+  output $ hkalFrame "Web Monitor" $ body gps monitors channels script
 
 main :: IO ()
 main = runCGI (handleErrors cgiMain)
+

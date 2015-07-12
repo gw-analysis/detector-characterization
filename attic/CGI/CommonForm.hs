@@ -8,14 +8,17 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/10 22:56:55
+  * Last Modified: 2015/07/12 16:19:54
 -}
 
 module CommonForm (
+  MultiSelect (Single, Multi, Both),
   hkalFrame,
   channelForm,
   dateForm
   ) where
+
+data MultiSelect = Single | Multi | Both deriving Eq
 
 hkalFrame :: String -> String -> String
 hkalFrame title body = concat [
@@ -30,12 +33,25 @@ hkalFrame title body = concat [
   "</body></html>"
   ]
 
-channelForm :: [String] -> String
-channelForm chs = concat [
+channelForm :: MultiSelect -> [String] -> String
+channelForm multi chs = concat [
   "<h3> Channel: </h3>",
-  "<p><select name=\"channel\" size=\"5\" multiple style=\"font-size:90%;background-color:#eeeeee; \">",
-  concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") chs,
-  "</select></p>"
+  case multi of
+   Single -> concat [
+     "<p><select name=\"channel\" size=\"5\" style=\"font-size:90%;background-color:#eeeeee; \">",
+     concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") chs,
+     "</select></p>"]
+   Multi -> concat [
+     "<p><select name=\"channel\" size=\"5\" multiple style=\"font-size:90%;background-color:#eeeeee; \">",
+     concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") chs,
+     "</select></p>"]
+   Both -> concat [
+     "<table><tr><th>Channel 1:</th><th></th><th>Channel 2:</th></tr>",
+     "<tr><td><select name=\"channel1\" size=\"5\" style=\"font-size:90%;background-color:#eeeeee; \">",
+     concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") chs,
+     "</select></td><td></td><td><select name=\"channel2\" size=\"5\" multiple style=\"font-size:90%;background-color:#eeeeee; \">",
+     concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") chs,
+     "</select></td></tr></table>"]
   ]
 
 dateForm :: String

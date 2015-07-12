@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/10 22:56:55
+  * Last Modified: 2015/07/12 17:36:41
 -}
 
 import Network.CGI
@@ -24,6 +24,7 @@ import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.SpectrumUtils.Function
 import HasKAL.DataBaseUtils.Function
 import HasKAL.TimeUtils.GPSfunction
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import CommonForm
 
 pngpath :: String
@@ -44,7 +45,7 @@ inputForm script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
   dateForm,
   "<p>Duration: <input type=\"text\" name=\"duration\" value=\"32\" size=\"5\" /> sec.</p>",
-  channelForm xendCh,
+  channelForm Multi xendCh,
   "<h3> Type: </h3>",
   "<p><input type=\"checkbox\" name=\"plottype\" value=\"TS\" checked=\"checked\">Time Series</p>",
   "<p><input type=\"checkbox\" name=\"plottype\" value=\"PSD\" checked=\"checked\">Spectrum</p>",
@@ -81,6 +82,7 @@ monMain gps duration pts ch = do
    Nothing -> return ()
    _ -> do
      let dat = fromJust datMaybe
+     fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
      forM_ pts $ \pt -> do
        pngExist <- doesFileExist $ pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png"
        case pngExist of
@@ -91,12 +93,10 @@ monMain gps duration pts ch = do
              let tvec = V.fromList $ take (V.length dat) [0,1/2048..]
              plotV Linear Line 1 BLUE ("s", "") 0.05 pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0),(0,0)) (tvec, dat)
            "PSD" -> do
-             let fs = 2048
-                 hfs = gwpsdV dat (truncate fs) fs
+             let hfs = gwpsdV dat (truncate fs) fs
              plotV LogXY Line 1 BLUE ("Hz", "/rHz") 0.05 pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0),(0,0)) hfs
            "SPE" -> do
-             let fs = 2048
-                 hfs = gwspectrogramV 0 (truncate fs) fs dat
+             let hfs = gwspectrogramV 0 (truncate fs) fs dat
              spectrogramM LogZ COLZ "/rHz" pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") hfs
                
 body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
