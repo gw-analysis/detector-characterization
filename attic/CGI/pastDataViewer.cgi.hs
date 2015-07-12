@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 17:36:41
+  * Last Modified: 2015/07/12 18:41:43
 -}
 
 import Network.CGI
@@ -53,20 +53,21 @@ inputForm script = concat [
   "<input type=\"submit\" value=\"plot view\" />",
   "</form>"]
 
-putName :: String -> String -> [String] -> String -> String
-putName gps duration plottypes channel = concat [
+putName :: String -> String -> [String] -> String -> String -> String
+putName gps duration plottypes channel msg = concat [
   "<Hr><h3> Channel: ", channel, "</h3>",
-  (concat $ map func plottypes),
-  "<br><br><br>"]
+  case msg of "" -> (concat $ map func plottypes)++"<br><br><br>"
+              _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
+  ]
   where func s = concat [
           "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\">",
           "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\"",
           "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
 
-putNames :: String -> String -> [String] -> [String] -> String
-putNames gps duration plottypes channels = concat [
+putNames :: String -> String -> [String] -> [String] -> [String] -> String
+putNames gps duration plottypes channels msgs = concat [
   "<h2>GPS Time: ", gps, "</h2>",
-  (concat $ map (putName gps duration plottypes) channels),
+  (concat $ zipWith (putName gps duration plottypes) channels msgs),
   "<Hr>[<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) - (read duration)), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
   " [<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) + (read duration)), uris, "\">Next &gt;</a>]"
@@ -75,11 +76,11 @@ putNames gps duration plottypes channels = concat [
                ++ (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&plottype=") plottypes)
 
-monMain :: String -> String -> [String] -> String -> IO ()
+monMain :: String -> String -> [String] -> String -> IO String
 monMain gps duration pts ch = do
   datMaybe <- kagraDataGet (read gps) (read duration) ch
   case datMaybe of
-   Nothing -> return ()
+   Nothing -> return "Can't find file or channel"
    _ -> do
      let dat = fromJust datMaybe
      fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
@@ -98,7 +99,8 @@ monMain gps duration pts ch = do
            "SPE" -> do
              let hfs = gwspectrogramV 0 (truncate fs) fs dat
              spectrogramM LogZ COLZ "/rHz" pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") hfs
-               
+     return ""
+     
 body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
 body gps duration plottypes channels script =
   unsafePerformIO $ case (gps, duration, plottypes, channels) of
@@ -107,8 +109,8 @@ body gps duration plottypes channels script =
      (_, _, [], _) -> return $ inputForm script
      (_, _, _, []) -> return $ inputForm script
      (Just x, Just y, z, w) -> do
-       mapM_ (monMain x y z) w
-       return $ putNames x y z w
+       msgs <- mapM (monMain x y z) w
+       return $ putNames x y z w msgs
      (_, _, _, _) -> return $ inputForm script
 
 cgiMain :: CGI CGIResult

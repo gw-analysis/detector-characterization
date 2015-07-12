@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 17:27:42
+  * Last Modified: 2015/07/12 18:49:20
 -}
 
 import Network.CGI
@@ -52,20 +52,21 @@ inputForm script = concat [
   "<input type=\"submit\" value=\"view\" />",
   "</form>"]
 
-putName :: String -> [String] -> String -> String -> String
-putName gps methods channel1 channel2 = concat [
+putName :: String -> [String] -> String -> String -> String -> String
+putName gps methods channel1 channel2 msg = concat [
   "<Hr><h3> Channel: ", channel2, "</h3>",
-  (concat $ map func methods),
-  "<br><br><br>"]
+  case msg of "" -> (concat $ map func methods)++"<br><br><br>"
+              _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
+  ]
   where func s = concat [
           "<nobr><a href=\"", pngpath, channel1, "--", channel2, "_", s,"-", gps, "-", "32", ".png\">",
           "<img alt=\"\" src=\"", pngpath, channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".png\"",
           "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
 
-putNames :: String -> [String] -> String -> [String] -> String
-putNames gps methods channel1 channels2 = concat [
+putNames :: String -> [String] -> String -> [String] -> [String] -> String
+putNames gps methods channel1 channels2 msgs = concat [
   "<h2>GPS Time: ", gps, "</h2><h2>vs ", channel1, "</h2>",
-  (concat $ map (putName gps methods channel1) channels2),
+  (concat $ zipWith (putName gps methods channel1) channels2 msgs),
   "<Hr>[<a href=\"./cormon.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./multiChannelViewer.cgi\">Back</a>] ",
   " [<a href=\"./multiChannelViewer.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"  
@@ -75,13 +76,13 @@ putNames gps methods channel1 channels2 = concat [
                ++ (concat $ zipWith (++) (repeat "&method=") methods)
 
                  
-corMain :: String -> [String] -> String -> String -> IO ()
+corMain :: String -> [String] -> String -> String -> IO String
 corMain gps methods ch1 ch2 = do
   datMaybe1 <- kagraDataGet (read gps) (read "32") ch1
   datMaybe2 <- kagraDataGet (read gps) (read "32") ch2
   case (datMaybe1, datMaybe2) of
-   (Nothing, _) -> return ()
-   (_, Nothing) -> return ()
+   (Nothing, _) -> return $ "Can't find file or channel-1: "++ch1
+   (_, Nothing) -> return $ "Can't find file or channel-2: "++ch2
    (_, _) -> do
      let dat1 = fromJust datMaybe1
          dat2 = fromJust datMaybe2
@@ -106,7 +107,8 @@ corMain gps methods ch1 ch2 = do
              let cor = takeCorrelation (read method) (toList dat1) (toList dat2) 16
              plot Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
                (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ zip [0,1/fs1..] cor
-
+     return ""
+       
 body :: Maybe String -> [String] -> Maybe String -> [String] -> String -> String
 body gps methods channel1 channels2 script =
     unsafePerformIO $ case (gps, methods ,channel1, channels2) of
@@ -115,8 +117,8 @@ body gps methods channel1 channels2 script =
                        (_, _, Just "", _) -> return $ inputForm script
                        (_, _, _, []) -> return $ inputForm script
                        (Just x, y, Just z, w)  -> do
-                         mapM_ (corMain x y z) w
-                         return $ putNames x y z w
+                         msgs <- mapM (corMain x y z) w
+                         return $ putNames x y z w msgs
                        (_, _, _, _) -> return $ inputForm script
 
 cgiMain :: CGI CGIResult

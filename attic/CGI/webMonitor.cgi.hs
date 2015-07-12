@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 17:28:27
+  * Last Modified: 2015/07/12 18:41:24
 -}
 
 import Network.CGI
@@ -52,20 +52,21 @@ inputForm script = concat [
   "<input type=\"submit\" value=\"view\" />",
   "</form>"]
 
-putName :: String -> [String] -> String -> String
-putName gps monitors channel = concat [
+putName :: String -> [String] -> String -> String -> String
+putName gps monitors channel msg = concat [
   "<Hr><h3> Channel: ", channel, "</h3>",
-  (concat $ map func monitors),
-  "<br><br><br>"]
+  case msg of "" -> (concat $ map func monitors)++"<br><br><br>"
+              _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
+  ]
   where func s = concat [
           "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\">",
           "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\"",
           "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
 
-putNames :: String -> [String] -> [String] -> String
-putNames gps monitors channels = concat [
+putNames :: String -> [String] -> [String] -> [String] -> String
+putNames gps monitors channels msgs = concat [
   "<h2>GPS Time: ", gps, "</h2>",
-  (concat $ map (putName gps monitors) channels),
+  (concat $ zipWith (putName gps monitors) channels msgs),
   "<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./webMonitor.cgi\">Back</a>] ",
   " [<a href=\"./webMonitor.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"
@@ -73,11 +74,11 @@ putNames gps monitors channels = concat [
   where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&monitor=") monitors)
                  
-monMain :: String -> [String] -> String -> IO ()
+monMain :: String -> [String] -> String -> IO String
 monMain gps mons ch = do
   datMaybe <- kagraDataGet (read gps) (read "128") ch
   case datMaybe of
-   Nothing -> return ()
+   Nothing -> return "Can't find file or channel"
    _ -> do
      let dat = fromJust datMaybe
      fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
@@ -99,7 +100,8 @@ monMain gps mons ch = do
                  nus = studentRayleighMonV (QUANT 0.95) fs (truncate fs) 64 64 16 snf hfs
              plotV Linear LinePoint 1 BLUE ("[Hz]", "nu") 0.05 mon
                (pngpath++ch++"_"++mon++"-"++gps++"-"++"128"++".png") ((0,0),(0,0)) (getSpectrum 0 nus)
-
+     return ""
+     
 body :: Maybe String -> [String] -> [String] -> String -> String
 body gps monitors channels script =
     unsafePerformIO $ case (gps, monitors, channels) of
@@ -107,8 +109,8 @@ body gps monitors channels script =
                        (_, [], _) -> return $ inputForm script
                        (_, _, []) -> return $ inputForm script
                        (Just x, y, z)  -> do
-                         mapM_ (monMain x y) z
-                         return $ putNames x y z
+                         msgs <- mapM (monMain x y) z
+                         return $ putNames x y z msgs
                        (_, _, _) -> return $ inputForm script
 
 cgiMain :: CGI CGIResult
