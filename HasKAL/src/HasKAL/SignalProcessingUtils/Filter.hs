@@ -128,7 +128,7 @@ iirCore input ilen numCoeff denomCoeff flen
             wflen = itow32 flen
 
 
-firCore :: VS.Vector CDouble -> Int -> [CDouble] -> -> Int -> VS.Vector CDouble
+firCore :: VS.Vector CDouble -> Int -> [CDouble] -> Int -> VS.Vector CDouble
 firCore input ilen firCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
    withArray firCoeff $ \ptrFirCoeff ->
