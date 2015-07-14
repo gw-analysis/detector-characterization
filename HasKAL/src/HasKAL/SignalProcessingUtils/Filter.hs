@@ -112,6 +112,7 @@ filtfilt input numCoeff denomCoeff = do
 
 
 -------------  Internal Functions  -----------------------------
+
 cumsum :: [Double] -> [Double]
 cumsum = scanl1 (+)
 
