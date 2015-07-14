@@ -115,6 +115,7 @@ filtfilt input numCoeff denomCoeff = do
 cumsum :: [Double] -> [Double]
 cumsum = scanl1 (+)
 
+
 iirCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
 iirCore input ilen numCoeff denomCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
