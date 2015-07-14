@@ -15,8 +15,13 @@ module HasKAL.SpectrumUtils.Function
 , fromSpectrum
 , normalizeSpectrum
 , normalizeSpectrogram
+, readSpectrum
+, writeSpectrum
+, readSpectrogram
+, writeSpectrogram
 ) where
 
+import Control.Monad (liftM)
 import Control.Monad.ST (ST)
 import Data.Packed.ST
 import Numeric.LinearAlgebra
@@ -33,7 +38,7 @@ plotFormatedSpectogram (tV, freqV, specgram) = do
 
 toSpectrogram :: [(Double, Double, Double)] -> Spectrogram
 toSpectrogram spec = (tV, freqV, specgram)
-  where specgram = (reshape $ dim tV).fromList $ css
+  where specgram = trans.(reshape $ dim freqV).fromList $ css
         freqV = fromList.nub $ bs
         tV = fromList.nub $ as      
         (as, bs, css) = unzip3 spec
@@ -91,3 +96,47 @@ normalizeSpectrum snf hoff = (fst hoff, newSpec)
 
 normalizeSpectrumCore :: Vector Double -> Vector Double -> Vector Double
 normalizeSpectrumCore xv yv = zipVectorWith (/) xv yv
+
+
+-- text IO
+readSpectrum :: FilePath -> IO Spectrum
+readSpectrum fname = do
+  xss <- liftM str2llst $ readFile fname
+  case rowsCheck 2 xss of
+   True -> return.toSpectrum $ map (\x -> (x!!0, x!!1)) xss
+   False -> error $ fname++" is not Spectrum Format"
+
+writeSpectrum :: FilePath -> Spectrum -> IO ()
+writeSpectrum fname spec = writeFile fname $ llst2str.map (\(x, y) -> [x, y]).fromSpectrum $ spec
+  
+readSpectrogram :: FilePath -> IO Spectrogram
+readSpectrogram fname = do
+  xs3 <- liftM (map str2llst.lines).readFile $ fname :: IO [[[Double]]]
+  let xss = concat xs3 -- remove empty list
+  case (emptyCheck xs3, rowsCheck 3 xss) of
+   (True, True) -> return.toSpectrogram $ map (\x -> (x!!0, x!!1, x!!2)) xss
+   (_, _) -> error $ fname++" is not Spectrogram Format"
+
+writeSpectrogram :: FilePath -> Spectrogram -> IO ()
+writeSpectrogram fname spec = writeFile fname $ llst2str.insertEmpty.map (\(x, y, z) -> [x, y, z]).plotFormatedSpectogram $ spec
+  
+
+
+{-- Internal Functions --}
+emptyCheck :: (Eq a) => [[a]] -> Bool
+emptyCheck xss = or $ map (==[]) xss
+
+rowsCheck :: Int -> [[a]] -> Bool
+rowsCheck n xss = and $ map ((==n).length) xss
+
+insertEmpty :: [[Double]] -> [[Double]]
+insertEmpty (x:y:[]) = [x, y, []]
+insertEmpty (x:y:ys) = case (head x == head y) of
+ True -> x : insertEmpty (y:ys)
+ False -> [x, []] ++ insertEmpty (y:ys)
+
+str2llst :: String -> [[Double]]
+str2llst = map (map read.words).lines
+
+llst2str :: [[Double]] -> String
+llst2str = unlines.map (unwords.map show)
