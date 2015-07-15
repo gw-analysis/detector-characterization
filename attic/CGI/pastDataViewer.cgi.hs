@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 18:41:43
+  * Last Modified: 2015/07/15 18:16:42
 -}
 
 import Network.CGI
@@ -40,10 +40,10 @@ xendCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
          ,"K1:PEM-EX_MIC_FLOOR"
          ]
 
-inputForm :: String -> String
-inputForm script = concat [
+inputForm :: String -> String -> String
+inputForm gps script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
-  dateForm,
+  dateForm gps,
   "<p>Duration: <input type=\"text\" name=\"duration\" value=\"32\" size=\"5\" /> sec.</p>",
   channelForm Multi xendCh,
   "<h3> Type: </h3>",
@@ -56,17 +56,23 @@ inputForm script = concat [
 putName :: String -> String -> [String] -> String -> String -> String
 putName gps duration plottypes channel msg = concat [
   "<Hr><h3> Channel: ", channel, "</h3>",
-  case msg of "" -> (concat $ map func plottypes)++"<br><br><br>"
+  case msg of "" -> (func plottypes)++"<br><br><br>"
               _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
   ]
-  where func s = concat [
-          "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\">",
-          "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\"",
-          "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
+  where func ss = concat $ map (\s -> concat ["<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\">",
+                                              "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\"",
+                                              "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]) ss
+-- where func' ss = concat [
+  --         "<table><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\">",
+  --                                   "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", duration, ".png\"",
+  --                                   "style=\"border: 0px solid ; width: 300px;\"></a></td>"]) ss, "</tr><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", "../", channel, "_", s, "-", gps, "-", duration, ".txt\" download=\"",
+  --                                   channel, "_", s, "-", gps, "-", duration, ".txt\"> Download </a></td>"]) ss, "</tr></table>"]
 
 putNames :: String -> String -> [String] -> [String] -> [String] -> String
 putNames gps duration plottypes channels msgs = concat [
-  "<h2>GPS Time: ", gps, "</h2>",
+  "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps duration plottypes) channels msgs),
   "<Hr>[<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) - (read duration)), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
@@ -104,14 +110,18 @@ monMain gps duration pts ch = do
 body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
 body gps duration plottypes channels script =
   unsafePerformIO $ case (gps, duration, plottypes, channels) of
-     (Just "", _, _, _) -> return $ inputForm script
-     (_, Just "", _, _) -> return $ inputForm script
-     (_, _, [], _) -> return $ inputForm script
-     (_, _, _, []) -> return $ inputForm script
+     (Just "", _, _, _) -> do
+       nowGps <- getCurrentGps
+       return $ inputForm nowGps script
+     (Just x, Just "", _, _) -> return $ inputForm x script
+     (Just x, _, [], _) -> return $ inputForm x script
+     (Just x, _, _, []) -> return $ inputForm x script
      (Just x, Just y, z, w) -> do
        msgs <- mapM (monMain x y z) w
        return $ putNames x y z w msgs
-     (_, _, _, _) -> return $ inputForm script
+     (_, _, _, _) -> do
+       nowGps <- getCurrentGps
+       return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult
 cgiMain = do

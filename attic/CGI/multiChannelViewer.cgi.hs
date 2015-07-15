@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 18:49:20
+  * Last Modified: 2015/07/15 18:17:50
 -}
 
 import Network.CGI
@@ -40,10 +40,10 @@ xendCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
          ,"K1:PEM-EX_MIC_FLOOR"
          ]
 
-inputForm :: String -> String
-inputForm script = concat [
+inputForm :: String -> String -> String
+inputForm gps script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
-  dateForm,
+  dateForm gps,
   channelForm Both xendCh,
   "<h3>Method: </h3>",
   "<input type=\"checkbox\" name=\"method\" value=\"Coh\" checked=\"checked\"> Coherence</p>",
@@ -55,17 +55,24 @@ inputForm script = concat [
 putName :: String -> [String] -> String -> String -> String -> String
 putName gps methods channel1 channel2 msg = concat [
   "<Hr><h3> Channel: ", channel2, "</h3>",
-  case msg of "" -> (concat $ map func methods)++"<br><br><br>"
+  case msg of "" -> (func methods)++"<br><br><br>"
               _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
   ]
-  where func s = concat [
-          "<nobr><a href=\"", pngpath, channel1, "--", channel2, "_", s,"-", gps, "-", "32", ".png\">",
-          "<img alt=\"\" src=\"", pngpath, channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".png\"",
-          "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
-
+  where func ss = concat $ map (\s -> concat ["<nobr><a href=\"", pngpath, channel1, "--", channel2, "_", s,"-", gps, "-", "32", ".png\">",
+                                              "<img alt=\"\" src=\"", pngpath, channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".png\"",
+                                              "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]) ss
+  -- where func' ss = concat [
+  --         "<table><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", pngpath, channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".png\">",
+  --                                   "<img alt=\"\" src=\"", pngpath, channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".png\"",
+  --                                   "style=\"border: 0px solid ; width: 300px;\"></a></td>"]) ss, "</tr><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", "../", channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".txt\" download=\"",
+  --                                   channel1, "--", channel2, "_", s, "-", gps, "-", "32", ".txt\"> Download </a></td>"]) ss,
+  --         "</tr></table>"]
+                                      
 putNames :: String -> [String] -> String -> [String] -> [String] -> String
 putNames gps methods channel1 channels2 msgs = concat [
-  "<h2>GPS Time: ", gps, "</h2><h2>vs ", channel1, "</h2>",
+  "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps methods channel1) channels2 msgs),
   "<Hr>[<a href=\"./cormon.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./multiChannelViewer.cgi\">Back</a>] ",
@@ -111,15 +118,19 @@ corMain gps methods ch1 ch2 = do
        
 body :: Maybe String -> [String] -> Maybe String -> [String] -> String -> String
 body gps methods channel1 channels2 script =
-    unsafePerformIO $ case (gps, methods ,channel1, channels2) of
-                       (Just "", _, _, _) -> return $ inputForm script
-                       (_, [], _, _) -> return $ inputForm script
-                       (_, _, Just "", _) -> return $ inputForm script
-                       (_, _, _, []) -> return $ inputForm script
-                       (Just x, y, Just z, w)  -> do
-                         msgs <- mapM (corMain x y z) w
-                         return $ putNames x y z w msgs
-                       (_, _, _, _) -> return $ inputForm script
+  unsafePerformIO $ case (gps, methods ,channel1, channels2) of
+                     (Just "", _, _, _) -> do
+                       nowGps <- getCurrentGps
+                       return $ inputForm nowGps script
+                     (Just x, [], _, _) -> return $ inputForm x script
+                     (Just x, _, Just "", _) -> return $ inputForm x script
+                     (Just x, _, _, []) -> return $ inputForm x script
+                     (Just x, y, Just z, w)  -> do
+                       msgs <- mapM (corMain x y z) w
+                       return $ putNames x y z w msgs
+                     (_, _, _, _) -> do
+                       nowGps <-getCurrentGps
+                       return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult
 cgiMain = do
