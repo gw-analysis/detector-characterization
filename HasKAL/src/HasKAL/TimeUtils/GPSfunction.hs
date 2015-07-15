@@ -18,6 +18,9 @@ Modified by T.Yokozawa, Jun.24.2014
    Make mjd2gps' (preliminary)
 Modified by T.Yamamoto, Jul.7. 2014
    change table file from "tai-utc.dat" to "TaiUtc.hs"
+Modified by T.Yamamoto, Jul.15. 2014
+   added functions for transforming "JST" <--> GPS
+   added function for getting current time
 -}
 
 
@@ -26,9 +29,13 @@ Modified by T.Yamamoto, Jul.7. 2014
 module HasKAL.TimeUtils.GPSfunction
 ( time2gps
 , gps2time
+, gps2localTime
 , timetuple2gps
 , gps2timetuple
+, gps2localTimetuple
 , mjd2gps'
+, getCurrentLocalTime
+, getCurrentGps
 ) where
 
 import Data.Time
@@ -80,6 +87,14 @@ utcgiven g = taiToUTCTime theLeapSecondTable (gpsgiven g)
 gps2time :: Integer->String
 gps2time g = formatTime defaultTimeLocale "%F %T %Z" (utcgiven g)
 
+name2zone :: String -> (UTCTime -> ZonedTime)
+name2zone s
+  | s == "JST" = utcToZonedTime (TimeZone 540 False s)
+  | otherwise  = utcToZonedTime (TimeZone 0 False "UTC")
+                 
+gps2localTime :: Integer -> String -> String
+gps2localTime g s = formatTime defaultTimeLocale "%F %T %Z" $ name2zone s (utcgiven g)
+
 --for timetuple2gps
 
 timestring :: String->String
@@ -110,6 +125,13 @@ maketimetuple (yy,mm,dd) h m s = ((fromInteger yy)::Int, mm, dd, h, m, s, "UTC")
 gps2timetuple :: Integer -> (Int, Int, Int, Int, Int, Int, String)
 gps2timetuple gg = maketimetuple (gps2Gregorian gg) (gps2Hour gg) (gps2Min gg) (gps2Sec gg) 
 
+gps2localTimetuple :: Integer -> String -> (Int, Int, Int, Int, Int, Int, String)
+gps2localTimetuple g s 
+  | s == "JST" = (yr, mon, day, hrs, min, sec, s)
+  | otherwise  = (yr, mon, day, hrs, min, sec, zone)
+  where (yr, mon, day, hrs, min, sec, zone) = gps2timetuple g'
+        g' = case s=="JST" of True  -> g + 32400
+                              False -> g
 
 --for Modified Julian Day(mjd)
 
@@ -128,6 +150,17 @@ mjd2string :: Double->String
 mjd2string tt = formatTime defaultTimeLocale "%F %T %Z" (mjd2utc tt)
 
 mjd2gps' = time2gps.mjd2string
+
+-- get Current time
+getCurrentLocalTime :: String -> IO String
+getCurrentLocalTime zone = do
+  utc <- getCurrentTime
+  return $ formatTime defaultTimeLocale "%F %T %Z" $ name2zone zone utc
+
+getCurrentGps :: IO String
+getCurrentGps = do
+  strTime <- getCurrentLocalTime "UTC"
+  return $ time2gps strTime
 
 {-
 These output is obsolute : Mar.4. 2014
