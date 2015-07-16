@@ -1,7 +1,7 @@
 /******************************************
  *     File Name: AppendFunction.cc
  *        Author: Takahiro Yamamoto
- * Last Modified: 2014/12/06 00:18:24
+ * Last Modified: 2015/07/16 11:39:33
  ******************************************/
 
 #include "AppendFunction.h"
@@ -34,6 +34,11 @@ extern "C" {
     return 0; // Haskell上で必要なダミーの返り値(C++で使う場合はvoidで良い)
   }
 
+  int SetRangeTH(TH1 *hist, double xmin, double xmax, double ymin, double ymax){
+    if (xmin < xmax) hist->GetXaxis()->SetRangeUser(xmin, xmax);
+    if (ymin < ymax) hist->GetYaxis()->SetRangeUser(ymin, ymax);
+    return 0;
+  }
 }
 
 Bool_t MySignalHandler::Notify(){

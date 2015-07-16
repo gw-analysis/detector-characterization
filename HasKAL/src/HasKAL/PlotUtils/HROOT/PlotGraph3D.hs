@@ -41,6 +41,7 @@ import qualified HasKAL.Misc.CoastData as MCD
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
+import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
 
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
@@ -48,33 +49,33 @@ import HasKAL.SpectrumUtils.Function
 data OptBG = NONE | COAST deriving (Eq)
 
 {--  External Functions  --}
-spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
-spectrogram log mark zLabel title fname dats = plot3dBase NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname dats
+spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+spectrogram log mark zLabel title fname range dats = plot3dBase NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range dats
 
-spectrogramX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
-spectrogramX log mark zLabel title dats = spectrogram log mark zLabel title "X11" dats
+spectrogramX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+spectrogramX log mark zLabel title range dats = spectrogram log mark zLabel title "X11" range dats
 
-skyMap :: LogOption -> PlotTypeOption3D -> String -> String -> String -> [(Double, Double, Double)] -> IO ()
-skyMap log mark zLabel title fname dats = plot3dBase COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
+skyMap :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+skyMap log mark zLabel title fname range dats = plot3dBase COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname range dats
 
-skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> [(Double, Double, Double)] -> IO ()
-skyMapX log mark zLabel title dats = skyMap log mark zLabel title "X11" dats
+skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+skyMapX log mark zLabel title range dats = skyMap log mark zLabel title "X11" range dats
 
-spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> Spectrogram -> IO ()
-spectrogramM log mark zLabel title fname dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname dats
+spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+spectrogramM log mark zLabel title fname range dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range dats
 
-spectrogramMX :: LogOption -> PlotTypeOption3D -> String -> String -> Spectrogram -> IO ()
-spectrogramMX log mark zLabel title dats = spectrogramM log mark zLabel title "X11" dats
+spectrogramMX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+spectrogramMX log mark zLabel title range dats = spectrogramM log mark zLabel title "X11" range dats
 
-skyMapM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> Spectrogram -> IO ()
-skyMapM log mark zLabel title fname dats = plot3dBaseM COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname dats
+skyMapM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+skyMapM log mark zLabel title fname range dats = plot3dBaseM COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname range dats
 
-skyMapMX :: LogOption -> PlotTypeOption3D -> String -> String -> Spectrogram -> IO ()
-skyMapMX log mark zLabel title dats = skyMapM log mark zLabel title "X11" dats
+skyMapMX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+skyMapMX log mark zLabel title range dats = skyMapM log mark zLabel title "X11" range dats
 
 {-- Internal Functions --}
-plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> [(Double, Double, Double)] -> IO ()
-plot3dBase wmap log mark xyzLabel title fname dats = do
+plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+plot3dBase wmap log mark xyzLabel title fname range dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
@@ -86,6 +87,7 @@ plot3dBase wmap log mark xyzLabel title fname dats = do
     HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ (DPV.fromList $ map trd' dats) @> ((idxY-1) + (idxX-1) * yNum)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
+  HAF.setRangeTH2D tH2d range
 
   HR.draw tH2d $ str2cstr $ show mark
   case wmap of NONE  -> return ()
@@ -95,8 +97,8 @@ plot3dBase wmap log mark xyzLabel title fname dats = do
   HR.delete tH2d
   HR.delete tCan
 
-plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> Spectrogram -> IO ()
-plot3dBaseM wmap log mark xyzLabel title fname (tV, fV, specM) = do
+plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+plot3dBaseM wmap log mark xyzLabel title fname range (tV, fV, specM) = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
@@ -108,6 +110,7 @@ plot3dBaseM wmap log mark xyzLabel title fname (tV, fV, specM) = do
     HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
+  HAF.setRangeTH2D tH2d range
 
   HR.draw tH2d $ str2cstr $ show mark
   case wmap of NONE  -> return ()

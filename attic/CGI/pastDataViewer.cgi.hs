@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/15 18:16:42
+  * Last Modified: 2015/07/16 12:03:21
 -}
 
 import Network.CGI
@@ -104,7 +104,7 @@ monMain gps duration pts ch = do
              plotV LogXY Line 1 BLUE ("Hz", "/rHz") 0.05 pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0),(0,0)) hfs
            "SPE" -> do
              let hfs = gwspectrogramV 0 (truncate fs) fs dat
-             spectrogramM LogZ COLZ "/rHz" pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") hfs
+             spectrogramM LogZ COLZ "/rHz" pt (pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png") ((0,0), (0,0)) hfs
      return ""
      
 body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
