@@ -183,7 +183,9 @@ library
        HDBC-mysql,
        template-haskell,
        names-th,
-       transformers
+       transformers,
+       resourcet,
+       conduit
 
   -- Directories containing source files.
   hs-source-dirs:      src
