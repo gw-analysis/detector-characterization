@@ -135,7 +135,7 @@ firCore input ilen firCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
    withArray firCoeff $ \ptrFirCoeff ->
    allocaArray ilen $ \ptrOutput ->
-   do c_fir_filter ptrInput wilen ptrNumCoeff wflen ptrOutput
+   do c_fir_filter ptrInput wilen ptrFirCoeff wflen ptrOutput
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
