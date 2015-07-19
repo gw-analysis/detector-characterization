@@ -19,6 +19,7 @@ module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
  ,setXYRangeUser
  ,modified
  ,update
+ ,setRangeTH2D
 ) where
 
 import qualified Data.IORef as DIO
@@ -70,6 +71,12 @@ addSignalHandle = do
   return ()
 -- 外部にダミー変数を見せないように `()' で返す
 
+setRangeTH2D :: HR.TH2D -> ((Double, Double), (Double, Double)) -> IO ()
+setRangeTH2D hist ((xmin, xmax), (ymin, ymax)) = do
+  let ptr'hist = FRC.get_fptr hist :: FFP.ForeignPtr (FRC.Raw HR.TH2D)
+  dummy <- FFP.withForeignPtr ptr'hist $ \lambda -> c'SetRangeTH2D lambda (realToFrac xmin) (realToFrac xmax) (realToFrac ymin) (realToFrac ymax)
+  return ()
+
 {--  Internal Functions  --}
 setRangeUser :: HR.TAxis -> (Double, Double) -> IO ()
 setRangeUser axis (min, max) = do
@@ -94,4 +101,5 @@ foreign import ccall "SetRangeUser" c'SetRangeUser :: FP.Ptr (FRC.Raw HR.TAxis) 
 foreign import ccall "cModified" c'Modified :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
 foreign import ccall "cUpdate" c'Update :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
 foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
+foreign import ccall "SetRangeTH" c'SetRangeTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
 

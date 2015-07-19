@@ -84,18 +84,12 @@ fromSpectrum (freqV, specV) = zip (toList freqV) (toList specV)
 
 -- df of Sn(f) must be the same as one of h(f)
 normalizeSpectrogram :: Spectrum -> Spectrogram -> Spectrogram
-normalizeSpectrogram snf hoffs = (fst' hoffs, snd' hoffs, newSpecgram)
-  where newSpecgram = mapCols1 normalizeSpectrumCore (snd snf) (trd' hoffs)
-        fst' (a, _, _) = a
-        snd' (_, b, _) = b
-        trd' (_, _, c) = c
+normalizeSpectrogram (fv, snf) (tV, fV, hfs) = (tV, fV, newSpecgram)
+  where newSpecgram = mapCols1 (\x y -> zipVectorWith (/) y x) snf hfs
 
 normalizeSpectrum :: Spectrum -> Spectrum -> Spectrum
-normalizeSpectrum snf hoff = (fst hoff, newSpec)
-  where newSpec = normalizeSpectrumCore (snd snf) (snd hoff)
-
-normalizeSpectrumCore :: Vector Double -> Vector Double -> Vector Double
-normalizeSpectrumCore xv yv = zipVectorWith (/) xv yv
+normalizeSpectrum (fv, snf) (fV, hf) = (fV, newSpec)
+  where newSpec = zipVectorWith (/) hf snf
 
 
 -- text IO

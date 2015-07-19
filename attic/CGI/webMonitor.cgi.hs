@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 18:41:24
+  * Last Modified: 2015/07/15 18:17:23
 -}
 
 import Network.CGI
@@ -41,10 +41,10 @@ xendCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
          ,"K1:PEM-EX_MIC_FLOOR"
          ]
 
-inputForm :: String -> String
-inputForm script = concat [
+inputForm :: String -> String -> String
+inputForm gps script = concat [
   "<form action=\"", script, "\" method=\"GET\">",
-  dateForm,
+  dateForm gps,
   channelForm Multi xendCh,
   "<h3> Monitor: </h3>",
   "<p><input type=\"checkbox\" name=\"monitor\" value=\"RM\" checked=\"checked\">RayleighMon</p>",
@@ -55,17 +55,24 @@ inputForm script = concat [
 putName :: String -> [String] -> String -> String -> String
 putName gps monitors channel msg = concat [
   "<Hr><h3> Channel: ", channel, "</h3>",
-  case msg of "" -> (concat $ map func monitors)++"<br><br><br>"
+  case msg of "" -> (func monitors)++"<br><br><br>"
               _ -> "<h4 style=\"color:#ff0000;\">&emsp;"++msg++"</h4>"
   ]
-  where func s = concat [
-          "<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\">",
-          "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\"",
-          "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]
+  where func ss = concat $ map (\s -> concat ["<nobr><a href=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\">",
+                                              "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\"",
+                                              "style=\"border: 0px solid ; width: 300px;\"></a>", "</nobr>"]) ss
+  -- where funcs' ss = concat [
+  --         "<table><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\">",
+  --                                     "<img alt=\"\" src=\"", pngpath, channel, "_", s, "-", gps, "-", "128", ".png\"",
+  --                                     "style=\"border: 0px solid ; width: 300px;\"></a><//td>"]) ss, "</tr><tr>",
+  --         concat $ map (\s -> concat ["<td><a href=\"", "../", channel, "_", s, "-", gps, "-", "128", ".txt\" download=\"",
+  --                                     channel, "_", s, "-", gps, "-", "128", ".txt\"> Download </a></td>"]) ss, "</tr></table>"]
 
+          
 putNames :: String -> [String] -> [String] -> [String] -> String
 putNames gps monitors channels msgs = concat [
-  "<h2>GPS Time: ", gps, "</h2>",
+  "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps monitors) channels msgs),
   "<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
   " [<a href=\"./webMonitor.cgi\">Back</a>] ",
@@ -104,14 +111,18 @@ monMain gps mons ch = do
      
 body :: Maybe String -> [String] -> [String] -> String -> String
 body gps monitors channels script =
-    unsafePerformIO $ case (gps, monitors, channels) of
-                       (Just "", _, _) -> return $ inputForm script
-                       (_, [], _) -> return $ inputForm script
-                       (_, _, []) -> return $ inputForm script
-                       (Just x, y, z)  -> do
-                         msgs <- mapM (monMain x y) z
-                         return $ putNames x y z msgs
-                       (_, _, _) -> return $ inputForm script
+  unsafePerformIO $ case (gps, monitors, channels) of
+                     (Just "", _, _) -> do
+                       nowGps <- getCurrentGps
+                       return $ inputForm nowGps script
+                     (Just x, [], _) -> return $ inputForm x script
+                     (Just x, _, []) -> return $ inputForm x script
+                     (Just x, y, z)  -> do
+                       msgs <- mapM (monMain x y) z
+                       return $ putNames x y z msgs
+                     (_, _, _) -> do
+                       nowGps <- getCurrentGps
+                       return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult
 cgiMain = do
