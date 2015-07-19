@@ -61,7 +61,7 @@ channelPlot param filename = do
        plotV LogXY Line 1 BLUE ("[Hz]", "[V/rHz]") 0.04 channel plotpsdfname
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) (sqrt zs))
        spectrogramM LogYZ COLZ " " (channel) plotspefname
-         $ setRange 3 1024 $ gwspectrogramV 0 (truncate fs) fs xs
+         ((0.0,0.0),(3.0,1024.0)) $ gwspectrogramV 0 (truncate fs) fs xs
   return $ ChanOutPut { inherit = Param
                           { sethome=homePath
                           , setsave=savePath

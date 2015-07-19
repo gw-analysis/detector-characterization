@@ -118,7 +118,7 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
     hts <- HFF.readFrameFromGPS'V srmGPS srmObsTime (activeChannelLabels!!0) srmCache
     let hfs = HSS.gwspectrogramV 0 srmStride srmSampling hts
         nus = SRM.studentRayleighMonV (SRM.QUANT 0.99) srmSampling srmStride srmChunck shiftN srmFClust snf hfs
-    PG3.spectrogramMX PG3.LogY PG3.COLZ "nu" "SRMon" nus
+    PG3.spectrogramMX PG3.LogY PG3.COLZ "nu" "SRMon" ((0.0,0.0),(0.0,0.0)) nus
 {----}
 
   {--  Exit Process  --}

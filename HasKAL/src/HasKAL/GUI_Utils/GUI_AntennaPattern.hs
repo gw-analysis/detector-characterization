@@ -91,7 +91,7 @@ hasKalGuiAntennaPattern = do
       CM.forM thetaV $ \theta -> do
         let fpfc = DUF.fplusfcrossts (detStr2Param $ read detectorStr) phi theta psiD
         return $ sqrt $ (fst (fst fpfc))**2 + (snd (fst fpfc))**2
-    RPG3.skyMapX RPG3.Linear RPG3.COLZ "Z" ("Antenna Pattern Skymap at "++detectorStr) $ genSkymapData phiV thetaV skymap
+    RPG3.skyMapX RPG3.Linear RPG3.COLZ "Z" ("Antenna Pattern Skymap at "++detectorStr) ((0.0,0.0),(0.0,0.0))$ genSkymapData phiV thetaV skymap
 
   {--  Exit Process  --}
   onDestroy window mainQuit

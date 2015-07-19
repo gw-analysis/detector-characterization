@@ -13,7 +13,7 @@ main = do
   statement <- kagraDataFind gpsstrt duration chname
   case statement of
     Nothing -> print "Nothing"
-    Just x -> mapM_ (hPtStrLn stdout) x
+    Just x -> mapM_ (hPutStrLn stdout) x
 
 
 
