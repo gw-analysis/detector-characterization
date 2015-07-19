@@ -55,6 +55,7 @@ import Foreign.Ptr
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Array
+import Foreign.Marshal.Alloc (free)
 import System.IO
 import Control.Applicative
 import Data.List
@@ -176,10 +177,13 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
 --    cstdout <- ciostdout
 -- 理由がまだ分からないが、Cのstdoutが使えない。
 --    c_FrameDump frameptr cstdout 2
+    free framefileName
+    free outputframefileName
+    free frtype
+    free channelName
     c_FrameWrite frameptr oFile
     c_FrFileOEnd oFile
     c_FrameFree frameptr
-
 
 addChannel :: CString -> String -> CDouble -> CDouble -> CDouble -> [CFloat] -> IO()
 addChannel framefileName channel_Name sampleRate startGPS dt xs = do
@@ -212,6 +216,8 @@ addChannel framefileName channel_Name sampleRate startGPS dt xs = do
 --    cstdout <- ciostdout
 -- 理由がまだ分からないが、Cのstdoutが使えない。
 --    c_FrameDump frameptr cstdout 2
+    free channelName
+    c_FrProcDataFree ptr_frprocdata
     c_FrFileITEnd iFile
     c_FrameFree frameptr
 
@@ -270,6 +276,8 @@ readFrame channel_Name framefile_Name = do
  --       frvect_r4 -> do
         3 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
+          free channel
+          free framefileName
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
 --          return (CDoubleData (read (show array_vdata) :: [CDouble]))
@@ -277,11 +285,15 @@ readFrame channel_Name framefile_Name = do
 --        frvect_r8 -> do
         2 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
+          free channel
+          free framefileName
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
           return (CDoubleData array_vdata)
         1 -> do
           array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+          free channel
+          free framefileName
           c_FrVectFree ptr_v
           c_FrFileIEnd ifile
           return (CDoubleData $ map fromIntegral array_vdata)
@@ -304,6 +316,7 @@ getChannelListCore frameFile gpsTime = do
     let channelList = lines channelList''
         adcChannelList = map takeChannelandFs $ filter (isPrefixOf "ADC") channelList
         procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
+    free frameFile'
     c_FrFileIEnd ifile
     return $ concat [procChannelList, adcChannelList]
 
@@ -328,6 +341,8 @@ getSamplingFrequencyCore frameFile channelName gpsTime = do
     v <- peek ptr_v
     dt' <- peekArray 1 (frvect_dx v)
     let dt = realToFrac (dt'!!0) :: Double
+    free channel
+    free framefileName
     c_FrVectFree ptr_v
     c_FrFileIEnd ifile
     return $ sampleRateIt dt
@@ -348,6 +363,7 @@ getGPSTime frameFile = do
     val_GTimeS <- return $ frameh_GTimeS val_frameH
     val_GTimeN <- return $ frameh_GTimeN val_frameH
     val_dt     <- return $ frameh_dt val_frameH
+    free frameFile'
     c_FrFileIEnd ifile
     return (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
 
@@ -456,6 +472,10 @@ foreign import ccall unsafe "FrameL.h FrProcDataNew"
                     -> CFRLONG
                     -> CInt
                     -> IO (Ptr FrProcData_partial)
+
+foreign import ccall unsafe "Frame.h FrProcDataFree"
+   c_FrProcDataFree :: Ptr FrProcData_partial
+                    -> IO()
 
 foreign import ccall unsafe "FrameL.h FrFileONewM"
     c_FrFileONewM :: CString
