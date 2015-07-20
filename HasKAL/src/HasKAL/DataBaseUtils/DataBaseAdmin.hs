@@ -14,6 +14,7 @@ import Data.Conduit
 import qualified Data.Conduit.List as CL
 import Data.Int (Int32)
 import Data.List (isInfixOf,  (!!))
+import Data.Maybe (fromJust, fromMaybe)
 import Database.HDBC.Session (withConnectionIO', withConnectionIO)
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC (quickQuery', runRaw, fromSql, rollback)
@@ -54,17 +55,24 @@ sink = do
   case c of
     Nothing -> return ()
     Just fname -> do
-      (gpsstrt', gpsstrtnano', duration') <- liftIO $ getGPSTime fname
-      let gpsstrt = fromIntegral gpsstrt' :: Int32
-          duration = fromIntegral (truncate duration') :: Int32
-          gpsend = gpsstrt + duration
-      chfs <- liftIO $ getChannelList fname
-      liftIO $ forM_ chfs $ \(ch, fs) -> do
-        let sqlstate = insertFramedb (Just fname) (Just gpsstrt) (Just gpsend) (Just ch) (Just (truncate fs)) (Just 4)
---      putStrLn $ "SQL: " ++ show sqlstate
---      runInsertQuery conn sqlstate ()
-        rawSystem "mysql" ["-uroot", "--connect_timeout=5", "-e", show sqlstate]
-      sink
+      maybegps <- liftIO $ getGPSTime fname
+      case maybegps of
+        Nothing -> return ()
+        Just (gpsstrt', gpsstrtnano', duration') -> do
+          let gpsstrt = fromIntegral gpsstrt' :: Int32
+              duration = fromIntegral (truncate duration') :: Int32
+              gpsend = gpsstrt + duration
+          maybechfs <- liftIO $ getChannelList fname
+    --      let chfs = fromMaybe ("not valid file.") maybechfs
+          case maybechfs of
+            Nothing -> return ()
+            Just chfs -> do
+              liftIO $ forM_ chfs $ \(ch, fs) -> do
+                let sqlstate = insertFramedb (Just fname) (Just gpsstrt) (Just gpsend) (Just ch) (Just (truncate fs)) (Just 4)
+    --      putStrLn $ "SQL: " ++ show sqlstate
+    --      runInsertQuery conn sqlstate ()
+                rawSystem "mysql" ["-uroot", "--connect_timeout=5", "-e", show sqlstate]
+              sink
 
 
 myreadFile :: FilePath -> Source (ResourceT IO) String

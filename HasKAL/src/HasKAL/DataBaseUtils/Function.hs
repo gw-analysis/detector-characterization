@@ -9,6 +9,8 @@ module HasKAL.DataBaseUtils.Function
 )
 where
 
+import Control.Monad
+import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import Database.Relational.Query ( relationalQuery
                                  , query
                                  , relation
@@ -29,17 +31,15 @@ import Database.HDBC              (quickQuery', runRaw, fromSql)
 
 import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
+import Data.Maybe                 (fromJust, fromMaybe)
+import qualified Data.Packed.Vector as DPV
+import qualified Data.Traversable as DT
 
 import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
-import HasKAL.FrameUtils.FrameUtils hiding (readFrame)
-import HasKAL.FrameUtils.Function (readFrame)
+import HasKAL.FrameUtils.FrameUtils
 
-import qualified Data.Packed.Vector as DPV
-import Control.Monad
-import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
-import qualified Data.Traversable as DT
 
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO (Maybe [String])
@@ -64,7 +64,6 @@ kagraDataPoint gpstime chname = runMaybeT $ MaybeT $ do
     x -> return (Just x)
 
 
-
 kagraDataGet :: Int -> Int -> String -> IO (Maybe (DPV.Vector Double))
 kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
@@ -72,13 +71,20 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
     Nothing -> return Nothing
     Just x -> do
       let headfile = head x
-      fs <- getSamplingFrequency headfile chname
-      (gpstimeSec, gpstimeNano, dt) <- getGPSTime headfile
-      let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+      maybefs <- getSamplingFrequency headfile chname
+      let fs = fromMaybe (error "no valid file") maybefs
+      maybegps <- getGPSTime headfile
+      let (gpstimeSec, gpstimeNano, dt) = fromMaybe (error "no valid file") maybegps
+          headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
             then 0
             else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
           nduration = floor $ fromIntegral duration * fs
-      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ mapM (readFrame chname) x
+--      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ mapM (readFrame chname) x
+      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ forM x (\y -> do
+        maybex <- readFrame chname y
+        return $ fromJust maybex)
+
+
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
 kagraDataFindCore gpsstrt duration chname =
