@@ -36,6 +36,7 @@ framefile_Name = "test-1065803961-10.gwf"
 
 {-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 {-# LANGUAGE EmptyDataDecls #-}
+--{-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE GADTs #-}
 
 module HasKAL.FrameUtils.FrameUtils
@@ -45,10 +46,13 @@ module HasKAL.FrameUtils.FrameUtils
 , getChannelList
 , getGPSTime
 , getSamplingFrequency
-, FrDataType(CFloatData, CDoubleData)
-, eval
-) where
+)
+where
 
+import Control.Applicative
+import Control.Monad.Trans.Maybe (runMaybeT,  MaybeT(..))
+import Data.List
+import Data.List.Split
 -- Foreigns
 import Foreign
 import Foreign.Ptr
@@ -56,11 +60,9 @@ import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Array
 import Foreign.Marshal.Alloc (free)
-import System.IO
-import Control.Applicative
-import Data.List
-import Data.List.Split
 import HasKAL.FrameUtils.FileManipulation
+import HasKAL.TimeUtils.Function (formatGPS)
+import System.IO
 
 
 #include "FrameL.h"
@@ -120,14 +122,6 @@ data FrVect_partial = FrVect_partial { frvect_type    :: CFRVECTTYPES
 data C_FrAdcData = C_FrAdcData { fradc_data       :: Ptr FrVect_partial
                                , fradc_sampleRate :: CDouble
                                }
---data FrDataType  = CFloatData [CFloat] | CDoubleData [CDouble]
---                 deriving (Show)
-data FrDataType a where
-    CFloatData  :: [CFloat] -> FrDataType [CFloat]
-    CDoubleData :: [CDouble] -> FrDataType [CDouble]
-eval :: FrDataType a -> a
-eval (CFloatData a)  = a
-eval (CDoubleData a) = a
 
 
 {-- Functions to manipulate frame-formated files --}
@@ -144,17 +138,16 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
     oFile <- c_FrFileONewM outputframefileName 8 frtype 128
 
     frameptr' <- peek frameptr
-    val_dt <- return $ frameh_dt frameptr'
-    val_GTimeS <-  return $ frameh_GTimeS frameptr'
+    let val_dt = frameh_dt frameptr'
+        val_GTimeS = frameh_GTimeS frameptr'
 
     channelName <- newCString channel_Name
     ptr_frprocdata <- c_FrProcDataNew frameptr channelName sampleRate nData (-32)
     -- ptr_frprocdata <- return $ frameh_frprocdata frameptr'
 
     frprocdata <- peek ptr_frprocdata
-    ptr_frvectdata <- return $ frprocdata_data frprocdata
-    frvectdata <- peek ptr_frvectdata
-    ptr_frvectdatad <- return $ frvect_dataD frvectdata
+    frvectdata <- peek $ frprocdata_data frprocdata
+    let ptr_frvectdatad = frvect_dataD frvectdata
     -- poke (advancePtr ptr_frvectdataf 1) (2134::CFloat)--worked, too
 
     let len = length xs
@@ -185,41 +178,46 @@ writeFrame experiment_Name head_Name frametype_Name channel_Name sampleRate star
     c_FrFileOEnd oFile
     c_FrameFree frameptr
 
-addChannel :: CString -> String -> CDouble -> CDouble -> CDouble -> [CFloat] -> IO()
-addChannel framefileName channel_Name sampleRate startGPS dt xs = do
+
+addChannel :: CString -> String -> CDouble -> CDouble -> CDouble -> [CFloat] -> IO (Maybe String)
+addChannel framefileName channel_Name sampleRate startGPS dt xs = runMaybeT $ MaybeT $ do
 
     let nData = (truncate sampleRate)*(truncate dt) :: CFRLONG
 
     iFile <- c_FrFileINew framefileName
-    frameptr <- c_FrameRead iFile
+    if (iFile == nullPtr)
+      then return Nothing
+      else do
+        frameptr <- c_FrameRead iFile
 
-    channelName <- newCString channel_Name
-    ptr_frprocdata <- c_FrProcDataNew frameptr channelName sampleRate nData (-32)
-    -- ptr_frprocdata <- return $ frameh_frprocdata frameptr'
+        channelName <- newCString channel_Name
+        ptr_frprocdata <- c_FrProcDataNew frameptr channelName sampleRate nData (-32)
+        -- ptr_frprocdata <- return $ frameh_frprocdata frameptr'
 
-    frprocdata <- peek ptr_frprocdata
-    ptr_frvectdata <- return $ frprocdata_data frprocdata
-    frvectdata <- peek ptr_frvectdata
-    ptr_frvectdataf <- return $ frvect_dataF frvectdata
+        frprocdata <- peek ptr_frprocdata
+        frvectdata <- peek $ frprocdata_data frprocdata
+        let ptr_frvectdataf = frvect_dataF frvectdata
 
-    let len = length xs
-    ys <- withArrayLen xs $ \len ptr_xs-> do
-            return ptr_xs
-    ys' <- peekArray len ys
-    let nData' = (truncate sampleRate)*(truncate dt) :: Int
-    copyArray ptr_frvectdataf ys nData'
-    let startGPS' = truncate startGPS :: CUInt
-        startGPSN = 0 :: CUInt
-        ptr_frrawdata = nullPtr
-    poke frameptr (FrameH_partial dt startGPS' startGPSN ptr_frprocdata ptr_frrawdata)
+        let len = length xs
+        ys <- withArrayLen xs $ \len ptr_xs-> do
+                return ptr_xs
+        ys' <- peekArray len ys
+        let nData' = (truncate sampleRate)*(truncate dt) :: Int
+        copyArray ptr_frvectdataf ys nData'
+        let startGPS' = truncate startGPS :: CUInt
+            startGPSN = 0 :: CUInt
+            ptr_frrawdata = nullPtr
+        poke frameptr (FrameH_partial dt startGPS' startGPSN ptr_frprocdata ptr_frrawdata)
 
---    cstdout <- ciostdout
--- 理由がまだ分からないが、Cのstdoutが使えない。
---    c_FrameDump frameptr cstdout 2
-    free channelName
-    c_FrProcDataFree ptr_frprocdata
-    c_FrFileITEnd iFile
-    c_FrameFree frameptr
+    --    cstdout <- ciostdout
+    -- 理由がまだ分からないが、Cのstdoutが使えない。
+    --    c_FrameDump frameptr cstdout 2
+        free channelName
+        c_FrProcDataFree ptr_frprocdata
+        c_FrFileITEnd iFile
+        c_FrameFree frameptr
+
+        return $ Just "Channel added."
 
 {-
 readFrame :: IO (String) -> IO (String) -> IO (FrDataType)
@@ -256,116 +254,121 @@ readFrame channel_Name framefile_Name = do
 -}
 
 
-readFrame :: String -> String -> IO(FrDataType [CDouble])
-readFrame channel_Name framefile_Name = do
+readFrame :: String -> String -> IO (Maybe [Double])
+readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 
-    channel <- newCString channel_Name
-    framefileName <- newCString framefile_Name
-    ifile <- c_FrFileINew framefileName
-
-    fstart <- c_FrFileITStart ifile
-    fend   <- c_FrFileITEnd ifile
-    let frlen = fend - fstart
-
-    ptr_v <- c_FrFileIGetV ifile channel fstart frlen
-    v <- peek ptr_v
-
-
-    let datatype = frvect_type v
-    case datatype of
- --       frvect_r4 -> do
-        3 -> do
-          array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
-          free channel
-          free framefileName
-          c_FrVectFree ptr_v
-          c_FrFileIEnd ifile
---          return (CDoubleData (read (show array_vdata) :: [CDouble]))
-          return (CDoubleData $ map realToFrac array_vdata)
---        frvect_r8 -> do
-        2 -> do
-          array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
-          free channel
-          free framefileName
-          c_FrVectFree ptr_v
-          c_FrFileIEnd ifile
-          return (CDoubleData array_vdata)
-        1 -> do
-          array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
-          free channel
-          free framefileName
-          c_FrVectFree ptr_v
-          c_FrFileIEnd ifile
-          return (CDoubleData $ map fromIntegral array_vdata)
+    withCString channel_Name $ \channel ->
+      withCString framefile_Name $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v==nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                let datatype = frvect_type v
+                case datatype of
+             --       frvect_r4 -> do
+                    3 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+            --          return (CDoubleData (read (show array_vdata) :: [CDouble]))
+                      return $ Just (map realToFrac array_vdata)
+            --        frvect_r8 -> do
+                    2 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (map realToFrac array_vdata)
+                    1 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (map fromIntegral array_vdata)
 
 
-
-
-getChannelList :: String -> IO [(String, Double)]
+getChannelList :: String -> IO (Maybe [(String, Double)])
 getChannelList frameFile = do
---    let extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Int
-    getChannelListCore frameFile $ extractstartGPStime frameFile
+    withCString frameFile $ \frameFile' -> do
+      ifile <- c_FrFileINew frameFile'
+      if (ifile == nullPtr)
+        then return Nothing
+        else do
+          fstart <- c_FrFileITStart ifile
+          let (gpsS, gpsN) = formatGPS $ realToFrac fstart
+          getChannelListCore frameFile' (fromIntegral gpsS)
 
-getChannelListCore :: String -> Integer -> IO [(String, Double)]
-getChannelListCore frameFile gpsTime = do
-    frameFile' <- newCString frameFile
-    ifile <- c_FrFileINew frameFile'
-    let gpsTime' = fromIntegral gpsTime :: CInt
-    channelList' <- c_FrFileIGetChannelList ifile gpsTime'
-    channelList'' <- peekCString channelList'
-    let channelList = lines channelList''
-        adcChannelList = map takeChannelandFs $ filter (isPrefixOf "ADC") channelList
-        procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
-    free frameFile'
-    c_FrFileIEnd ifile
-    return $ concat [procChannelList, adcChannelList]
+
+getChannelListCore :: CString -> CInt -> IO (Maybe [(String, Double)])
+getChannelListCore frameFile gpsTime = runMaybeT $ MaybeT $ do
+    ifile <- c_FrFileINew frameFile
+    if (ifile == nullPtr)
+      then return Nothing
+      else do
+        channelList' <- c_FrFileIGetChannelList ifile gpsTime
+        if (channelList'==nullPtr)
+          then return Nothing
+          else do
+            channelList'' <- peekCString channelList'
+            let channelList = lines channelList''
+                adcChannelList = map takeChannelandFs $ filter (isPrefixOf "ADC") channelList
+                procChannelList= map takeChannelandFs $ filter (isPrefixOf "PROC") channelList
+            c_FrFileIEnd ifile
+            return $ Just (concat [procChannelList, adcChannelList])
+
 
 takeChannelandFs :: String -> (String, Double)
 takeChannelandFs x = (\[channelName, fs] -> (channelName, read fs :: Double)) $ splitOn "\t" $ (!!) (splitOn " " x) 1
 
 
-getSamplingFrequency :: String -> String -> IO Double
-getSamplingFrequency frameFile channelName = do
-  getSamplingFrequencyCore frameFile channelName $ extractstartGPStime frameFile
+getSamplingFrequency :: String -> String -> IO (Maybe Double)
+getSamplingFrequency frameFile channelName = runMaybeT $ MaybeT $ do
+    withCString channelName $ \channel ->
+      withCString frameFile $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v == nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                dt' <- peekArray 1 (frvect_dx v)
+                let dt = realToFrac (dt'!!0) :: Double
+                c_FrVectFree ptr_v
+                c_FrFileIEnd ifile
+                return $ Just (sampleRateIt dt)
+                where
+                  sampleRateIt dt
+                    | rate>=1.0 = fromIntegral $ floor $ rate + 0.5
+                    | rate<1.0  = rate
+                    where rate = 1.0 / dt :: Double
 
 
-getSamplingFrequencyCore :: String -> String -> Integer -> IO Double
-getSamplingFrequencyCore frameFile channelName gpsTime = do
-    channel <- newCString channelName
-    framefileName <- newCString frameFile
-    ifile <- c_FrFileINew framefileName
-    fstart <- c_FrFileITStart ifile
-    fend   <- c_FrFileITEnd ifile
-    let frlen = fend - fstart
-    ptr_v <- c_FrFileIGetV ifile channel fstart frlen
-    v <- peek ptr_v
-    dt' <- peekArray 1 (frvect_dx v)
-    let dt = realToFrac (dt'!!0) :: Double
-    free channel
-    free framefileName
-    c_FrVectFree ptr_v
-    c_FrFileIEnd ifile
-    return $ sampleRateIt dt
-    where
-      sampleRateIt dt
-        | rate>=1.0 = fromIntegral $ floor $ rate + 0.5
-        | rate<1.0  = rate
-        where rate = 1.0 / dt :: Double
-
-
-
-getGPSTime :: String -> IO (Int, Int, Double)
+getGPSTime :: String -> IO (Maybe (Int, Int, Double))
 getGPSTime frameFile = do
-    frameFile' <- newCString frameFile
-    ifile <- c_FrFileINew frameFile'
-    ptr_frameH <- c_FrameRead ifile
-    val_frameH <- peek ptr_frameH
-    val_GTimeS <- return $ frameh_GTimeS val_frameH
-    val_GTimeN <- return $ frameh_GTimeN val_frameH
-    val_dt     <- return $ frameh_dt val_frameH
-    free frameFile'
-    c_FrFileIEnd ifile
-    return (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
+    withCString frameFile $ \frameFile' -> runMaybeT $ MaybeT $ do
+      ifile <- c_FrFileINew frameFile'
+      if (ifile==nullPtr)
+        then return Nothing
+        else do
+          ptr_frameH <- c_FrameRead ifile
+          val_frameH <- peek ptr_frameH
+          let val_GTimeS = frameh_GTimeS val_frameH
+              val_GTimeN = frameh_GTimeN val_frameH
+              val_dt     = frameh_dt val_frameH
+          c_FrFileIEnd ifile
+          return $ Just (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
 
 
 {-- Storable Type for structure--}
