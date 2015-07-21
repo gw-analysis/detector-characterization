@@ -91,8 +91,8 @@ corMain gps methods ch1 ch2 = do
    (_, _) -> do
      let dat1 = fromJust datMaybe1
          dat2 = fromJust datMaybe2
-     fs1 <- (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch1)
-     fs2 <- (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch2)
+     fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read "32") ch1)
+     fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read "32") ch2)
      forM_ methods $ \method -> do
        pngExits <- doesFileExist $ pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32"++".png"
        case (pngExits, fs1==fs2) of

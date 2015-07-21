@@ -86,7 +86,7 @@ monMain gps duration pts ch = do
    Nothing -> return "Can't find file or channel"
    _ -> do
      let dat = fromJust datMaybe
-     fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
+     fs <- liftM fromJust $ (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read duration) ch)
      forM_ pts $ \pt -> do
        pngExist <- doesFileExist $ pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png"
        case pngExist of
