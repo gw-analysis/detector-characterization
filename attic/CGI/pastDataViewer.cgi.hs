@@ -76,8 +76,7 @@ putNames gps duration plottypes channels msgs = concat [
   (concat $ zipWith (putName gps duration plottypes) channels msgs),
   timeShiftLink "./pastDataViewer.cgi" gps duration uris
   ]
-  where uris = "&duration=" ++ duration
-               ++ (concat $ zipWith (++) (repeat "&channel=") channels)
+  where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&plottype=") plottypes)
 
 monMain :: String -> String -> [String] -> String -> IO String
