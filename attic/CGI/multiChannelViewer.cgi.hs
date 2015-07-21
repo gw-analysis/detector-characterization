@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/15 18:17:50
+  * Last Modified: 2015/07/21 21:35:37
 -}
 
 import Network.CGI
@@ -118,7 +118,7 @@ body :: Maybe String -> [String] -> Maybe String -> [String] -> String -> String
 body gps methods channel1 channels2 script =
   unsafePerformIO $ case (gps, methods ,channel1, channels2) of
                      (Just "", _, _, _) -> do
-                       nowGps <- getCurrentGps
+                       nowGps <- return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
                      (Just x, [], _, _) -> return $ inputForm x script
                      (Just x, _, Just "", _) -> return $ inputForm x script
@@ -127,7 +127,7 @@ body gps methods channel1 channels2 script =
                        msgs <- mapM (corMain x y z) w
                        return $ putNames x y z w msgs
                      (_, _, _, _) -> do
-                       nowGps <-getCurrentGps
+                       nowGps <-return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult

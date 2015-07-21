@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/16 12:03:21
+  * Last Modified: 2015/07/21 21:33:47
 -}
 
 import Network.CGI
@@ -108,7 +108,7 @@ body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
 body gps duration plottypes channels script =
   unsafePerformIO $ case (gps, duration, plottypes, channels) of
      (Just "", _, _, _) -> do
-       nowGps <- getCurrentGps
+       nowGps <- return "1120543424" --getCurrentGps
        return $ inputForm nowGps script
      (Just x, Just "", _, _) -> return $ inputForm x script
      (Just x, _, [], _) -> return $ inputForm x script
@@ -117,7 +117,7 @@ body gps duration plottypes channels script =
        msgs <- mapM (monMain x y z) w
        return $ putNames x y z w msgs
      (_, _, _, _) -> do
-       nowGps <- getCurrentGps
+       nowGps <- return "1120543424" --getCurrentGps
        return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult
