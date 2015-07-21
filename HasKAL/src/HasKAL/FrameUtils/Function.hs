@@ -21,9 +21,10 @@ module HasKAL.FrameUtils.Function
 ) where
 
 import qualified Control.Monad as CM
-import Control.Monad.Trans.Maybe (runMaybeT,   MaybeT(..))
+import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import Data.Maybe (fromJust, fromMaybe)
 import qualified Data.Packed.Vector as DPV
+import qualified Data.Traversable as DT
 
 import qualified HasKAL.DetectorUtils.Detector as HDD
 import qualified HasKAL.FrameUtils.FrameUtils as HFF
@@ -51,28 +52,34 @@ readFrameFromGPS :: Integer -- ^ start GPS [sec]
                  -> Integer -- ^ length [sec]
                  -> String -- ^ channel name
                  -> String -- ^ file name
-                 -> IO [Double]
-readFrameFromGPS gpsTime obsTime channel cache = do
+                 -> IO (Maybe [Double])
+readFrameFromGPS gpsTime obsTime channel cache = runMaybeT $ MaybeT $ do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   maybefs <- HFF.getSamplingFrequency (head fileNames) channel
-  let fs = fromMaybe (error "no valid file") maybefs
-  maybegps <- HFF.getGPSTime $ head fileNames
-  let (gpsS, gpsN, _) = fromMaybe (error "no valid file") maybegps
-  let fileGPS = HTF.deformatGPS (gpsS,gpsN)
-  let headNum = if (fromIntegral gpsTime - fileGPS) <= 0 then 0
-        else truncate $ (fromIntegral gpsTime - fileGPS) * fs
-      length = truncate $ fs * fromIntegral obsTime
-  CM.liftM (take length.drop headNum.concat) $ CM.forM fileNames (\x -> do
-    maybex <- HFF.readFrame channel x
-    return $ fromJust maybex)
+  case maybefs of
+    Nothing -> return Nothing
+    Just fs -> do
+      maybegps <- HFF.getGPSTime $ head fileNames
+      case maybegps of
+        Nothing -> return Nothing
+        Just (gpsS, gpsN, _) -> do
+          let fileGPS = HTF.deformatGPS (gpsS,gpsN)
+              headNum = if (fromIntegral gpsTime - fileGPS) <= 0 then 0
+                else truncate $ (fromIntegral gpsTime - fileGPS) * fs
+              length = truncate $ fs * fromIntegral obsTime
+          DT.sequence $ Just $ CM.liftM (take length.drop headNum.concat) $ CM.forM fileNames (\x -> do
+            maybex <- HFF.readFrame channel x
+            return $ fromJust maybex)
 
 readFrameFromGPS'V :: Integer -- ^ start GPS [sec]
                    -> Integer -- ^ length [sec]
                    -> String -- ^ channel name
                    -> String -- ^ file name
-                   -> IO (DPV.Vector Double)
-readFrameFromGPS'V gpsTime obsTime channel cache =
-  CM.liftM DPV.fromList $ readFrameFromGPS gpsTime obsTime channel cache
+                   -> IO (Maybe (DPV.Vector Double))
+readFrameFromGPS'V gpsTime obsTime channel cache = do
+  readFrameFromGPS gpsTime obsTime channel cache >>= \x -> do
+    case x of Nothing -> return Nothing
+              Just y -> return $ Just $ DPV.fromList y
 
 -- readFrameUntilGPS :: Integer -> Integer -> String -> String -> IO [Double]
 -- readFrameUntilGPS gpsTime obsTime channel cache = do
@@ -85,17 +92,27 @@ readFrameWaveData :: HDD.Detector
                   -> Integer -- ^ length [sec]
                   -> String -- ^ channel name
                   -> String -- ^ file name
-                  -> IO HWD.WaveData
-readFrameWaveData detector gpsTime obsTime channel cache = do
+                  -> IO (Maybe HWD.WaveData)
+readFrameWaveData detector gpsTime obsTime channel cache = runMaybeT $ MaybeT $ do
   let fileNames = HFP.pickUpFileNameinFile gpsTime (gpsTime + obsTime - 1) cache
   maybefs <- HFF.getSamplingFrequency (head fileNames) channel
-  let fs = fromMaybe (error "no valid file") maybefs
-  maybegps <- HFF.getGPSTime $ head fileNames
-  let (gpsS, gpsN, _) = case maybegps of Nothing -> error "no valid file"
-  let fileGPS = HTF.deformatGPS (gpsS,gpsN)
-  let startGPS = if (fromIntegral gpsTime - fileGPS) <= 0 then fileGPS
-        else fromIntegral (truncate $ fs * (fromIntegral gpsTime - fileGPS)) / fs + fileGPS
-      endGPS = fromIntegral (truncate $ fs * fromIntegral obsTime) / fs + startGPS
-  soft <- readFrameFromGPS gpsTime obsTime channel cache
-  return $ HWD.mkWaveData detector "test dayo" fs (HTF.formatGPS startGPS) (HTF.formatGPS endGPS) $ DPV.fromList soft
+  case maybefs of
+    Nothing -> return Nothing
+    Just fs -> do
+      maybegps <- HFF.getGPSTime $ head fileNames
+      case maybegps of
+        Nothing -> return Nothing
+        Just (gpsS,  gpsN,  _) -> do
+          let fileGPS = HTF.deformatGPS (gpsS,gpsN)
+          let startGPS = if (fromIntegral gpsTime - fileGPS) <= 0
+                then fileGPS
+                else fromIntegral (truncate $ fs * (fromIntegral gpsTime - fileGPS)) / fs + fileGPS
+          let endGPS = fromIntegral (truncate $ fs * fromIntegral obsTime) / fs + startGPS
+          readFrameFromGPS gpsTime obsTime channel cache >>= \x ->
+            case x of
+              Nothing -> return Nothing
+              Just y -> return $ Just $ HWD.mkWaveData detector "test dayo" fs (HTF.formatGPS startGPS) (HTF.formatGPS endGPS) $ DPV.fromList y
+
+
+
 
