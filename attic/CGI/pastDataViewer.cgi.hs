@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/16 12:03:21
+  * Last Modified: 2015/07/21 21:33:47
 -}
 
 import Network.CGI
@@ -74,12 +74,9 @@ putNames :: String -> String -> [String] -> [String] -> [String] -> String
 putNames gps duration plottypes channels msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps duration plottypes) channels msgs),
-  "<Hr>[<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) - (read duration)), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
-  " [<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) + (read duration)), uris, "\">Next &gt;</a>]"
+  timeShiftLink "./pastDataViewer.cgi" gps duration uris
   ]
-  where uris = "&duration=" ++ duration
-               ++ (concat $ zipWith (++) (repeat "&channel=") channels)
+  where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&plottype=") plottypes)
 
 monMain :: String -> String -> [String] -> String -> IO String
@@ -89,7 +86,7 @@ monMain gps duration pts ch = do
    Nothing -> return "Can't find file or channel"
    _ -> do
      let dat = fromJust datMaybe
-     fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
+     fs <- liftM fromJust $ (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read duration) ch)
      forM_ pts $ \pt -> do
        pngExist <- doesFileExist $ pngpath++ch++"_"++pt++"-"++gps++"-"++duration++".png"
        case pngExist of
@@ -111,7 +108,7 @@ body :: Maybe String -> Maybe String -> [String] -> [String] -> String -> String
 body gps duration plottypes channels script =
   unsafePerformIO $ case (gps, duration, plottypes, channels) of
      (Just "", _, _, _) -> do
-       nowGps <- getCurrentGps
+       nowGps <- return "1120543424" --getCurrentGps
        return $ inputForm nowGps script
      (Just x, Just "", _, _) -> return $ inputForm x script
      (Just x, _, [], _) -> return $ inputForm x script
@@ -120,7 +117,7 @@ body gps duration plottypes channels script =
        msgs <- mapM (monMain x y z) w
        return $ putNames x y z w msgs
      (_, _, _, _) -> do
-       nowGps <- getCurrentGps
+       nowGps <- return "1120543424" --getCurrentGps
        return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult

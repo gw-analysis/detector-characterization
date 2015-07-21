@@ -8,12 +8,13 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/15 18:25:40
+  * Last Modified: 2015/07/21 16:57:45
 -}
 
 module CommonForm (
   MultiSelect (Single, Multi, Both),
   hkalFrame,
+  timeShiftLink,
   channelForm,
   dateForm
   ) where
@@ -37,6 +38,13 @@ hkalFrame title body = concat [
   "<br><a href=\"./multiChannelViewer.cgi\">Multi Channel Viewer</a></div>",
   "<small>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></small></footer>",
   "</body></html>"
+  ]
+
+timeShiftLink :: String -> String -> String -> String -> String
+timeShiftLink path gps duration uris = concat [
+  "<Hr>[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps) - (read duration)), "&duration="++duration, uris, "\">&lt; Prev</a>] ",
+  " [<a href=\"", path, "\">Back</a>] ",
+  " [<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps) + (read duration)), "&duration="++duration, uris, "\">Next &gt;</a>]"
   ]
 
 channelForm :: MultiSelect -> [String] -> String

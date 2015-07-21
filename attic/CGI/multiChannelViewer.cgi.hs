@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/15 18:17:50
+  * Last Modified: 2015/07/21 22:38:34
 -}
 
 import Network.CGI
@@ -16,7 +16,7 @@ import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_, liftM)
 import Data.Maybe (fromJust)
-import Data.Vector.Storable (toList)
+import Data.Vector.Storable (fromList)
 
 import HasKAL.DataBaseUtils.Function
 import HasKAL.FrameUtils.FrameUtils
@@ -74,9 +74,7 @@ putNames :: String -> [String] -> String -> [String] -> [String] -> String
 putNames gps methods channel1 channels2 msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps methods channel1) channels2 msgs),
-  "<Hr>[<a href=\"./cormon.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./multiChannelViewer.cgi\">Back</a>] ",
-  " [<a href=\"./multiChannelViewer.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"  
+  timeShiftLink "./multiChannelViewer.cgi" gps "1" uris
   ]
   where uris = "&channel1="++channel1
                ++ (concat $ zipWith (++) (repeat "&channel2=") channels2)
@@ -93,8 +91,8 @@ corMain gps methods ch1 ch2 = do
    (_, _) -> do
      let dat1 = fromJust datMaybe1
          dat2 = fromJust datMaybe2
-     fs1 <- (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch1)
-     fs2 <- (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch2)
+     fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read "32") ch1)
+     fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read "32") ch2)
      forM_ methods $ \method -> do
        pngExits <- doesFileExist $ pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32"++".png"
        case (pngExits, fs1==fs2) of
@@ -107,20 +105,20 @@ corMain gps methods ch1 ch2 = do
              plotV Linear LinePoint 1 BLUE ("[Hz]", "|coh(f)|^2") 0.05 method 
                (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ coh'f
            "Peason" -> do
-             let cor = takeCorrelation (read method) (toList dat1) (toList dat2) 16
-             plot Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
-               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ zip [0,1/fs1..] cor
+             let cor = takeCorrelationV (read method) dat1 dat2 16
+             plotV Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
+               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ (fromList [0,1/fs1..], cor)
            "MIC" -> do
-             let cor = takeCorrelation (read method) (toList dat1) (toList dat2) 16
-             plot Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
-               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ zip [0,1/fs1..] cor
+             let cor = takeCorrelationV (read method) dat1 dat2 16
+             plotV Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
+               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ (fromList [0,1/fs1..], cor)
      return ""
        
 body :: Maybe String -> [String] -> Maybe String -> [String] -> String -> String
 body gps methods channel1 channels2 script =
   unsafePerformIO $ case (gps, methods ,channel1, channels2) of
                      (Just "", _, _, _) -> do
-                       nowGps <- getCurrentGps
+                       nowGps <- return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
                      (Just x, [], _, _) -> return $ inputForm x script
                      (Just x, _, Just "", _) -> return $ inputForm x script
@@ -129,7 +127,7 @@ body gps methods channel1 channels2 script =
                        msgs <- mapM (corMain x y z) w
                        return $ putNames x y z w msgs
                      (_, _, _, _) -> do
-                       nowGps <-getCurrentGps
+                       nowGps <-return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult

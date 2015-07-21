@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/15 18:17:23
+  * Last Modified: 2015/07/21 21:35:07
 -}
 
 import Network.CGI
@@ -74,9 +74,7 @@ putNames :: String -> [String] -> [String] -> [String] -> String
 putNames gps monitors channels msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps monitors) channels msgs),
-  "<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./webMonitor.cgi\">Back</a>] ",
-  " [<a href=\"./webMonitor.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"
+  timeShiftLink "./webMonitor.cgi" gps "1" uris
   ]
   where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&monitor=") monitors)
@@ -88,7 +86,7 @@ monMain gps mons ch = do
    Nothing -> return "Can't find file or channel"
    _ -> do
      let dat = fromJust datMaybe
-     fs <- (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) 1 ch)
+     fs <- liftM fromJust $ (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps) (read "128") ch)
      forM_ mons $ \mon -> do
        pngExist <- doesFileExist $ pngpath++ch++"_"++mon++"-"++gps++"-"++"128"++".png"
        case pngExist of
@@ -113,7 +111,7 @@ body :: Maybe String -> [String] -> [String] -> String -> String
 body gps monitors channels script =
   unsafePerformIO $ case (gps, monitors, channels) of
                      (Just "", _, _) -> do
-                       nowGps <- getCurrentGps
+                       nowGps <- return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
                      (Just x, [], _) -> return $ inputForm x script
                      (Just x, _, []) -> return $ inputForm x script
@@ -121,7 +119,7 @@ body gps monitors channels script =
                        msgs <- mapM (monMain x y) z
                        return $ putNames x y z msgs
                      (_, _, _) -> do
-                       nowGps <- getCurrentGps
+                       nowGps <- return "1120543424" --getCurrentGps
                        return $ inputForm nowGps script
 
 cgiMain :: CGI CGIResult

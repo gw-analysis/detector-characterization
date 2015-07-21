@@ -1,47 +1,48 @@
 module HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
        ( takeCorrelation
+       , takeCorrelationV
        , alpha2Pvalue
        , data2Significance
        , correlationResult2pickupMaxValueIndex
+       , correlationResult2pickupMaxValueIndexV
        )
        where
+
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
+import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
 -- for Vector
---import Numeric.LinearAlgebra
+import qualified Data.Vector.Storable as S
+import qualified Data.Vector.Unboxed as U
 
--- GSL
-import qualified Foreign.C.Types as FCT
-foreign import ccall "gsl_cdf_tdist_Pinv" gsl_cdf_tdist_Pinv :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble
-foreign import ccall "gsl_cdf_tdist_P"    gsl_cdf_tdist_P    :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble
-foreign import ccall "gsl_cdf_tdist_Q"    gsl_cdf_tdist_Q    :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble
+takeCorrelation :: CorrelationMethod -> [Double] -> [Double] -> Int -> [Double]
+takeCorrelation method x y maxN = U.toList $ takeCorrelationCore method (U.fromList x) (U.fromList y) maxN
 
+takeCorrelationV :: CorrelationMethod -> S.Vector Double -> S.Vector Double -> Int -> S.Vector Double
+takeCorrelationV method x y maxN = U.convert $ takeCorrelationCore method (U.convert x) (U.convert y) maxN
 
-takeCorrelation :: (Floating a) => CorrelationMethod -> [a] -> [a] -> Int -> [a]
-takeCorrelation method x y maxN = case method of
-  Peason     -> twoChannelData2Correlation x y maxN
-  MIC        -> twoChannelData2Correlation x y maxN
+takeCorrelationCore :: CorrelationMethod -> U.Vector Double -> U.Vector Double -> Int -> U.Vector Double
+takeCorrelationCore method x y maxN = case method of
+  Peason -> twoChannelData2CorrelationV x y maxN
+  MIC    -> twoChannelData2CorrelationV x y maxN
 
+twoChannelData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> U.Vector Double
+twoChannelData2CorrelationV x y maxN
+  | U.length x == 0 = U.fromList []
+  | U.length y == 0 = U.fromList []
+  | maxN < 0        = U.fromList []
+  | otherwise       = U.map (timeshiftedData2CorrelationV x y) $ U.fromList [0..maxN]
+  where timeshiftedData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> Double
+        timeshiftedData2CorrelationV listX listY intN
+          | intN < dataLength = pearsonCorrelationV (dataHeadDropNV listX intN) listY
+          | otherwise         = pearsonCorrelationV (dataHeadDropNV listX dataLength) listY
+          where dataLength = max (U.length listX) (U.length listY)
 
--- pearsonCorrelation :: (Floating a) => [a] -> [a] -> a
---func f x y listN :: (Floating a) => [a] -> [a] -> [Int] -> [a]
-twoChannelData2Correlation :: (Floating a) => [a] -> [a] -> Int -> [a]
-twoChannelData2Correlation [] _ _ = []
-twoChannelData2Correlation _ [] _ = []
-twoChannelData2Correlation x y maxN
-        | maxN < 0   = []
-        | otherwise  = map (timeshiftedData2Correlation x y) [0..maxN]
-           where timeshiftedData2Correlation :: (Floating a) => [a] -> [a] -> Int -> a
-                 timeshiftedData2Correlation listX listY intN
-                     | intN < dataLength = pearsonCorrelation (dataHeadDropN listX intN) listY
-                     | otherwise         = pearsonCorrelation (dataHeadDropN listX dataLength) listY
-                   where dataLength = max (length listX) (length listY)
+dataHeadDropNV ::  U.Vector Double -> Int -> U.Vector Double
+dataHeadDropNV listData intN = U.drop intN listData
 
-dataHeadDropN ::  (Floating a) => [a] -> Int -> [a]
-dataHeadDropN listData intN = drop intN listData
-
-dataTailDropN ::  (Floating a) => [a] -> Int -> [a]
-dataTailDropN listData intN = take ((length listData) - intN) listData
+dataTailDropNV ::  U.Vector Double -> Int -> U.Vector Double
+dataTailDropNV listData intN = U.take ((U.length listData) - intN) listData
 
 
 -- index of max correlation = 
@@ -52,47 +53,43 @@ dataTailDropN listData intN = take ((length listData) - intN) listData
 correlationResult2pickupMaxValueIndex :: [Double] -> Double -> (Int, Double)
 correlationResult2pickupMaxValueIndex result srate = (indexMax, (fromIntegral indexMax) / srate)
   where indexMax = snd $ maximum $ zip result [0, 1..]
+
+correlationResult2pickupMaxValueIndexV :: S.Vector Double -> Double -> (Int, Double)
+correlationResult2pickupMaxValueIndexV result srate = (indexMax, (fromIntegral indexMax) / srate)
+  where indexMax = S.maxIndex result
       
 --(indexMax, indexMax * srate)
 
     --  where indexMax = maximum [1..10]
 
 
-
---pearsonCorrelation :: (Floating a) => Vector Double -> Vector Double -> a
-pearsonCorrelation :: (Floating a) => [a] -> [a] -> a
-pearsonCorrelation x y = sxy / (sqrt sxx) / (sqrt syy)
-                       where dataTotal = zip x y
-                             xmean = (sum $ map fst dataTotal) / fromIntegral n
-                             ymean = (sum $ map snd dataTotal) / fromIntegral n
-                             n = length dataTotal
-                             sxy = sum $ map (\x -> (fst x - xmean) * (snd x - ymean)) dataTotal
-                             sxx = sum $ map (\x -> (fst x - xmean) ^ 2) dataTotal
-                             syy = sum $ map (\x -> (snd x - ymean) ^ 2) dataTotal
+pearsonCorrelationV :: U.Vector Double -> U.Vector Double -> Double
+pearsonCorrelationV x y = sxy / (sqrt sxx) / (sqrt syy)
+  where n = min (U.length x) (U.length y)
+        (x', y') = (U.take n x, U.take n y)
+        xmean = (U.sum x') / fromIntegral n
+        ymean = (U.sum y') / fromIntegral n
+        xdiff = U.map (+(-xmean)) x'
+        ydiff = U.map (+(-ymean)) y'
+        sxy = U.sum $ U.zipWith (*) xdiff ydiff
+        sxx = U.sum $ U.map (**2) xdiff
+        syy = U.sum $ U.map (**2) ydiff
 
 
 alpha2Pvalue :: Int -> Double -> Double
 alpha2Pvalue n alpha
-          | n < 3     = 0
-          | otherwise = t / sqrt (realToFrac n - 2.0 + t * t)
-                        where t = gslCdfTDistPinv (1.0 - alpha/2.0) ( realToFrac (n-2) )
+  | n < 3     = 0
+  | otherwise = t / sqrt (realToFrac n - 2.0 + t * t)
+  where t = gslCdfTdistPinv (1.0 - alpha/2.0) ( realToFrac (n-2) )
 
 
 data2Significance :: Int -> Double -> Double
 data2Significance n r
-                  | n < 3     = 0
-                  | abs r > 1 = 0
-                  | t <  0    = 2.0 * gslCdfTDistP t (realToFrac (n-2))
-                  | t >= 0    = 2.0 * gslCdfTDistQ t (realToFrac (n-2))
-                           where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
+  | n < 3     = 0
+  | abs r > 1 = 0
+  | t <  0    = 2.0 * gslCdfTdistP t (realToFrac (n-2))
+  | t >= 0    = 2.0 * gslCdfTdistQ t (realToFrac (n-2))
+  where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
 
 
 
-
--- double gsl cdf tdist Pinv (const double P, const double nu)
-gslCdfTDistPinv :: Double -> Double -> Double
-gslCdfTDistPinv pVal n = realToFrac $ gsl_cdf_tdist_Pinv (realToFrac pVal) (realToFrac n)
-
---gsl cdf tdist Q (const double x, const double nu)
-gslCdfTDistP x n = realToFrac $ gsl_cdf_tdist_P (realToFrac x) (realToFrac n)
-gslCdfTDistQ x n = realToFrac $ gsl_cdf_tdist_Q (realToFrac x) (realToFrac n)

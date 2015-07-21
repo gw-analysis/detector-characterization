@@ -8,11 +8,12 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 15:30:21
+  * Last Modified: 2015/07/19 13:26:44
 -}
 
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
+  hBruco,
   coherenceMon
 ) where
 
@@ -20,8 +21,15 @@ module HasKAL.MonitorUtils.CoherenceMon.Function (
 import Numeric.GSL.Fourier
 import qualified Data.Vector.Storable as V
 import Data.Complex
-
+import Data.List (sort)
+import Data.Matrix.Unboxed (toLists, fromColumns)
 import HasKAL.SpectrumUtils.Signature
+
+-- | Bruco like tool
+hBruco :: Int -> Double -> (V.Vector Double, String) -> [(V.Vector Double, String)] -> [(Double, [(Double, String)])]
+hBruco nfft fs (xt, xch) yts = zip fvec result
+  where result = map (reverse.sort.(`zip` (map snd yts))).toLists.fromColumns $ map (snd.(coherenceMon nfft fs xt).fst) yts
+        fvec = [0, fs/(fromIntegral nfft)..]
 
 -- | frequency based coherency
 coherenceMon :: Int              -- ^ length of FFT
