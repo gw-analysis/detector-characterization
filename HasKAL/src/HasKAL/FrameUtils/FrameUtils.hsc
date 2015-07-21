@@ -302,6 +302,7 @@ getChannelList frameFile = do
         else do
           fstart <- c_FrFileITStart ifile
           let (gpsS, gpsN) = formatGPS $ realToFrac fstart
+          c_FrFileIEnd ifile
           getChannelListCore frameFile' (fromIntegral gpsS)
 
 
@@ -368,6 +369,7 @@ getGPSTime frameFile = do
               val_GTimeN = frameh_GTimeN val_frameH
               val_dt     = frameh_dt val_frameH
           c_FrFileIEnd ifile
+          c_FrameFree ptr_frameH
           return $ Just (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
 
 
