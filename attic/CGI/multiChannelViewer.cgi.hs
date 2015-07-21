@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/21 21:35:37
+  * Last Modified: 2015/07/21 22:38:34
 -}
 
 import Network.CGI
@@ -16,7 +16,7 @@ import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
 import Control.Monad (forM_, liftM)
 import Data.Maybe (fromJust)
-import Data.Vector.Storable (toList)
+import Data.Vector.Storable (fromList)
 
 import HasKAL.DataBaseUtils.Function
 import HasKAL.FrameUtils.FrameUtils
@@ -105,13 +105,13 @@ corMain gps methods ch1 ch2 = do
              plotV Linear LinePoint 1 BLUE ("[Hz]", "|coh(f)|^2") 0.05 method 
                (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ coh'f
            "Peason" -> do
-             let cor = takeCorrelation (read method) (toList dat1) (toList dat2) 16
-             plot Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
-               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ zip [0,1/fs1..] cor
+             let cor = takeCorrelationV (read method) dat1 dat2 16
+             plotV Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
+               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ (fromList [0,1/fs1..], cor)
            "MIC" -> do
-             let cor = takeCorrelation (read method) (toList dat1) (toList dat2) 16
-             plot Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
-               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ zip [0,1/fs1..] cor
+             let cor = takeCorrelationV (read method) dat1 dat2 16
+             plotV Linear LinePoint 1 BLUE ("[sec]", "correlation") 0.05 method 
+               (pngpath++ch1++"--"++ch2++"_"++method++"-"++gps++"-"++"32.png") ((0,0),(0,0)) $ (fromList [0,1/fs1..], cor)
      return ""
        
 body :: Maybe String -> [String] -> Maybe String -> [String] -> String -> String

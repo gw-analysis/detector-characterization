@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/21 21:37:01
+  * Last Modified: 2015/07/21 22:38:47
 -}
 
 import Network.CGI
@@ -24,7 +24,7 @@ import HasKAL.Misc.StrictMapping
 import HasKAL.DataBaseUtils.Function
 import HasKAL.FrameUtils.FrameUtils
 import HasKAL.TimeUtils.GPSfunction
-import HasKAL.MonitorUtils.CorrelationMon.CalCorrelationV
+import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.MonitorUtils.CoherenceMon.Function
 import CommonForm
