@@ -74,9 +74,7 @@ putNames :: String -> [String] -> String -> [String] -> [String] -> String
 putNames gps methods channel1 channels2 msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps methods channel1) channels2 msgs),
-  "<Hr>[<a href=\"./cormon.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./multiChannelViewer.cgi\">Back</a>] ",
-  " [<a href=\"./multiChannelViewer.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"  
+  timeShiftLink "./multiChannelViewer.cgi" gps "1" uris
   ]
   where uris = "&channel1="++channel1
                ++ (concat $ zipWith (++) (repeat "&channel2=") channels2)

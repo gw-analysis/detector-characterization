@@ -74,9 +74,7 @@ putNames :: String -> String -> [String] -> [String] -> [String] -> String
 putNames gps duration plottypes channels msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps duration plottypes) channels msgs),
-  "<Hr>[<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) - (read duration)), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./pastDataViewer.cgi\">Back</a>] ",
-  " [<a href=\"./pastDataViewer.cgi?Date=GPS&gps=", (show $ (read gps) + (read duration)), uris, "\">Next &gt;</a>]"
+  timeShiftLink "./pastDataViewer.cgi" gps duration uris
   ]
   where uris = "&duration=" ++ duration
                ++ (concat $ zipWith (++) (repeat "&channel=") channels)

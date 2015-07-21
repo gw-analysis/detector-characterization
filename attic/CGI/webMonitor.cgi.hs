@@ -74,9 +74,7 @@ putNames :: String -> [String] -> [String] -> [String] -> String
 putNames gps monitors channels msgs = concat [
   "<h2>GPS Time: ", gps, "&nbsp; (", (gps2localTime (read gps) "JST"), ")</h2>",
   (concat $ zipWith (putName gps monitors) channels msgs),
-  "<Hr>[<a href=\"./webMonitor.cgi?gps=", (show $ (read gps) - 32), uris, "\">&lt; Prev</a>] ",
-  " [<a href=\"./webMonitor.cgi\">Back</a>] ",
-  " [<a href=\"./webMonitor.cgi?Date=GPS&gps=", (show $ (read gps) + 32), uris, "\">Next &gt;</a>]"
+  timeShiftLink "./webMonitor.cgi" gps "1" uris
   ]
   where uris = (concat $ zipWith (++) (repeat "&channel=") channels)
                ++ (concat $ zipWith (++) (repeat "&monitor=") monitors)
