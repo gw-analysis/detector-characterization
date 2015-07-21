@@ -12,8 +12,10 @@ import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
 import qualified HasKAL.Misc.StrictMapping as HMS
 
 import HasKAL.FrameUtils.FrameUtils
-import SpectrumUtilsNoiseMon
-import LinearPredictionNoiseMon
+--import SpectrumUtilsNoiseMon
+--import LinearPredictionNoiseMon
+import HasKAL.SpectrumUtils.SpectrumUtils
+import HasKAL.SignalProcessingUtils.LinearPrediction
 import HasKAL.SignalProcessingUtils.Resampling
 
 {- For plotting -}
