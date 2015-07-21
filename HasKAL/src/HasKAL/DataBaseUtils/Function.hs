@@ -71,18 +71,23 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
     Nothing -> return Nothing
     Just x -> do
       let headfile = head x
-      maybefs <- getSamplingFrequency headfile chname
-      let fs = fromMaybe (error "no valid file") maybefs
-      maybegps <- getGPSTime headfile
-      let (gpstimeSec, gpstimeNano, dt) = fromMaybe (error "no valid file") maybegps
-          headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
-            then 0
-            else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
-          nduration = floor $ fromIntegral duration * fs
+      getSamplingFrequency headfile chname >>= \maybefs -> do
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs -> do
+            getGPSTime headfile >>= \maybegps -> do
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
 --      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ mapM (readFrame chname) x
-      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ forM x (\y -> do
-        maybex <- readFrame chname y
-        return $ fromJust maybex)
+                  DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat)
+                    $ forM x (\y -> do
+                        maybex <- readFrame chname y
+                        return $ fromJust maybex)
 
 
 
