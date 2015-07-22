@@ -38,13 +38,25 @@ coherenceMon :: Int              -- ^ length of FFT
           -> V.Vector Double  -- ^ time series 2: y(t)
           -> Spectrum         -- ^     coherency: |coh(f)|^2
 coherenceMon nfft fs xt yt = (fv, coh'f)
-  where xt' = [V.slice i (nfft-1) xt | i <- [0, nfft..(V.length xt)-nfft]]
-        yt' = [V.slice i (nfft-1) yt | i <- [0, nfft..(V.length yt)-nfft]]
-        pxx = ave $ map ps xt'
-        pyy = ave $ map ps yt'
-        pxy = ave $ zipWith cs xt' yt'
-        fv = V.fromList [0, fs/(fromIntegral nfft)..fs/2]
-        coh'f = V.slice 0 (V.length fv) $ coh pxy pxx pyy
+  where nfft' = min nfft $ min (V.length xt) (V.length yt)
+        fv = V.fromList [0, fs/(fromIntegral nfft')..fs/2]
+        -- ずらしなしで計算
+        xt1 = map (\i -> V.slice i nfft' xt) [0, nfft'..(V.length xt)-nfft']
+        yt1 = map (\i -> V.slice i nfft' yt) [0, nfft'..(V.length yt)-nfft']
+        pxx1 = ave $ map ps xt1
+        pyy1 = ave $ map ps yt1
+        pxy1 = ave $ zipWith cs xt1 yt1
+        coh'f1 = V.slice 0 (V.length fv) $ coh pxy1 pxx1 pyy1
+        -- データを1/2ずらす
+        -- (位相遅れには応答があるので1点ずらしはしなくてい良い)
+        dur = nfft'`div`2
+        xt2 = map (\i -> V.slice (i+dur) nfft' xt) [0, nfft'..(V.length xt)-nfft'-dur]
+        yt2 = map (\i -> V.slice (i+dur) nfft' yt) [0, nfft'..(V.length xt)-nfft'-dur]
+        pxx2 = ave $ map ps xt2
+        pyy2 = ave $ map ps yt2
+        pxy2 = ave $ zipWith cs xt2 yt2
+        coh'f2 = V.slice 0 (V.length fv) $ coh pxy2 pxx2 pyy2
+        coh'f = V.zipWith max coh'f1 coh'f2
 
 -- | power spectrum w/o FFT norm
 ps :: V.Vector Double -- ^    time series: x(t)
