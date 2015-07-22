@@ -8,18 +8,20 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/19 13:26:44
+  * Last Modified: 2015/07/23 02:21:24
 -}
 
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
   hBruco,
-  coherenceMon
+  coherenceMon,
+  coherenceTFMon
 ) where
 
 
 import Numeric.GSL.Fourier
 import qualified Data.Vector.Storable as V
+import qualified Data.Packed.Matrix as M
 import Data.Complex
 import Data.List (sort)
 import Data.Matrix.Unboxed (toLists, fromColumns)
@@ -57,6 +59,22 @@ coherenceMon nfft fs xt yt = (fv, coh'f)
         pxy2 = ave $ zipWith cs xt2 yt2
         coh'f2 = V.slice 0 (V.length fv) $ coh pxy2 pxx2 pyy2
         coh'f = V.zipWith max coh'f1 coh'f2
+
+-- | TF map of coherency
+coherenceTFMon :: Int             -- ^   shift point
+               -> Int             -- ^ average point
+               -> Int             -- ^ length of FFT
+               -> Double          -- ^      sampling: fs
+               -> V.Vector Double -- ^ time series 1: x(t)
+               -> V.Vector Double -- ^ time series 2: y(t)
+               -> Spectrogram     -- ^     coherency: |coh(t, f)|^2|
+coherenceTFMon nshift nchunck nfft fs xt yt = (tV, fV, coh'tf)
+  where nchunck' = min nchunck $ min (V.length xt) (V.length yt)
+        tV = V.fromList [0, (fromIntegral nshift)/fs..(fromIntegral nstop)/fs]
+        fV = V.fromList [0, fs/(fromIntegral nfft)..fs/2]
+        coh'tf = M.fromColumns
+                 $ map (\i -> snd $ coherenceMon nfft fs (V.slice i nchunck' xt) (V.slice i nchunck' yt)) [0, nshift..nstop]
+        nstop = min (V.length xt) (V.length yt) - nchunck'
 
 -- | power spectrum w/o FFT norm
 ps :: V.Vector Double -- ^    time series: x(t)
