@@ -24,10 +24,8 @@ DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
 DEP2 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
 LIBLINK=-L/opt/work/libframe-8.21/lib -L/opt/work/root-5.34.19/lib/root -lFrame -lm
 INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root 
-#ROOTINC=-L/opt/work/root/include
 
-#FRAMEDATA=~/detector-characterization/optFiles/sample-data/test-1066392016-300.gwf
-HASKALPATH=~/detector-characterization/HasKAL/src/HasKAL
+HASKALPATH=../..//HasKAL/src/HasKAL
 
 #TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
 #TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
