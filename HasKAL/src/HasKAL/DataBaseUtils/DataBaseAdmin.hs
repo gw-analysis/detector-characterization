@@ -53,11 +53,11 @@ source = myreadFile
 sink = do
   c <- await
   case c of
-    Nothing -> return ()
+    Nothing -> sink
     Just fname -> do
       maybegps <- liftIO $ getGPSTime fname
       case maybegps of
-        Nothing -> return ()
+        Nothing -> sink
         Just (gpsstrt', gpsstrtnano', duration') -> do
           let gpsstrt = fromIntegral gpsstrt' :: Int32
               duration = fromIntegral (truncate duration') :: Int32
@@ -65,7 +65,7 @@ sink = do
           maybechfs <- liftIO $ getChannelList fname
     --      let chfs = fromMaybe ("not valid file.") maybechfs
           case maybechfs of
-            Nothing -> return ()
+            Nothing -> sink
             Just chfs -> do
               liftIO $ forM_ chfs $ \(ch, fs) -> do
                 let sqlstate = insertFramedb (Just fname) (Just gpsstrt) (Just gpsend) (Just ch) (Just (truncate fs)) (Just 4)
