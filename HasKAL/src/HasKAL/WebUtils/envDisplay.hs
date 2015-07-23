@@ -9,6 +9,7 @@ import HasKAL.TimeUtils.GPSfunction (gps2time)
 
 import Control.Monad (forM_, liftM)
 import Data.List (isSuffixOf, isInfixOf)
+import Data.Maybe (fromMaybe)
 import Data.Packed.Vector (fromList, subVector, dim)
 import Data.String.Utils (replace)
 import System.Directory (createDirectoryIfMissing, copyFile, removeFile)

@@ -41,7 +41,8 @@ channelPlot param filename = do
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
 --  gTimeS <- liftM (show.fst) $ getGPSTime filename
-  (gTimeS', _, _) <- getGPSTime filename
+  maybegps <-(gTimeS', _, _) <- getGPSTime filename
+  let (gTimeS', _, _) = fromMaybe (error "no valid gps time in the file") maybegps
   let gTimeS = show gTimeS' :: String
   let durationS = show $ extractDataLengthfromFilename filename
 --  chList' <- getChannelList filename
