@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-} 
 
-module HasKAL.WebUtils.FileWatcher (watchNewfile) where
+module HasKAL.WebUtils.FileWatcher 
+( watchNewfile
+, watchNewfilewDB
+) where
 
 import Control.Concurrent
 import Filesystem (getWorkingDirectory)
@@ -26,7 +29,7 @@ watchNewfile f webhomedir watchdir = do
         Removed _ _ -> print "file removed"
         _ -> case extension (eventPath event) of
                Just "filepart" -> print "file downloading"
-               Just _ -> do
+               Just "gwf" -> do
                  let gwfname = encodeString $ eventPath event
                  print gwfname
                  rawSystem f [webhomedir, gwfname]
@@ -39,4 +42,33 @@ watchNewfile f webhomedir watchdir = do
     waitBreak = do
       _ <- catchIOError getLine (\e -> if isEOFError e then exitSuccess else exitFailure)
       waitBreak
+
+
+watchNewfilewDB :: String            -- | command name
+                -> String            -- | DB command name
+                -> String            -- | location where index.html will be
+                -> String            -- | location to watch new file added
+                -> IO ()
+watchNewfilewDB f g webhomedir watchdir = do
+  withManager $ \manager -> do
+    watchDir manager (decodeString watchdir) (const True)
+      $ \event -> case event of
+        Removed _ _ -> print "file removed"
+        _ -> case extension (eventPath event) of
+               Just "filepart" -> print "file downloading"
+               Just "gwf" -> do
+                 let gwfname = encodeString $ eventPath event
+                 print gwfname
+                 rawSystem f [webhomedir, gwfname]
+                 print "event display updated."
+                 rawSystem g [webhomedir, gwfname]
+                 print "database updated."
+               
+               Nothing -> print "file extension should be .filepart or .gwf"
+    waitBreak
+  where
+    waitBreak = do
+      _ <- catchIOError getLine (\e -> if isEOFError e then exitSuccess else exitFailure)
+      waitBreak
+
 
