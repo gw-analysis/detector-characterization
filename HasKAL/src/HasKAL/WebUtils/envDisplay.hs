@@ -5,18 +5,19 @@ import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils (getChannelList, getGPSTime)
 import HasKAL.FrameUtils.FileManipulation (extractDataLengthfromFilename)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV, Spectrogram)
---import HasKAL.SpectrumUtils.Function (plotFormatedSpectogram)
+import HasKAL.TimeUtils.GPSfunction (gps2time)
+
 import Control.Monad (forM_, liftM)
 import Data.List (isSuffixOf, isInfixOf)
 import Data.Packed.Vector (fromList, subVector, dim)
-import System.Environment (getArgs)
-import System.Directory (createDirectoryIfMissing, copyFile, removeFile)
-import qualified Numeric.LinearAlgebra as NL
-import System.PosixCompat.Files (fileExist, removeLink, createSymbolicLink)
 import Data.String.Utils (replace)
+import System.Directory (createDirectoryIfMissing, copyFile, removeFile)
+import System.Environment (getArgs)
+import qualified Numeric.LinearAlgebra as NL
 import System.FilePath ((</>))
 import System.IO.Unsafe (unsafePerformIO)
-import HasKAL.TimeUtils.GPSfunction (gps2time)
+import System.PosixCompat.Files (fileExist, removeLink, createSymbolicLink)
+
 
 main :: IO ()
 main = do
@@ -38,15 +39,17 @@ allChannelPlot homePath filename = do
       savePathLatest = savePath++"_latest"
   createDirectoryIfMissing True savePath
   createDirectoryIfMissing True savePathLatest
-  gTimeS <- liftM (show.fst) $ getGPSTime filename
-  let durationS = show $ extractDataLengthfromFilename filename
-  chList' <- getChannelList filename
+  maybegps <- getGPSTime filename
+  let (gTimeS, gTimeN, durationS) = fromMaybe (error " not gps infomation in the file") maybegps
+  maybech <- getChannelList filename
+  let chList' = fromMaybe (error " not channel in the file.") maybech
   let chList = take 8 [(channel, fs)|(channel, fs)<-chList', (isSuffixOf "_FLOOR" channel)|| (channel=="K1:PEM-EX_REF")]
   forM_ chList $ \(channel, fs) -> do
     let plotfname = savePath </> channel++"_TS-"++gTimeS++"-"++durationS++".png"
         plotpsdfname = savePath </> channel++"_PSD-"++gTimeS++"-"++durationS++".png"
         plotspefname = savePath </> channel++"_SPE-"++gTimeS++"-"++durationS++".png"
-    xs <- readFrameV channel filename
+    maybexs <- readFrameV channel filename
+    let xs = fromMaybe (error " no data in the file.") maybexs
     case (isSuffixOf "-RAW" channel) of
      True -> do
        plotV Linear Line 1 BLUE ("[s]", "ADC Count") 0.05 channel plotfname
@@ -58,7 +61,7 @@ allChannelPlot homePath filename = do
        plotV LogXY Line 1 BLUE ("[Hz]", "[V/rHz]") 0.04 channel plotpsdfname
          ((0,0),(0,0)) (subVector 0 (dim ys `div` 2 - 1) ys, subVector 0 (dim zs `div` 2 - 1) (sqrt zs))
        spectrogramM LogYZ COLZ " " (channel) plotspefname
-         $ setRange 3 1024 $ gwspectrogramV 0 (truncate fs) fs xs
+         ((0.0,0.0),(3.0,1024.0)) $ gwspectrogramV 0 (truncate fs) fs xs
 -- | generate an event display page
   contents <- readFile $ homePath </> "template.html"
   updatetarget <- genTargetLatest savePath savePathLatest gTimeS durationS chList
