@@ -4,7 +4,8 @@
 
 
 module HasKAL.DataBaseUtils.DataBaseAdmin
-( updateFrameDB
+( updateFrameDBfromcache
+, updateFrameDB
 ) where
 
 import Control.Monad
@@ -47,7 +48,16 @@ updateFrameDB fname = doesFileExist fname >>= \b ->
        else error "file not found."
 
 
-source = myreadFile
+updateFrameDBfromcache fname = doesFileExist cachefname >>= \b ->
+  if b then withConnectionIO' DD.connect $ \conn -> do
+         runResourceT $ sourcefromcache cachefname $$ sink
+         rollback conn
+       else error "file not found."
+
+
+source = yield
+
+sourcefromcache = myreadFile
 
 
 sink = do
