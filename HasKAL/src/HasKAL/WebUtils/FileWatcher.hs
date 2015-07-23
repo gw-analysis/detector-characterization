@@ -61,7 +61,7 @@ watchNewfilewDB f g webhomedir watchdir = do
                  print gwfname
                  rawSystem f [webhomedir, gwfname]
                  print "event display updated."
-                 rawSystem g [webhomedir, gwfname]
+                 rawSystem g [gwfname]
                  print "database updated."
                
                Nothing -> print "file extension should be .filepart or .gwf"
