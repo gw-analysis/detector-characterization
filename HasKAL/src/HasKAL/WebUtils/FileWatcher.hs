@@ -1,8 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE OverloadedStrings #-}
 
-module HasKAL.WebUtils.FileWatcher 
+module HasKAL.WebUtils.FileWatcher
 ( watchNewfile
 , watchNewfilewDB
+, updatingDB
 ) where
 
 import Control.Concurrent
@@ -63,8 +64,33 @@ watchNewfilewDB f g webhomedir watchdir = do
                  print "event display updated."
                  rawSystem g [gwfname]
                  print "database updated."
-               
+
                Nothing -> print "file extension should be .filepart or .gwf"
+    waitBreak
+  where
+    waitBreak = do
+      _ <- catchIOError getLine (\e -> if isEOFError e then exitSuccess else exitFailure)
+      waitBreak
+
+
+updatingDB :: String            -- | DB command
+           -> String            -- | location to watch new file added
+           -> IO ()
+updatingDB f watchdir = do
+  withManager $ \manager -> do
+    watchDir manager (decodeString watchdir) (const True)
+      $ \event -> case event of
+        Removed _ _ -> print "file removed"
+        _ -> case extension (eventPath event) of
+               Just "filepart" -> print "file downloading"
+               Just "gwf" -> do
+                 let gwfname = encodeString $ eventPath event
+                 print gwfname
+                 rawSystem f [gwfname]
+                 print "framefile database updated."
+               Nothing -> print "file extension should be .filepart or .gwf"
+--      $ \event -> do rawSystem f [webhomedir, "/home/detchar/xend/K-K1_R-1113209036-32.gwf"]
+--      $ \event -> channelPlot' param (encodeString $ eventPath event) >>= genWebPage'
     waitBreak
   where
     waitBreak = do
