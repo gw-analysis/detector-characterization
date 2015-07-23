@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
-{- add function "runmed" by T.Yokozawa 2015, 7, 21-}
 
 module HasKAL.SpectrumUtils.SpectrumUtils
 ( module HasKAL.SpectrumUtils.Function
@@ -9,7 +8,6 @@ module HasKAL.SpectrumUtils.SpectrumUtils
 , gwspectrogram
 , gwpsdV
 , gwspectrogramV
-, runmed
 )
 where
 
@@ -30,17 +28,6 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 
 --import HasKAL.SpectrumUtils.AuxFunction(sort, median)
 import Data.List (sort, foldl')
-
-{- for estimate running median -}
-runmed :: [Double] -> Int -> [Double]
-runmed dat nmed = do 
-  let datV = fromList dat
-      ndat = dim datV
-      maxitr = floor $ fromIntegral (ndat) / fromIntegral (nmed) :: Int
-      datList = takesV  (take maxitr (repeat nmed)) datV :: [Vector Double]
-  map median $ map (sort . toList) datList
-      
-
 
 {- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
