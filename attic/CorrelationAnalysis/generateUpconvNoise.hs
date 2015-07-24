@@ -5,6 +5,11 @@ import System.Environment (getArgs)
 --import System.Random
 --import Data.List.Split (splitOn)
 
+import qualified Data.Complex as DC
+
+import HasKAL.DetectorUtils.Detector
+import HasKAL.SimulationUtils.DetectorNoiseGenerator (geneNPSD)
+import qualified HasKAL.ExternalUtils.GSL.RandomNumberGeneration as RNG
 import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.SpectrumUtils
 import UsefulFunction (taple2string, threedata2string)
@@ -37,8 +42,15 @@ main = do
 
 
  {-- generate detector noise --}
- let tlist   = [0, dt..duration-dt]::[Double]
-
+ let tlist = [0, dt..duration-dt]::[Double]
+ 
+ let flist = [5, 5.0+1.0/duration..fs/2]::[Double]
+ rng <- RNG.newRngWithSeed (-1)
+-- let flist_noise_taple = geneNPSD rng VIRGO flist::[(Double, DC.Complex Double)]
+--     flist_noise     = map (DC.magnitude.snd) (flist_noise_taple)::[DC.Complex Double]
+--     flist_noise_abs = map abs flist_noise
+-- let fname = "fnoise.txt"
+-- writeFile fname $ taple2string flist flist_noise_abs
 
  {-- convert time domain by IFFT --}
 
