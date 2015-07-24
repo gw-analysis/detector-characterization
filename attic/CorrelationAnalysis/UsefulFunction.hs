@@ -1,4 +1,3 @@
--- Time-stamp: "2015-07-25 02:48:06 yuzu"
 module UsefulFunction (
        taple2string
        ,threedata2string
@@ -18,6 +17,10 @@ module UsefulFunction (
 taple2string ::[Double] -> [Double] -> String
 taple2string a b = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  (map show b)
 
+-- taple2string [1, 2, 3, 4] [4, 5, 6, 7] [8, 9, 10, 11]
+-- -> "1 4 8\n2 5 9\n3 6 10\n4 7 11\n"
+-- you can easily write ANSII txt, such as 
+--  writeFile "hoge.txt" $ threedata2string [1, 2, 3, 4] [4, 5, 6, 7] [8, 9, 10, 11]
 threedata2string ::[Double] -> [Double] ->[Double]-> String
 threedata2string a b c = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show b) $ zipWith (++) (repeat " ")  (map show c)
 

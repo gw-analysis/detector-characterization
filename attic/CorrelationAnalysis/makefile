@@ -1,5 +1,3 @@
-#Time-stamp: "2015-07-24 20:23:21 yuzu"
-
 CC=ghc
 HC=ghc -O2
 
