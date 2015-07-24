@@ -1,15 +1,5 @@
-{- |
-Module      : HasKAL.PlotUtils.PlotUtils.HROOT.PlotGraph3D
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-3D plot tool
 
--}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
    LogOption(Linear, LogX, LogY, LogZ, LogXY, LogXZ, LogYZ, LogXYZ)

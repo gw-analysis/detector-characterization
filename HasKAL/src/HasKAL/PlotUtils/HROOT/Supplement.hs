@@ -1,15 +1,5 @@
-{- |
-Module      : HasKAL.PlotUtils.PlotUtils.HROOT.Supplement
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-some useful functions
 
--}
 
 module HasKAL.PlotUtils.HROOT.Supplement (
    setLog'

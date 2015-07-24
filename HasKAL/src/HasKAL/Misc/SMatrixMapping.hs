@@ -1,14 +1,5 @@
-{- |
-Module      : HasKAL.Misc.SMatrixMapping
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-map functions for Storable Matrix
--}
+
 
 module HasKAL.Misc.SMatrixMapping (
    convertS2U

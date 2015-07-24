@@ -1,20 +1,10 @@
-{- |
-Module      : Function
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : Takahiro Yamamoto %mail%
-Stability   : test
-Portability : POSIX
 
--}{-
-  * Last Modified: 2015/07/23 02:21:24
--}
 
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
   hBruco,
   coherenceMon,
+  coherenceMon',
   coherenceTFMon
 ) where
 
@@ -26,6 +16,7 @@ import Data.Complex
 import Data.List (sort)
 import Data.Matrix.Unboxed (toLists, fromColumns)
 import HasKAL.SpectrumUtils.Signature
+
 
 -- | Bruco like tool
 hBruco :: Int -> Double -> (V.Vector Double, String) -> [(V.Vector Double, String)] -> [(Double, [(Double, String)])]
@@ -107,3 +98,56 @@ coh pxy pxx pyy = V.zipWith (/) coeff denom
 
 r2c :: Double -> Complex Double
 r2c x = x :+ 0
+
+coherenceMon' :: Int              -- ^ length of FFT
+          -> Double           -- ^      sampling: fs
+          -> V.Vector Double  -- ^ time series 1: x(t)
+          -> V.Vector Double  -- ^ time series 2: y(t)
+          -> Spectrum         -- ^     coherency: |coh(f)|^2
+coherenceMon' nfft fs xt yt = (fv, coh'f)
+  where nfft' = min nfft $ min (V.length xt) (V.length yt)
+        fv = V.fromList [0, fs/(fromIntegral nfft')..fs/2]
+        -- ずらしなしで計算
+        xt1 = map (\i -> V.slice i nfft' xt) [0, nfft'..(V.length xt)-nfft']
+        yt1 = map (\i -> V.slice i nfft' yt) [0, nfft'..(V.length yt)-nfft']
+        pxx1 = ave' $ map ps' xt1
+        pyy1 = ave' $ map ps' yt1
+        pxy1 = ave' $ zipWith cs' xt1 yt1
+        coh'f1 = V.slice 0 (V.length fv) $ coh' pxy1 pxx1 pyy1
+        -- データを1/2ずらす
+        -- (位相遅れには応答があるので1点ずらしはしなくてい良い)
+        dur = nfft'`div`2
+        xt2 = map (\i -> V.slice (i+dur) nfft' xt) [0, nfft'..(V.length xt)-nfft'-dur]
+        yt2 = map (\i -> V.slice (i+dur) nfft' yt) [0, nfft'..(V.length xt)-nfft'-dur]
+        pxx2 = ave' $ map ps' xt2
+        pyy2 = ave' $ map ps' yt2
+        pxy2 = ave' $ zipWith cs' xt2 yt2
+        coh'f2 = V.slice 0 (V.length fv) $ coh' pxy2 pxx2 pyy2
+        coh'f = V.zipWith max coh'f1 coh'f2
+
+ps' :: V.Vector Double -- ^    time series: x(t)
+   -> V.Vector Double -- ^ power spectrum: Pxx(f)
+ps' xt = V.map ((**2).magnitude) $ fft $ V.map r2c xt
+
+cs' :: V.Vector Double           -- ^    time series: x(t)
+   -> V.Vector Double           -- ^    time series: y(t)
+   -> V.Vector (Complex Double) -- ^ cross specturm: Pxy(f)
+cs' xt yt = V.zipWith (*) xf (V.map conjugate yf)
+  where xf = fft $ V.map r2c xt
+        yf = fft $ V.map r2c yt
+
+ave' :: (Fractional a, V.Storable a)
+    => [V.Vector a] -- ^  list of spectrum: Pij(f)
+    -> V.Vector a   -- ^ averaged spectrum: < Pij(f) >
+ave' pij = V.map (/ (fromIntegral $ length pij)) sum'pij
+  where sum'pij = foldl1 (V.zipWith (+)) pij
+
+
+coh' :: V.Vector (Complex Double) -- ^ cross spectrum: Pxy(f)
+    -> V.Vector Double           -- ^ power spectrum: Pxx(f)
+    -> V.Vector Double           -- ^ power spectrum: Pyy(f) 
+    -> V.Vector Double           -- ^       coherent: coh^{2}(f)
+coh' pxy pxx pyy = V.zipWith (/) coeff denom
+  where coeff = V.map ((**2).magnitude) $ pxy
+        denom = V.zipWith (*) pxx pyy
+

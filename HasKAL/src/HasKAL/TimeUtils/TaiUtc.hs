@@ -1,18 +1,4 @@
-{- |
-Module      : TaiUtc
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : Takahiro Yamamoto %mail%
-Stability   : test
-Portability : POSIX
 
-Reference:
-  http://maia.usno.navy.mil
-  http://maia.usno.navy.mil/ser7/tai-utc.dat
--}{-
-  * Last Modified: 2015/07/10 13:40:04
--}
 
 
 module HasKAL.TimeUtils.TaiUtc (

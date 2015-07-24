@@ -1,14 +1,5 @@
-{- |
-Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-Threshold of Student Rayleigh Distribution
--}
+
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighThreshold (
    studentThreshold

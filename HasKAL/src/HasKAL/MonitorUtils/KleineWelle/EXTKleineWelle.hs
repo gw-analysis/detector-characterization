@@ -1,15 +1,5 @@
-{- |
-Module      : HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-LAL function
-- [1] L. Blackburn, "KleineWelle Technical Document", LIGO-T060221-00-Z
--}
+
 
 module HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle
   (execKleineWelle

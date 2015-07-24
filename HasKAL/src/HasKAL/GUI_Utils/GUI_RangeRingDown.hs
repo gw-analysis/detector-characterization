@@ -1,15 +1,5 @@
-{- |
-Module      : HasKAL.GUI_Utils.GUI_RangeRingDown
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-GUI of Ring Down Range Monitor
 
--}
 
 module HasKAL.GUI_Utils.GUI_RangeRingDown(
    hasKalGuiRingDownRange

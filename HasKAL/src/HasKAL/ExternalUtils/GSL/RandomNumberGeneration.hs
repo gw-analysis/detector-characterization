@@ -1,16 +1,5 @@
-{- |
-Module      : HasKAL.ExternalUtils.GSL.RandomNumberDistributions
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-Distribution functions
 
-- [1] "GSL Reference Manual"  http://www.gnu.org/software/gsl/manual/html_node/
--}
 
 module HasKAL.ExternalUtils.GSL.RandomNumberGeneration (
    GSLRng(..)

@@ -1,17 +1,5 @@
-{- |
-Module      : HasKAL.Constant.CGSM
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-Physical constant in CGS unit
 
-- [1] "GSL Reference Manual"  http://www.gnu.org/software/gsl/manual/html_node/
-- [2] "gsl/gsl_const_cgsm.h"
--}
 
 {-# LANGUAGE ForeignFunctionInterface, CApiFFI #-}
 

@@ -1,16 +1,5 @@
-{- |
-Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighMon
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-student-Rayleigh monitor
 
-- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
--}
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
    FitMethod(LSM, MLE, QUANT)

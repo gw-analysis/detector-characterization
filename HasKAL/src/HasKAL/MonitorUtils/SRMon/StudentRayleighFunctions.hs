@@ -1,16 +1,5 @@
-{- |
-Module      : HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-Student Rayleigh Functions
 
-- [1] C.Rover, Phys. Rev. D 84, 122004 (2011)
--}
 
 module HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions (
    hkalRanStudentRayleighPdf

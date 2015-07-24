@@ -1,14 +1,5 @@
-{- |
-Module      : HasKAL.FrameUtils.Functions
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-Frame IO functions
--}
+
 
 module HasKAL.FrameUtils.Function
 ( readFrameV

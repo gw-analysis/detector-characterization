@@ -1,17 +1,6 @@
-{- |
-Module      : HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-plot option
 
-- [1] http://root.cern.ch/root/html/THistPainter.html#HP01
-- [2] http://root.cern.ch/root/html/TAttFill.html#F1
--}
+
 module HasKAL.PlotUtils.PlotOption.PlotOptionHROOT(
        PlotTypeOption(Line, Point, LinePoint, PointLine, Dot),
        PlotTypeOption3D(COLZ, CONTZ, LEGO2Z, AITOFF, MERCATOR),

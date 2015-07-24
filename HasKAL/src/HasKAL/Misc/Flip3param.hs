@@ -1,14 +1,5 @@
-{- |
-Module      : HasKAL.Misc.Flip3param
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-flip functions for 3 parameter function
--}
+
 
 module HasKAL.Misc.Flip3param (
    flip132

@@ -1,15 +1,5 @@
-{- |
-Module      : HasKAL.PlotUtils.PlotUtils.HROOT.PlotGraph
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-2D plot tool
 
--}
 
 module HasKAL.PlotUtils.HROOT.PlotGraph (
    LogOption(Linear, LogX, LogY, LogXY)

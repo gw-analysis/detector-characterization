@@ -1,14 +1,5 @@
-{- |
-Module      : HasKAL.Misc.UMatrixMapping
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : hoge@hoge.com
-Stability   : test
-Portability : POSIX
 
-map functions for Unboxed Matrix
--}
+
 
 module HasKAL.Misc.UMatrixMapping (
    convertS2U
