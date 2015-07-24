@@ -46,8 +46,8 @@ main = do
  
  let flist = [5, 5.0+1.0/duration..fs/2]::[Double]
  rng <- RNG.newRngWithSeed (-1)
--- let flist_noise_taple = geneNPSD rng VIRGO flist::[(Double, DC.Complex Double)]
---     flist_noise     = map (DC.magnitude.snd) (flist_noise_taple)::[DC.Complex Double]
+-- let flist_noise_taple = geneNPSD rng VIRGO flist
+--     flist_noise     = map (DC.magnitude.snd) (flist_noise_taple)
 --     flist_noise_abs = map abs flist_noise
 -- let fname = "fnoise.txt"
 -- writeFile fname $ taple2string flist flist_noise_abs
