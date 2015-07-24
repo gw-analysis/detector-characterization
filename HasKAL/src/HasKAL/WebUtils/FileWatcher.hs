@@ -13,8 +13,6 @@ import System.Exit
 import System.IO.Error
 import Filesystem.Path
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
---import HasKAL.WebUtils.EventDisplayXend
---import HasKAL.WebUtils.Data
 import System.Process (rawSystem)
 import Data.Text
 
@@ -23,7 +21,6 @@ watchNewfile :: String            -- | executive filename
              -> String            -- | location to watch new file added
              -> IO ()
 watchNewfile f webhomedir watchdir = do
---  dir <- getWorkingDirectory
   withManager $ \manager -> do
     watchDir manager (decodeString watchdir) (const True)
       $ \event -> case event of
