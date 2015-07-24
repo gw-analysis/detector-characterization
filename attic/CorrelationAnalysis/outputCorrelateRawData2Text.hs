@@ -1,12 +1,13 @@
-import Numeric.LinearAlgebra  --subVector
-import Numeric --showFFloat
-import Control.Monad -- forM
-import System.Environment -- getArgs
+import Numeric.LinearAlgebra  (subVector)
+import Numeric (showFFloat)
+import Control.Monad (forM)
+import System.Environment (getArgs)
 import System.Random
-import System.Process -- system
-import Data.List.Split -- splitOn
+import System.Process
+import Data.List.Split (splitOn)
+import Data.Maybe (fromMaybe)
 
-import HasKAL.FrameUtils.FrameUtils -- read Frame file
+import HasKAL.FrameUtils.FrameUtils (readFrame)
 import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SignalProcessingUtils.Filter
@@ -59,8 +60,9 @@ main = do
        ifs_harf_harf = 4096::Int
        ifs_8 = 2048::Int
        ifs_16 = 1024::Int
-   readDataGW <- readFrame channelName (fileName)
-   let dataGW  = map realToFrac (eval readDataGW)
+   maybereadDataGW <- readFrame channelName fileName
+   let readDataGW = fromMaybe (error " no data in the file.") maybereadDataGW
+   let dataGW  = map realToFrac readDataGW
 
 
  ---------------------------------
@@ -68,8 +70,9 @@ main = do
  ---------------------------------
    let channelName = "X1:CTR-PSL_SEIS_IN1_DQ" ::String
    let dfs = 2048.0 ::Double
-   readDataSEIS <- readFrame channelName (fileName)
-   let dataSEIS  = map realToFrac (eval readDataSEIS)
+   maybereadDataSEIS <- readFrame channelName fileName
+   let readDataSEIS = fromMaybe (error " no data in the file.") maybereadDataSEIS
+   let dataSEIS  = map realToFrac readDataSEIS
 
 
  ---------------------------------
@@ -82,6 +85,6 @@ main = do
 
    
    let fname = (showFFloat (Just 0) dgetGpsTime "" ) ++ "__fs2048_SEIS_GW__RAW.txt" ::[Char]
-   writeFile fname $ taple2string dataSEIS  dataFilteredDownSample
+   writeFile fname $ taple2string dataSEIS dataFilteredDownSample
    
    return ()
