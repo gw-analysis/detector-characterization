@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/07/12 22:13:56
+  * Last Modified: 2015/07/25 11:46:49
 -}
 
 {-
@@ -16,30 +16,24 @@ Compile: make
 Usage: main /data/kagra/xend/R0206/K-K1_R-1120509568-32.gwf
 -}
 
-import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMon)
 
-import Control.Monad (liftM, forM)
-import System.Environment (getArgs)
-import HasKAL.FrameUtils.FrameUtils (getChannelList, getSamplingFrequency)
-import HasKAL.FrameUtils.Function (readFrameV)
+import Data.Vector.Storable
+
 import HasKAL.PlotUtils.HROOT.PlotGraph
+import Function
+
 
 main = do
-  args <- getArgs
-  case (length args) of
-   1 -> do
-     let fname = head args
-     chList <- liftM (map fst) $ getChannelList fname
-     dats <- mapM (`readFrameV` fname) chList
-     forM (zip3 [1..] chList dats) $ \(n1, ch1, dat1) -> do
-       fs1 <- getSamplingFrequency fname ch1
-       forM (zip3 [1..] chList dats) $ \(n2, ch2, dat2) -> do
-         fs2 <- getSamplingFrequency fname ch2
-         case (n1<n2, fs1==fs2) of
-          (True, True) -> do
-            let coh = coherenceMon (truncate fs1) fs1 dat1 dat2
-            plotV LogX Line 1 BLUE ("x","y") 0.05
-              (ch1++" vs "++ch2) (ch1++ch2++".png") ((0,0),(-0.05,1.05)) coh
-          (_, _) -> return ()
-   _ -> error "Usage: main filename"
+  -- パラメタ
+  let fs = 16384.0
+      duration = 128.0
+      nfft = truncate fs
+
+  -- data生成
+  let xv = fromList [0, 1/fs..duration-1/fs]
+      yv = xv
+
+  -- 計算
+  let zv = coherenceMon' nfft fs xv yv
+  plotV Linear Line 1 BLUE ("x", "y") 0.05 "t" "a.png" ((0,0),(-0.05,1.05)) zv
 
