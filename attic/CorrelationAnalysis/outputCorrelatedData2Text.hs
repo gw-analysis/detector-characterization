@@ -7,6 +7,7 @@ import System.Process -- system
 import Data.List.Split -- splitOn
 
 import HasKAL.FrameUtils.FrameUtils -- read Frame file
+--import HasKAL.FrameUtils.Function
 import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SignalProcessingUtils.Filter
@@ -59,7 +60,8 @@ main = do
        ifs_8 = 2048::Int
        ifs_16 = 1024::Int
    readDataGW <- readFrame channelName (fileName)
-   let dataGW  = map realToFrac (eval readDataGW)
+   let dataGW  = map realToFrac ( readDataGW)
+--   let dataGW  = map realToFrac ( readDataGW)
 
  ---------------------------------
  -- GW channel -> Band Pass Filter
@@ -85,7 +87,8 @@ main = do
    let channelName = "X1:CTR-PSL_SEIS_IN1_DQ" ::String
    let dfs = 2048.0 ::Double
    readDataSEIS <- readFrame channelName (fileName)
-   let dataSEIS  = map realToFrac (eval readDataSEIS)
+   let dataSEIS  = map realToFrac ( readDataSEIS)
+--   let dataSEIS  = map realToFrac (readDataSEIS)
 
 
  ---------------------------------

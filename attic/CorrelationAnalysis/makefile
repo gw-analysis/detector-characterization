@@ -1,5 +1,3 @@
-#Time-stamp: "2014-10-31 20:15:20 yuzurihara"
-
 CC=ghc
 HC=ghc -O2
 
@@ -17,6 +15,7 @@ OBJ11=check_spect0908.hs
 OBJ12=check_spect09082.hs
 OBJ13=check_spect0910.hs
 OBJ14=outputCorrelatedData2Text.hs 
+OBJ15=generateUpconvNoise.hs
 
 
 DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
@@ -30,9 +29,16 @@ HASKALPATH=../..//HasKAL/src/HasKAL
 #TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
 #TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
 
-TARGET=outputCorrelateRawData2Text
+#TARGET=outputCorrelateRawData2Text
+TARGET=generateUpconvNoise
 
 all:$(TARGET)
+
+generateUpconvNoise:${OBJ15}
+	ln -fs ${HASKALPATH} ./
+	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	@echo "*** Making $@ ***"
+
 
 outputCorrelateRawData2Text: outputCorrelateRawData2Text.hs 
 	ln -fs ${HASKALPATH} ./
