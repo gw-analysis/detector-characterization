@@ -1,4 +1,5 @@
 
+
 import System.Environment (getArgs)
 import qualified Data.Complex as DC
 import Data.Complex (Complex( (:+) ))
@@ -8,16 +9,15 @@ import HasKAL.SimulationUtils.DetectorNoiseGenerator (geneNPSD)
 import HasKAL.SpectrumUtils.DetectorSensitivity (ifonoisepsd)
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberGeneration as RNG
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberDistributions as RND
-import UsefulFunction (taple2string, threedata2string)
+--import UsefulFunction (taple2string, threedata2string)
 import qualified HasKAL.Misc.StrictMapping as HMS
 import qualified Numeric.LinearAlgebra as NLA
-import Numeric.GSL.Fourier (ifft)
-
---import qualified FFT as FFT
+import qualified FFT as FFT
 
 {-- need 1 argument = amplitude of seismic noise --}
 {-- usage : generateUpconvNoise 1e-6 --}
 
+{-- output :  time[sec], delta_x[m], data_h_sc[], GW channel(data_h_sc + noiset), noiset, seismic --}
 
 main = do
 
@@ -40,82 +40,88 @@ main = do
 
  let tlist = [0, dt..duration-dt]::[Double]
  let flist    = [0,df..fs/2]::[Double]
-     flistRev = [1*df, 2*df..fs/2.0-1*df]::[Double]
-     flistAll = flist ++ reverse flistRev :: [Double]
+ rng <- RNG.newRngWithSeed (-1)
 
  {-- generate detector noise --}
- rng <- RNG.newRngWithSeed (0)
- -- geneNPSD :: RNG.GSLRng -> HDD.Detector -> [Double] -> IO [(Double, DC.Complex Double)]
- flistNoiseTaple <- geneNPSD rng VIRGO flist
- let flistNoiseTapleRev = map DC.conjugate.reverse.init.tail $ map snd (flistNoiseTaple) :: [DC.Complex Double]
-     fNoise'  = map snd flistNoiseTaple ++ flistNoiseTapleRev ::[DC.Complex Double]
-     fNoise   = map (replace_zero fLow) $ zip flistAll fNoise'
- let fabs' = map (replace_zero fLow) $ zip flist (map snd flistNoiseTaple)
-     fabs  = map (DC.magnitude) fabs'
- let fname = "fnoise1.txt"
- writeFile fname $ taple2string flist fabs
-
-
  {-- convert time domain by IFFT --}
- let  tDetectorNoise' = ifft $ NLA.fromList fNoise
-      tDetectorNoise  = map NLA.realPart $ NLA.toList tDetectorNoise'
- let fname = "tnoise1.txt"
+ tDetectorNoise <- geneDetectorNoise rng VIRGO fLow flist
+ let fname = "tnoise.txt"
  writeFile fname $ taple2string tlist tDetectorNoise
 
 
- {-- check --}
- -- let fx = map (replace_zero fLow) $ zip flist (map snd flistNoiseTaple)
- -- let tDetectorNoise2 = FFT.ifft'c2r $ NLA.fromList fx
- -- let fname = "tnoise2.txt"
- -- writeFile fname $ taple2string tlist $ NLA.toList tDetectorNoise2
-
-
-
  {-- generate seismic noise --}
- let data_dx = map exponentialSine tlist
-             where exponentialSine x = amplitude * sin (2.0 * pi * fm * x) * exp(-x/tau)
-
+ let deltax = map (exponentialSine amplitude fm tau) tlist
 
  {-- add background of seismic noise --}
- let fSeismic' = map (geneSeismicNoise fLow) flist
-               where geneSeismicNoise fLow f
-                                      | f < fLow  = 0.0
-                                      | otherwise = ampSeis/f/f
--- let fSeismic  = 
- let fname = "fnoise2.txt"
- writeFile fname $ taple2string flist fSeismic'
+ tSeisBG <- geneSeismicNoiseT rng fLow ampSeis flist
+ let fname = "tnoise2.txt"
+ writeFile fname $ taple2string tlist tSeisBG
 
- 
+ let data1 = map (DC.magnitude) $ NLA.toList $ FFT.fft'r2c $ NLA.fromList tSeisBG
+ let fname = "fnoise3.txt"
+ writeFile fname $ taple2string flist data1
 
-
- {-- generate upconversion noise --}
- let data_hsc = map upconversionNoise data_dx
+{-- generate upconversion noise --}
+ let dataHsc = map upconversionNoise deltax :: [Double]
               where upconversionNoise x = gfactor * sin (4.0 * pi / lambda * (x + x0))
- let fname = "upconv.txt"
- writeFile fname $ threedata2string tlist data_dx data_hsc
 
  {-- merge all noise --}
- 
+ let tSeismicData = zipWith (+) deltax  tSeisBG
+ let tGWchannel   = zipWith (+) dataHsc tDetectorNoise
   
  {-- output generated noise --}
- 
+ {-- output :  time[sec], delta_x[m], data_h_sc[], GW channel(data_h_sc + noiset), noiset, seismic --}
+ let fname = "upconv.txt"
+ writeFile fname $ sixdata2string tlist deltax dataHsc tGWchannel tDetectorNoise tSeismicData
+ return () 
 
- return ()
 
-replace_zero :: Double->(Double, DC.Complex Double)->(DC.Complex Double)
+
+
+
+replace_zero :: Double -> (Double, DC.Complex Double) -> (DC.Complex Double)
 replace_zero minfreq (freq, npsd)
               | 0 <= freq && freq < minfreq = (0 :+ 0)
               | otherwise                     = npsd
 
+geneDetectorNoise :: RNG.GSLRng -> Detector -> Double -> [Double] -> IO [Double]
+geneDetectorNoise rng ifo fLow fin = do
+   flistNoiseTaple <- geneNPSD rng VIRGO fin
+   let fx = map (replace_zero fLow) $ zip fin (map snd flistNoiseTaple) :: [Complex Double]
+   return $ NLA.toList $ FFT.ifft'c2r $ NLA.fromList fx
 
 
+geneSeismicNoiseT :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [Double]
+geneSeismicNoiseT rng fLow ampSeis fin = do
+   fSeismicNoise <- geneSeismicNoiseF rng fLow ampSeis fin
+   return $ NLA.toList $ FFT.ifft'c2r $ NLA.fromList fSeismicNoise
 
--- geneSeismicNoise :: RNG.GSLRng -> [Double] -> [Double] -> IO [(ouble, DC.Complex Double)]
--- geneSeismicNoise 
 
--- fin seedSpectrum = do
---   let sensCurve = (zip fin).(map sqrt).NLA.toList.(HSD.ifonoisepsd ifo).NLA.fromList $ fin
---   HMS.forM' sensCurve $ \(freq, curve) -> do 
---     real <- RND.gslRanGaussian rng (sqrt 0.5)
---     imag <- RND.gslRanGaussian rng (sqrt 0.5)
---     return $ (freq, (curve :+ 0) * (real :+ imag) )eneNPSD :: RNG.GSLRng -> HDD.Detector -> [Double] -> IO [(Double, DC.Complex Double)]
+geneSeismicNoiseF :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [DC.Complex Double]
+geneSeismicNoiseF rng fLow ampSeis fin = do
+   let seedSf = map (powSeismicNoise fLow ampSeis) fin
+   HMS.forM' seedSf $ \sf -> do 
+      real <- RND.gslRanGaussian rng (sqrt 0.5)
+      imag <- RND.gslRanGaussian rng (sqrt 0.5)
+      return $ (sf :+ 0) * (real :+ imag)
+
+powSeismicNoise :: Double -> Double -> Double -> Double
+powSeismicNoise fLow ampSeis f 
+                       | f < fLow  = 0.0
+                       | otherwise = ampSeis/f/f
+
+exponentialSine :: Double -> Double -> Double -> Double -> Double
+exponentialSine amplitude fm tau x = amplitude * sin (2.0 * pi * fm * x) * exp(-x/tau)
+
+
+{-- to output data --}
+taple2string ::[Double] -> [Double] -> String
+taple2string a b = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  (map show b)
+
+
+threedata2string ::[Double] -> [Double] ->[Double]-> String
+threedata2string a b c = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show b) $ zipWith (++) (repeat " ")  (map show c)
+
+sixdata2string::[Double] -> [Double] ->[Double]->[Double]->[Double]->[Double]-> String
+sixdata2string a b c d e f = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show b) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show c) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show d) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show e) $ zipWith (++) (repeat " ")  ( map show f)
+
