@@ -23,6 +23,7 @@ main = do
 
  {-- configuration --} 
  [argAmp] <- getArgs
+      
  let amplitude = read (argAmp) ::Double --transiend seismic noise [m]
  print amplitude
 
@@ -61,14 +62,15 @@ main = do
  let fname = "fnoise3.txt"
  writeFile fname $ taple2string flist data1
 
-{-- generate upconversion noise --}
- let dataHsc = map upconversionNoise deltax :: [Double]
-              where upconversionNoise x = gfactor * sin (4.0 * pi / lambda * (x + x0))
-
  {-- merge all noise --}
  let tSeismicData = zipWith (+) deltax  tSeisBG
- let tGWchannel   = zipWith (+) dataHsc tDetectorNoise
   
+ {-- generate upconversion noise --}
+ let dataHsc = map upconversionNoise tSeismicData :: [Double]
+              where upconversionNoise x = gfactor * sin (4.0 * pi / lambda * (x + x0))
+
+ let tGWchannel = zipWith (+) dataHsc tDetectorNoise
+
  {-- output generated noise --}
  {-- output :  time[sec], delta_x[m], data_h_sc[], GW channel(data_h_sc + noiset), noiset, seismic --}
  let fname = "upconv.txt"
