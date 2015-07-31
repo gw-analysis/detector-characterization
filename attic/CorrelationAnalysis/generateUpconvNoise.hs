@@ -45,7 +45,7 @@ main = do
 
  {-- generate detector noise --}
  {-- convert time domain by IFFT --}
- tDetectorNoise <- geneDetectorNoise rng VIRGO fLow flist
+ tDetectorNoise <- genDetectorNoise rng VIRGO fLow flist
  let fname = "tnoise.txt"
  writeFile fname $ taple2string tlist tDetectorNoise
 
@@ -54,7 +54,7 @@ main = do
  let deltax = map (exponentialSine amplitude fm tau) tlist
 
  {-- add background of seismic noise --}
- tSeisBG <- geneSeismicNoiseT rng fLow ampSeis flist
+ tSeisBG <- genSeismicNoiseT rng fLow ampSeis flist
  let fname = "tnoise2.txt"
  writeFile fname $ taple2string tlist tSeisBG
 
@@ -86,21 +86,21 @@ replace_zero minfreq (freq, npsd)
               | 0 <= freq && freq < minfreq = (0 :+ 0)
               | otherwise                     = npsd
 
-geneDetectorNoise :: RNG.GSLRng -> Detector -> Double -> [Double] -> IO [Double]
-geneDetectorNoise rng ifo fLow fin = do
+genDetectorNoise :: RNG.GSLRng -> Detector -> Double -> [Double] -> IO [Double]
+genDetectorNoise rng ifo fLow fin = do
    flistNoiseTaple <- geneNPSD rng VIRGO fin
    let fx = map (replace_zero fLow) $ zip fin (map snd flistNoiseTaple) :: [Complex Double]
    return $ NLA.toList $ FFT.ifft'c2r $ NLA.fromList fx
 
 
-geneSeismicNoiseT :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [Double]
-geneSeismicNoiseT rng fLow ampSeis fin = do
-   fSeismicNoise <- geneSeismicNoiseF rng fLow ampSeis fin
+genSeismicNoiseT :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [Double]
+genSeismicNoiseT rng fLow ampSeis fin = do
+   fSeismicNoise <- genSeismicNoiseF rng fLow ampSeis fin
    return $ NLA.toList $ FFT.ifft'c2r $ NLA.fromList fSeismicNoise
 
 
-geneSeismicNoiseF :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [DC.Complex Double]
-geneSeismicNoiseF rng fLow ampSeis fin = do
+genSeismicNoiseF :: RNG.GSLRng -> Double -> Double -> [Double] -> IO [DC.Complex Double]
+genSeismicNoiseF rng fLow ampSeis fin = do
    let seedSf = map (powSeismicNoise fLow ampSeis) fin
    HMS.forM' seedSf $ \sf -> do 
       real <- RND.gslRanGaussian rng (sqrt 0.5)
@@ -111,6 +111,8 @@ powSeismicNoise :: Double -> Double -> Double -> Double
 powSeismicNoise fLow ampSeis f 
                        | f < fLow  = 0.0
                        | otherwise = ampSeis/f/f
+
+--injectExternalForce 
 
 exponentialSine :: Double -> Double -> Double -> Double -> Double
 exponentialSine amplitude fm tau x = amplitude * sin (2.0 * pi * fm * x) * exp(-x/tau)
