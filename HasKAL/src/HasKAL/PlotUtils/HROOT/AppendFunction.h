@@ -1,8 +1,4 @@
-/******************************************
- *     File Name: AppendFunction.h
- *        Author: Takahiro Yamamoto
- * Last Modified: 2015/07/16 11:48:39
- ******************************************/
+
 
 #ifndef I_GUARD_APPENDFUNCTION_H
 #define I_GUARD_APPENDFUNCTION_H

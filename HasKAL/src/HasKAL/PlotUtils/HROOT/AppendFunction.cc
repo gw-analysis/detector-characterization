@@ -1,8 +1,4 @@
-/******************************************
- *     File Name: AppendFunction.cc
- *        Author: Takahiro Yamamoto
- * Last Modified: 2015/07/16 11:39:33
- ******************************************/
+
 
 #include "AppendFunction.h"
 
