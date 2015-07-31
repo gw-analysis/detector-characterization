@@ -1,11 +1,12 @@
 {-******************************************
   *     File Name: DetectorNoiseGenerator.hs
   *        Author: Takahiro Yamamoto
-  * Last Modified: 2014/07/27 15:31:10
+  * Last Modified: 2015/07/31 14:50:35
   *******************************************-}
 
 module HasKAL.SimulationUtils.DetectorNoiseGenerator (
    geneNPSD
+  ,geneNPSDV
   ,geneNPSD'
 --   ,geneNonGaussNPSD
 ) where
@@ -15,6 +16,8 @@ import qualified Data.Complex as DC
 import Data.Complex (Complex( (:+) ))
 import qualified Data.List as DL
 import qualified Numeric.LinearAlgebra as NLA
+import Data.Vector.Storable ((!))
+import qualified Data.Vector.Storable as V
 
 import qualified HasKAL.DetectorUtils.Detector as HDD 
 import qualified HasKAL.ExternalUtils.GSL.RandomNumberGeneration as RNG
@@ -56,6 +59,18 @@ geneNPSD rng ifo fin = do
        imag <- RND.gslRanGaussian rng (sqrt 0.5)
        return $ (freq, (curve :+ 0) * (real :+ imag) )
 
+geneNPSDV :: RNG.GSLRng -> HDD.Detector -> V.Vector Double -> IO (V.Vector Double, V.Vector (DC.Complex Double))
+geneNPSDV rng ifo fin = do
+  let sensCurve = (V.map sqrt).(HSD.ifonoisepsd ifo) $ fin
+
+  psd <- V.forM (V.fromList [0..V.length fin - 1]) $ \i -> do
+    case fin!i == 0 of
+     True -> return $ 0.0:+0.0
+     False -> do
+       real <- RND.gslRanGaussian rng (sqrt 0.5)
+       imag <- RND.gslRanGaussian rng (sqrt 0.5)
+       return $ ((sensCurve!i) :+ 0) * (real :+ imag)
+  return (fin, psd)
 
 -- param1: Number of generating spectrum
 -- param2: Detecotr Type (defined at HasKAL/DetectorUtils/Detector.hs)
