@@ -48,10 +48,14 @@ geneNPSD :: RNG.GSLRng -> HDD.Detector -> [Double] -> IO [(Double, DC.Complex Do
 geneNPSD rng ifo fin = do
   let sensCurve = (zip fin).(map sqrt).NLA.toList.(HSD.ifonoisepsd ifo).NLA.fromList $ fin
 
-  HMS.forM' sensCurve $ \(freq, curve) -> do 
-    real <- RND.gslRanGaussian rng (sqrt 0.5)
-    imag <- RND.gslRanGaussian rng (sqrt 0.5)
-    return $ (freq, (curve :+ 0) * (real :+ imag) )
+  HMS.forM' sensCurve $ \(freq, curve) -> do
+    case freq == 0 of
+     True -> return $ (freq, 0.0:+0.0)
+     False -> do
+       real <- RND.gslRanGaussian rng (sqrt 0.5)
+       imag <- RND.gslRanGaussian rng (sqrt 0.5)
+       return $ (freq, (curve :+ 0) * (real :+ imag) )
+
 
 -- param1: Number of generating spectrum
 -- param2: Detecotr Type (defined at HasKAL/DetectorUtils/Detector.hs)
