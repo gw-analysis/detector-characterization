@@ -26,17 +26,13 @@ INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root
 
 HASKALPATH=../..//HasKAL/src/HasKAL
 
-#TARGET=check_correlation generateHtml frameReadCheck frameData2SpectrogramePic frameData2CalibratedData frameData2PassFiltered spectrogram_check filter_check_lpf
-#TARGET=frameData2LPF_correlation check_spect0908 check_spect09082 check_spect0910
-
-#TARGET=outputCorrelateRawData2Text
 TARGET=generateUpconvNoise
 
 all:$(TARGET)
 
 generateUpconvNoise:${OBJ15}
 	ln -fs ${HASKALPATH} ./
-	${HC} --make -o $@ $^ ${DEP2} ${INCLINK} ${LIBLINK}
+	${HC} --make -o $@ $^ ${DEP2}
 	@echo "*** Making $@ ***"
 
 
@@ -116,18 +112,6 @@ check_correlation:${OBJ1}
 	$(CC) -O ${OBJ1} -o $@ ${INKLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
-
-testplot2:${OBJ2}
-	ln -fs ${HASKALPATH} ./
-	ln -fs ${FRAMEDATA} ./
-	$(CC) -O ${OBJ2} -o $@ ${INKLINK} ${LIBLINK}
-	@echo "*** Making $@ ***"
-
-
-testplot3:${OBJ3}
-	ln -fs ${HASKALPATH} ./
-	$(CC) -O ${OBJ3} -o $@ ${INKLINK} ${LIBLINK}
-	@echo "*** Making $@ ***"
 
 clean:
 	rm -f *.o *.hi
