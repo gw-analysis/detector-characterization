@@ -1,25 +1,30 @@
 
 module HasKAL.SignalProcessingUtils.LinearPrediction
 ( lpefCoeff
+, lpefCoeffV
 , levinson
+, levinsonV
 , whitening
 , whiteningWaveData
 ) where
 
+import qualified Data.Array.CArray as CA
+import qualified Data.Array.Unboxed as UV
+import Data.Complex()
 import qualified Data.Vector.Storable as VS
+import qualified Data.Vector.Generic as G
 import Data.Maybe
+import Foreign.Storable (pokeElemOff)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
-import Data.Complex()
-import qualified Data.Array.Unboxed as UV
-import HasKAL.SignalProcessingUtils.FilterH
+import HasKAL.SignalProcessingUtils.Filter
 import HasKAL.SignalProcessingUtils.WindowType
 import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SignalProcessingUtils.Interpolation
 import HasKAL.SignalProcessingUtils.InterpolationType
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.WaveUtils.Data
-
+import System.IO.Unsafe (unsafePerformIO)
 
 {- exposed functions -}
 lpefCoeff :: Int -> [(Double,Double)] -> ([Double],Double)
@@ -41,7 +46,7 @@ levinson p r = do
 
 
 whitening :: ([Double],Double) -> [Double]-> [Double]
-whitening (whnb,rho) x = map (/sqrt rho) $ fir whnb x
+whitening (whnb,rho) x = map (/sqrt rho) $ toList $ fir whnb $ fromList x
 
 
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]
@@ -50,8 +55,29 @@ whitening (whnb,rho) x = map (/sqrt rho) $ fir whnb x
 
 whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
 whiteningWaveData (whnb,rho) x = do
-  let y = map (/sqrt rho) $ fir whnb $ toList (gwdata x)
-  fromJust $ updateWaveDatagwdata x $ fromList y
+  let y = G.map (/sqrt rho) $ fir whnb (gwdata x)
+  fromJust $ updateWaveDatagwdata x y
+
+
+
+lpefCoeffV :: Int -> (Vector Double, Vector Double) -> ([Double], Double)
+lpefCoeffV p psddat = (out,rho)
+  where
+    (out,rho) = levinsonV p r
+    r = fst.fromComplex.ifft
+      $ toComplex (G.map (fs*) (snd psddat), constant (0::Double) (G.length (snd psddat)))
+    fs = (G.last.fst) psddat
+
+
+
+levinsonV :: Int -> Vector Double -> ([Double],Double)
+levinsonV p r = do
+--    let r' = unsafePerformIO $ CA.createCArray (0, nlen-1)
+--          $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0, nlen-1]) r
+  let r' = UV.listArray (0, nlen-1) $ VS.toList r
+      (tmpcoef, rho) = levinsonD r' p
+  (1:CA.elems tmpcoef,rho)
+    where nlen = G.length r
 
 
 {- internal functions -}
@@ -70,5 +96,24 @@ levinsonD r p = (UV.array (1,p) [ (k, a UV.!(p,k)) | k <- [1..p] ], rho UV.!p)
            | otherwise = a UV.!(k-1,i) + a UV.!(k,k) * a UV.!(k-1,k-i)
     rhok 1 = (1 - (abs (a UV.!(1,1)))^(2::Int)) * r UV.!0
     rhok k = (1 - (abs (a UV.!(k, k)))^(2::Int)) * rho UV.!(k-1)
+
+
+levinsonDC :: (CA.Ix a, Integral a, RealFloat b)
+  => CA.Array Int Double           -- ^ r
+  -> Int                           -- ^ p
+  -> (CA.Array Int Double, Double) -- ^ (coefficients,rho)
+levinsonDC r p = (CA.array (1,p) [ (k, a CA.!(p,k)) | k <- [1..p] ], rho CA.!p)
+  where
+    a = CA.array ((1,1),(p,p))
+      [((k,i), ak k i) | k<-[1..p], i<-[1..k]]:: CA.Array (Int,Int) Double
+    rho = CA.array (1,p) [ (k, rhok k) | k <- [1..p] ]:: CA.Array Int Double
+    ak 1 1         = -r CA.!1 / r CA.!0
+    ak k i | k==i  = -(r CA.!k+sum [a CA.!(k-1,l)*r CA.!(k-l)|l<-[1..(k-1)]])
+                   / rho CA.!(k-1)
+           | otherwise = a CA.!(k-1,i) + a CA.!(k,k) * a CA.!(k-1,k-i)
+    rhok 1 = (1 - (abs (a CA.!(1,1)))^(2::Int)) * r CA.!0
+    rhok k = (1 - (abs (a CA.!(k, k)))^(2::Int)) * rho CA.!(k-1)
+
+
 
 
