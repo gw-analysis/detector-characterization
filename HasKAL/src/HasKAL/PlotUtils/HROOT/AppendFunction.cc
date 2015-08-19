@@ -35,6 +35,14 @@ extern "C" {
     if (ymin < ymax) hist->GetYaxis()->SetRangeUser(ymin, ymax);
     return 0;
   }
+
+  int SetPadMargin(double lmargin, double rmargin, double tmargin, double bmargin){
+    gPad->SetLeftMargin(lmargin);
+    gPad->SetRightMargin(rmargin);
+    gPad->SetTopMargin(tmargin);
+    gPad->SetBottomMargin(bmargin);
+    return 0;
+  }
 }
 
 Bool_t MySignalHandler::Notify(){

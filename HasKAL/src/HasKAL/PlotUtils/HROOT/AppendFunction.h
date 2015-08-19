@@ -15,6 +15,7 @@ extern "C" {
   int cModified(TCanvas *canvas);
   int cUpdate(TCanvas *canvas);
   int SetRangeTH(TH1 *hist, double xmin, double xmax, double ymin, double ymax);
+  int SetPadMargin(double lmargin, double rmargin, double tmargin, double bmargin);
 }
 
 class MySignalHandler : public TSignalHandler{
