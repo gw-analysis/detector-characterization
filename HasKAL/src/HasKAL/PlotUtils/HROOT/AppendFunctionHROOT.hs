@@ -11,6 +11,7 @@ module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
  ,update
  ,setRangeTH2D
  ,setPadMargin
+ ,setXAxisDate
 ) where
 
 import qualified Data.IORef as DIO
@@ -21,6 +22,7 @@ import qualified FFICXX.Runtime.Cast as FRC
 import qualified Foreign.ForeignPtr as FFP
 import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
+import HasKAL.TimeUtils.GPSfunction (gps2unix)
 
 {--  External Functions  --}
 setGrid :: HR.TCanvas -> IO ()
@@ -73,6 +75,12 @@ setPadMargin l r t b = do
   dummy <- c'SetPadMargin (realToFrac l) (realToFrac r) (realToFrac t) (realToFrac b)
   return ()
 
+setXAxisDate :: HR.TGraph -> Integer -> IO ()
+setXAxisDate gra gps = do
+  let ptr'gra = FRC.get_fptr gra :: FFP.ForeignPtr (FRC.Raw HR.TGraph)
+  dummy <- FFP.withForeignPtr ptr'gra $ \lambda -> c'SetXAxisDate lambda (fromInteger $ gps2unix gps)
+  return ()
+
 {--  Internal Functions  --}
 setRangeUser :: HR.TAxis -> (Double, Double) -> IO ()
 setRangeUser axis (min, max) = do
@@ -99,4 +107,4 @@ foreign import ccall "cUpdate" c'Update :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FC
 foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
 foreign import ccall "SetRangeTH" c'SetRangeTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
 foreign import ccall "SetPadMargin" c'SetPadMargin :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
-
+foreign import ccall "SetXAxisDate" c'SetXAxisDate :: FP.Ptr (FRC.Raw HR.TGraph) -> FCT.CInt -> IO (FCT.CInt)
