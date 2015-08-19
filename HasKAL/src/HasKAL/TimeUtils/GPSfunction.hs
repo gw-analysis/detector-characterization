@@ -13,12 +13,14 @@ module HasKAL.TimeUtils.GPSfunction
 , mjd2gps'
 , getCurrentLocalTime
 , getCurrentGps
+, gps2unix
 ) where
 
 import Data.Time
 import Data.Time.Calendar
 import Data.Time.Clock
 import Data.Time.Clock.TAI
+import Data.Time.Clock.POSIX
 import System.Environment
 import Data.List
 import System.IO
@@ -127,6 +129,13 @@ mjd2string :: Double->String
 mjd2string tt = formatTime defaultTimeLocale "%F %T %Z" (mjd2utc tt)
 
 mjd2gps' = time2gps.mjd2string
+
+-- for Unix Time
+gps2unix :: Integer -> Integer
+gps2unix gps = read $ init $ show $ utcTimeToPOSIXSeconds $ utcgiven gps
+
+-- unix2gps :: POSIXTime -> String
+-- unix2gps unix = show $ diffAbsoluteTime (utcToTAITime theLeapSecondTable (posixSecondsToUTCTime unix)) taibase
 
 -- get Current time
 getCurrentLocalTime :: String -> IO String
