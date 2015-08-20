@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "filterFunctions.h"
 //-- prototype
 //int fir_filter_core(double*,  unsigned,  double[],  double[],  unsigned*,  unsigned, double*);
@@ -105,4 +106,29 @@ int fir_filter_core (double *input, unsigned inputlen, double fir_coeff[], doubl
     }
     return 1;
 }
+
+
+double goertzel (double *Samples, int N, double fs, double freq)
+{
+ int j;
+ double Reg[3];        // 3 shift registers
+ double CosVal, Mag, Omega;
+ Omega = freq/(fs/2);
+ Reg[1] = Reg[2] = 0.0;
+
+ CosVal = 2.0 * cos(M_PI * Omega );
+ for (j=0; j<N; j++)
+  {
+   Reg[0] = Samples[j] + CosVal * Reg[1] - Reg[2];
+   Reg[2] = Reg[1];  // Shift the values.
+   Reg[1] = Reg[0];
+  }
+ Mag = Reg[2] * Reg[2] + Reg[1] * Reg[1] - CosVal * Reg[1] * Reg[2];
+
+ if(Mag > 0.0)Mag = sqrt(Mag);
+ else Mag = 1.0E-42;   // To prevent a problem in dB()
+
+ return(Mag);
+}
+
 
