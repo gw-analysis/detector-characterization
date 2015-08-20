@@ -20,7 +20,7 @@ import InjectionType
 {-- need 1 argument = amplitude of seismic noise --}
 {-- usage : generateUpconvNoise 1e-6 --}
 
-{-- output :  time[sec], delta_x[m], data_h_sc[], GW channel(data_h_sc + noiset), noiset, seismic --}
+{-- output : 1 text file containing (time[sec], delta_x[m], data_h_sc[], GW channel(data_h_sc + noiset), noiset, seismic ) --}
 
 
 {-- memo : Norm of FFT is not consistent with C language. --}
@@ -51,6 +51,8 @@ main = do
 
  {-- generate detector noise --}
  {-- convert time domain by IFFT --}
+ {-- ToDo : replace VIRGO -> InitialVIRGO --}
+ {--        add noise curve of InitialVIRGO in HasKAL --}
  tDetectorNoise <- genDetectorNoise rng VIRGO fLow flist
  let fname = "tnoise.txt"
  writeFile fname $ taple2string tlist tDetectorNoise
@@ -65,9 +67,9 @@ main = do
  let fname = "tnoise2.txt"
  writeFile fname $ taple2string tlist tSeisBG
 
- let data1 = map (DC.magnitude) $ NLA.toList $ FFT.fft'r2c $ NLA.fromList tSeisBG
- let fname = "fnoise3.txt"
- writeFile fname $ taple2string flist data1
+-- let data1 = map (DC.magnitude) $ NLA.toList $ FFT.fft'r2c $ NLA.fromList tSeisBG
+-- let fname = "fnoise3.txt"
+-- writeFile fname $ taple2string flist data1
 
  {-- merge all noise --}
  let tSeismicData = zipWith (+) deltax  tSeisBG
@@ -90,14 +92,23 @@ main = do
 {-- Instead of 0 padding, S(f < f_low) = S(f_low) padding --}
 replace_zero :: Double -> (Double, DC.Complex Double) -> (DC.Complex Double)
 replace_zero minfreq (freq, npsd)
-              | 0 <= freq && freq < minfreq = (0 :+ 0)
+              | 0 <= freq && freq < minfreq   = (0 :+ 0)
               | otherwise                     = npsd
+
+
+-- replace_flow :: RNG.GSLRng -> Detector -> Double -> (Double, DC.Complex Double) -> (DC.Complex Double)
+-- replace_flow rng ifo minfreq (freq, npsd)
+--               | 0 <= freq && freq < minfreq   = npsd_flow
+--               | otherwise                     = npsd
+--                                      where npsd_flow' = geneNPSD rng ifo [minfreq]
+--                                            npsd_flow = snd npsd_flow'
 
 {-- HasKAL.simulationUtils.... --}
 genDetectorNoise :: RNG.GSLRng -> Detector -> Double -> [Double] -> IO [Double]
 genDetectorNoise rng ifo fLow fin = do
-   flistNoiseTaple <- geneNPSD rng VIRGO fin
+   flistNoiseTaple <- geneNPSD rng ifo fin
    let fx = map (replace_zero fLow) $ zip fin (map snd flistNoiseTaple) :: [Complex Double]
+--   let fx = map (replace_flow rng ifo fLow) $ zip fin (map snd flistNoiseTaple) :: [Complex Double]
    return $ NLA.toList $ FFT.ifft'c2r $ NLA.fromList fx
 
 {-- HasKAL.simulationUtils.... --}
