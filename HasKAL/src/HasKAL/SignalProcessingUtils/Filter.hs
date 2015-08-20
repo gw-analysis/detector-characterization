@@ -43,7 +43,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , filtfilt
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0)
+import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
 import Foreign.C.Types
 -- import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
@@ -56,10 +56,10 @@ iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
   let ilen = VS.length inputV
       flen = length numCoeff
-      inputV' = unsafeCoerce inputV :: VS.Vector CDouble
+      inputV' = d2cdV inputV :: VS.Vector CDouble
       numCoeff' = d2cd numCoeff
       denomCoeff' = d2cd denomCoeff
-  unsafeCoerce $ iirCore inputV' ilen numCoeff' denomCoeff' flen
+  cd2dV $ iirCore inputV' ilen numCoeff' denomCoeff' flen
 
 
 iirFilter :: [Double] -> [Double] -> [Double] -> [Double]
@@ -76,9 +76,9 @@ fir :: [Double] -> VS.Vector Double -> VS.Vector Double
 fir firCoeff inputV = do
   let ilen = VS.length inputV
       flen = length firCoeff
-      inputV' = unsafeCoerce inputV :: VS.Vector CDouble
+      inputV' = d2cdV inputV :: VS.Vector CDouble
       firCoeff' = d2cd firCoeff
-  unsafeCoerce $ firCore inputV' ilen firCoeff' flen
+  cd2dV $ firCore inputV' ilen firCoeff' flen
 
 
 firFilter :: [Double] -> [Double] -> [Double]
@@ -187,6 +187,11 @@ d2cd = map realToFrac
 cd2d :: [CDouble] -> [Double]
 cd2d = map realToFrac
 
+d2cdV :: VS.Vector Double -> VS.Vector CDouble
+d2cdV = VS.map realToFrac
+
+cd2dV :: VS.Vector CDouble -> VS.Vector Double
+cd2dV = VS.map realToFrac
 
 foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 

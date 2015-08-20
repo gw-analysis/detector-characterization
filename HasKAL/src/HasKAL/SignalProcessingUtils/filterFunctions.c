@@ -71,6 +71,10 @@ int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned f
         fir_buffer[temp]=0.0;
         fir_buffer[temp+filterlen]=0.0;
     }
+    //-- initialize output
+    for (temp=0;temp<inputlen;temp++){
+        output[temp]=0.0;
+    }
     //-- set input index
     fir_ix = 0;
 
@@ -89,20 +93,16 @@ int fir_filter_core (double *input, unsigned inputlen, double fir_coeff[], doubl
 
     for (oidx=0;oidx<inputlen;oidx++){
 
-        fir_buffer[*index]        = input[oidx];
+        fir_buffer[*index]           = input[oidx];
         fir_buffer[*index+filterlen] = input[oidx];
-
+        *index = *index+1;
         if(*index==filterlen) *index=0;
 
         for (idx=0;idx<filterlen;idx++){
             output[oidx] = output[oidx]
-                + fir_coeff[idx]*fir_buffer[*index+filterlen-idx];
+                + fir_coeff[idx]*fir_buffer[*index+idx];
         }
-        *index=*index+1;
-
-
     }
-
     return 1;
 }
 
