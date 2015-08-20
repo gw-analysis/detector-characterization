@@ -8,6 +8,7 @@
 #include <TSysEvtHandler.h>
 #include <TCanvas.h>
 #include <TH1.h>
+#include <TGraph.h>
 
 extern "C" {
   int SetRangeUser(TAxis *axis, double min, double max);
@@ -15,6 +16,8 @@ extern "C" {
   int cModified(TCanvas *canvas);
   int cUpdate(TCanvas *canvas);
   int SetRangeTH(TH1 *hist, double xmin, double xmax, double ymin, double ymax);
+  int SetPadMargin(double lmargin, double rmargin, double tmargin, double bmargin);
+  int SetXAxisDate(TGraph *gra, int unixtime);
 }
 
 class MySignalHandler : public TSignalHandler{

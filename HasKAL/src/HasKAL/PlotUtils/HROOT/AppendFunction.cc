@@ -35,6 +35,21 @@ extern "C" {
     if (ymin < ymax) hist->GetYaxis()->SetRangeUser(ymin, ymax);
     return 0;
   }
+
+  int SetPadMargin(double lmargin, double rmargin, double tmargin, double bmargin){
+    gPad->SetLeftMargin(lmargin);
+    gPad->SetRightMargin(rmargin);
+    gPad->SetTopMargin(tmargin);
+    gPad->SetBottomMargin(bmargin);
+    return 0;
+  }
+
+  int SetXAxisDate(TGraph *gra, int unixtime){
+    int offset = unixtime - 788918400;// rootの基準は1995/1/1 00:00:00
+    gra->GetXaxis()->SetTimeOffset(offset);
+    gra->GetXaxis()->SetTimeDisplay(1);
+  }
+
 }
 
 Bool_t MySignalHandler::Notify(){
