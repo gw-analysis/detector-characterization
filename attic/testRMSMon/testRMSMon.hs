@@ -1,15 +1,14 @@
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.FrameUtils.Function (readFrameV)
-import HasKAL.SpectrumUtils.GwPsdMethod
+--import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Signature
 
 import qualified Data.Vector.Generic as DVG
-import qualified Data.Vector.Storable as V (length)
 import qualified Numeric.LinearAlgebra as NLA
-import Data.Maybe (fromMaybe)
-import System.Environment (getArgs)
+import Data.Maybe (fromMaybe, fromJust)
+--import System.Environment (getArgs)
 import Control.Monad (forM)
 
 import ReadFiles
@@ -29,8 +28,13 @@ main = do
  let channel  = "K1:PEM-EX_MAG_X_FLOOR"
      fs = 2048::Double
      ifs = 2048::Int
- let filelist = take 100 testFiles
- let gps = 1124077533::Double
+    
+ let nfile = 100   -- you can change
+     filelist = take nfile testFiles
+-- let gps = 1124077533::Double
+ let gps = 77533::Double
+
+ print nfile
 
  maybexs <- mapM (readFrameV channel) filelist
  let xs = map (fromMaybe (error " no data in the file.")) maybexs
@@ -38,39 +42,41 @@ main = do
  --print $ DVG.take 100 ys
  --print $ DVG.length ys
 
- let nfile = length filelist
- print nfile
 
- let duration = 32::Double
-     iduration = 32::Int
+ let iduration = 64::Int     -- you can change
+     duration  = fromIntegral iduration :: Double
+     totalDuration = 32.0 * (fromIntegral nfile) :: Double
+     nSplit    = floor $ totalDuration / duration
  let nchunk = iduration * ifs::Int
- let tlist = [1/fs, 2/fs..32]
+ let tlist = [1/fs, 2/fs..duration]
      nt    = length tlist
 
- let flist = [0.0,1.0/duration ..fs/2.0]
-
- {-- split vector --}
- let xs1 = DVG.slice 0 nt ys
- print $ DVG.length xs1
+ print nchunk
+ print nSplit
 
 
- {-- fft xs data --}
- let index = [0..nfile-1]::[Int]
+ let iSplit = [0..nSplit-1]::[Int]
+ rmslist <- forM iSplit $ \i -> do    -- for loop
 
- rmslist <- forM index $ \i -> do
-  let hoff = gwpsdV (DVG.slice (10*i) (10*i+nchunk) ys) nchunk fs
+  {-- split vector --}
+  let hoff = gwpsdV (DVG.slice (nchunk*i) nchunk ys) nchunk fs
 --  {-- sum each frequecy band --}
 --  {-- [0.2:1] [1:4] [4:10] Hz --}
 --  let f1 = 0.2
 --      f2 = 1.0
   let f1 = 1.0
       f2 = 4.0
-  --sumHoff = DVG.sum $ DVG.filter (>f1) $ DVG.filter (<f2) hoff
-  
-  let indexlist = [0..]
-  let listSpectrum = zip (NLA.toList $ fst hoff) (NLA.toList $ snd hoff)
-  let sumHoff = sum $ map snd $ filter ( \(x, y) -> f1<x && x<f2 ) listSpectrum
 
+  let indx1' = DVG.findIndex (>=f1) $ fst hoff
+      indx2' = DVG.findIndex (>=f2) $ fst hoff
+      indx1  = fromJust indx1'
+      indx2  = fromJust indx2'
+  let sumHoff = DVG.sum . DVG.slice indx1 (indx2 - indx1) $ snd hoff
+
+  -- old definition
+  --let indexlist = [0..]
+  -- let listSpectrum = zip (NLA.toList $ fst hoff) (NLA.toList $ snd hoff)
+  -- let sumHoff = sum $ map snd $ filter ( \(x, y) -> f1<x && x<f2 ) listSpectrum
 
 --  let fname = filelist!!(i) ++ ".png"
 --  plotXV LogXY LinePoint 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 "title" ((0.001,5),(0,0)) hoff
@@ -80,11 +86,9 @@ main = do
 --  {-- plot RMS value --}
 -- plotXV Linear Dot 1 RED ("time", channel) 0.08 "RMSMon" ((0,0), (0,0)) $ DVG.zip (DVG.fromList tlist) xs
 
-  
+
  let gpslist = [gps, gps+duration..gps+(fromIntegral nfile)*duration]::[Double]
- print gpslist
- print rmslist
- plotXV LogY LinePoint 1 BLUE ("GPS[sec]", "?/s^2") 0.05 "title" ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
+ plotXV Linear LinePoint 1 BLUE ("GPS[sec]", "          V/s^2") 0.05 "RMSMon" ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
  
  return 0
 
