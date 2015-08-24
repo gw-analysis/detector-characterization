@@ -1,5 +1,5 @@
 CC=ghc
-HC=ghc -O2
+HC=ghc --make
 
 OBJ1=testRMSMon.hs
 
@@ -18,7 +18,7 @@ all:$(TARGET)
 
 testRMSMon:${OBJ1} 
 	ln -fs ${HASKALPATH} ./
-	${HC} --make -o $@ $^ ${DEP3}  -lFrame
+	${HC} -o $@ $^ ${DEP3} -lFrame -fPIC
 	@echo "*** Making $@ ***"
 
 
