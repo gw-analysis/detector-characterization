@@ -38,6 +38,7 @@
 module HasKAL.SignalProcessingUtils.Filter
   ( iir
   , fir
+--  , fir'
   , iirFilter
   , firFilter
   , filtfilt
@@ -51,6 +52,7 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Word
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
@@ -79,6 +81,17 @@ fir firCoeff inputV = do
       inputV' = d2cdV inputV :: VS.Vector CDouble
       firCoeff' = d2cd firCoeff
   cd2dV $ firCore inputV' ilen firCoeff' flen
+
+
+
+fir' :: [Double] -> VS.Vector Double -> VS.Vector Double
+fir' firCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length firCoeff
+--      inputV' = d2cdV inputV :: VS.Vector CDouble
+--      firCoeff' = d2cd firCoeff
+--  cd2dV $ firCore inputV' ilen firCoeff' flen
+  firCore' inputV ilen firCoeff flen
 
 
 firFilter :: [Double] -> [Double] -> [Double]
@@ -137,6 +150,18 @@ firCore input ilen firCoeff flen
    allocaArray ilen $ \ptrOutput ->
    do c_fir_filter ptrInput wilen ptrFirCoeff wflen ptrOutput
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+firCore' :: VS.Vector Double -> Int -> [Double] -> Int -> VS.Vector Double
+firCore' input ilen firCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filter (castPtr ptrInput) wilen (castPtr ptrFirCoeff) wflen ptrOutput
+      newForeignPtr_ (castPtr ptrOutput) >>= \foreignptrOutput ->
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
             wflen = itow32 flen
