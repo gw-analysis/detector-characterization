@@ -132,3 +132,37 @@ double goertzel (double *Samples, int N, double fs, double freq)
 }
 
 
+
+
+int filtfilt (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double *output){
+
+    unsigned inputidx, k, i;
+    double y, init_coeff[filterlen];
+
+    //-- initialize the delay registers
+    for (k=0;k<filterlen;k++){
+        init_coeff[k] = 0.0;
+    }
+
+    //-- forward filtering
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+
+    //-- reverse filtering
+    //-- input : reversed output
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+    //--filtering again
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+    //-reverse output
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+    for (i=0;i<inputlen;i++){
+        output[i] = input[inputlen-i-1];
+    }
+
+
+    return 1;
+}
+

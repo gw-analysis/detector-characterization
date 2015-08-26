@@ -8,3 +8,5 @@ int iir_filter (double*,  unsigned,  double[],  double[], unsigned, double*);
 int iir_filter_core (double*, unsigned, double[], double[], unsigned, double[], double*);
 
 double goertzel (double*, int, double, double);
+
+int filtfilt (double*,  unsigned,  double[],  double[], unsigned, double*);

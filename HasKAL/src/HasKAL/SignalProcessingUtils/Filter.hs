@@ -103,25 +103,15 @@ firFilter input firCoeff = do
   cd2d $ firFilterCore input' ilen firCoeff' flen
 
 
-filtfilt :: [Double] -> [Double] -> [Double] -> [Double]
-filtfilt input numCoeff denomCoeff = do
---  let inputCD = d2cd input
-  let numCoeffCD = d2cd numCoeff
-      denomCoeffCD = d2cd denomCoeff
-      ilen = length input
-      flen = length numCoeff
-      lrefl = 3 * (flen - 1)
-      si'' = tail.reverse.cumsum.reverse $ zipWith (-) numCoeff $ map (*((sum numCoeff)/(sum denomCoeff))) denomCoeff
-      si' = si''++ [0]
-      si = d2cd si'
 
-      input'' = (map (2*(head input)-) $ foldl (\acc m -> acc ++ [input !! m]) [] [lrefl,lrefl-1..2])
-        ++ input ++ (map (2*(last input)-) $ foldl (\acc m -> acc ++ [input !! m]) [] [ilen-1, ilen-2..ilen-lrefl])
-      input' = d2cd input''
-      forwardFiltered = iirFilterCoreInit input' (length input') numCoeffCD denomCoeffCD flen (map (*(head input')) si)
-      reverseFiltered = reverse $ iirFilterCoreInit (reverse forwardFiltered)
-        (length forwardFiltered) numCoeffCD denomCoeffCD flen (map (*(last forwardFiltered)) si)
-  map realToFrac $ foldl (\acc m -> acc ++ [reverseFiltered !! m]) [] [lrefl+1..lrefl+ilen]
+filtfilt :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
+filtfilt (numCoeff, denomCoeff) inputV = do
+  let ilen = VS.length inputV
+      flen = length numCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      numCoeff' = d2cd numCoeff
+      denomCoeff' = d2cd denomCoeff
+  cd2dV $ filtfiltCore inputV' ilen numCoeff' denomCoeff' flen
 
 
 -------------  Internal Functions  -----------------------------
@@ -203,6 +193,19 @@ firFilterCore input ilen firCoeff flen
             wflen = itow32 flen
 
 
+
+filtfiltCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+filtfiltCore input ilen numCoeff denomCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray numCoeff $ \ptrNumCoeff ->
+   withArray denomCoeff $ \ptrDenomCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_filtfilt ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
 
@@ -223,5 +226,7 @@ foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble 
 foreign import ccall "filterFunctions.h iir_filter_core" c_iir_filter_core :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
+foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
 
