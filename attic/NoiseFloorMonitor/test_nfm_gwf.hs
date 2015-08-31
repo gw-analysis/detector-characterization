@@ -18,7 +18,7 @@ import Numeric.LinearAlgebra
  
 
 main = do    
-   ts <- genTimeGauss (4096*128) 1.0
+--   ts <- genTimeGauss (4096*128) 1.0
 --   ts1 <- genTDomain lcsz tsSF 40 1024 HDD.KAGRA
 --   ts2 <- genTDomain' (10*tsSF) tsSF 40 1024 HDD.KAGRA
 --   let ts = ts1 ++ ts2 ++ ts1
@@ -29,7 +29,7 @@ main = do
    let frameSF = 4096.0
    let np = defaultNFMparam
        lcsz = 4096 * 128 
---       ts = take lcsz $ map realToFrac (eval framets)
+       ts = take lcsz $ map realToFrac (eval framets)
        printshow xx = putStrLn $ (show (fst xx)) ++ " " ++ (show (snd xx))
    (nfmmean,nfmdev)<- estimateThreshold np (lcsz*2)
 --   print  (nfmmean,nfmdev)
