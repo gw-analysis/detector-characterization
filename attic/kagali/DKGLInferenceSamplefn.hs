@@ -51,7 +51,7 @@ cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
 
 
-foreign import ccall "hogehoge.h DKGLInferenceSamplefn" c_DKGLInferenceSamplefn :: Ptr CDouble -- ^ input pointer
+foreign import ccall "DKGLInferenceSamplefn.h DKGLInferenceSamplefn" c_DKGLInferenceSamplefn :: Ptr CDouble -- ^ input pointer
                                                                                 -> CInt        -- ^ # of elements in input
                                                                                 -> Ptr CDouble -- ^ output pointer
                                                                                 -> CInt        -- ^ # of elements in output
