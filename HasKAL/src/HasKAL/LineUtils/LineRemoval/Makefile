@@ -9,3 +9,5 @@ all:$(PROGS)
 main_Mblt:	$(OBJS1)
 	$(CC) --make $(OBJS1) $(LOADLIBES)
 
+clean:
+	/bin/rm -f main_Mblt *.o *.hi

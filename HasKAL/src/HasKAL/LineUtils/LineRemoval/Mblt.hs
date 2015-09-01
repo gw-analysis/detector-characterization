@@ -24,8 +24,8 @@ import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.SignalProcessingUtils.FilterType
 
 -- module --
---import HasKAL.LineUtils.LineRemoval.RngMedian as RM
-import qualified RngMedian as RM
+import HasKAL.LineUtils.LineRemoval.RngMedian as RM
+--import qualified RngMedian as RM
 import HasKAL.SpectrumUtils.SpectrumUtils as HSU
 
 -- Function --
