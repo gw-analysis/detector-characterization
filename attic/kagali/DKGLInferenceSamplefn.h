@@ -1,1 +1,1 @@
-void DKGLInferenceSamplefn(double *in,int nin,double *out,int nout);
+void DKGLInferenceSamplefn(double *out,int nout,double *in,int nin);

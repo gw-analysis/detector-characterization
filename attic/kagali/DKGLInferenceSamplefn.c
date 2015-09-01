@@ -1,9 +1,9 @@
 
-#include <kagali/KGLStdlib.h>
+#include <KGLStdlib.h>
 #include <KGLInferenceSamplefn.h>
 #include <DKGLInferenceSamplefn.h>
 
-void DKGLInferenceSamplefn(double *in,int nin,double *out,int nout){
+void DKGLInferenceSamplefn(double *out,int nout,double *in,int nin){
   KGLStatus *status = KGLCreateStatus();  
   
   double outtmp;
