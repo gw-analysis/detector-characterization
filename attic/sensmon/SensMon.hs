@@ -15,6 +15,7 @@ data SensParam = SensParam
        { histmin :: Double
        , histmax :: Double
        , binInterval :: Double
+       , binlist :: [Double]
        }
 
 
@@ -24,6 +25,8 @@ runSensMon input fs n =
         { histmax = 1.0E-18
         , histmin = 1.0E-24
         , binInterval = (logBase 10 (histmax param) - logBase 10 (histmin param))/100.0
+        , binlist = map (10**) [logBase 10 (histmin param), logBase 10 (histmin param)
+            +(binInterval param) ..logBase 10 (histmax param)]
         }
    in runSensMonCore input fs n param
 
@@ -36,9 +39,7 @@ runSensMonCore input fs n param = do
       eachFbin = M.toColumns . M.fromRows $ vlist
       hmax = histmax param
       hmin = histmin param
-      dbins' = binInterval param
-      bins' = [logBase 10 hmin, logBase 10 hmin + dbins'..logBase 10 hmax]
-      bins = map (10**) bins'
+      bins = binlist param
    in ( VS.fromList $ take (length vlist) [0, fromIntegral n/fs..]
       , VS.fromList bins
       , M.fromColumns
