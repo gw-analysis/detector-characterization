@@ -1,16 +1,18 @@
-PROGS = test
-
 CFLAGS := -O2 -Wall -optc -std=c99
 
 INCLUDEDIR = -I/home/ueno/kagali/include/kagali
+
 LIBDIR = -L/home/ueno/kagali/lib
 
-OBJS = test.hs
+CSRC = DKGLInferenceSamplefn.c DKGLIterativeLeastSquare2DNewton.c
 
-all:$(PROGS)
+all: test main_nha
 
-test: $(OBJS) DKGLInferenceSamplefn.c
-	ghc $(CFLAGS) $(OBJS) DKGLInferenceSamplefn.c -lkagali $(LIBDIR) $(INCLUDEDIR)
+test: test.hs DKGLInferenceSamplefn.c
+	ghc $(CFLAGS) test.hs $(CSRC) -lkagali $(LIBDIR) $(INCLUDEDIR)
+
+main_nha: main_nha.hs DKGLIterativeLeastSquare2DNewton.c
+	ghc $(CFLAGS) main_nha.hs $(CSRC) -lkagali $(LIBDIR) $(INCLUDEDIR)
 
 clean:
-	/bin/rm -f main_nha *.hi
+	/bin/rm -f test main_nha *.hi
