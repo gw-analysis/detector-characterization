@@ -1,32 +1,52 @@
 
 import qualified Data.Vector.Storable as VS
 import Data.List
+import Numeric
 import KAGALIUtils
+--import System.Environment
+
 
 main :: IO()
 main = do
-     string <- readFile "test.dat"
+--     cnsig <- getArgs
+     string <- readFile "../../HasKAL/src/HasKAL/LineUtils/LineRemoval/LIGOtest.dat"
      let stringList = lines string
          frameList = makeDouble stringList
-         frame = VS.fromList frameList
+         frameV = VS.fromList frameList
+--         nsig = read (cnsig!!0) :: Int
+         nsig = 4
          fs = 2048.0
-         dt = 1.0/fs
-         nframe = length frameList
-         time = take (nframe) [0,dt..]
-         nsig = 2
-         (out1,out2,out3) = dKGLIterativeLeastSquare2DNewton frame fs nsig
-         out1List = VS.toList out1
-         out2List = VS.toList out2
-         out3List = VS.toList out3
-         outText = toText [out1List, out2List, out3List]
-         
-     print $ dt
---     print $ time
+         nframe = 64
+         nshift = 4
+         nstart = 0
+         nend = 100
+         outV = nha frameV fs nsig nframe nshift nstart nend
+         outText = concat $ map (toText . shift) outV
      writeFile "output.dat" $ outText
-     
-     
+
+
 makeDouble :: [String] -> [Double]
 makeDouble = map read
 
+
+nha :: VS.Vector Double -> Double -> Int -> Int -> Int -> Int -> Int -> [(Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha datV fs nsig nframe nshift nstart nend = retVal
+  where retVal = zipWith3 (\v w (x, y, z) -> (v, w, x, y, z)) tstart tend result
+        tstart = map ( (/fs) . fromIntegral ) nIdx
+        tend = map ( (/fs) . fromIntegral . (+nframe) ) nIdx
+        nIdx = [nstart, nstart + nshift .. nstop]
+        nstop = min (VS.length datV - nframe) nend
+        result =
+          map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
+
+
 toText :: [[Double]] -> String
-toText xss = unlines . map (unwords . map show) . transpose $ xss 
+toText xss = unlines . map (unwords . map (\x -> Numeric.showEFloat (Just 10) x "") ) . transpose $ xss 
+
+
+shift :: (Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
+shift (tstart, tend, x, y, z) = [tstart', tend', VS.toList x, VS.toList y, VS.toList z]
+  where tstart' = take num $ repeat tstart
+        tend' = take num $ repeat tend
+        num = VS.length x
+
