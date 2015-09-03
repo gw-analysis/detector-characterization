@@ -3,23 +3,21 @@
 module HasKAL.MonitorUtils.SensMon
 ( SensParam
 , runSensMon
+, updateSensMon
 --,
 ) where
 
 import qualified Data.Packed.Matrix as M
 import qualified Data.Vector.Storable as VS
+import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.SpectrumUtils
+import HasKAL.SpectrumUtils.Function (updateMatrixElement)
+import Signature
+import Data
+import Function
 
 
-data SensParam = SensParam
-       { histmin :: Double
-       , histmax :: Double
-       , binInterval :: Double
-       , binlist :: [Double]
-       }
-
-
-runSensMon :: VS.Vector Double -> Double -> Int -> Spectrogram
+runSensMon :: VS.Vector Double -> Double -> Int -> SensSpectrum
 runSensMon input fs n =
   let param = SensParam
         { histmax = 1.0E-18
@@ -31,7 +29,17 @@ runSensMon input fs n =
    in runSensMonCore input fs n param
 
 
-runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> Spectrogram
+updateSensMon :: SensSpectrum -> SensSpectrum -> SensSpectrum
+updateSensMon history new = do
+  let (_, _, historyM) = history
+      (_, _, newM)     = new
+      updatedM = updateMatrixElement historyM mindxs values
+      mindxs = [(c, r) | c<-[0..rows historyM-1], r<-[0..cols historyM-1]]
+      values = [historyM @@> (x, y) + newM @@> (x, y) | x<-[0..rows historyM-1], y<-[0..cols historyM-1]]
+   in updateSensMonInternal history updatedM
+
+
+runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> SensSpectrum
 runSensMonCore input fs n param = do
   let chunks = mkChunks input n
       vlist  = map (\x -> VS.take (floor (fromIntegral n/fs))
@@ -40,10 +48,10 @@ runSensMonCore input fs n param = do
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
-   in ( VS.fromList $ take (length vlist) [0, fromIntegral n/fs..]
+   in ( VS.take (floor (fs/2)) $ linspace n (0, fs)
       , VS.fromList bins
       , M.fromColumns
-        $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
+        $ map (VS.fromList . snd . histogram1d hmin hmax bins . take (floor (fs/2)) . VS.toList) eachFbin)
 
 
 mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
