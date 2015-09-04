@@ -4,10 +4,14 @@
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
    LogOption(Linear, LogX, LogY, LogZ, LogXY, LogXZ, LogYZ, LogXYZ)
   ,PlotTypeOption3D(COLZ, CONTZ, LEGO2Z, AITOFF, MERCATOR)
+  ,histgram2d
+  ,histgram2dX
   ,spectrogram
   ,spectrogramX
   ,skyMap
   ,skyMapX
+  ,histgram2dM
+  ,histgram2dMX
   ,spectrogramM
   ,spectrogramMX
   ,skyMapM
@@ -39,6 +43,12 @@ import HasKAL.SpectrumUtils.Function
 data OptBG = NONE | COAST deriving (Eq)
 
 {--  External Functions  --}
+histgram2d :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+histgram2d log mark (xl, yl, zl) title fname range dat = plot3dBase NONE log mark (xl, yl, zl) title fname range dat
+
+histgram2dX :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
+histgram2dX log mark (xl, yl, zl) title range dat = plot3dBase NONE log mark (xl, yl, zl) title "X11" range dat
+
 spectrogram :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
 spectrogram log mark zLabel title fname range dats = plot3dBase NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range dats
 
@@ -50,6 +60,12 @@ skyMap log mark zLabel title fname range dats = plot3dBase COAST log mark ("long
 
 skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
 skyMapX log mark zLabel title range dats = skyMap log mark zLabel title "X11" range dats
+
+histgram2dM :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+histgram2dM log mark (xl, yl, zl) title fname range dat = plot3dBaseM NONE log mark (xl, yl, zl) title fname range dat
+
+histgram2dMX :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
+histgram2dMX log mark (xl, yl, zl) title range dat = plot3dBaseM NONE log mark (xl, yl, zl) title "X11" range dat
 
 spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
 spectrogramM log mark zLabel title fname range dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range dats
