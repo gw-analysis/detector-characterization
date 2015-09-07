@@ -1,4 +1,5 @@
 import HasKAL.FrameUtils.FrameUtils
+--import HasKAL.FrameUtils.Function (readFrameWaveData)
 import NoiseFloorMon
 import HasKAL.SimulationUtils.DetectorNoiseGenerator
 import qualified HasKAL.DetectorUtils.Detector as HDD 
@@ -15,6 +16,8 @@ import HasKAL.SignalProcessingUtils.Resampling
 {- For fft -} 
 import Numeric.GSL.Fourier  
 import Numeric.LinearAlgebra
+
+import HasKAL.WaveUtils.Data
  
 
 main = do    
@@ -22,17 +25,24 @@ main = do
 --   ts1 <- genTDomain lcsz tsSF 40 1024 HDD.KAGRA
 --   ts2 <- genTDomain' (10*tsSF) tsSF 40 1024 HDD.KAGRA
 --   let ts = ts1 ++ ts2 ++ ts1
-   let fname = "/home/yokozawa/L-L1_LOSC_4_V1-971558912-4096.gwf"
-       chname = "L1:LOSC-STRAIN"
-   framets <- readFrame chname fname
+   let fname = "/home/yokozawa/L-L1_LOSC_4_V1-971558912-4096.gwf" :: String
+       chname = "L1:LOSC-STRAIN" :: String
+       gpstime = 971558912 :: Integer
+       obstime = 128 :: Integer
+   framets <- readFrame chname fname 
+   print "aa"
+--   framets <- readFrameWaveData gpstime obstime chname fname
 --   frameSF <- getSamplingFrequency fname chname
    let frameSF = 4096.0
+
    let np = defaultNFMparam
        lcsz = 4096 * 128 
        ts = take lcsz $ map realToFrac (eval framets)
        printshow xx = putStrLn $ (show (fst xx)) ++ " " ++ (show (snd xx))
-   (nfmmean,nfmdev)<- estimateThreshold np (lcsz*2)
---   print  (nfmmean,nfmdev)
+       nfmmean = 5.481560468892423e-2
+       nfmdev = 1.5462956889872793e-2
+--   (nfmmean,nfmdev)<- estimateThreshold np (lcsz*2)
+--   print "aa"
    nfmstatus<-getNoiseFloorStatus ts frameSF np (nfmmean,nfmdev)
    mapM_ printshow nfmstatus
 

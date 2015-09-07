@@ -13,8 +13,8 @@ USELIB=
 
 # program
 TAR1=test_nfm_gwf
-TAR2=make_frame
-TAR3=test_psd
+TAR2=test
+TAR3=test_wavedata
 TAR4=gen_tdomain
 TAR= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
 
