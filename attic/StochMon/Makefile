@@ -12,7 +12,7 @@ HC = ghc -O2
 USELIB=
 
 # program
-TAR1=teststoch4
+TAR1=teststoch_gwf
 TAR2=teststoch2
 TAR3=teststoch3
 TAR= ${TAR1} ${TAR2} ${TAR3}
