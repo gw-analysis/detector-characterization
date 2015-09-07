@@ -11,9 +11,21 @@ void plot_sample_350hz(){
   gStyle->SetTitleOffset(0.7,"Y");
   
   float t1,t2,A,f,phi;
+  float f1 = 334.0;
+  float f2 = 340.0;
+  float f3 = 350.0;
+  
+  stringstream cond;
+  cond << "f>" << f1 << " && f<" << f3;
+  
+  stringstream cond1;
+  cond1 << "f>" << f1 << " && f<" << f2;
+  
+  stringstream cond2;
+  cond2 << "f>" << f2 << " && f<" << f3;
   
   TNtuple *nt = new TNtuple("nt","Demo ntuple","t1:t2:A:f:phi");
-  ifstream data("output.dat");
+  ifstream data("LIGOtest.ana");
   int index=0;
   while (data >> t1 >> t2 >> A >> f >> phi) {
     nt->Fill(t1,t2,A,f,phi);
@@ -23,7 +35,7 @@ void plot_sample_350hz(){
   nt->SetMarkerStyle(7);
   c1->cd(1);
   nt->SetMarkerColor(1);
-  nt->Draw("A:(t1+t2)/2>>htmp(20,0.0,10.0,20,0,1.0)","f>330 && f<360","");
+  nt->Draw("A:(t1+t2)/2>>htmp(20,0.0,10.0,20,0,1.0)",cond.str().c_str(),"");
   TH2F *h = gPad->GetListOfPrimitives()->FindObject("htmp");
   h->SetTitle("");
   h->GetXaxis()->CenterTitle();
@@ -33,14 +45,14 @@ void plot_sample_350hz(){
   gPad->ls();
   gPad->Modified();
   
-  nt->SetMarkerColor(2);
-  nt->Draw("A:(t1+t2)/2","f>330 && f<340","same");
   nt->SetMarkerColor(4);
-  nt->Draw("A:(t1+t2)/2","f>340 && f<360","same");
+  nt->Draw("A:(t1+t2)/2",cond1.str().c_str(),"same");
+  nt->SetMarkerColor(2);
+  nt->Draw("A:(t1+t2)/2",cond2.str().c_str(),"same");
   
   c1->cd(2); 
   nt->SetMarkerColor(1);
-  nt->Draw("f:(t1+t2)/2>>htmp(20,0,10.0,20,330,360)","","");
+  nt->Draw("f:(t1+t2)/2>>htmp(20,0,10.0,20,334,350)","","");
   TH2F *h2 = gPad->GetListOfPrimitives()->FindObject("htmp");
   h2->SetTitle("");
   h2->GetXaxis()->CenterTitle();
@@ -50,10 +62,10 @@ void plot_sample_350hz(){
   gPad->ls();
   gPad->Modified();
   
-  nt->SetMarkerColor(2);
-  nt->Draw("f:(t1+t2)/2","f>330 && f<340","same");
   nt->SetMarkerColor(4);
-  nt->Draw("f:(t1+t2)/2","f>340 && f<360","same");
+  nt->Draw("f:(t1+t2)/2",cond1.str().c_str(),"same");
+  nt->SetMarkerColor(2);
+  nt->Draw("f:(t1+t2)/2",cond2.str().c_str(),"same");
   
   c1->SaveAs("plot_sample_350hz.eps");
 }

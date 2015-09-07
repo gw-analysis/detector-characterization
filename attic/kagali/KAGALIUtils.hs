@@ -2,9 +2,10 @@
 module KAGALIUtils
  ( dKGLInferenceSamplefn
   , dKGLIterativeLeastSquare2DNewton
-  ) where
+  , nha
+ ) where
 
-import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map)
+import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map, slice)
 import Foreign.ForeignPtr (newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
@@ -34,6 +35,18 @@ dKGLIterativeLeastSquare2DNewton frame fs nsig = do
       fs' = realToFrac fs
   let (out1,out2,out3) = dKGLIterativeLeastSquare2DNewtonCore frame' nframe nsig fs'
    in (cd2dV out1, cd2dV out2, cd2dV out3)
+
+
+nha :: VS.Vector Double->Double->Double->Double->Int->Int->Int->Int->Int->[(Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha datV fs fmin fmax nsig nframe nshift nstart nend = retVal
+  where retVal = zipWith3 (\v w (x, y, z) -> (v, w, x, y, z)) tstart tend result
+        tstart = map ( (/fs) . fromIntegral ) nIdx
+        tend = map ( (/fs) . fromIntegral . (+nframe) ) nIdx
+        nIdx = [nstart, nstart + nshift .. nstop]
+        nstop = min (VS.length datV - nframe) nend
+        result =
+          map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
+
 
 
 {- internal functions -}

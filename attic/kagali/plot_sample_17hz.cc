@@ -13,7 +13,7 @@ void plot_sample_17hz(){
   float t1,t2,A,f,phi;
   
   TNtuple *nt = new TNtuple("nt","Demo ntuple","t1:t2:A:f:phi");
-  ifstream data("output.dat");
+  ifstream data("LIGOtest.ana");
   int index=0;
   while (data >> t1 >> t2 >> A >> f >> phi) {
     nt->Fill(t1,t2,A,f,phi);
@@ -34,7 +34,7 @@ void plot_sample_17hz(){
   gPad->Modified();
   
   nt->SetMarkerColor(2);
-  nt->Draw("A:(t1+t2)/2","f<30","same");
+  nt->Draw("A:(t1+t2)/2","f>10 && f<20","same");
 
   
   c1->cd(2); 
