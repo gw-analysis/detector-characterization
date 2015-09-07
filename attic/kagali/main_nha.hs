@@ -14,12 +14,12 @@ main = do
          frameList = makeDouble stringList
          frameV = VS.fromList frameList
 --         nsig = read (cnsig!!0) :: Int
-         nsig = 4
+         nsig = 5
          fs = 2048.0
-         nframe = 64
-         nshift = 4
+         nframe = 256
+         nshift = 64
          nstart = 0
-         nend = 100
+         nend = 30000
          outV = nha frameV fs nsig nframe nshift nstart nend
          outText = concat $ map (toText . shift) outV
      writeFile "output.dat" $ outText
