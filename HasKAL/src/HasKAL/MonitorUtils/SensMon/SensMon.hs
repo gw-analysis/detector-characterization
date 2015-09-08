@@ -55,11 +55,13 @@ runSensMonCore input fs n param =
 
 
 mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
---mkChunks [] _ = []
-mkChunks vIn n = VS.slice 0 n vIn : mkChunks (VS.drop n vIn) n
+mkChunks vIn n = mkChunksCore vIn n (VS.length vIn `div` n)
+  where
+    mkChunksCore _ _ 0 = []
+    mkChunksCore vIn n m = VS.slice 0 n vIn :  mkChunksCore (VS.drop n vIn) n (m-1)
 
 
-histogram1d :: Double -> Double -> [Double] -> [Double] -> ([Double], [Double])
+histograe1d :: Double -> Double -> [Double] -> [Double] -> ([Double], [Double])
 histogram1d xmin xmax bins input =
   let intervals = zipWith (\x y ->(x, y)) (init bins) (tail bins)
       within u x = x >= fst u && x < snd u
