@@ -29,8 +29,16 @@ main = do
      fs = 2048::Double
      ifs = 2048::Int
     
- let nfile = 100   -- you can change
+ let nfile = 300   -- you can change
      filelist = take nfile testFiles
+ let iduration = 128::Int     -- you can change
+     duration  = fromIntegral iduration :: Double
+     totalDuration = 32.0 * (fromIntegral nfile) :: Double
+     nSplit    = floor $ totalDuration / duration
+ let nchunk = iduration * ifs::Int
+ let tlist = [1/fs, 2/fs..duration]
+     nt    = length tlist
+
 -- let gps = 1124077533::Double
  let gps = 77533::Double
 
@@ -43,13 +51,6 @@ main = do
  --print $ DVG.length ys
 
 
- let iduration = 64::Int     -- you can change
-     duration  = fromIntegral iduration :: Double
-     totalDuration = 32.0 * (fromIntegral nfile) :: Double
-     nSplit    = floor $ totalDuration / duration
- let nchunk = iduration * ifs::Int
- let tlist = [1/fs, 2/fs..duration]
-     nt    = length tlist
 
  print nchunk
  print nSplit
@@ -88,7 +89,12 @@ main = do
 
 
  let gpslist = [gps, gps+duration..gps+(fromIntegral nfile)*duration]::[Double]
- plotXV Linear LinePoint 1 BLUE ("GPS[sec]", "          V/s^2") 0.05 "RMSMon" ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
+-- show X window 
+-- plotXV Linear LinePoint 1 BLUE ("GPS[sec]", "V/s^2") 0.05 "RMSMon" ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
+
+-- save picture
+ let fname = "hoge.png"
+ plotV Linear LinePoint 1 BLUE ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
  
  return 0
 
