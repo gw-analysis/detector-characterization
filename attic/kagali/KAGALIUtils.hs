@@ -3,15 +3,16 @@ module KAGALIUtils
  ( dKGLInferenceSamplefn
   , dKGLIterativeLeastSquare2DNewton
   , nha
+  , formatNHA
  ) where
 
-import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map, slice)
+import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map, slice, fromList)
 import Foreign.ForeignPtr (newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import Foreign.C.Types
 import System.IO.Unsafe (unsafePerformIO)
-
+import Data.Packed.Matrix (toColumns, fromRows)
 
 {- exposed functions -}
 dKGLInferenceSamplefn :: VS.Vector Double  -- ^ Input Vector
@@ -47,6 +48,13 @@ nha datV fs fmin fmax nsig nframe nshift nstart nend = retVal
         result =
           map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
 
+formatNHA :: [(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)] -> [[(VS.Vector Double, VS.Vector Double)]]
+formatNHA input = output
+  where tVec = VS.fromList $ map (\(x, _, _, _) -> x) input
+        aVecL = toColumns.fromRows $ map (\(_, y, _, _) -> y) input
+        fVecL = toColumns.fromRows $ map (\(_, _, z, _) -> z) input
+        pVecL = toColumns.fromRows $ map (\(_, _, _, w) -> w) input
+        output = map (map (\vl -> (tVec, vl)) ) [aVecL, fVecL, pVecL]
 
 
 {- internal functions -}
