@@ -2,6 +2,7 @@
 module KAGALIUtils
  ( dKGLInferenceSamplefn
   , dKGLIterativeLeastSquare2DNewton
+  , butterBandPass
   , nha
   , formatNHA
  ) where
@@ -22,6 +23,11 @@ dKGLInferenceSamplefn vIn = do
       ilen = VS.length vIn :: Int
       olen = ilen
   cd2dV $ dKGLInferenceSamplefnCore vIn' ilen olen
+
+
+butterBandPass :: VS.Vector Double->Double->Double->Double->VS.Vector Double
+butterBandPass inputV fs fmin fmax = retVal
+  where retVal = 
 
 
 dKGLIterativeLeastSquare2DNewton :: VS.Vector Double    -- ^ Input Vector (frame)
@@ -107,6 +113,14 @@ foreign import ccall "DKGLInferenceSamplefn.h DKGLInferenceSamplefn" c_DKGLInfer
                                                                                 -> CInt        -- ^ # of elements in input
                                                                                 -> Ptr CDouble -- ^ output pointer
                                                                                 -> CInt        -- ^ # of elements in output
+                                                                                -> IO()
+
+foreign import ccall "DKGLBandPassFilter.h DKGLBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
+                                                                                -> Ptr CDouble -- ^ input pointer
+                                                                                -> CInt        -- ^ # of elements in input
+                                                                                -> CDouble     -- ^ sampling frequency [Hz]
+                                                                                -> CDouble     -- ^ lower cutoff frequency [Hz]
+                                                                                -> CDouble     -- ^ higher cutoff frequency [Hz]
                                                                                 -> IO()
 
 foreign import ccall "DKGLIterativeLeastSquare2DNewton.h DKGLIterativeLeastSquare2DNewton" c_DKGLIterativeLeastSquare2DNewton :: Ptr CDouble -- ^ input pointer (frame)

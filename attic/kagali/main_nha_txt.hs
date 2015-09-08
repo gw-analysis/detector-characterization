@@ -33,10 +33,15 @@ makeDouble = map read
 toText :: [[Double]] -> String
 toText xss = unlines . map (unwords . map (\x -> Numeric.showEFloat (Just 10) x "") ) . transpose $ xss 
 
-
+{-
 shift :: (Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
 shift (tstart, tend, x, y, z) = [tstart', tend', VS.toList x, VS.toList y, VS.toList z]
   where tstart' = take num $ repeat tstart
         tend' = take num $ repeat tend
         num = VS.length x
+-}
 
+shift :: (Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
+shift (time, x, y, z) = [time', VS.toList x, VS.toList y, VS.toList z]
+  where time' = take num $ repeat time
+        num = VS.length x
