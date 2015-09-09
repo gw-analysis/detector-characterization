@@ -42,16 +42,17 @@ updateSensMon history new = do
 runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> SensSpectrum
 runSensMonCore input fs n param = do
   let chunks = mkChunks input n
-      vlist  = map (\x -> VS.take (floor (fromIntegral n/fs))
+      n2 = n `div` 2
+      vlist  = map (\x -> VS.take n2
         $ VS.map (sqrt . (*2)) $ snd $ gwpsdV x n fs) chunks
       eachFbin = M.toColumns . M.fromRows $ vlist
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
-   in ( VS.take (floor (fs/2)) $ linspace n (0, fs)
+   in ( VS.take n2 $ linspace n (0, fs)
       , VS.fromList bins
       , M.fromColumns
-        $ map (VS.fromList . snd . histogram1d hmin hmax bins . take (floor (fs/2)) . VS.toList) eachFbin)
+        $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
 
 
 mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
