@@ -12,9 +12,9 @@ import qualified Data.Vector.Storable as VS
 import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SpectrumUtils.Function (updateMatrixElement)
-import Signature
-import Data
-import Function
+import HasKAL.MonitorUtils.Signature
+import HasKAL.MonitorUtils.Data
+import HasKAL.MonitorUtils.Function
 
 
 runSensMon :: VS.Vector Double -> Double -> Int -> SensSpectrum
