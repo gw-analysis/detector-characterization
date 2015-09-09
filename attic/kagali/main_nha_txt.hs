@@ -16,13 +16,14 @@ main = do
 --         nsig = read (cnsig!!0) :: Int
          nsig   = 5      :: Int
          fs     = 2048   :: Double
-         fmin   = 10     :: Double
-         fmax   = 1024   :: Double
+         fmin   = 300    :: Double
+         fmax   = 400    :: Double
          nframe = 1024   :: Int
          nshift = 32     :: Int
          nstart = 0      :: Int
          nend   = 30000  :: Int
-         outV = KGL.nha frameV fs fmin fmax nsig nframe nshift nstart nend
+         frameV_bp = KGL.butterBandPass frameV fs fmin fmax
+         outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
          outText = concat $ map (toText . shift) outV
      writeFile "LIGOtest.ana" $ outText
 

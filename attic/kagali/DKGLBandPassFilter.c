@@ -1,7 +1,7 @@
 
 #include <kagali/KGLStdlib.h>
 #include <kagali/KGLBandPassFilter.h>
-#include <kagali/DKGLBandPassFilter.h>
+#include <DKGLBandPassFilter.h>
 #include <gsl/gsl_sf_bessel.h>
 
 
@@ -58,11 +58,23 @@ void DKGLButterworthBandPassFilter( //begin{proto}
   KGLCalloc(den_coeff,order+1,double,status);
   KGLCalloc(datatmp,npoint,double,status);
   
-  KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
-  KGLZeroPhaseFilter(status,datatmp,datain,npoint,num_coeff,den_coeff,order);
-  
-  KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
-  KGLZeroPhaseFilter(status,dataout,datatmp,npoint,num_coeff,den_coeff,order);
+  if((flow > 0 && flow < fs/2.0) && (fhigh > 0 && fhigh < fs/2.0)){
+    KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
+    KGLZeroPhaseFilter(status,datatmp,datain,npoint,num_coeff,den_coeff,order);
+    KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
+    KGLZeroPhaseFilter(status,dataout,datatmp,npoint,num_coeff,den_coeff,order);
+    
+  }else if(fhigh == 0 || flow >= fs/2.0){
+    for(int i = 0; i < npoint; i++) dataout[i] = 0;
+    
+  }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
+    KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
+    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
+    
+  }else if(fhigh >= fs/2.0){
+    KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
+    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
+  }
   
   KGLDestroyStatus(status);
   
