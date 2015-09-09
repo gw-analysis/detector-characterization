@@ -1,6 +1,6 @@
 
 
-module HasKAL.MonitorUtils.SensMon
+module SensMon
 ( SensParam
 , runSensMon
 , updateSensMon
@@ -50,7 +50,7 @@ runSensMonCore input fs n param = do
       hmin = histmin param
       bins = binlist param
    in ( VS.take n2 $ linspace n (0, fs)
-      , VS.fromList bins
+      , VS.fromList $ init bins
       , M.fromColumns
         $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
 
