@@ -23,14 +23,14 @@ main = do
 --     cnsig <- getArgs
      let nsig   = 5      :: Int
          fs     = 4096   :: Double
-         fmin   = 10     :: Double
-         fmax   = 1024   :: Double
+--         fmin   = 10     :: Double
+--         fmax   = 1024   :: Double
          nframe = 1024   :: Int
          nshift = 32     :: Int
          nstart = 0      :: Int
          nend   = 300    :: Int
          dataV = fromJust dataVmaybe 
-         outV = KGL.nha dataV fs fmin fmax nsig nframe nshift nstart nend
+         outV = KGL.nha dataV fs nsig nframe nshift nstart nend
          outText = concat $ map (toText . shift) outV
      writeFile "L-L1_LOSC_4_V1-931160064-4096.ana" $ outText
 
@@ -38,10 +38,16 @@ main = do
 toText :: [[Double]] -> String
 toText xss = unlines . map (unwords . map (\x -> Numeric.showEFloat (Just 10) x "") ) . transpose $ xss 
 
-
+{-
 shift :: (Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
 shift (tstart, tend, x, y, z) = [tstart', tend', VS.toList x, VS.toList y, VS.toList z]
   where tstart' = take num $ repeat tstart
         tend' = take num $ repeat tend
+        num = VS.length x
+-}
+
+shift :: (Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
+shift (time, x, y, z) = [time', VS.toList x, VS.toList y, VS.toList z]
+  where time' = take num $ repeat time
         num = VS.length x
 

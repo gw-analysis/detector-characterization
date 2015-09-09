@@ -1,7 +1,7 @@
 
 #include <kagali/KGLStdlib.h>
 #include <kagali/KGLBandPassFilter.h>
-#include <kagali/DKGLBandPassFilter.h>
+#include <DKGLBandPassFilter.h>
 #include <gsl/gsl_sf_bessel.h>
 
 

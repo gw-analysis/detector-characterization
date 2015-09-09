@@ -1,6 +1,6 @@
 
 module KAGALIUtils
- ( dKGLInferenceSamplefn
+ (  dKGLInferenceSamplefn
   , dKGLIterativeLeastSquare2DNewton
   , butterBandPass
   , nha
@@ -26,8 +26,13 @@ dKGLInferenceSamplefn vIn = do
 
 
 butterBandPass :: VS.Vector Double->Double->Double->Double->VS.Vector Double
-butterBandPass inputV fs fmin fmax = retVal
-  where retVal = 
+butterBandPass inputV fs fmin fmax = do
+   let inputV' = d2cdV inputV
+       npoint = VS.length inputV :: Int
+       fs' = realToFrac fs
+       fmin' = realToFrac fmin
+       fmax' = realToFrac fmax
+   cd2dV $ butterBandPassCore inputV' npoint fs' fmin' fmax'
 
 
 dKGLIterativeLeastSquare2DNewton :: VS.Vector Double    -- ^ Input Vector (frame)
@@ -44,8 +49,8 @@ dKGLIterativeLeastSquare2DNewton frame fs nsig = do
    in (cd2dV out1, cd2dV out2, cd2dV out3)
 
 
-nha :: VS.Vector Double->Double->Double->Double->Int->Int->Int->Int->Int->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
-nha datV fs fmin fmax nsig nframe nshift nstart nend = retVal
+nha :: VS.Vector Double->Double->Int->Int->Int->Int->Int->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha datV fs nsig nframe nshift nstart nend = retVal
   where retVal = zipWith3 (\v w (x, y, z) -> ((v+w)/2, x, y, z)) tstart tend result
         tstart = map ( (/fs) . fromIntegral ) nIdx
         tend = map ( (/fs) . fromIntegral . (+nframe) ) nIdx
@@ -74,6 +79,20 @@ dKGLInferenceSamplefnCore input ilen olen
    do c_DKGLInferenceSamplefn ptrOut (fromIntegral olen) ptrIn (fromIntegral ilen)
       newForeignPtr_ ptrOut >>= \foreignptrOutput ->
          return $ VS.unsafeFromForeignPtr0 foreignptrOutput olen
+
+
+butterBandPassCore :: VS.Vector CDouble  -- ^ Input Vector
+                          -> Int                -- ^ # of elements in Input Vector
+                          -> CDouble            -- ^ sampling frequency
+                          -> CDouble            -- ^ lower cutoff frequency
+                          -> CDouble            -- ^ higher cutoff frequency
+                          -> VS.Vector CDouble  -- ^ Output Vector
+butterBandPassCore inputV npoint fs fmin fmax
+  = unsafePerformIO $ VS.unsafeWith inputV $ \ptrIn ->
+   allocaArray npoint $ \ptrOut ->
+   do c_DKGLButterworthBandPassFilter ptrOut ptrIn (fromIntegral npoint) fs fmin fmax
+      newForeignPtr_ ptrOut >>= \foreignptrOutput ->
+         return $ VS.unsafeFromForeignPtr0 foreignptrOutput npoint
 
 
 dKGLIterativeLeastSquare2DNewtonCore :: VS.Vector CDouble       -- ^ Input Vector (frame)
@@ -115,7 +134,7 @@ foreign import ccall "DKGLInferenceSamplefn.h DKGLInferenceSamplefn" c_DKGLInfer
                                                                                 -> CInt        -- ^ # of elements in output
                                                                                 -> IO()
 
-foreign import ccall "DKGLBandPassFilter.h DKGLBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
+foreign import ccall "DKGLBandPassFilter.h DKGLButterworthBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
                                                                                 -> Ptr CDouble -- ^ input pointer
                                                                                 -> CInt        -- ^ # of elements in input
                                                                                 -> CDouble     -- ^ sampling frequency [Hz]
