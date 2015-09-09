@@ -71,7 +71,10 @@ void DKGLButterworthBandPassFilter( //begin{proto}
     KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
     KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
     
-  }else if(fhigh >= fs/2.0){
+  }else if(flow == 0 && fhigh == fs/2.0){
+    for(int i = 0; i < npoint; i++) dataout[i] = datain[i];
+    
+  }else if(fhigh > fs/2.0){
     KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
     KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
   }
