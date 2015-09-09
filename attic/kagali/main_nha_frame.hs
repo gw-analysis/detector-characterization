@@ -23,14 +23,15 @@ main = do
 --     cnsig <- getArgs
      let nsig   = 5      :: Int
          fs     = 4096   :: Double
---         fmin   = 10     :: Double
---         fmax   = 1024   :: Double
+         fmin   = 300    :: Double
+         fmax   = 400    :: Double
          nframe = 1024   :: Int
          nshift = 32     :: Int
          nstart = 0      :: Int
          nend   = 300    :: Int
          dataV = fromJust dataVmaybe 
-         outV = KGL.nha dataV fs nsig nframe nshift nstart nend
+         dataV_bp = KGL.butterBandPass dataV fs fmin fmax
+         outV = KGL.nha dataV_bp fs nsig nframe nshift nstart nend
          outText = concat $ map (toText . shift) outV
      writeFile "L-L1_LOSC_4_V1-931160064-4096.ana" $ outText
 
