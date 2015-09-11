@@ -1,6 +1,6 @@
 
-#include <KGLStdlib.h>
-#include <KGLInferenceSamplefn.h>
+#include <kagali/KGLStdlib.h>
+#include <kagali/KGLInferenceSamplefn.h>
 #include <DKGLInferenceSamplefn.h>
 
 void DKGLInferenceSamplefn(double *out,int nout,double *in,int nin){
