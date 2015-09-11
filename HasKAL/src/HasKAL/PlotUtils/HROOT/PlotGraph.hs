@@ -20,6 +20,7 @@ module HasKAL.PlotUtils.HROOT.PlotGraph (
 ) where
 
 import qualified Control.Monad as CM
+import qualified Data.List as DL
 import qualified Foreign.C.String as FCS
 import qualified Foreign.C.Types as FCT
 import qualified Foreign.Marshal.Array as FMA
@@ -75,6 +76,9 @@ oPlotXV log mark lineWidth colors xyLable labelSize title range dats = oPlotV lo
 
 
 {-- Internal Functions --}
+defColors :: [ColorOpt]
+defColors = [BLACK, RED, GREEN, BLUE, YELLOW, PINK, CYAN]
+
 plotBase :: MultiPlot -> LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
 plotBase multi log mark lineWidth colors xyLables labelSize titles fname ranges dats = do
   tApp <- HRS.newTApp' fname
@@ -84,7 +88,7 @@ plotBase multi log mark lineWidth colors xyLables labelSize titles fname ranges 
 
   tGras <- CM.forM dats $ \dat -> HR.newTGraph (toEnum $ length dat) (getPtrX dat) (getPtrY dat)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
-  setColors' tGras colors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  setColors' tGras $ DL.nub $ colors ++ defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
@@ -112,7 +116,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
 
   tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
-  setColors' tGras colors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  setColors' tGras $ DL.nub $ colors ++ defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
