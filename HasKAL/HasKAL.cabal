@@ -185,7 +185,9 @@ library
        names-th,
        transformers,
        resourcet,
-       conduit
+       conduit,
+       carray
+
 
   -- Directories containing source files.
   hs-source-dirs:      src
