@@ -46,6 +46,8 @@ data NFMParam = NFMParam{
 , maxfreq :: Double 
 , lpfOrder :: Int 
 , hpfOrder :: Int
+, nfmmean :: Double
+, nfmdev :: Double
 } deriving (Show, Eq, Read)
 
 defaultNFMparam :: NFMParam
@@ -59,10 +61,12 @@ defaultNFMparam = NFMParam{
 ,  maxfreq = 128.0
 ,  lpfOrder = 6
 ,  hpfOrder = 6
+,  nfmmean = 5.481560468892423e-2
+,  nfmdev = 1.5462956889872793e-2
 }
 
-makeNFMparam :: Double->Int->Int->Int->Int->Double->Double->Int->Int->NFMParam
-makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo = 
+makeNFMparam :: Double->Int->Int->Int->Int->Double->Double->Int->Int->Double->Double->NFMParam
+makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo mean dev = 
    NFMParam{  
    	      tsreSF = rsf
    	   ,  whitenFltOrder = wfo
@@ -73,6 +77,8 @@ makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo =
 	   ,  maxfreq = maxf
 	   ,  lpfOrder = lpfo
 	   ,  hpfOrder = hpfo
+	   ,  nfmmean = mean
+	   ,  nfmdev = dev
    }
 
 {-estimateThreshold should be done before applying getNoiseFloorStatus-}
@@ -87,8 +93,8 @@ estimateThreshold np lcsz = do
        nfmdev =  sqrt(nfmdev' / (realToFrac((Prelude.length noisemon) - 1)))
    return $ (nfmmean,nfmdev)                         
 
-getNoiseFloorStatus :: [Double]->Double->NFMParam->(Double,Double)->IO[(Double,Double)]
-getNoiseFloorStatus ts tsSF np (nfmmean,nfmdev) = do
+getNoiseFloorStatus :: [Double]->Double->NFMParam->IO[(Double,Double)]
+getNoiseFloorStatus ts tsSF np = do
   let dsts = downsampleV tsSF (tsreSF np) (fromList ts)
       nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
@@ -102,7 +108,7 @@ getNoiseFloorStatus ts tsSF np (nfmmean,nfmdev) = do
   print "aaa"
   let ndatV = dim bpts
       bptssig = subVector nfmFltDelay (ndatV -nfmFltDelay) $ bpts
-      bptssig2 = G.map (\x -> (x*x-nfmmean)/nfmdev) bptssig 
+      bptssig2 = G.map (\x -> (x*x-(nfmmean np))/(nfmdev np)) bptssig 
       datrunmed = runmedV bptssig2 (rmSize np)
       intervalrunmed = (fromIntegral (rmSize np)) / (tsreSF np) :: Double
       trunmed = [(intervalrunmed),(intervalrunmed*2)..]

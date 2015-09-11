@@ -18,6 +18,7 @@ import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 
 import HasKAL.WaveUtils.Data
+import Data.Time
  
 
 main = do    
@@ -36,14 +37,14 @@ main = do
    let frameSF = 4096.0
 
    let np = defaultNFMparam
-       lcsz = 4096 * 128 
+       lcsz = 4096 * 1024 
        ts = take lcsz $ map realToFrac (eval framets)
        printshow xx = putStrLn $ (show (fst xx)) ++ " " ++ (show (snd xx))
-       nfmmean = 5.481560468892423e-2
-       nfmdev = 1.5462956889872793e-2
 --   (nfmmean,nfmdev)<- estimateThreshold np (lcsz*2)
---   print "aa"
-   nfmstatus<-getNoiseFloorStatus ts frameSF np (nfmmean,nfmdev)
+   time1 <- getCurrentTime
+   nfmstatus<-getNoiseFloorStatus ts frameSF np
+   time2 <- getCurrentTime
+   print $ diffUTCTime time2 time1
    mapM_ printshow nfmstatus
 
 
