@@ -25,25 +25,22 @@ import ReadFiles
 main = do
 
  {-- open frame file --}
- let channel  = "K1:PEM-EX_MAG_X_FLOOR"
-     fs = 2048::Double
+ let fs = 2048::Double
      ifs = 2048::Int
-    
- let nfile = 300   -- you can change
+ let nfile = 100 :: Int -- you can change
      filelist = take nfile testFiles
- let iduration = 128::Int     -- you can change
-     duration  = fromIntegral iduration :: Double
-     totalDuration = 32.0 * (fromIntegral nfile) :: Double
-     nSplit    = floor $ totalDuration / duration
- let nchunk = iduration * ifs::Int
- let tlist = [1/fs, 2/fs..duration]
-     nt    = length tlist
+
+ let totalduration  = 32 * nfile :: Int
+     nSplit = 20 :: Int -- you can change
+     iduration = totalduration `div` nSplit :: Int
+     duration = fromIntegral iduration
 
 -- let gps = 1124077533::Double
- let gps = 77533::Double
+ let gpsstart = 77533::Double
 
- print nfile
 
+ -- ToDdo: use mySQL seaver's function
+ let channel  = "K1:PEM-EX_MAG_X_FLOOR"
  maybexs <- mapM (readFrameV channel) filelist
  let xs = map (fromMaybe (error " no data in the file.")) maybexs
  let ys = DVG.concat xs
@@ -51,61 +48,37 @@ main = do
  --print $ DVG.length ys
 
 
-
- print nchunk
- print nSplit
-
-
- let iSplit = [0..nSplit-1]::[Int]
- rmslist <- forM iSplit $ \i -> do    -- for loop
-
-  {-- split vector --}
-  let hoff = gwpsdV (DVG.slice (nchunk*i) nchunk ys) nchunk fs
---  {-- sum each frequecy band --}
---  {-- [0.2:1] [1:4] [4:10] Hz --}
---  let f1 = 0.2
---      f2 = 1.0
-  let f1 = 1.0
-      f2 = 4.0
-
-  let indx1' = DVG.findIndex (>=f1) $ fst hoff
-      indx2' = DVG.findIndex (>=f2) $ fst hoff
-      indx1  = fromJust indx1'
-      indx2  = fromJust indx2'
-  let sumHoff = DVG.sum . DVG.slice indx1 (indx2 - indx1) $ snd hoff
-
-  -- old definition
-  --let indexlist = [0..]
-  -- let listSpectrum = zip (NLA.toList $ fst hoff) (NLA.toList $ snd hoff)
-  -- let sumHoff = sum $ map snd $ filter ( \(x, y) -> f1<x && x<f2 ) listSpectrum
-
---  let fname = filelist!!(i) ++ ".png"
---  plotXV LogXY LinePoint 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 "title" ((0.001,5),(0,0)) hoff
-  
-  return sumHoff
-
---  {-- plot RMS value --}
--- plotXV Linear Dot 1 RED ("time", channel) 0.08 "RMSMon" ((0,0), (0,0)) $ DVG.zip (DVG.fromList tlist) xs
-
-
- let gpslist = [gps, gps+duration..gps+(fromIntegral nfile)*duration]::[Double]
--- show X window 
--- plotXV Linear LinePoint 1 BLUE ("GPS[sec]", "V/s^2") 0.05 "RMSMon" ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
-
--- save picture
  let fname = "hoge.png"
- plotV Linear LinePoint 1 BLUE ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((0,0),(0,0)) (NLA.fromList gpslist, NLA.fromList rmslist)
+ let color = [BLUE, RED, PINK]
+ let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
+ let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
+ let rms   = calculateRSS nSplit gpsstart duration fs ys freq
+ oPlotV Linear LinePoint 1 color ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((gpsstart,gpsend),(0.01,0.25)) rms
  
  return 0
 
 
 
---squeezeSpectrumRange :: Spectrum -> Double -> Double -> Vector NLA.Double
---squeezeSpectrumRange spectrum f1 f2 = 
+calculateRSS :: Int -> Double -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
+calculateRSS nSplit gpsstart duration fs ys freq = 
+ map (\(f1, f2) -> calculateRSScore nSplit gpsstart duration fs ys f1 f2) freq
 
-threedata2string ::[Double] -> [Double] ->[Double]-> String
-threedata2string a b c = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show b) $ zipWith (++) (repeat " ")  (map show c)
+calculateRSScore :: Int -> Double -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
+calculateRSScore nSplit gpsstart duration fs ys f1 f2 = do
+ let listindex = [0..nSplit-1]::[Int]
+ let rmsvector = NLA.fromList $ map (sumHoff nSplit fs ys f1 f2) listindex
+ let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
+ let gpsvector = NLA.fromList [gpsstart, gpsstart+duration..gpsend]::NLA.Vector Double
+ (gpsvector, rmsvector)
 
-sixdata2string::[Double] -> [Double] ->[Double]->[Double]->[Double]->[Double]-> String
-sixdata2string a b c d e f = unlines  $ zipWith (++) (map show a)  $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show b) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show c) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show d) $ zipWith (++) (repeat " ")  $ zipWith (++) ( map show e) $ zipWith (++) (repeat " ")  ( map show f)
+sumHoff::Int -> Double -> NLA.Vector Double -> Double -> Double -> Int -> Double
+sumHoff nSplit fs ys f1 f2 i = do
+ let nchunk = (DVG.length ys) `div` nSplit ::Int
+ let hoff = gwpsdV (DVG.slice (nchunk*i) nchunk ys) nchunk fs
+ let indx1' = DVG.findIndex (>=(min f1 f2)) $ fst hoff
+     indx2' = DVG.findIndex (>(max f1 f2)) $ fst hoff
+     indx1  = fromJust indx1'
+     indx2  = fromJust indx2'
+ DVG.sum . DVG.slice indx1 (indx2 - indx1) $ snd hoff
+
 
