@@ -52,19 +52,19 @@ main = do
  let color = [BLUE, RED, PINK]
  let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
  let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
- let rms   = calculateRSS nSplit gpsstart duration fs ys freq
+ let rms   = calculateRMS nSplit gpsstart duration fs ys freq
  oPlotV Linear LinePoint 1 color ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((gpsstart,gpsend),(0.01,0.25)) rms
  
  return 0
 
 
 
-calculateRSS :: Int -> Double -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
-calculateRSS nSplit gpsstart duration fs ys freq = 
- map (\(f1, f2) -> calculateRSScore nSplit gpsstart duration fs ys f1 f2) freq
+calculateRMS :: Int -> Double -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
+calculateRMS nSplit gpsstart duration fs ys freq = 
+ map (\(f1, f2) -> calculateRMScore nSplit gpsstart duration fs ys f1 f2) freq
 
-calculateRSScore :: Int -> Double -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
-calculateRSScore nSplit gpsstart duration fs ys f1 f2 = do
+calculateRMScore :: Int -> Double -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
+calculateRMScore nSplit gpsstart duration fs ys f1 f2 = do
  let listindex = [0..nSplit-1]::[Int]
  let rmsvector = NLA.fromList $ map (sumHoff nSplit fs ys f1 f2) listindex
  let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
