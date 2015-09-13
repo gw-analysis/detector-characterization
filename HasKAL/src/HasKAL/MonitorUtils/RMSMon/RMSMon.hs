@@ -22,7 +22,8 @@ rmsMon nSplit gpsstart fs ys freq = do
 rmsMoncore :: Int -> Double -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
 rmsMoncore nSplit gpsstart duration fs ys f1 f2 = do
  let listindex = [0..nSplit-1]::[Int]
- let rmsvector = NLA.fromList $ map (sumHoff nSplit fs ys f1 f2) listindex
+ let df = 1.0/duration :: Double 
+ let rmsvector = NLA.fromList $ map (*df) $ map (sumHoff nSplit fs ys f1 f2) listindex
  let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
  let gpsvector = NLA.fromList [gpsstart, gpsstart+duration..gpsend]::NLA.Vector Double
  (gpsvector, rmsvector)

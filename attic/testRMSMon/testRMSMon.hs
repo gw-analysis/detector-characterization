@@ -46,7 +46,7 @@ main = do
  let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
 -- let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
  let rms   = rmsMon nSplit gpsstart fs ys freq
- oPlotV Linear LinePoint 1 color ("GPS[sec]", "V/s^2") 0.05 "RMSMon (BLUE:0.1-1Hz, RED:1-4Hz, PINK:4-8Hz)" fname ((0,0),(0.01,0.25)) rms
+ oPlotV Linear LinePoint 1 color ("GPS[sec]", "Voltage[V]") 0.05 "RMSMon (BLUE:0.1-1Hz, RED:1-4Hz, PINK:4-8Hz)" fname ((0,0),(1e-4,1e-3)) rms
  
  return 0
 
