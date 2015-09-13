@@ -11,8 +11,10 @@ import HasKAL.SpectrumUtils.Signature
 
 
 {-- Expose Functions --}
-rmsMon :: Int -> Double -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
-rmsMon nSplit gpsstart duration fs ys freq = 
+rmsMon :: Int -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
+rmsMon nSplit gpsstart fs ys freq = do
+ let nduration = fromIntegral $ (DVG.length ys) `div` nSplit :: Double
+ let duration  = nduration / fs :: Double
  map (\(f1, f2) -> rmsMoncore nSplit gpsstart duration fs ys f1 f2) freq
 
 

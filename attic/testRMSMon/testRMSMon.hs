@@ -20,14 +20,13 @@ main = do
 
  {-- open frame file --}
  let fs = 2048::Double
-     ifs = 2048::Int
  let nfile = 100 :: Int -- you can change
      filelist = take nfile testFiles
 
  let totalduration  = 32 * nfile :: Int
      nSplit = 20 :: Int -- you can change
-     iduration = totalduration `div` nSplit :: Int
-     duration = fromIntegral iduration
+--     iduration = totalduration `div` nSplit :: Int
+--     duration = fromIntegral iduration
 
 -- let gps = 1124077533::Double
  let gpsstart = 77533::Double
@@ -45,9 +44,9 @@ main = do
  let fname = "hoge.png"
  let color = [BLUE, RED, PINK]
  let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
- let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
- let rms   = rmsMon nSplit gpsstart duration fs ys freq
- oPlotV Linear LinePoint 1 color ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((gpsstart,gpsend),(0.01,0.25)) rms
+-- let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
+ let rms   = rmsMon nSplit gpsstart fs ys freq
+ oPlotV Linear LinePoint 1 color ("GPS[sec]", "V/s^2") 0.05 "RMSMon" fname ((0,0),(0.01,0.25)) rms
  
  return 0
 
