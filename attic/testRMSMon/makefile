@@ -6,19 +6,26 @@ OBJ1=testRMSMon.hs
 DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
       ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
 DEP2 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
+
 DEP3 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 LIBLINK= -lFrame -lm -lgsl -lgslcblas
 INCLINK=-
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=testRMSMon
+TARGET=sypoliclink testRMSMon testDailyRMSMon
 
 all:$(TARGET)
 
-testRMSMon:${OBJ1} 
+sypoliclink:
 	ln -fs ${HASKALPATH} ./
-	${HC} -o $@ $^ ${DEP3} -lFrame -fPIC
+
+testRMSMon:${OBJ1} ${DEP3}
+	${HC} -o $@ $^ -I/home/detchar/tools/include/root -lFrame -fPIC -lm -lgsl -lgslcblas
+	@echo "*** Making $@ ***"
+
+testDailyRMSMon:${OBJ1} ${DEP3}
+	${HC} -o $@ $^ -I/home/detchar/tools/include/root -lFrame -fPIC -lm -lgsl -lgslcblas
 	@echo "*** Making $@ ***"
 
 
