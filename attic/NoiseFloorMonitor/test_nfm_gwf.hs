@@ -19,9 +19,10 @@ import Numeric.LinearAlgebra
 
 import HasKAL.WaveUtils.Data
 import Data.Time
+import HasKAL.TimeUtils.Function
  
 
-main = do    
+main = do     
 --   ts <- genTimeGauss (4096*128) 1.0
 --   ts1 <- genTDomain lcsz tsSF 40 1024 HDD.KAGRA
 --   ts2 <- genTDomain' (10*tsSF) tsSF 40 1024 HDD.KAGRA
@@ -36,16 +37,23 @@ main = do
 --   frameSF <- getSamplingFrequency fname chname
    let frameSF = 4096.0
 
-   let np = defaultNFMparam
-       lcsz = 4096 * 1024 
-       ts = take lcsz $ map realToFrac (eval framets)
+--   let np = defaultNFMparam
+   np <- makeNFMparam 512.0 100 (512*10) (512*5) 128 64.0 128.0 6 6 
+   let lcsz = 4096 * 128
+       det = HDD.KAGRA
+       datatype = "L1:LOSC-STRAIN"
+       startGPSTime = formatGPS $ fromIntegral gpstime
+       stopGPSTime = formatGPS $ fromIntegral (gpstime+obstime)
+       ts' = take lcsz $ map realToFrac (eval framets)	
+       ts = fromList ts'
+       tsWD = mkWaveData det datatype frameSF startGPSTime stopGPSTime ts 
+
        printshow xx = putStrLn $ (show (fst xx)) ++ " " ++ (show (snd xx))
---   (nfmmean,nfmdev)<- estimateThreshold np (lcsz*2)
    time1 <- getCurrentTime
-   nfmstatus<-getNoiseFloorStatus ts frameSF np
+   nfmstatus<-getNoiseFloorStatus tsWD np
    time2 <- getCurrentTime
    print $ diffUTCTime time2 time1
-   mapM_ printshow nfmstatus
+   mapM_ print nfmstatus
 
 
 genTimeGauss :: Int->Double->IO[Double]

@@ -24,6 +24,7 @@ import Data.List (sort, foldl')
 
 import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
+import Numeric.LinearAlgebra.Data
 import qualified Data.Vector.Generic as G
 
 import HasKAL.SignalProcessingUtils.Filter
@@ -33,6 +34,7 @@ import HasKAL.WaveUtils.Data hiding (mean)
 import HasKAL.WaveUtils.Signature
 import HasKAL.TimeUtils.Signature
 import HasKAL.DetectorUtils.Detector
+import HasKAL.TimeUtils.Function
 
 --import HROOT hiding (eval, mean)
 
@@ -65,9 +67,9 @@ defaultNFMparam = NFMParam{
 ,  nfmdev = 1.5462956889872793e-2
 }
 
-makeNFMparam :: Double->Int->Int->Int->Int->Double->Double->Int->Int->Double->Double->NFMParam
-makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo mean dev = 
-   NFMParam{  
+makeNFMparam :: Double->Int->Int->Int->Int->Double->Double->Int->Int->IO(NFMParam)
+makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo = do
+   let np' = NFMParam{  
    	      tsreSF = rsf
    	   ,  whitenFltOrder = wfo
    	   ,  whitenFltSize = wfs
@@ -77,9 +79,26 @@ makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo mean dev =
 	   ,  maxfreq = maxf
 	   ,  lpfOrder = lpfo
 	   ,  hpfOrder = hpfo
-	   ,  nfmmean = mean
-	   ,  nfmdev = dev
-   }
+	   ,  nfmmean = 0.0
+	   ,  nfmdev = 0.0
+             }
+       lcsz = (floor (tsreSF np'))*128
+   thresnfm<-estimateThreshold np' lcsz
+   return NFMParam{  
+   	      tsreSF = rsf
+   	   ,  whitenFltOrder = wfo
+   	   ,  whitenFltSize = wfs
+	   ,  whitenFltSTime = wfst
+	   ,  rmSize = rms
+	   ,  minfreq = minf
+	   ,  maxfreq = maxf
+	   ,  lpfOrder = lpfo
+	   ,  hpfOrder = hpfo
+	   ,  nfmmean = fst thresnfm
+	   ,  nfmdev = snd thresnfm
+          }
+
+
 
 {-estimateThreshold should be done before applying getNoiseFloorStatus-}
 
@@ -93,32 +112,27 @@ estimateThreshold np lcsz = do
        nfmdev =  sqrt(nfmdev' / (realToFrac((Prelude.length noisemon) - 1)))
    return $ (nfmmean,nfmdev)                         
 
-getNoiseFloorStatus :: [Double]->Double->NFMParam->IO[(Double,Double)]
-getNoiseFloorStatus ts tsSF np = do
-  let dsts = downsampleV tsSF (tsreSF np) (fromList ts)
+getNoiseFloorStatus :: WaveData->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
+getNoiseFloorStatus tsWD np = do
+  let dsts = downsampleV (samplingFrequency tsWD) (tsreSF np) (gwdata tsWD)
       nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
   let psdmedian = gwpsdV whitendatsample (floor (tsreSF np)) (tsreSF np)
-      startGPST = (0,0)::(Int, Int)
-      stopGPST = (0,0)::(Int,Int)
-      dstsWD = mkWaveData KAGRA "test" (tsreSF np) startGPST stopGPST dsts
+      dstsWD = mkWaveData (detector tsWD) (dataType tsWD) (tsreSF np) (startGPSTime tsWD) (stopGPSTime tsWD) dsts
 --      wtts =  whitening (lpefCoeffV (whitenFltOrder np) psdmedian) (toList dsts) 
       wtts = whiteningWaveData (lpefCoeffV (whitenFltOrder np) psdmedian) dstsWD
   bpts <- applybandpass (gwdata wtts) np
   print "aaa"
   let ndatV = dim bpts
-      bptssig = subVector nfmFltDelay (ndatV -nfmFltDelay) $ bpts
-      bptssig2 = G.map (\x -> (x*x-(nfmmean np))/(nfmdev np)) bptssig 
+      bptssig = subVector nfmFltDelay (ndatV - nfmFltDelay) $ bpts
+      bptssig2 = G.map (\x -> (x*x-(nfmmean np))/((nfmdev np))) bptssig 
       datrunmed = runmedV bptssig2 (rmSize np)
       intervalrunmed = (fromIntegral (rmSize np)) / (tsreSF np) :: Double
-      trunmed = [(intervalrunmed),(intervalrunmed*2)..]
-
---  print $ (lpefCoeffV (whitenFltOrder np) psdmedian)
---  print $ vjoin [bpts, fromList [-1.0,-1.0..]] 
---  print $ subVector nfmFltDelay (ndatV -nfmFltDelay) bpts
-  return $ zip trunmed datrunmed
---  return $ take 1 $ zip [1..] wtts
---  return $ 
+      gpsbtime = deformatGPS (startGPSTime tsWD)
+      btrunmed = [(intervalrunmed*0+gpsbtime),(intervalrunmed*1+gpsbtime)..]
+      etrunmed = [(intervalrunmed*1+gpsbtime),(intervalrunmed*2+gpsbtime)..]
+  print wtts
+  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) datrunmed
 
 getThresholdStatus :: [Double]->NFMParam->IO[Double]
 getThresholdStatus ts np = do
@@ -173,7 +187,7 @@ runmedV datV nmed = do
   let ndat = dim datV
       maxitr = floor $ fromIntegral (ndat) / fromIntegral (nmed) :: Int
       datList = takesV  (take maxitr (repeat nmed)) datV :: [Vector Double]
-  map median $ map (sort . toList) datList
+  map median (map toList $ map sortVector datList)
 
 mean :: Floating a => [a] -> a
 mean x = fst $ foldl' (\(!m, !n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
