@@ -1,5 +1,6 @@
 module HasKAL.MonitorUtils.RMSMon.RMSMon(
-       rmsMon
+       rmsMon,
+       rmsDailyMon
 ) where
 
 import qualified Data.Vector.Generic as DVG
@@ -11,23 +12,35 @@ import HasKAL.SpectrumUtils.Signature
 
 
 {-- Expose Functions --}
-rmsMon :: Int -> Double -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
-rmsMon nSplit gpsstart fs ys freq = do
+rmsMon :: Int -> Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
+rmsMon nSplit fs ys freq = do
  let nduration = fromIntegral $ (DVG.length ys) `div` nSplit :: Double
  let duration  = nduration / fs :: Double
- map (\(f1, f2) -> rmsMoncore nSplit gpsstart duration fs ys f1 f2) freq
+ map (\(f1, f2) -> rmsMoncore nSplit duration fs ys f1 f2) freq
+     where rmsMoncore :: Int -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
+           rmsMoncore nSplit duration fs ys f1 f2 = do
+             let listindex = [0..nSplit-1]::[Int]
+             let df = 1.0/duration :: Double 
+             let rmsvector = NLA.fromList $ map (*df) $ map (sumHoff nSplit fs ys f1 f2) listindex
+             let tn = (fromIntegral nSplit -1)*duration::Double
+             let timevector = NLA.fromList [0, duration..tn]::NLA.Vector Double
+             (timevector, rmsvector)
 
+rmsDailyMon :: Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
+rmsDailyMon fs ys freq = do
+ let nSplit = 96::Int -- 24時間のデータを15分ずつ = 96個
+ let duration  = 0.15::Double
+ map (\(f1, f2) -> rmsDailyMoncore nSplit duration fs ys f1 f2) freq
+     where rmsDailyMoncore :: Int -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
+           rmsDailyMoncore nSplit duration fs ys f1 f2 = do
+             let listindex = [0..nSplit-1]::[Int]
+             let df = 1.0/duration :: Double 
+             let rmsvector = NLA.fromList $ map (*df) $ map (sumHoff nSplit fs ys f1 f2) listindex
+             let tn = (fromIntegral nSplit -1) * duration::Double
+             let timevector = NLA.fromList [0, duration..tn]::NLA.Vector Double
+             (timevector, rmsvector)
 
 {-- Internal Functions --}
-rmsMoncore :: Int -> Double -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
-rmsMoncore nSplit gpsstart duration fs ys f1 f2 = do
- let listindex = [0..nSplit-1]::[Int]
- let df = 1.0/duration :: Double 
- let rmsvector = NLA.fromList $ map (*df) $ map (sumHoff nSplit fs ys f1 f2) listindex
- let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
- let gpsvector = NLA.fromList [gpsstart, gpsstart+duration..gpsend]::NLA.Vector Double
- (gpsvector, rmsvector)
-
 sumHoff::Int -> Double -> NLA.Vector Double -> Double -> Double -> Int -> Double
 sumHoff nSplit fs ys f1 f2 i = do
  let nchunk = (DVG.length ys) `div` nSplit ::Int
