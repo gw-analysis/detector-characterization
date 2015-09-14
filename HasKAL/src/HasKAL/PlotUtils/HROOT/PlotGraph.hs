@@ -114,6 +114,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   HAF.setGrid tCan
   HRS.setLog' tCan log
+  HAF.setPadMargin 0.15 0.15 1 1
 
   tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
