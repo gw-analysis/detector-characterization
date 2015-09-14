@@ -85,7 +85,7 @@ plot3dBase wmap log mark xyzLabel title fname range dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
-  HAF.setPadMargin 1 0.15 1 1
+  HAF.setPadMargin 0.15 0.15 1 1
 
   let (xNum, yNum) = getNum dats
       (xMin, xMax, yMin, yMax) = getDataEdge dats
@@ -109,7 +109,7 @@ plot3dBaseM wmap log mark xyzLabel title fname range (tV, fV, specM) = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
-  HAF.setPadMargin 1 0.15 1 1
+  HAF.setPadMargin 0.15 0.15 1 1
 
   let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
       (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
