@@ -21,10 +21,8 @@ DEPs= ${DEP1}
 
 # kagali 関連
 CFLAGS2=-I./
-DEPK1=/home/yamamoto/work/detector-characterization/attic/kagali/DKGLInferenceSamplefn.c
-DEPK2=/home/yamamoto/work/detector-characterization/attic/kagali/DKGLIterativeLeastSquare2DNewton.c
-DEPK3=/home/yamamoto/work/detector-characterization/attic/kagali/DKGLBandPassFilter.c
-DEPKs= ${DEPK1} ${DEPK2} ${DEPK3}
+DEPK1=DKGLUtils.c
+DEPKs= ${DEPK1}
 
 # link path
 ifneq (${USELIB},)
@@ -40,7 +38,7 @@ ${TAR1}: ${TAR1}.hs ${DEPs} ${DEPKs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 
 clean:
-	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi 
+	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
 
 cleanall: clean
 	rm -f ${TARs}
