@@ -7,7 +7,6 @@ module HasKAL.GUI_Utils.GUI_Utils
 
 import Graphics.UI.Gtk
 import qualified Control.Monad as CM -- forM
-import qualified Numeric.LinearAlgebra as NLA -- data Vector, fromList, toList
 import qualified System.IO as SIO -- openFile
 
 import qualified HasKAL.GUI_Utils.GUI_AntennaPattern as HGGA
