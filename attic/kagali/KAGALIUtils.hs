@@ -1,7 +1,6 @@
 
 module KAGALIUtils
- (  dKGLInferenceSamplefn
-  , dKGLIterativeLeastSquare2DNewton
+ (  dKGLIterativeLeastSquare2DNewton
   , butterBandPass
   , nha
   , formatNHA
@@ -16,15 +15,6 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Packed.Matrix (toColumns, fromRows)
 
 {- exposed functions -}
-dKGLInferenceSamplefn :: VS.Vector Double  -- ^ Input Vector
-                      -> VS.Vector Double  -- ^ Output Vector
-dKGLInferenceSamplefn vIn = do
-  let vIn' = d2cdV vIn
-      ilen = VS.length vIn :: Int
-      olen = ilen
-  cd2dV $ dKGLInferenceSamplefnCore vIn' ilen olen
-
-
 butterBandPass :: VS.Vector Double->Double->Double->Double->VS.Vector Double
 butterBandPass inputV fs fmin fmax = do
    let inputV' = d2cdV inputV
@@ -69,18 +59,6 @@ formatNHA input = output
 
 
 {- internal functions -}
-dKGLInferenceSamplefnCore :: VS.Vector CDouble  -- ^ Input Vector
-                          -> Int                -- ^ # of elements in Input Vector
-                          -> Int                -- ^ # of elements in Onput Vector
-                          -> VS.Vector CDouble  -- ^ Output Vector
-dKGLInferenceSamplefnCore input ilen olen
-  = unsafePerformIO $ VS.unsafeWith input $ \ptrIn ->
-   allocaArray olen $ \ptrOut ->
-   do c_DKGLInferenceSamplefn ptrOut (fromIntegral olen) ptrIn (fromIntegral ilen)
-      newForeignPtr_ ptrOut >>= \foreignptrOutput ->
-         return $ VS.unsafeFromForeignPtr0 foreignptrOutput olen
-
-
 butterBandPassCore :: VS.Vector CDouble  -- ^ Input Vector
                           -> Int                -- ^ # of elements in Input Vector
                           -> CDouble            -- ^ sampling frequency
@@ -128,13 +106,7 @@ cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
 
 
-foreign import ccall "DKGLInferenceSamplefn.h DKGLInferenceSamplefn" c_DKGLInferenceSamplefn :: Ptr CDouble -- ^ input pointer
-                                                                                -> CInt        -- ^ # of elements in input
-                                                                                -> Ptr CDouble -- ^ output pointer
-                                                                                -> CInt        -- ^ # of elements in output
-                                                                                -> IO()
-
-foreign import ccall "DKGLBandPassFilter.h DKGLButterworthBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
+foreign import ccall "DKGLUtils.h DKGLButterworthBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
                                                                                 -> Ptr CDouble -- ^ input pointer
                                                                                 -> CInt        -- ^ # of elements in input
                                                                                 -> CDouble     -- ^ sampling frequency [Hz]
@@ -142,7 +114,7 @@ foreign import ccall "DKGLBandPassFilter.h DKGLButterworthBandPassFilter" c_DKGL
                                                                                 -> CDouble     -- ^ higher cutoff frequency [Hz]
                                                                                 -> IO()
 
-foreign import ccall "DKGLIterativeLeastSquare2DNewton.h DKGLIterativeLeastSquare2DNewton" c_DKGLIterativeLeastSquare2DNewton :: Ptr CDouble -- ^ input pointer (frame)
+foreign import ccall "DKGLUtils.h DKGLIterativeLeastSquare2DNewton" c_DKGLIterativeLeastSquare2DNewton :: Ptr CDouble -- ^ input pointer (frame)
                                                                                 -> Ptr CDouble -- ^ output pointer (Afit)
                                                                                 -> Ptr CDouble -- ^ output pointer (ffit)
                                                                                 -> Ptr CDouble -- ^ output pointer (pfit)
