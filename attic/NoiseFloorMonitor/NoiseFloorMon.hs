@@ -4,7 +4,8 @@ module NoiseFloorMon
 ( 
   NFMParam (..) 
 , estimateThreshold 
-, getNoiseFloorStatus
+, getNoiseFloorStatusV
+, getNoiseFloorStatusWaveData
 , defaultNFMparam
 , makeNFMparam
 )
@@ -112,8 +113,32 @@ estimateThreshold np lcsz = do
        nfmdev =  sqrt(nfmdev' / (realToFrac((Prelude.length noisemon) - 1)))
    return $ (nfmmean,nfmdev)                         
 
-getNoiseFloorStatus :: WaveData->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
-getNoiseFloorStatus tsWD np = do
+getNoiseFloorStatusV :: Vector Double->Double->GPSTIME->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
+getNoiseFloorStatusV tsV tsSF gpst np = do
+  let dsts = downsampleV tsSF (tsreSF np) tsV
+      nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
+  whitendatsample <- getWhitensample dsts np
+  let psdmedian = gwpsdV whitendatsample (floor (tsreSF np)) (tsreSF np)
+      det = KAGRA
+      dataType = "test"
+      startGPSTime = gpst
+      stopGPSTime = gpst
+      dstsWD = mkWaveData det dataType (tsreSF np) startGPSTime stopGPSTime dsts
+--      wtts =  whitening (lpefCoeffV (whitenFltOrder np) psdmedian) (toList dsts) 
+      wtts = whiteningWaveData (lpefCoeffV (whitenFltOrder np) psdmedian) dstsWD
+  bpts <- applybandpass (gwdata wtts) np
+  let ndatV = dim bpts
+      bptssig = subVector nfmFltDelay (ndatV - nfmFltDelay) $ bpts
+      bptssig2 = G.map (\x -> (x*x-(nfmmean np))/((nfmdev np))) bptssig 
+      datrunmed = runmedV bptssig2 (rmSize np)
+      intervalrunmed = (fromIntegral (rmSize np)) / (tsreSF np) :: Double
+      gpsbtime = deformatGPS startGPSTime
+      btrunmed = [(intervalrunmed*0+gpsbtime),(intervalrunmed*1+gpsbtime)..]
+      etrunmed = [(intervalrunmed*1+gpsbtime),(intervalrunmed*2+gpsbtime)..]
+  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) datrunmed
+
+getNoiseFloorStatusWaveData :: WaveData->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
+getNoiseFloorStatusWaveData tsWD np = do
   let dsts = downsampleV (samplingFrequency tsWD) (tsreSF np) (gwdata tsWD)
       nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
