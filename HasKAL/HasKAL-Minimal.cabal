@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 -- The name of the package.
-name:                HasKAL
+name:                HasKAL-Minimal
 
 -- The package version.  See the Haskell package versioning policy (PVP)
 -- for standards guiding when and how versions should be incremented.
@@ -53,12 +53,6 @@ library
     HasKAL.Constant,
     HasKAL.Constant.CGSM,
     HasKAL.Constant.MKSA,
-    -- DataBaseUtils --
-    HasKAL.DataBaseUtils,
-    HasKAL.DataBaseUtils.Function,
-    HasKAL.DataBaseUtils.Framedb,
-    HasKAL.DataBaseUtils.DataBaseAdmin,
-    HasKAL.DataBaseUtils.DataSource,
     -- DetectorUtils --
     HasKAL.DetectorUtils,
     HasKAL.DetectorUtils.Detector,
@@ -75,18 +69,6 @@ library
     HasKAL.FrameUtils.FrameUtils,
     HasKAL.FrameUtils.Function,
     HasKAL.FrameUtils.PickUpFileName,
-    -- GUI_Utils --
-    HasKAL.GUI_Utils.GUI_AntennaPattern,
-    HasKAL.GUI_Utils.GUI_CorrelationMon,
-    HasKAL.GUI_Utils.GUI_GaussianityRayleighMon,
-    HasKAL.GUI_Utils.GUI_GaussianityStudentRayleighMon,
-    HasKAL.GUI_Utils.GUI_GlitchKleineWelle,
-    HasKAL.GUI_Utils.GUI_RangeIMBH,
-    HasKAL.GUI_Utils.GUI_RangeInspiral,
-    HasKAL.GUI_Utils.GUI_RangeRingDown,
-    HasKAL.GUI_Utils.GUI_RangeStochMon,
-    HasKAL.GUI_Utils.GUI_Supplement,
-    HasKAL.GUI_Utils.GUI_Utils,
     -- LineUtils --
     HasKAL.LineUtils.LineRemoval.Mblt,
     HasKAL.LineUtils.LineRemoval.RngMedian,
@@ -178,52 +160,41 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:
+--       async,
        base >=4.7,
-       process >=1.1,
-       gtk >=0.13,
-       text,
-       regex-compat >=0.95,
+       bindings-gsl,
+       carray,
+       cgi,
        Chart >=1.3,
        Chart-gtk >=1.3,
        Chart-cairo >=1.3,
        colour >=2.3,
-       data-default-class >=0.0,
-       old-time,
-       lens,
-       hmatrix >=0.16,
-       hmatrix-special,
-       hmatrix-gsl,
-       vector,
-       HROOT==0.8.*,
-       old-locale,
-       time,
-       split,
        containers,
-       filepath,
-       directory,
-       matrices >= 0.3,
-       fficxx-runtime,
+       data-default-class >=0.0,
        deepseq,
-       bindings-gsl,
-       async,
-       hinotify,
-       system-filepath,
-       system-fileio,
+       directory,
+       fficxx-runtime,
+       filepath,
        fsnotify,
-       unix-compat,
-       cgi,
-       MissingH,
-       HDBC,
-       HDBC-session,
-       relational-query-HDBC,
-       relational-query,
-       HDBC-mysql,
-       template-haskell,
-       names-th,
+--       hinotify,
+       hmatrix >=0.16,
+       hmatrix-gsl,
+       hmatrix-special,
+       HROOT==0.8.*,
+       lens,
+       matrices >= 0.3,
+--       MissingH,
+       old-locale,
+       old-time,
+       process >=1.1,
+       split,
+--       system-fileio,
+       system-filepath,
+       text,
+       time,
        transformers,
-       resourcet,
-       conduit,
-       carray
+       unix-compat,
+       vector
 
 
   -- Directories containing source files.
@@ -238,42 +209,42 @@ library
 
 
 
-executable loadFrameData
-  hs-source-dirs: exe-src
-  main-is:        loadFrameData.hs
-  build-depends:
-    base >4.7
-   ,HasKAL
-   ,Chart >= 1.3
-   ,Chart-cairo >= 1.3
-   ,Chart-gtk >= 1.3
-   ,colour
-   ,data-default-class
-   ,hmatrix >=0.16
-   ,hmatrix-gsl
-   ,hmatrix-special
-   ,lens
-  ghc-options:  -O2 -threaded -rtsopts -eventlog
-  extra-libraries:  Frame
+-- executable loadFrameData
+--   hs-source-dirs: exe-src
+--   main-is:        loadFrameData.hs
+--   build-depends:
+--     base >4.7
+--    ,HasKAL
+--    ,Chart >= 1.3
+--    ,Chart-cairo >= 1.3
+--    ,Chart-gtk >= 1.3
+--    ,colour
+--    ,data-default-class
+--    ,hmatrix >=0.16
+--    ,hmatrix-gsl
+--    ,hmatrix-special
+--    ,lens
+--   ghc-options:  -O2 -threaded -rtsopts -eventlog
+--   extra-libraries:  Frame
 
 
-executable kagraDataFind
-  hs-source-dirs: exe-src
-  main-is:        kagraDataFind.hs
-  build-depends:
-    base > 4.7
-   ,HasKAL
-  ghc-options: -O2 -threaded -rtsopts -eventlog
-  extra-libraries: Frame
+-- executable kagraDataFind
+--   hs-source-dirs: exe-src
+--   main-is:        kagraDataFind.hs
+--   build-depends:
+--     base > 4.7
+--    ,HasKAL
+--   ghc-options: -O2 -threaded -rtsopts -eventlog
+--   extra-libraries: Frame
 
 
-executable kagraDataPoint
-  hs-source-dirs: exe-src
-  main-is:        kagraDataPoint.hs
-  build-depends:
-    base > 4.7
-   ,HasKAL
-  ghc-options: -O2 -threaded -rtsopts -eventlog
-  extra-libraries: Frame
+-- executable kagraDataPoint
+--   hs-source-dirs: exe-src
+--   main-is:        kagraDataPoint.hs
+--   build-depends:
+--     base > 4.7
+--    ,HasKAL
+--   ghc-options: -O2 -threaded -rtsopts -eventlog
+--   extra-libraries: Frame
 
 
