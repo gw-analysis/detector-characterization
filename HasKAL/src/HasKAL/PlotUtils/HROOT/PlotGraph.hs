@@ -89,7 +89,7 @@ plotBase multi log mark lineWidth colors xyLables labelSize titles fname ranges 
 
   tGras <- CM.forM dats $ \dat -> HR.newTGraph (toEnum $ length dat) (getPtrX dat) (getPtrY dat)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
-  setColors' tGras $ DL.nub $ colors ++ defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
@@ -118,7 +118,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
 
   tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
-  setColors' tGras $ DL.nub $ colors ++ defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
