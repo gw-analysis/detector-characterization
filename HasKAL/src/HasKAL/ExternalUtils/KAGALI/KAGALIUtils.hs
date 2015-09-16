@@ -27,7 +27,7 @@ judge flow fhigh fs order
 butterBandPass :: VS.Vector Double->Double->Double->Double->Int->Either String (VS.Vector Double)
 butterBandPass inputV fs flow fhigh order =
   case judge flow fhigh fs order of 
-   False -> Left "Please check that f_low < f_high, f_low is not too small, and f_high is not too high."
+   False -> Left "NHA: please check that f_low < f_high, f_low is not too small, and f_high is not too high."
    True -> Right output
      where inputV' = d2cdV inputV
            npoint = VS.length inputV :: Int
