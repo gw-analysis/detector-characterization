@@ -104,11 +104,15 @@ hasKalGuiStudentRayleighMon activeChannelLabels = do
     putStrLn ("     stride: " ++ (show srmStride) )
 {--}
     snt <- HFF.readFrameFromGPS'V srmGPS srmObsTime (activeChannelLabels!!0) srmCache
-    let snf = HSS.gwpsdV snt srmStride srmSampling
     hts <- HFF.readFrameFromGPS'V srmGPS srmObsTime (activeChannelLabels!!0) srmCache
-    let hfs = HSS.gwspectrogramV 0 srmStride srmSampling hts
-        nus = SRM.studentRayleighMonV (SRM.QUANT 0.99) srmSampling srmStride srmChunck shiftN srmFClust snf hfs
-    PG3.spectrogramMX PG3.LogY PG3.COLZ "nu" "SRMon" ((0.0,0.0),(0.0,0.0)) nus
+    case (snt, hts) of
+     (Just x, Just y) -> do
+       let snf = HSS.gwpsdV x srmStride srmSampling
+           hfs = HSS.gwspectrogramV 0 srmStride srmSampling y
+           nus = SRM.studentRayleighMonV (SRM.QUANT 0.99) srmSampling srmStride srmChunck shiftN srmFClust snf hfs
+       PG3.spectrogramMX PG3.LogY PG3.COLZ "nu" "SRMon" ((0.0,0.0),(0.0,0.0)) nus
+     (_, _) -> do
+       putStrLn "###  Can't read data  ###"
 {----}
 
   {--  Exit Process  --}

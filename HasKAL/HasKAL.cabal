@@ -102,7 +102,7 @@ library
     HasKAL.MonitorUtils.CorrelationMon.CalCorrelation,
     HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
-    HasKAL.MonitorUtils.NoiseFloorMon/NoiseFloorMon,
+    HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon,
     HasKAL.MonitorUtils.RMSMon.RMSMon,
     HasKAL.MonitorUtils.RangeMon.IMBH,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance,

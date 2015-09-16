@@ -88,9 +88,9 @@ hasKalGuiStochMon = do
     putStrLn ("  Detector 2: " ++ stochDet2 )
     putStrLn ("  f min [Hz]: " ++ (show stochfMin) )
     putStrLn ("  f max [Hz]: " ++ (show stochfMax) )
-    let freqs = [stochfMin..stochfMax] :: [Double]
-        h2omega = RSS.h2omega_sens_allf (3*365*86400) (read stochDet1) (read stochDet2) 0.05 0.95 freqs
-    RPG.plotX RPG.LogXY RPG.Line 2 RPG.BLUE ("frequency [Hz]","h2omega") 0.05 ("StochMon: ("++stochDet1++", "++stochDet2++")") ((0,0),(0,0)) $ zip freqs h2omega
+    let param = RSS.makeStochMonParam (read stochDet1) (3*365*86400) (read stochDet2) [] stochfMin stochfMax 1 1e-5 0.8
+        h2omega = RSS.h2omega_adet param
+    RPG.plotX RPG.LogXY RPG.Line 2 RPG.BLUE ("frequency [Hz]","h2omega") 0.05 ("StochMon: ("++stochDet1++", "++stochDet2++")") ((0,0),(0,0)) h2omega
 
   onDestroy stochWindow mainQuit
   widgetShowAll stochWindow

@@ -94,12 +94,16 @@ hasKalGuiRayleighMon activeChannelLabels = do
     putStrLn ("     stride: " ++ (show rmStride) )
 {--}
     snt <- HFF.readFrameFromGPS'V rmGPS rmObsTime (activeChannelLabels!!0) rmCache
-    let snf = HSS.gwpsdV snt rmStride rmSampling
     hts <- HFF.readFrameFromGPS'V rmGPS rmObsTime (activeChannelLabels!!0) rmCache
-    let hfs = HSS.gwspectrogramV 0 rmStride rmSampling hts
-        quant = RM.rayleighMonV [0.5,0.9,0.95,0.99] rmSampling rmStride rmFClust snf hfs
-        colors = [RED,RED,GREEN,GREEN,BLUE,BLUE,PINK,PINK]
-    oPlotXV LogXY LinePoint 2 colors ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
+    case (snt, hts) of
+     (Just x, Just y) -> do
+       let snf = HSS.gwpsdV x rmStride rmSampling
+           hfs = HSS.gwspectrogramV 0 rmStride rmSampling y
+           quant = RM.rayleighMonV [0.5,0.9,0.95,0.99] rmSampling rmStride rmFClust snf hfs
+           colors = [RED,RED,GREEN,GREEN,BLUE,BLUE,PINK,PINK]
+       oPlotXV LogXY LinePoint 2 colors ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
+     (_, _) -> do
+       putStrLn "###  Can't read data  ###"
 {----}
 
   {--  Exit Process  --}

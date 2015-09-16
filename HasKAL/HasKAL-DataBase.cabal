@@ -77,7 +77,8 @@ library
        relational-query,
        relational-query-HDBC,
        template-haskell,
-       transformers
+       transformers,
+       HasKAL-Minimal
 
   -- Directories containing source files.
   hs-source-dirs:      src
