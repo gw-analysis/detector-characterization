@@ -73,7 +73,8 @@ library
        base >=4.7,
        text,
        gtk >=0.13,
-       regex-compat >=0.95
+       regex-compat >=0.95,
+       HasKAL-Minimal
 
   -- Directories containing source files.
   hs-source-dirs:      src

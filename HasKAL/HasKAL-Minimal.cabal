@@ -84,12 +84,12 @@ library
     HasKAL.MonitorUtils.CorrelationMon.CalCorrelation,
     HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
-    HasKAL.MonitorUtils.NoiseFloorMon/NoiseFloorMon,
+    HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon,
     HasKAL.MonitorUtils.RMSMon.RMSMon,
     HasKAL.MonitorUtils.RangeMon.IMBH,
-    HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance,
+--    HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistance,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta,
-    HasKAL.MonitorUtils.RangeMon.InspiralRingdownSnr,
+--    HasKAL.MonitorUtils.RangeMon.InspiralRingdownSnr,
     HasKAL.MonitorUtils.RangeMon.InspiralRingdownSnrQuanta,
     HasKAL.MonitorUtils.RangeMon.StochMon.StochMon,
     HasKAL.MonitorUtils.RayleighMon.RayleighMon,
@@ -144,12 +144,12 @@ library
     -- WaveUtils --
     HasKAL.WaveUtils,
     HasKAL.WaveUtils.Data,
-    HasKAL.WaveUtils.Signature,
+    HasKAL.WaveUtils.Signature
     -- WebUtils --
-    HasKAL.WebUtils,
-    HasKAL.WebUtils.Data,
-    HasKAL.WebUtils.EventDisplayXend,
-    HasKAL.WebUtils.FileWatcher
+--    HasKAL.WebUtils,
+--    HasKAL.WebUtils.Data,
+--    HasKAL.WebUtils.EventDisplayXend,
+--    HasKAL.WebUtils.FileWatcher
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -161,6 +161,7 @@ library
   -- Other library packages from which modules are imported.
   build-depends:
 --       async,
+       array,
        base >=4.7,
        bindings-gsl,
        carray,
@@ -188,7 +189,7 @@ library
        old-time,
        process >=1.1,
        split,
---       system-fileio,
+       system-fileio,
        system-filepath,
        text,
        time,
