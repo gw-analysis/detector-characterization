@@ -48,12 +48,12 @@ void DKGLButterworthBandPassFilter( //begin{proto}
     int npoint,      /**< [in] data length */
     double fs,       /**< [in] sampling frequency [Hz] */
     double flow,     /**< [in] lower cutoff frequency [Hz] */
-    double fhigh     /**< [in] higher cutoff frequency [Hz] */
+    double fhigh,    /**< [in] higher cutoff frequency [Hz] */
+    int order        /**< [in] filter order */
     )  //end{proto}
 {
   KGLStatus *status = KGLCreateStatus();
   
-  int order = 6;
   double *num_coeff = NULL;
   double *den_coeff = NULL;
   double *datatmp = NULL;
@@ -61,20 +61,20 @@ void DKGLButterworthBandPassFilter( //begin{proto}
   KGLCalloc(den_coeff,order+1,double,status);
   KGLCalloc(datatmp,npoint,double,status);
   
-  if(flow < fs/2.0 && (fhigh > 0 && fhigh < fs/2.0)){
+  if((flow > 0 && flow < fs/2.0) && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
     KGLZeroPhaseFilter(status,datatmp,datain,npoint,num_coeff,den_coeff,order);
     KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
     KGLZeroPhaseFilter(status,dataout,datatmp,npoint,num_coeff,den_coeff,order);
     
-  }else if(fhigh <= 0 || flow >= fs/2.0){
+  }else if(flow >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = 0;
     
   }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
     KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
     
-  }else if(flow == 0 && fhigh == fs/2.0){
+  }else if(flow == 0 && fhigh >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = datain[i];
     
   }else if(fhigh >= fs/2.0){
@@ -107,7 +107,7 @@ void DKGLIterativeLeastSquare2DNewton( //begin{proto}
   double nu0 = 2.0;
   
   KGLIterativeLeastSquare2DNewton(status,Afit,ffit,pfit,frame,fs,nframe,
-				  Fcostthr,a2thr,nsig,nitr,mu0,nu0);    
+				  Fcostthr,a2thr,nsig,nitr,mu0,nu0);
   KGLDestroyStatus(status);
   
   return;

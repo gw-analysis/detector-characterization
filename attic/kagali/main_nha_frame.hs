@@ -23,6 +23,7 @@ main = do
 --     cnsig <- getArgs
      let nsig   = 5      :: Int
          fs     = 4096   :: Double
+         order  = 6      :: Int
          fmin   = 300    :: Double
          fmax   = 400    :: Double
          nframe = 1024   :: Int
@@ -30,10 +31,13 @@ main = do
          nstart = 0      :: Int
          nend   = 300    :: Int
          dataV = fromJust dataVmaybe 
-         dataV_bp = KGL.butterBandPass dataV fs fmin fmax
-         outV = KGL.nha dataV_bp fs nsig nframe nshift nstart nend
-         outText = concat $ map (toText . shift) outV
-     writeFile "L-L1_LOSC_4_V1-931160064-4096.ana" $ outText
+         output = KGL.butterBandPass dataV fs fmin fmax order
+     case output of
+       Left message -> print message
+       Right frameV_bp -> do
+         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
+             outText = concat $ map (toText . shift) outV
+         writeFile "L-L1_LOSC_4_V1-931160064-4096.ana" $ outText
 
 
 toText :: [[Double]] -> String

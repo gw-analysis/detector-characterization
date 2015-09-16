@@ -15,14 +15,26 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Packed.Matrix (toColumns, fromRows)
 
 {- exposed functions -}
-butterBandPass :: VS.Vector Double->Double->Double->Double->VS.Vector Double
-butterBandPass inputV fs fmin fmax = do
-   let inputV' = d2cdV inputV
-       npoint = VS.length inputV :: Int
-       fs' = realToFrac fs
-       fmin' = realToFrac fmin
-       fmax' = realToFrac fmax
-   cd2dV $ butterBandPassCore inputV' npoint fs' fmin' fmax'
+judge :: Double->Double->Double->Int->Bool
+judge flow fhigh fs order
+   | (flow < fhigh) &&
+     ((flow == 0) ||
+     (((flow/fs)**(fromIntegral order) > 1e-14) &&
+     (((fs/2-fhigh)/fs)**(fromIntegral order) > 1e-14))) = True
+   | otherwise = False
+
+
+butterBandPass :: VS.Vector Double->Double->Double->Double->Int->Either String (VS.Vector Double)
+butterBandPass inputV fs flow fhigh order =
+  case judge flow fhigh fs order of 
+   False -> Left "Please check that f_low < f_high, f_low is not too small, and f_high is not too high."
+   True -> Right output
+     where inputV' = d2cdV inputV
+           npoint = VS.length inputV :: Int
+           fs' = realToFrac fs
+           flow' = realToFrac flow
+           fhigh' = realToFrac fhigh
+           output = cd2dV $ butterBandPassCore inputV' npoint fs' flow' fhigh' order
 
 
 dKGLIterativeLeastSquare2DNewton :: VS.Vector Double    -- ^ Input Vector (frame)
@@ -49,6 +61,7 @@ nha datV fs nsig nframe nshift nstart nend = retVal
         result =
           map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
 
+
 formatNHA :: [(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)] -> [[(VS.Vector Double, VS.Vector Double)]]
 formatNHA input = output
   where tVec = VS.fromList $ map (\(x, _, _, _) -> x) input
@@ -64,11 +77,12 @@ butterBandPassCore :: VS.Vector CDouble  -- ^ Input Vector
                           -> CDouble            -- ^ sampling frequency
                           -> CDouble            -- ^ lower cutoff frequency
                           -> CDouble            -- ^ higher cutoff frequency
+                          -> Int                -- ^ filter order
                           -> VS.Vector CDouble  -- ^ Output Vector
-butterBandPassCore inputV npoint fs fmin fmax
+butterBandPassCore inputV npoint fs flow fhigh order
   = unsafePerformIO $ VS.unsafeWith inputV $ \ptrIn ->
    allocaArray npoint $ \ptrOut ->
-   do c_DKGLButterworthBandPassFilter ptrOut ptrIn (fromIntegral npoint) fs fmin fmax
+   do c_DKGLButterworthBandPassFilter ptrOut ptrIn (fromIntegral npoint) fs flow fhigh (fromIntegral order)
       newForeignPtr_ ptrOut >>= \foreignptrOutput ->
          return $ VS.unsafeFromForeignPtr0 foreignptrOutput npoint
 
@@ -112,6 +126,7 @@ foreign import ccall "DKGLUtils.h DKGLButterworthBandPassFilter" c_DKGLButterwor
                                                                                 -> CDouble     -- ^ sampling frequency [Hz]
                                                                                 -> CDouble     -- ^ lower cutoff frequency [Hz]
                                                                                 -> CDouble     -- ^ higher cutoff frequency [Hz]
+                                                                                -> CInt        -- ^ filter order
                                                                                 -> IO()
 
 foreign import ccall "DKGLUtils.h DKGLIterativeLeastSquare2DNewton" c_DKGLIterativeLeastSquare2DNewton :: Ptr CDouble -- ^ input pointer (frame)

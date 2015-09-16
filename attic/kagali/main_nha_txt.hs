@@ -15,17 +15,21 @@ main = do
          frameV = VS.fromList frameList
 --         nsig = read (cnsig!!0) :: Int
          nsig   = 5      :: Int
+         order  = 6      :: Int
          fs     = 2048   :: Double
          fmin   = 300    :: Double
-         fmax   = 400    :: Double
+         fmax   = 250    :: Double
          nframe = 1024   :: Int
          nshift = 32     :: Int
          nstart = 0      :: Int
          nend   = 30000  :: Int
-         frameV_bp = KGL.butterBandPass frameV fs fmin fmax
-         outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
-         outText = concat $ map (toText . shift) outV
-     writeFile "LIGOtest.ana" $ outText
+         output = KGL.butterBandPass frameV fs fmin fmax order
+     case output of 
+       Left message -> print message 
+       Right frameV_bp -> do
+         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
+             outText = concat $ map (toText . shift) outV
+         writeFile "LIGOtest.ana" $ outText
 
 makeDouble :: [String] -> [Double]
 makeDouble = map read
