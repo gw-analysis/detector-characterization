@@ -165,6 +165,8 @@ library
     HasKAL.WaveUtils.Signature,
     -- WebUtils --
     HasKAL.WebUtils,
+    HasKAL.WebUtils.CGI.Data,
+    HasKAL.WebUtils.CGI.Function,
     HasKAL.WebUtils.Data,
     HasKAL.WebUtils.EventDisplayXend,
     HasKAL.WebUtils.FileWatcher
