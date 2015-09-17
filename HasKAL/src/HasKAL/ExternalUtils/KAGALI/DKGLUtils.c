@@ -4,7 +4,7 @@
 #include <kagali/KGLLeastSquareMethod.h>
 #include <kagali/KGLLeastSquareFunc.h>
 #include <kagali/KGLIterativeLeastSquare2DNewton.h>
-#include <DKGLUtils.h>
+#include "DKGLUtils.h"
 #include <gsl/gsl_sf_bessel.h>
 
 
@@ -80,6 +80,52 @@ void DKGLButterworthBandPassFilter( //begin{proto}
   }else if(fhigh >= fs/2.0){
     KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
     KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
+  }
+  
+  KGLDestroyStatus(status);
+  
+  return;
+}
+
+
+void DKGLButterworthBandPassSOSFilter( //begin{proto}
+    double *dataout, /**< [out] data */
+    double *datain,  /**< [in] data */
+    int npoint,      /**< [in] data length */
+    double fs,       /**< [in] sampling frequency [Hz] */
+    double flow,     /**< [in] lower cutoff frequency [Hz] */
+    double fhigh,    /**< [in] higher cutoff frequency [Hz] */
+    int order        /**< [in] filter order */
+    )  //end{proto}
+{
+  KGLStatus *status = KGLCreateStatus();
+  
+  int nrows = (order + (order%2))/2; 
+  double gain = 1.0;
+  double **sos = NULL;
+  double *datatmp = NULL;
+  KGLCallocMatrix(sos,nrows,6,double,status);
+  KGLCalloc(datatmp,npoint,double,status);
+  
+  if((flow > 0 && flow < fs/2.0) && (fhigh > 0 && fhigh < fs/2.0)){
+    KGLButterworthLowPassSOSFilterKernel(status,&gain,sos,npoint,fhigh,fs,order);
+    KGLZeroPhaseSOSFilter(status,datatmp,datain,npoint,gain,sos,order);
+    KGLButterworthHighPassSOSFilterKernel(status,&gain,sos,npoint,flow,fs,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order);
+    
+  }else if(flow >= fs/2.0){
+    for(int i = 0; i < npoint; i++) dataout[i] = 0;
+    
+  }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
+    KGLButterworthLowPassSOSFilterKernel(status,&gain,sos,npoint,fhigh,fs,order);
+    KGLZeroPhaseSOSFilter(status,datatmp,datain,npoint,gain,sos,order);
+    
+  }else if(flow == 0 && fhigh >= fs/2.0){
+    for(int i = 0; i < npoint; i++) dataout[i] = datain[i];
+    
+  }else if(fhigh >= fs/2.0){
+    KGLButterworthHighPassSOSFilterKernel(status,&gain,sos,npoint,flow,fs,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order);
   }
   
   KGLDestroyStatus(status);

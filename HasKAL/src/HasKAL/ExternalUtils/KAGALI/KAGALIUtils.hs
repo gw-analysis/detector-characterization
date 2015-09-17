@@ -27,7 +27,7 @@ judge flow fhigh fs order
 butterBandPass :: VS.Vector Double->Double->Double->Double->Int->Either String (VS.Vector Double)
 butterBandPass inputV fs flow fhigh order =
   case judge flow fhigh fs order of 
-   False -> Left "NHA: please check that f_low < f_high, f_low is not too small, and f_high is not too high."
+   False -> Left "butterBandPass: please check that f_low < f_high, f_low is not too small, and f_high is not too high."
    True -> Right output
      where inputV' = d2cdV inputV
            npoint = VS.length inputV :: Int
@@ -82,7 +82,8 @@ butterBandPassCore :: VS.Vector CDouble  -- ^ Input Vector
 butterBandPassCore inputV npoint fs flow fhigh order
   = unsafePerformIO $ VS.unsafeWith inputV $ \ptrIn ->
    allocaArray npoint $ \ptrOut ->
-   do c_DKGLButterworthBandPassFilter ptrOut ptrIn (fromIntegral npoint) fs flow fhigh (fromIntegral order)
+--   do c_DKGLButterworthBandPassFilter ptrOut ptrIn (fromIntegral npoint) fs flow fhigh (fromIntegral order)
+   do c_DKGLButterworthBandPassSOSFilter ptrOut ptrIn (fromIntegral npoint) fs flow fhigh (fromIntegral order)
       newForeignPtr_ ptrOut >>= \foreignptrOutput ->
          return $ VS.unsafeFromForeignPtr0 foreignptrOutput npoint
 
@@ -120,7 +121,8 @@ cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
 
 
-foreign import ccall "DKGLUtils.h DKGLButterworthBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
+--foreign import ccall "DKGLUtils.h DKGLButterworthBandPassFilter" c_DKGLButterworthBandPassFilter :: Ptr CDouble -- ^ output pointer
+foreign import ccall "DKGLUtils.h DKGLButterworthBandPassSOSFilter" c_DKGLButterworthBandPassSOSFilter :: Ptr CDouble -- ^ output pointer
                                                                                 -> Ptr CDouble -- ^ input pointer
                                                                                 -> CInt        -- ^ # of elements in input
                                                                                 -> CDouble     -- ^ sampling frequency [Hz]

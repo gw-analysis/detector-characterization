@@ -6,7 +6,7 @@ CFLAGS=`pkg-config --cflags ${LIB}`
 LDFLAGS=`pkg-config --libs-only-L ${LIB}`
 LIBS=`pkg-config --libs-only-l ${LIB}`
 
-CSRC = DKGLUtils.c
+CSRC = HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
 
 all: main_nha_txt main_nha_frame
 

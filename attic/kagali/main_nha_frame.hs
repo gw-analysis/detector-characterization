@@ -6,8 +6,7 @@ import qualified Data.Vector.Storable as VS
 import Data.List
 import Data.Maybe (fromJust)
 import Numeric
-import qualified KAGALIUtils as KGL
---import System.Environment
+import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL
 
 
 main :: IO()
