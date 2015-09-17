@@ -19,8 +19,10 @@ judge :: Double->Double->Double->Int->Bool
 judge flow fhigh fs order
    | (flow < fhigh) &&
      ((flow == 0) ||
-     (((flow/fs)**(fromIntegral order) > 1e-14) &&
-     (((fs/2-fhigh)/fs)**(fromIntegral order) > 1e-14))) = True
+--     (((flow/fs)**(fromIntegral order) > 1e-14) &&
+--     (((fs/2-fhigh)/fs)**(fromIntegral order) > 1e-14))) = True
+     (((flow/fs)**2 > 1e-14) &&
+     (((fs/2-fhigh)/fs)**2 > 1e-14))) = True 
    | otherwise = False
 
 
