@@ -122,7 +122,14 @@ inputFrame params x = htmlFrame $ inputHeader++x++inputFooter
         
 resultFrame :: ParamCGI -> String -> String
 resultFrame params x = htmlFrame $ errorMsg++resultHeader++x++resultFooter
-  where resultHeader = "<h3>GPS Time: "++gps'++"&nbsp; ("++(gps2localTime (read gps') locale')++")</h3>"
+  where resultHeader = concat ["<h3>GPS Time: "++gps'++"&nbsp; ("++(gps2localTime (read gps') locale')++")</h3>"
+                              ,"<p><b>duration: </b>"++(duration params)++"s&emsp;&emsp;"
+                              ,"<b>Freq. band: </b>"++(fmin params)++" - "
+                               ++(fmaxfN $ fmax params)++" Hz</b>"]
+        fmaxfN x = case (read x) == 0.0 of
+                    True -> "f<font size=\"1\">Nyquist</font>"
+                    False -> x
+                    
         resultFooter = cgiNavi params
         gps' = fromJust $ gps params
         locale' = locale params
@@ -247,10 +254,12 @@ genePngTable :: [(Message, String, [String])] -> String
 genePngTable filenames = concat $ map genePngTableCore filenames
 
 genePngTableCore :: (Message, String, [String]) -> String
-genePngTableCore (msg, ch, files) = "<h3>"++ch++"</h3>"++errhtml++"<br>"++body++"<br clear=\"top\"><Hr>"
-  where body = case (msg=="") of
-                True -> concat $ newline 4 $ map imghtml $ filter (not . isPrefixOf "ERROR") files
-                False -> "<p style=\"color: #ff0000;\">"++msg++"</p>"
+genePngTableCore (msg, ch, files) = concat ["<h3>"++ch++msg'++"</h3>"
+                                           ,errhtml++"<br>"++body++"<br clear=\"top\"><Hr>"]
+  where (msg', body) = case (isPrefixOf "ERROR" msg) of
+                True  -> ("<span style=\"color: #ff0000;\"> "++msg++"</span>", "")
+                False -> ("<span>&ensp; (fs="++msg++" Hz)</span>"
+                         , concat $ newline 4 $ map imghtml $ filter (not . isPrefixOf "ERROR") files)
         errhtml = concat $ map (\x -> "<p style=\"color: #ff0000;\">"++x++"</p>") $ filter (isPrefixOf "ERROR") files
         imghtml x = "<nobr><a target=\"_blank\" href=\""++x++"\">"++"<img alt=\"\" src=\""++x
                   ++"\" align=\"top\" style=\"border: 0px solid; width: 300px;\"></a></nobr>"
