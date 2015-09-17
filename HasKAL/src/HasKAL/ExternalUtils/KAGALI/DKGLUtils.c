@@ -118,7 +118,7 @@ void DKGLButterworthBandPassSOSFilter( //begin{proto}
     
   }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassSOSFilterKernel(status,&gain,sos,npoint,fhigh,fs,order);
-    KGLZeroPhaseSOSFilter(status,datatmp,datain,npoint,gain,sos,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datain,npoint,gain,sos,order);
     
   }else if(flow == 0 && fhigh >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = datain[i];

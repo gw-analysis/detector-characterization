@@ -21,7 +21,7 @@ main = do
          nframe = 1024   :: Int
          nshift = 32     :: Int
          nstart = 0      :: Int
-         nend   = 30000  :: Int
+         nend   = 3000   :: Int
          output = KGL.butterBandPass frameV fs fmin fmax order
      case output of 
        Left message -> print message 
