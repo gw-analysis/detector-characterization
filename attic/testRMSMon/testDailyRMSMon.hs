@@ -8,47 +8,45 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Signature
-import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
+import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsDailyMon)
 import HasKAL.TimeUtils.GPSfunction
 
-import ReadFiles
+import HasKAL.DataBaseUtils.Function (kagraDataGet)
 
---import HasKAL.DataBaseUtils.Function (kagraDataGet)
+--import ReadFiles
+
+{-- memo
+    running time : ~10min 15s = 615s
+--}
+
 
 main = do
-
- {-- open frame file --}
  let fs = 2048::Double
- let nfile = 10 :: Int -- you can change
-     filelist = take nfile testFiles
+     totalduration  = (24*60*60) :: Int -- 1day = 86400s
+--     nSplit = 20 :: Int -- you can change
 
- let totalduration  = 32 * nfile :: Int
-     nSplit = 20 :: Int -- you can change
-
- let gps = 1124077533::Integer
- let jst = gps2localTime gps "JST" ::String
- let gpsstart = 77533::Double
- let xlabel = "time[s] since "  ++  show jst ::String
+ let gps = 1120544000::Int
+ let jst = gps2localTime (toInteger gps) "JST" ::String
+ let xlabel = "hour[h] since "  ++  show jst ::String
      ylabel = "Voltage[V]"::String
 
-
- -- ToDdo: use mySQL seaver's function
+ {-- open frame file --}
+-- maybexs <- mapM (readFrameV channel) filelist
+-- let xs = map (fromMaybe (error " no data in the file.")) maybexs
+-- let ys = DVG.concat xs
  let channel  = "K1:PEM-EX_MAG_X_FLOOR"
- maybexs <- mapM (readFrameV channel) filelist
- let xs = map (fromMaybe (error " no data in the file.")) maybexs
- let ys = DVG.concat xs
-
--- zs <- kagraDataGet 1124077565 64 "K1:PEM-EX_MAG_X_FLOOR"
--- let ys = fromJust zs
-
-
-
- let fname = "hoge.png"
- let color = [BLUE, RED, PINK]
- let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
--- let gpsend = gpsstart+(fromIntegral nSplit -1)*duration::Double
- let rms   = rmsMon nSplit fs ys freq
- oPlotV Linear LinePoint 1 color (xlabel, ylabel) 0.05 "RMSMon (BLUE:0.1-1Hz, RED:1-4Hz, PINK:4-8Hz)" fname ((0,0),(0,2e-3)) rms
+ ysmaybe <- kagraDataGet gps totalduration channel
+ case ysmaybe of
+     Nothing -> print "Can't find channel"
+     _       -> do
+       let ys = fromJust ysmaybe
+       let fname = "hoge.png"
+       let color = [BLUE, RED, PINK]
+       let freq  = [(0.1, 1.0), (1.0, 4.0), (4.0, 8.0)]::[(Double, Double)]
+       let rms   = rmsDailyMon fs ys freq
+       let rms_max = DVG.maximum $ DVG.concat ( map snd rms)
+       oPlotV Linear LinePoint 1 color (xlabel, ylabel) 0.05 "RMSMon (BLUE:0.1-1Hz, RED:1-4Hz, PINK:4-8Hz)" fname ((0,0),(0,rms_max*1.2)) rms
  
  return 0
+
 

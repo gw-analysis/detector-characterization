@@ -11,9 +11,9 @@ import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 import HasKAL.TimeUtils.GPSfunction
 
---import ReadFiles
-
 import HasKAL.DataBaseUtils.Function (kagraDataGet)
+
+--import ReadFiles
 
 main = do
  let fs = 2048::Double
@@ -26,6 +26,9 @@ main = do
      ylabel = "Voltage[V]"::String
 
  {-- open frame file --}
+-- maybexs <- mapM (readFrameV channel) filelist
+-- let xs = map (fromMaybe (error " no data in the file.")) maybexs
+-- let ys = DVG.concat xs
  let channel  = "K1:PEM-EX_MAG_X_FLOOR"
  ysmaybe <- kagraDataGet gps totalduration channel
  case ysmaybe of
@@ -41,8 +44,3 @@ main = do
  
  return 0
 
-
-
--- maybexs <- mapM (readFrameV channel) filelist
--- let xs = map (fromMaybe (error " no data in the file.")) maybexs
--- let ys = DVG.concat xs

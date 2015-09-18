@@ -29,7 +29,7 @@ rmsMon nSplit fs ys freq = do
 rmsDailyMon :: Double -> NLA.Vector Double -> [(Double, Double)] -> [(NLA.Vector Double, NLA.Vector Double)]
 rmsDailyMon fs ys freq = do
  let nSplit = 96::Int -- assuming data is 24hour and divide into 15 pieces => 96 chunks
- let duration  = 0.15::Double
+ let duration  = 0.25::Double  -- 24*60/96 = 0.25[min]
  map (\(f1, f2) -> rmsDailyMoncore nSplit duration fs ys f1 f2) freq
      where rmsDailyMoncore :: Int -> Double -> Double -> NLA.Vector Double -> Double -> Double -> (NLA.Vector Double,NLA.Vector Double)
            rmsDailyMoncore nSplit duration fs ys f1 f2 = do
