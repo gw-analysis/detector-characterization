@@ -138,6 +138,8 @@ library
     HasKAL.SignalProcessingUtils.FilterType,
     HasKAL.SignalProcessingUtils.Interpolation,
     HasKAL.SignalProcessingUtils.InterpolationType,
+    HasKAL.SignalProcessingUtils.LinearPrediction,
+    HasKAL.SignalProcessingUtils.Resampling,
     HasKAL.SignalProcessingUtils.Signature,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
