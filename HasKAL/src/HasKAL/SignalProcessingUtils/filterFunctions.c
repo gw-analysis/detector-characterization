@@ -4,6 +4,11 @@
 #include <string.h>
 #include <math.h>
 #include "filterFunctions.h"
+
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
+
 //-- prototype
 //int fir_filter_core(double*,  unsigned,  double[],  double[],  unsigned*,  unsigned, double*);
 //int fir_filter (double*, unsigned, double[], unsigned,  double*);
