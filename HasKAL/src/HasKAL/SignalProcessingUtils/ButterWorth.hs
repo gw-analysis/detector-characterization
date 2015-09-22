@@ -16,6 +16,8 @@ module HasKAL.SignalProcessingUtils.ButterWorth
 , butter
 , filterPole
 , setN
+, polz
+, zeroz
 )
 where
 
@@ -56,6 +58,12 @@ filterPole n' k' = realToFrac (cos (pi*(2*k+n-1)/(2*n))) + jj * realToFrac (sin 
 
 setN :: Double -> Double -> Double -> Int
 setN fc f1 decibels = truncate $ log (10.0**(decibels/10)-1) / (2.0*log (f1/fc))
+
+polz :: Double -> Double -> Int -> FilterType -> [Complex Double]
+polz fs fc n filt = map (\m -> -(gammaCore fs fc n m filt) / deltaCore fs fc n m filt) [0..n]
+
+zeroz :: Double -> Double -> Int -> FilterType -> [Complex Double]
+zeroz fs fc n filt = map (\m -> -(alphaCore fs fc n m filt) / betaCore fs fc n m filt) [0..n]
 
 
 {-- Internal Funtion --}
