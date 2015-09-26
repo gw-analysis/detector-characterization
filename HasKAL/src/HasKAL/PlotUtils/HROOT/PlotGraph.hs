@@ -17,6 +17,8 @@ module HasKAL.PlotUtils.HROOT.PlotGraph (
   ,plotXV
   ,oPlotV
   ,oPlotXV
+  ,plotDateV
+  ,plotDateXV
 ) where
 
 import qualified Control.Monad as CM
@@ -61,18 +63,23 @@ dPlot log mark lineWidth colors xyLables labelSize titles fname ranges dats = pl
 dPlotX :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
 dPlotX log mark lineWidth colors xyLables labelSize titles ranges dats = dPlot log mark lineWidth colors xyLables labelSize titles "X11" ranges dats
 
-
 plotV :: LogOption -> PlotTypeOption -> Int -> ColorOpt -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrum -> IO ()
-plotV log mark lineWidth color xyLable labelSize title fname range dat = plotBaseV Over log mark lineWidth [color] [xyLable] labelSize [title] fname [range] [dat]
+plotV log mark lineWidth color xyLable labelSize title fname range dat = plotBaseV Over log mark lineWidth [color] [xyLable] labelSize [title] fname [range] [(-1)] [dat]
 
 plotXV :: LogOption -> PlotTypeOption -> Int -> ColorOpt -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> Spectrum -> IO ()
 plotXV log mark lineWidth color xyLable labelSize title range dat = plotV log mark lineWidth color xyLable labelSize title "X11" range dat
 
 oPlotV :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> [Spectrum] -> IO ()
-oPlotV log mark lineWidth colors xyLable labelSize title fname range dats = plotBaseV Over log mark lineWidth colors [xyLable] labelSize (repeat title) fname (repeat range) dats
+oPlotV log mark lineWidth colors xyLable labelSize title fname range dats = plotBaseV Over log mark lineWidth colors [xyLable] labelSize (repeat title) fname (repeat range) [(-1)] dats
 
 oPlotXV :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> [Spectrum] -> IO ()
 oPlotXV log mark lineWidth colors xyLable labelSize title range dats = oPlotV log mark lineWidth colors xyLable labelSize title "X11" range dats
+
+plotDateV :: LogOption -> PlotTypeOption -> Int -> ColorOpt -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrum -> IO ()
+plotDateV log mark lineWidth color xyLable labelSize title fname range gps dat = plotBaseV Over log mark lineWidth [color] [xyLable] labelSize [title] fname [range] [gps] [dat]
+
+plotDateXV :: LogOption -> PlotTypeOption -> Int -> ColorOpt -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrum -> IO ()
+plotDateXV log mark lineWidth color xyLable labelSize title range gps dat = plotDateV log mark lineWidth color xyLable labelSize title "X11" range gps dat
 
 
 {-- Internal Functions --}
@@ -108,8 +115,8 @@ plotBase multi log mark lineWidth colors xyLables labelSize titles fname ranges 
   CM.mapM HR.delete tGras
   HR.delete tCan
 
-plotBaseV :: MultiPlot -> LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Spectrum] -> IO ()
-plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges dats = do
+plotBaseV :: MultiPlot -> LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [Spectrum] -> IO ()
+plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges gps dats = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   HAF.setGrid tCan
@@ -117,6 +124,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   HAF.setPadMargin 0.15 1 1 1
 
   tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
+  CM.zipWithM_ HAF.setXAxisDate tGras gps
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
   setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
