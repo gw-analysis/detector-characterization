@@ -44,11 +44,13 @@ extern "C" {
     return 0;
   }
 
-  int SetXAxisDate(TGraph *gra, int unixtime){
+  int SetXAxisDateTGraph(TGraph *gra, int unixtime){
     int offset = unixtime - 788918400;// rootの基準は1995/1/1 00:00:00
     gra->GetXaxis()->SetNdivisions(505);
     gra->GetXaxis()->SetTimeOffset(offset);
     gra->GetXaxis()->SetTimeDisplay(1);
+    return 0;
+  }
   }
 
 }

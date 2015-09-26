@@ -124,7 +124,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   HAF.setPadMargin 0.15 1 1 1
 
   tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
-  CM.zipWithM_ HAF.setXAxisDate tGras gps
+  CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
   setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
