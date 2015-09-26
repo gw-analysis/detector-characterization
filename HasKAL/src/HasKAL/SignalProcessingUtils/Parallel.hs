@@ -9,7 +9,7 @@ module HasKAL.SignalProcessingUtils.Parallel
 
 import Data.List
 import Data.Maybe (fromJust)
-import HasKAL.MathUtils.LinearAlgebra (polyval, toeplitz)
+import HasKAL.MathUtils.LinearAlgebra.Function (polyval, toeplitz)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Polynomials(polySolve)
 
@@ -65,6 +65,6 @@ tf2cparallel (num', denom') = do
 
 
 d2clist :: [Double] -> [Complex Double]
-d2clist xs = map :+0 xs
+d2clist xs = map (:+0) xs
 
 
