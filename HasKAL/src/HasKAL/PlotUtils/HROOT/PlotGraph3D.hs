@@ -16,6 +16,8 @@ module HasKAL.PlotUtils.HROOT.PlotGraph3D (
   ,spectrogramMX
   ,skyMapM
   ,skyMapMX
+  ,histgram2dDateM
+  ,histgram2dDateMX
 ) where
 
 import qualified Control.Monad as CM
@@ -62,22 +64,28 @@ skyMapX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double
 skyMapX log mark zLabel title range dats = skyMap log mark zLabel title "X11" range dats
 
 histgram2dM :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
-histgram2dM log mark (xl, yl, zl) title fname range dat = plot3dBaseM NONE log mark (xl, yl, zl) title fname range dat
+histgram2dM log mark (xl, yl, zl) title fname range dat = plot3dBaseM NONE log mark (xl, yl, zl) title fname range (-1) dat
 
 histgram2dMX :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
-histgram2dMX log mark (xl, yl, zl) title range dat = plot3dBaseM NONE log mark (xl, yl, zl) title "X11" range dat
+histgram2dMX log mark (xl, yl, zl) title range dat = plot3dBaseM NONE log mark (xl, yl, zl) title "X11" range (-1) dat
 
 spectrogramM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
-spectrogramM log mark zLabel title fname range dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range dats
+spectrogramM log mark zLabel title fname range dats = plot3dBaseM NONE log mark ("Time [s]", "Frequency [Hz]", zLabel) title fname range (-1) dats
 
 spectrogramMX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
 spectrogramMX log mark zLabel title range dats = spectrogramM log mark zLabel title "X11" range dats
 
 skyMapM :: LogOption -> PlotTypeOption3D -> String -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
-skyMapM log mark zLabel title fname range dats = plot3dBaseM COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname range dats
+skyMapM log mark zLabel title fname range dats = plot3dBaseM COAST log mark ("longitude [deg.]", "latitude [deg.]", zLabel) title fname range (-1) dats
 
 skyMapMX :: LogOption -> PlotTypeOption3D -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
 skyMapMX log mark zLabel title range dats = skyMapM log mark zLabel title "X11" range dats
+
+histgram2dDateM :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrogram -> IO ()
+histgram2dDateM log mark (xl, yl, zl) title fname range gps dat = plot3dBaseM NONE log mark (xl, yl, zl) title fname range gps dat
+
+histgram2dDateMX :: LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrogram -> IO ()
+histgram2dDateMX log mark (xl, yl, zl) title range gps dat = plot3dBaseM NONE log mark (xl, yl, zl) title "X11" range gps dat
 
 {-- Internal Functions --}
 plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
@@ -104,8 +112,8 @@ plot3dBase wmap log mark xyzLabel title fname range dats = do
   HR.delete tH2d
   HR.delete tCan
 
-plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Spectrogram -> IO ()
-plot3dBaseM wmap log mark xyzLabel title fname range (tV, fV, specM) = do
+plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrogram -> IO ()
+plot3dBaseM wmap log mark xyzLabel title fname range gps (tV, fV, specM) = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
   HRS.setLog' tCan log
@@ -114,6 +122,7 @@ plot3dBaseM wmap log mark xyzLabel title fname range (tV, fV, specM) = do
   let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
       (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
+  HAF.setXAxisDateTH2D tH2d gps
   CM.forM [1..xNum-1] $ \idxX -> CM.forM [1..yNum-1] $ \idxY ->
     HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
   setXYZLabel' tH2d xyzLabel

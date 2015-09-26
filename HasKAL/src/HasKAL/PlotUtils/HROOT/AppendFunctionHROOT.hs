@@ -12,6 +12,7 @@ module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
  ,setRangeTH2D
  ,setPadMargin
  ,setXAxisDateTGraph
+ ,setXAxisDateTH2D
 ) where
 
 import qualified Data.IORef as DIO
@@ -84,6 +85,16 @@ setXAxisDateTGraph gra gps = do
      return ()
    False -> return ()
 
+setXAxisDateTH2D :: HR.TH2D -> Int -> IO ()
+setXAxisDateTH2D th2d gps = do
+  case gps >= 0 of
+   True -> do
+     let ptr'th2d = FRC.get_fptr th2d :: FFP.ForeignPtr (FRC.Raw HR.TH2D)
+     dummy <- FFP.withForeignPtr ptr'th2d $ \lambda -> c'SetXAxisDateTH2D lambda (fromInteger $ gps2unix $ toInteger gps)
+     return ()
+   False -> return ()
+
+
 {--  Internal Functions  --}
 setRangeUser :: HR.TAxis -> (Double, Double) -> IO ()
 setRangeUser axis (min, max) = do
@@ -111,3 +122,4 @@ foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
 foreign import ccall "SetRangeTH" c'SetRangeTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
 foreign import ccall "SetPadMargin" c'SetPadMargin :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
 foreign import ccall "SetXAxisDateTGraph" c'SetXAxisDateTGraph :: FP.Ptr (FRC.Raw HR.TGraph) -> FCT.CInt -> IO (FCT.CInt)
+foreign import ccall "SetXAxisDateTH2D" c'SetXAxisDateTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CInt -> IO (FCT.CInt)

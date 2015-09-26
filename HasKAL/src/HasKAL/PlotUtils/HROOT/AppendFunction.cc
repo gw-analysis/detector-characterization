@@ -51,8 +51,14 @@ extern "C" {
     gra->GetXaxis()->SetTimeDisplay(1);
     return 0;
   }
-  }
 
+  int SetXAxisDateTH2D(TH2D *th, int unixtime){
+    int offset = unixtime - 788918400;// rootの基準は1995/1/1 00:00:00
+    th->GetXaxis()->SetNdivisions(505);
+    th->GetXaxis()->SetTimeOffset(offset);
+    th->GetXaxis()->SetTimeDisplay(1);
+    return 0;
+  }
 }
 
 Bool_t MySignalHandler::Notify(){

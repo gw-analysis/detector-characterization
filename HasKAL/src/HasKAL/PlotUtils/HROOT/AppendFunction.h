@@ -8,6 +8,7 @@
 #include <TSysEvtHandler.h>
 #include <TCanvas.h>
 #include <TH1.h>
+#include <TH2.h>
 #include <TGraph.h>
 
 extern "C" {
@@ -18,6 +19,7 @@ extern "C" {
   int SetRangeTH(TH1 *hist, double xmin, double xmax, double ymin, double ymax);
   int SetPadMargin(double lmargin, double rmargin, double tmargin, double bmargin);
   int SetXAxisDateTGraph(TGraph *gra, int unixtime);
+  int SetXAxisDateTH2D(TH2D *th, int unixtime);
 }
 
 class MySignalHandler : public TSignalHandler{
