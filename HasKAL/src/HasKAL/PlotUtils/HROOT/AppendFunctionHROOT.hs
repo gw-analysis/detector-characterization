@@ -75,11 +75,14 @@ setPadMargin l r t b = do
   dummy <- c'SetPadMargin (realToFrac l) (realToFrac r) (realToFrac t) (realToFrac b)
   return ()
 
-setXAxisDate :: HR.TGraph -> Integer -> IO ()
+setXAxisDate :: HR.TGraph -> Int -> IO ()
 setXAxisDate gra gps = do
-  let ptr'gra = FRC.get_fptr gra :: FFP.ForeignPtr (FRC.Raw HR.TGraph)
-  dummy <- FFP.withForeignPtr ptr'gra $ \lambda -> c'SetXAxisDate lambda (fromInteger $ gps2unix gps)
-  return ()
+  case gps >= 0 of
+   True -> do
+     let ptr'gra = FRC.get_fptr gra :: FFP.ForeignPtr (FRC.Raw HR.TGraph)
+     dummy <- FFP.withForeignPtr ptr'gra $ \lambda -> c'SetXAxisDate lambda (fromInteger $ gps2unix $ toInteger gps)
+     return ()
+   False -> return ()
 
 {--  Internal Functions  --}
 setRangeUser :: HR.TAxis -> (Double, Double) -> IO ()
