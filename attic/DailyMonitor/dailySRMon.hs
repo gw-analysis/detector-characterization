@@ -21,23 +21,24 @@ main = do
       quantile  = 0.99 -- 0 < quantile < 1
       -- for Plot
       oFile = "out.png"
-      title = "StudentRayleighMon:"
-      xlabel = "time [s] from GPS: "++(show gps)
+      title = "StudentRayleighMon: " ++ channel
+      xlabel = "time: "++(show gps)
 
   {-- read data --}
   mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) channel
   let file = case mbFiles of
-              Nothing -> error "Can't find file"
+              Nothing -> error "Can't find file."
               _ -> head $ fromJust mbFiles
   mbDat <- kagraDataGet gps duration channel
   mbFs <- getSamplingFrequency file channel
   let (dat, fs) = case (mbDat, mbFs) of
                    (Just a, Just b) -> (a, b)
-                   (_, _) -> error "Can't read file"
+                   (Nothing, _) -> error "Can't read data."
+                   (_, Nothing) -> error "Can't read sampling frequency."
 
   {-- main --}
   let snf = gwpsdV dat (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
-  histgram2dM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) nu
+  histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
 
