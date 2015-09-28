@@ -17,6 +17,7 @@ module HasKAL.FrameUtils.FileManipulation
 import Control.Monad (forM)
 import System.Directory (doesDirectoryExist, getDirectoryContents, getCurrentDirectory)
 import System.FilePath ((</>))
+import Data.List (sort)
 import Data.List.Split (splitOn)
 import Numeric.LinearAlgebra
 import Numeric.GSL.LinearAlgebra (fromFile, fileDimensions)
@@ -32,7 +33,7 @@ getRecursiveFileSystem topdir = do
       if isDirectory
         then getRecursiveFileSystem path
         else return [path]
-    return (concat paths)
+    return $ sort (concat paths)
 
 genFileList :: FilePath -> FilePath -> IO()
 genFileList fileName absDir = do
