@@ -13,8 +13,6 @@ import HasKAL.TimeUtils.GPSfunction
 
 import HasKAL.DataBaseUtils.Function (kagraDataGet)
 
---import ReadFiles
-
 {-- memo
     running time : ~10min 15s = 615s
 --}
@@ -23,8 +21,8 @@ import HasKAL.DataBaseUtils.Function (kagraDataGet)
 main = do
  let fs = 2048::Double
      totalduration  = (24*60*60) :: Int -- 1day = 86400s
---     nSplit = 20 :: Int -- you can change
 
+     {-- parameters --}
  let gps = 1120544000::Int
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
@@ -34,6 +32,9 @@ main = do
 -- maybexs <- mapM (readFrameV channel) filelist
 -- let xs = map (fromMaybe (error " no data in the file.")) maybexs
 -- let ys = DVG.concat xs
+
+
+
  let channel  = "K1:PEM-EX_MAG_X_FLOOR"
  ysmaybe <- kagraDataGet gps totalduration channel
  case ysmaybe of
