@@ -1,7 +1,9 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables #-}
 
 module HasKAL.DataBaseUtils.Function
-( kagraDataFind
+( db2framelist
+, db2framecache
+, kagraDataFind
 , kagraDataGet
 , kagraDataPoint
 , kagraDataFindCore
@@ -137,6 +139,28 @@ kagraDataPointCore gpstime chname =
       wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
       wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
       return $ ch ! Frame.fname'
+
+
+db2framecache :: String -> IO [String]
+db2framecache dbname = do
+  maybefrlist <- db2framelist dbname
+  let out = [ x
+            | Just x <- maybefrlist
+            ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+db2framelist :: String -> IO [Maybe String]
+db2framelist dbname =
+  handleSqlError' $ withconnectionIO connect $ \ conn ->
+  runQuery' conn (relationalQuery core) ()
+    where
+      core = relation $ do
+        lists <- query dbname
+        return $ lists ! Frame.fname'
+
 
 
 setSqlMode conn = do
