@@ -13,9 +13,9 @@ USELIB=
 
 # program
 TAR1=test_nfm_gwf
-TAR2=test
+TAR2=test_nfm_wavedata
 TAR3=test_wavedata
-TAR4=gen_tdomain
+TAR4=check_wfilter
 TAR= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
 
 # link path
@@ -34,14 +34,14 @@ endif
 # compile rule
 all: ${TAR}
 
-${TAR1}: ${TAR1}.hs HasKAL/SignalProcessingUtils/filterFunctions.c
+${TAR1}: ${TAR1}.hs HasKAL/SignalProcessingUtils/filterFunctions.o
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} 
 
-${TAR2}: ${TAR2}.hs
+${TAR2}: ${TAR2}.hs HasKAL/SignalProcessingUtils/filterFunctions.o
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-${TAR3}: ${TAR3}.hs
+${TAR3}: ${TAR3}.hs HasKAL/SignalProcessingUtils/filterFunctions.o
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-${TAR4}: ${TAR4}.hs HasKAL/SignalProcessingUtils/filterFunctions.c
+${TAR4}: ${TAR4}.hs HasKAL/SignalProcessingUtils/filterFunctions.o
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:

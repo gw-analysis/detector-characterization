@@ -8,6 +8,7 @@ module HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon
 , getNoiseFloorStatusWaveData
 , defaultNFMparam
 , makeNFMparam
+, genTimeGauss
 )
 where
 
@@ -44,6 +45,7 @@ data NFMParam = NFMParam{
 , whitenFltOrder :: Int
 , whitenFltSize :: Int
 , whitenFltSTime :: Int
+, whitenFltStride :: Int
 , rmSize :: Int
 , minfreq :: Double
 , maxfreq :: Double 
@@ -57,8 +59,9 @@ defaultNFMparam :: NFMParam
 defaultNFMparam = NFMParam{
    tsreSF = 512.0 
 ,  whitenFltOrder = 100
-,  whitenFltSize = 512 * 10
-,  whitenFltSTime = 512 * 5
+,  whitenFltSize = 1024 * 10
+,  whitenFltSTime = 1024 * 5
+,  whitenFltStride = 512
 ,  rmSize = 128 
 ,  minfreq = 64.0
 ,  maxfreq = 128.0
@@ -68,13 +71,14 @@ defaultNFMparam = NFMParam{
 ,  nfmdev = 1.5462956889872793e-2
 }
 
-makeNFMparam :: Double->Int->Int->Int->Int->Double->Double->Int->Int->IO(NFMParam)
-makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo = do
+makeNFMparam :: Double->Int->Int->Int->Int->Int->Double->Double->Int->Int->IO(NFMParam)
+makeNFMparam rsf wfo wfs wfst wfnfft rms minf maxf lpfo hpfo = do
    let np' = NFMParam{  
    	      tsreSF = rsf
    	   ,  whitenFltOrder = wfo
    	   ,  whitenFltSize = wfs
 	   ,  whitenFltSTime = wfst
+	   ,  whitenFltStride = wfnfft
 	   ,  rmSize = rms
 	   ,  minfreq = minf
 	   ,  maxfreq = maxf
@@ -83,13 +87,14 @@ makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo = do
 	   ,  nfmmean = 0.0
 	   ,  nfmdev = 0.0
              }
-       lcsz = (floor (tsreSF np'))*128
+       lcsz = (floor (tsreSF np'))*64
    thresnfm<-estimateThreshold np' lcsz
    return NFMParam{  
    	      tsreSF = rsf
    	   ,  whitenFltOrder = wfo
    	   ,  whitenFltSize = wfs
 	   ,  whitenFltSTime = wfst
+	   ,  whitenFltStride = wfnfft
 	   ,  rmSize = rms
 	   ,  minfreq = minf
 	   ,  maxfreq = maxf
@@ -106,7 +111,7 @@ makeNFMparam rsf wfo wfs wfst rms minf maxf lpfo hpfo = do
 estimateThreshold :: NFMParam->Int->IO(Double,Double)
 estimateThreshold np lcsz = do
    simnoise <- genTimeGauss lcsz
-   noisemon <- getThresholdStatus simnoise np
+   noisemon <- getThresholdStatus (fromList simnoise) np
    let nfmmean' = sum noisemon
        nfmmean = (nfmmean' / (realToFrac (Prelude.length noisemon)))
        nfmdev' = sum  (Prelude.map (\x->(x-nfmmean)*(x-nfmmean)) noisemon)
@@ -118,7 +123,7 @@ getNoiseFloorStatusV tsV tsSF gpst np = do
   let dsts = downsampleV tsSF (tsreSF np) tsV
       nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
-  let psdmedian = gwpsdV whitendatsample (floor (tsreSF np)) (tsreSF np)
+  let psdmedian = gwpsdV whitendatsample (whitenFltStride np) (tsreSF np)
       det = KAGRA
       dataType = "test"
       startGPSTime = gpst
@@ -135,19 +140,17 @@ getNoiseFloorStatusV tsV tsSF gpst np = do
       gpsbtime = deformatGPS startGPSTime
       btrunmed = [(intervalrunmed*0+gpsbtime),(intervalrunmed*1+gpsbtime)..]
       etrunmed = [(intervalrunmed*1+gpsbtime),(intervalrunmed*2+gpsbtime)..]
-  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) datrunmed
+  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) (map abs datrunmed)
 
 getNoiseFloorStatusWaveData :: WaveData->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
 getNoiseFloorStatusWaveData tsWD np = do
   let dsts = downsampleV (samplingFrequency tsWD) (tsreSF np) (gwdata tsWD)
-      nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
+      nfmFltDelay = nfmCalcFltDelay (whitenFltStride np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
-  let psdmedian = gwpsdV whitendatsample (floor (tsreSF np)) (tsreSF np)
+  let psdmedian = gwpsdV whitendatsample (whitenFltOrder np) (tsreSF np)
       dstsWD = mkWaveData (detector tsWD) (dataType tsWD) (tsreSF np) (startGPSTime tsWD) (stopGPSTime tsWD) dsts
---      wtts =  whitening (lpefCoeffV (whitenFltOrder np) psdmedian) (toList dsts) 
       wtts = whiteningWaveData (lpefCoeffV (whitenFltOrder np) psdmedian) dstsWD
   bpts <- applybandpass (gwdata wtts) np
-  print "aaa"
   let ndatV = dim bpts
       bptssig = subVector nfmFltDelay (ndatV - nfmFltDelay) $ bpts
       bptssig2 = G.map (\x -> (x*x-(nfmmean np))/((nfmdev np))) bptssig 
@@ -156,13 +159,20 @@ getNoiseFloorStatusWaveData tsWD np = do
       gpsbtime = deformatGPS (startGPSTime tsWD)
       btrunmed = [(intervalrunmed*0+gpsbtime),(intervalrunmed*1+gpsbtime)..]
       etrunmed = [(intervalrunmed*1+gpsbtime),(intervalrunmed*2+gpsbtime)..]
-  print wtts
-  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) datrunmed
+  return $ zip3 (map formatGPS btrunmed) (map formatGPS etrunmed) (map abs datrunmed)
 
-getThresholdStatus :: [Double]->NFMParam->IO[Double]
+getThresholdStatus :: Vector Double->NFMParam->IO[Double]
 getThresholdStatus ts np = do
-  let nfmFltDelay = nfmCalcFltDelay 0 (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
-  bpts <- applybandpass (fromList ts) np  
+  let nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
+  whitendatsample <- getWhitensample ts np
+  let psdmedian = gwpsdV whitendatsample (whitenFltStride np) (tsreSF np)
+      det = KAGRA
+      dataType = "test"
+      startGPSTime = (0,0)
+      stopGPSTime = (0,0)
+      tsWD = mkWaveData det dataType (tsreSF np) startGPSTime stopGPSTime ts
+      wtts = whiteningWaveData (lpefCoeffV (whitenFltOrder np) psdmedian) tsWD
+  bpts <- applybandpass (gwdata wtts) np  
   let ndatV = dim bpts
       bptssig = subVector nfmFltDelay (ndatV -nfmFltDelay) $ bpts
       bptssig2 = G.map (\x -> x*x) bptssig 
