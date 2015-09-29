@@ -11,6 +11,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
+import qualified Data.Vector.Algorithms.Heap as H (sort)
 
 import HasKAL.Misc.UMatrixMapping
 import HasKAL.SpectrumUtils.Signature
@@ -84,4 +85,5 @@ whiteningSpectrum snf hf = V.zipWith (/) hf snf
 getEmpiricalQuantile :: Double -> Vector Double -> Double
 getEmpiricalQuantile pVal datV = V.head $ V.drop (pIdx-1) $ sort4Vec datV
   where pIdx = truncate $ pVal * (fromIntegral $ V.length datV)
-        sort4Vec = fromList.sort.V.toList
+        -- sort4Vec = fromList.sort.V.toList
+        sort4Vec = modify H.sort
