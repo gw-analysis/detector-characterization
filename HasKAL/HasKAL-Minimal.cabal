@@ -199,7 +199,8 @@ library
        time,
        transformers,
        unix-compat,
-       vector
+       vector,
+       vector-algorithms
 
 
   -- Directories containing source files.

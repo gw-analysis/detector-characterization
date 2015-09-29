@@ -198,6 +198,7 @@ library
        hmatrix-special,
        hmatrix-gsl,
        vector,
+       vector-algorithms,
        HROOT==0.8.*,
        old-locale,
        time,
