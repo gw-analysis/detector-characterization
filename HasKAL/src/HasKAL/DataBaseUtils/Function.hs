@@ -141,7 +141,7 @@ kagraDataPointCore gpstime chname =
       return $ ch ! Frame.fname'
 
 
-db2framecache :: String -> IO [String]
+db2framecache :: Relation () Frame.Framedb -> IO (Maybe [String])
 db2framecache dbname = do
   maybefrlist <- db2framelist dbname
   case catMaybes maybefrlist of
@@ -149,7 +149,7 @@ db2framecache dbname = do
     x  -> return (Just x)
 
 
-db2framelist :: String -> IO [Maybe String]
+db2framelist :: Relation () Frame.Framedb -> IO [Maybe String]
 db2framelist dbname =
   handleSqlError' $ withConnectionIO connect $ \ conn ->
   runQuery' conn (relationalQuery core) ()
