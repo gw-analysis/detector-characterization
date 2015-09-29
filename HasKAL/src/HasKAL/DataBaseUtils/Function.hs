@@ -33,7 +33,7 @@ import Database.HDBC              (quickQuery', runRaw, fromSql)
 
 import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
-import Data.Maybe                 (fromJust, fromMaybe)
+import Data.Maybe                 (fromJust, fromMaybe, catMaybes)
 import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 
@@ -144,17 +144,14 @@ kagraDataPointCore gpstime chname =
 db2framecache :: String -> IO [String]
 db2framecache dbname = do
   maybefrlist <- db2framelist dbname
-  let out = [ x
-            | Just x <- maybefrlist
-            ]
-  case out of
+  case catMaybes maybefrlist of
     [] -> return Nothing
     x  -> return (Just x)
 
 
 db2framelist :: String -> IO [Maybe String]
 db2framelist dbname =
-  handleSqlError' $ withconnectionIO connect $ \ conn ->
+  handleSqlError' $ withConnectionIO connect $ \ conn ->
   runQuery' conn (relationalQuery core) ()
     where
       core = relation $ do
