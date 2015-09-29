@@ -1,6 +1,7 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
+import Data.Packed.Vector (subVector)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -44,13 +45,16 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwpsdV dat (truncate $ fftLength * fs) fs
+  let snf = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
   histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
 
+
+{-- Internal Functions --}
 show0 :: Int -> String -> String
 show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
   | otherwise   = number
   where len = length number
+

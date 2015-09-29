@@ -1,7 +1,9 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
+import Data.Packed.Vector (subVector)
 
+import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
@@ -22,10 +24,10 @@ main = do
       -- for SRMon
       fftLength = 1    -- seconds
       freqResol = 16   -- Hz
-      quantiles  = [0.50, 0.90, 0.95, 0.99] -- 0 < quantile < 1
+      quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
       oFile = channel++"-"++year++"-"++month++"-"++day++"_RMon.png"
-      title = "RayleighMon: " ++ channel
+      title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ channel
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 
   {-- read data --}
@@ -41,12 +43,13 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwpsdV dat (truncate $ fftLength * fs) fs
+  let snf = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
-  oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, GREEN, GREEN, PINK, PINK]
+  oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK]
     (xlabel, "normalized noise Lv.") 0.05 title oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
 
+{-- Internal Functions --}
 show0 :: Int -> String -> String
 show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
