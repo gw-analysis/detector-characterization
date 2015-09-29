@@ -11,4 +11,4 @@ main = do
   contents <- db2framecache dbname
   case contents of
     Nothing -> print "Nothing"
-    Just x -> writeFile fileName $ unlines contents
+    Just x -> writeFile fileName $ unlines x
