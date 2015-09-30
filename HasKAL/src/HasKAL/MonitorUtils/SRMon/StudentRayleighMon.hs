@@ -12,6 +12,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
+import qualified Data.Vector.Algorithms.Heap as H (sort)
 
 import HasKAL.Misc.UMatrixMapping
 import HasKAL.MonitorUtils.SRMon.Signature
@@ -81,12 +82,13 @@ whiteningSpectrum snf hf = V.zipWith (/) hf snf
 getNuQuantV :: Double -> Vector Double -> Double
 getNuQuantV pVal dataF = getClosestValueV e t
   where e = empiricalQuantileV pVal dataF
-        t = V.map (theoreticalQuantileV pVal) $ fromList [2.0, 2.1..100.0]
+        t = V.map (theoreticalQuantileV pVal) $ fromList [2.0, 2.1..200.0]
 
 empiricalQuantileV :: Double -> Vector Double -> Double
 empiricalQuantileV pVal dataF = V.unsafeIndex (sort4Vec dataF) (pIdx -1)
   where pIdx = truncate $ pVal * (fromIntegral $ V.length dataF)
-        sort4Vec = fromList.sort.V.toList -- vectorのソートに変更する
+        -- sort4Vec = fromList.sort.V.toList -- vectorのソートに変更する
+        sort4Vec = modify H.sort
 
 theoreticalQuantileV :: Double -> Double -> (Double, Double)
 theoreticalQuantileV pVal nu = (hkalCdfStudentRayleighPinv sigma nu pVal, nu)
