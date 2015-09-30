@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailySRMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/09/14 15:26:03
+# Last Modified: 2015/10/01 00:51:57
 #******************************************#
 
 # compiler option
@@ -30,10 +30,11 @@ endif
 all: ${TARs}
 
 ${TAR1}: ${TAR1}.hs ${DEPs}
+	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
-	rm -f ./*~ ./*.o ./*.hi
+	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
 
 cleanall: clean
 	rm -f ${TARs}
