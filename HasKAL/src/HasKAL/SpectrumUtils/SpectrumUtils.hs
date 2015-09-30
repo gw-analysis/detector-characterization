@@ -33,8 +33,8 @@ import Data.List (sort, foldl')
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
   where freqV = take (div nfft 2) $ toList $ linspace nfft (0, fs)
-        tV    = [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..(nt-1)]]
-        spec = map (\m -> (take (div nfft 2)).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft (fromList x)) nfft fs) [0..(nt-1)] :: [[Double]]
+        tV    = [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
+        spec = map (\m -> (take (div nfft 2)).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft (fromList x)) nfft fs) [0..nt] :: [[Double]]
         nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral nshift)
         nshift = nfft -noverlap
 
@@ -68,9 +68,9 @@ gwpsdMedianAverageCore dat nfft fs w = do
 gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
   where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
-        tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..(nt-1)]]
+        tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
-          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..(nt-1)] :: Matrix Double
+          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..nt)] :: Matrix Double
         nt = floor $ (fromIntegral (dim x -nfft)) /(fromIntegral nshift)
         nshift = nfft - noverlap
         nfft2 = div nfft 2
