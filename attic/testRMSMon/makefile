@@ -2,7 +2,7 @@ CC=ghc
 HC=ghc --make
 
 OBJ1=testRMSMon.hs
-OBJ1=testDailyRMSMon.hs
+OBJ2=testDailyRMSMon.hs
 
 DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
       ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
@@ -14,8 +14,7 @@ INCLINK=-
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=sypoliclink testRMSMon testDailyRMSMon
-#TARGET=sypoliclink testRMSMon
+TARGET=sypoliclink testRMSMon
 
 all:$(TARGET)
 
@@ -27,15 +26,9 @@ compile2:
 
 
 testRMSMon:${OBJ1} ${DEP3}
-	-ghc --make -o testRMSMon testRMSMon.hs -I/home/detchar/tools/include/root -lFrame -fPIC 
+	-ghc --make -o testRMSMon testRMSMon.hs -I/home/detchar/tools/include/root -lFrame -fPIC
 	-ghc --make -o testRMSMon testRMSMon.hs HasKAL/PlotUtils/HROOT/AppendFunction.cc -I/home/detchar/tools/include/root -lFrame -fPIC -lm -lgsl -lgslcblas
 	@echo "*** Making $@ ***"
-
-testDailyRMSMon:${OBJ1} ${DEP3}
-	${HC} -o $@ $^ -I/home/detchar/tools/include/root -lFrame -fPIC -lm -lgsl -lgslcblas
-	@echo "*** Making $@ ***"
-
-
 
 clean:
 	rm -f *.o *.hi
