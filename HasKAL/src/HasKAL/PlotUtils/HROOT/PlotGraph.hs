@@ -19,6 +19,8 @@ module HasKAL.PlotUtils.HROOT.PlotGraph (
   ,oPlotXV
   ,plotDateV
   ,plotDateXV
+  ,oPlotDateV
+  ,oPlotDateXV
 ) where
 
 import qualified Control.Monad as CM
@@ -80,6 +82,12 @@ plotDateV log mark lineWidth color xyLable labelSize title fname range gps dat =
 
 plotDateXV :: LogOption -> PlotTypeOption -> Int -> ColorOpt -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrum -> IO ()
 plotDateXV log mark lineWidth color xyLable labelSize title range gps dat = plotDateV log mark lineWidth color xyLable labelSize title "X11" range gps dat
+
+oPlotDateV :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> (String, String) -> Double -> String -> String -> ((Double, Double), (Double, Double)) -> Int -> [Spectrum] -> IO ()
+oPlotDateV log mark lineWidth colors xyLable labelSize title fname range gps dats = plotBaseV Over log mark lineWidth colors [xyLable] labelSize (repeat title) fname (repeat range) (replicate (length dats) gps) dats
+
+oPlotDateXV :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> (String, String) -> Double -> String -> ((Double, Double), (Double, Double)) -> Int -> [Spectrum] -> IO ()
+oPlotDateXV log mark lineWidth colors xyLable labelSize title range gps dats = oPlotDateV log mark lineWidth colors xyLable labelSize title "X11" range gps dats
 
 
 {-- Internal Functions --}
