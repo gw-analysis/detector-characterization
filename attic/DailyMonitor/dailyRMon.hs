@@ -13,30 +13,29 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 
 main = do
   args <- getArgs
-  (ch, year, month, day) <- case length args of
-                             4 -> return (args!!0, args!!1, show0 2 (args!!2), show0 2 (args!!3))
-                             _ -> error "Usage: dailySRMon channel yyyy mm dd"
+  (year, month, day, ch) <- case length args of
+                             4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
+                             _ -> error "Usage: dailyRMon yyyy mm dd channel"
 
   {-- parameters --}
-  let channel = ch
-      gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
+  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
       -- for SRMon
       fftLength = 1    -- seconds
       freqResol = 16   -- Hz
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile = channel++"-"++year++"-"++month++"-"++day++"_RMon.png"
-      title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ channel
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_RMon.png"
+      title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 
   {-- read data --}
-  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) channel
+  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
   let file = case mbFiles of
               Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
               _ -> head $ fromJust mbFiles
-  mbDat <- kagraDataGet gps duration channel
-  mbFs <- getSamplingFrequency file channel
+  mbDat <- kagraDataGet gps duration ch
+  mbFs <- getSamplingFrequency file ch
   let (dat, fs) = case (mbDat, mbFs) of
                    (Just a, Just b) -> (a, b)
                    (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
