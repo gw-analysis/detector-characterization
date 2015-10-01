@@ -24,12 +24,12 @@ import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 
 main = do
  args <- getArgs
- (channel, year, month, day, f1low, f1high, f2low, f2high, f3low, f3high) <- case length args of
-     10 -> return (args!!0, args!!1, show0 2 (args!!2), show0 2 (args!!3), args!!4, args!!5, args!!6, args!!7, args!!8, args!!9)
-     8 -> return (args!!0, args!!1, show0 2 (args!!2), show0 2 (args!!3), args!!4, args!!5, args!!6, args!!7, "0", "0")
-     6 -> return (args!!0, args!!1, show0 2 (args!!2), show0 2 (args!!3), args!!4, args!!5, "0", "0", "0", "0")
-     4 -> return (args!!0, args!!1, show0 2 (args!!2), show0 2 (args!!3), "0.1", "1", "1", "4", "4", "8")
-     _ -> error "Usage: dailyRMSMon channel yyyy mm dd f1low f1high f2low f2high f3low f3high\nex)\ndailyRMSMon K1:PEM-EX_MAG_X_FLOOR 2015 7 15 0.1 1 1 4 4 8"
+ (year, month, day, channel, f1low, f1high, f2low, f2high, f3low, f3high) <- case length args of
+     10 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, args!!8, args!!9)
+     8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
+     6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
+     4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "1", "1", "4", "4", "8")
+     _ ->  error "Usage: dailyRMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\ndailyRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 1 1 4 4 8"
 
 
  {-- parameters --}
