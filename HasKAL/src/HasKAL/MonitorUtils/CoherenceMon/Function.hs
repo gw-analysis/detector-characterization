@@ -4,6 +4,7 @@
 module HasKAL.MonitorUtils.CoherenceMon.Function (
   hBruco,
   coherenceMon,
+  delayCoherenceMon,
   coherenceTFMon
 ) where
 
@@ -30,10 +31,9 @@ coherenceMon :: Int              -- ^ length of FFT
           -> V.Vector Double  -- ^ time series 1: x(t)
           -> V.Vector Double  -- ^ time series 2: y(t)
           -> Spectrum         -- ^     coherency: |coh(f)|^2
-coherenceMon nfft fs xt yt = (fv, U.convert coh'f)
+coherenceMon nfft fs xt yt = (fv, coh'f1)
   where nfft' = min nfft $ min (V.length xt) (V.length yt)
         fv = V.fromList [0, fs/(fromIntegral nfft')..fs/2]
-        -- ずらしなしで計算
         xt1 = map (\i -> V.slice i nfft' xt) [0, nfft'..(V.length xt)-nfft']
         yt1 = map (\i -> V.slice i nfft' yt) [0, nfft'..(V.length yt)-nfft']
         xf1 = map fft' xt1
@@ -42,18 +42,12 @@ coherenceMon nfft fs xt yt = (fv, U.convert coh'f)
         pyy1 = ave $ map ps yf1
         pxy1 = ave $ zipWith cs xf1 yf1
         coh'f1 = V.slice 0 (V.length fv) $ coh pxy1 pxx1 pyy1
-        -- データを1/2ずらす
-        -- (位相遅れには応答があるので1点ずらしはしなくてい良い)
-        dur = nfft'`div`2
-        xt2 = map (\i -> V.slice (i+dur) nfft' xt) [0, nfft'..(V.length xt)-nfft'-dur]
-        yt2 = map (\i -> V.slice (i+dur) nfft' yt) [0, nfft'..(V.length xt)-nfft'-dur]
-        xf2 = map fft' xt2
-        yf2 = map fft' yt2
-        pxx2 = ave $ map ps xf2
-        pyy2 = ave $ map ps yf2
-        pxy2 = ave $ zipWith cs xf2 yf2
-        coh'f2 = V.slice 0 (V.length fv) $ coh pxy2 pxx2 pyy2
-        coh'f = V.zipWith max coh'f1 coh'f2
+
+delayCoherenceMon :: Int -> Double -> V.Vector Double -> V.Vector Double -> Spectrum
+delayCoherenceMon nfft fs xt yt = (fv1, V.zipWith max coh1 coh2)
+  where (fv1, coh1) = coherenceMon nfft fs xt yt
+        (fv2, coh2) = coherenceMon nfft fs (V.drop (nfft`div`2) xt) (V.drop (nfft`div`2) yt)
+
 
 -- | TF map of coherency
 coherenceTFMon :: Int             -- ^   shift point
