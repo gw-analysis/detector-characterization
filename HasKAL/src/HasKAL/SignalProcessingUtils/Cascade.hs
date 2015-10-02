@@ -32,9 +32,9 @@ tf2cascade (num, denom) =
         ++ [([1, -realPart (last zeror), 0], [1, -realPart (last poler), 0])]
       | length poler == 2 = zip secNum secDenom
         ++ [([1, -realPart (last poler)-realPart (last.init $ poler)
-           , -realPart (last poler)*realPart (last.init  $ poler)]
+           , realPart (last poler)*realPart (last.init  $ poler)]
            , [1, -realPart (last zeror)-realPart (last.init $ zeror)
-           , -realPart (last zeror)*realPart (last.init $ zeror)])]
+           , realPart (last zeror)*realPart (last.init $ zeror)])]
       | otherwise = error "something wrong,  perhaps you have >2 real zero"
 
 
