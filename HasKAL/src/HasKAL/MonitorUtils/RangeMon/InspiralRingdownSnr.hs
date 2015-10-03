@@ -25,19 +25,19 @@ import Numeric.LinearAlgebra
 
  -- 光速の定義
 c :: Vector Double
-c  = fromList hasKAL_const_mksa_speed_of_light
+c  = fromList [hasKAL_const_mksa_speed_of_light]
 
  -- 万有引力定数の定義
 g :: Vector Double
-g = fromList hasKAL_const_mksa_gravitational_constant
+g = fromList [hasKAL_const_mksa_gravitational_constant]
 
  -- 太陽質量[kg]
 msolar :: Vector Double
-msolar = fromList hasKAL_const_mksa_solar_mass
+msolar = fromList [hasKAL_const_mksa_solar_mass]
 
  -- Mpc[m]
 megapc :: Vector Double
-megapc = fromList (hasKAL_const_mksa_parsec * 10**(6))
+megapc = fromList [(hasKAL_const_mksa_parsec * 10**(6))]
 
 
  --- integratedInpiral:インスパイラルのSNRの被積分関数を定義
