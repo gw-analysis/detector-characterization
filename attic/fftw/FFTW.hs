@@ -10,6 +10,9 @@ module FFTW
 , idct1d
 , dct2d
 , idct2d
+-- * Real to Complex
+, dftRC1d
+, dftCR1d
 )
 where
 
@@ -105,6 +108,23 @@ idct2d m = do
         (n, ptr) = toForeignPtr $ dct3N [0, 1] arr
      in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
 
+dftRC1d :: VS.Vector Double -> VS.Vector (NL.Complex Double)
+dftRC1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ dftRC arr
+   in VS.unsafeFromForeignPtr0 ptr n
+
+
+dftCR1d :: VS.Vector (NL.Complex Double) -> VS.Vector Double
+dftCR1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ dftCR arr
+   -- in VS.map (1/fromIntegral len *) $ VS.unsafeFromForeignPtr0 ptr n
+   in VS.unsafeFromForeignPtr0 ptr n -- 1/N無しで元に戻る定義になっている
 
 
 scaling i n v = do
