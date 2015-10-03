@@ -228,6 +228,7 @@ library
        transformers,
        resourcet,
        conduit,
+       array,
        carray
 
 
