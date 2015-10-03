@@ -48,9 +48,9 @@ updateFrameDB fname = doesFileExist fname >>= \b ->
        else error "file not found."
 
 
-updateFrameDBfromcache fname = doesFileExist cachefname >>= \b ->
+updateFrameDBfromcache fname = doesFileExist fname >>= \b ->
   if b then withConnectionIO' DD.connect $ \conn -> do
-         runResourceT $ sourcefromcache cachefname $$ sink
+         runResourceT $ sourcefromcache fname $$ sink
          rollback conn
        else error "file not found."
 
