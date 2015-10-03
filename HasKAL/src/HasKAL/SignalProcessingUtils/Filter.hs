@@ -42,6 +42,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , iirFilter
   , firFilter
   , filtfilt
+  , sosfilter
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
@@ -103,7 +104,6 @@ firFilter input firCoeff = do
   cd2d $ firFilterCore input' ilen firCoeff' flen
 
 
-
 filtfilt :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 filtfilt (numCoeff, denomCoeff) inputV = do
   let ilen = VS.length inputV
@@ -112,6 +112,16 @@ filtfilt (numCoeff, denomCoeff) inputV = do
       numCoeff' = d2cd numCoeff
       denomCoeff' = d2cd denomCoeff
   cd2dV $ filtfiltCore inputV' ilen numCoeff' denomCoeff' flen
+
+
+sosfilter :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
+sosfilter coeffs inputV =
+  let (num, denom) = unzip coeffs
+      nums = map (\i->map (!!i) num) [0..length head num-1]
+      denoms = map (\i->map (!!i) denom) [0..length head denom-1]
+      ilen = VS.length inputV
+      nsec = length coeff
+   in cd2dV $ sosfilterCore inputV ilen (nums!!0) (num!!1) (num!!2) (denom!!0) (denom!!1) (denom!!2) nsec
 
 
 -------------  Internal Functions  -----------------------------
@@ -206,6 +216,24 @@ filtfiltCore input ilen numCoeff denomCoeff flen
       where wilen = itow32 ilen
             wflen = itow32 flen
 
+
+sosfilterCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+sosfilterCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray num0 $ \ptrNum0 ->
+   withArray num1 $ \ptrNum1 ->
+   withArray num2 $ \ptrNum2 ->
+   withArray denom0 $ \ptrDenom0 ->
+   withArray denom1 $ \ptrDenom1 ->
+   withArray denom2 $ \ptrDenom2 ->
+   allocaArray ilen $ \ptrOutput ->
+   do c'sosfilter ptrInput wilen ptrNum0 ptrNum1 ptrNum2 ptrDenom0 ptrDenom1 ptrDenom2 wnsec ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wnsec = itow32 nsec
+
+
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
 
@@ -229,4 +257,4 @@ foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble 
 
 foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
-
+foreign import ccall "filterFunctions.h sosfilter" c'sosfilter :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
