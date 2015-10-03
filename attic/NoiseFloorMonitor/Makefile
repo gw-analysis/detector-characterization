@@ -13,8 +13,8 @@ USELIB=
 
 # program
 TAR1=test_nfm_gwf
-TAR2=test_nfm_wavedata
-TAR3=test_wavedata
+TAR2=test_cleandata
+TAR3=test_flag
 TAR4=check_wfilter
 TAR= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
 
