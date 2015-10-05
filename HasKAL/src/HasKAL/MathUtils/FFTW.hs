@@ -6,68 +6,24 @@ module HasKAL.MathUtils.FFTW
 , dftHR1d
 , dftRH2d
 , dftHR2d
-, dftRC1d
-, dftCR1d
-, dftRC2d
-, dftCR2d
 , dct1d
 , idct1d
 , dct2d
 , idct2d
+-- * Real to Complex
+, dftRC1d
+, dftCR1d
 )
 where
 
-
 import qualified Data.Vector.Storable as VS
-import Data.Array.CArray
-import Foreign.ForeignPtr (withForeignPtr)
 import Foreign.Storable (pokeElemOff)
+import Data.Array.CArray
 import Math.FFT
+import System.IO.Unsafe (unsafePerformIO)
 import qualified Numeric.LinearAlgebra as NL
 import Numeric.LinearAlgebra.Devel (unsafeMatrixToForeignPtr, matrixFromVector, MatrixOrder(..))
-import System.IO.Unsafe (unsafePerformIO)
-
-
-dftRC1d :: VS.Vector Double -> VS.Vector (NL.Complex Double)
-dftRC1d vin = do
-  let len = VS.length vin
-      arr = unsafePerformIO $ createCArray (0, len-1)
-        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
-      (n, ptr) = toForeignPtr $ dftRC arr
-   in VS.unsafeFromForeignPtr0 ptr n
-
-
-dftCR1d :: VS.Vector (NL.Complex Double) -> VS.Vector Double
-dftCR1d vin = do
-  let len = VS.length vin
-      arr = unsafePerformIO $ createCArray (0, len-1)
-        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
-      (n, ptr) = case (even len) of
-        True -> toForeignPtr $ dftCR arr
-        False-> toForeignPtr $ dftCRO arr
-   in VS.map (1/fromIntegral len *) $ VS.unsafeFromForeignPtr0 ptr n
-
-
-dftRC2d :: NL.Matrix Double -> NL.Matrix (NL.Complex Double)
-dftRC2d m = do
-    let mm = NL.rows m :: Int
-        mn = NL.cols m :: Int
-        arr = unsafePerformIO
-          $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m) ((0, 0), (mm-1, mn-1))
-        (n,  ptr) = toForeignPtr $  dftRCN [0, 1] arr
-     in matrixFromVector RowMajor mm mn $ VS.unsafeFromForeignPtr0 ptr n
-
-
-dftCR2d :: NL.Matrix (NL.Complex Double) -> NL.Matrix Double
-dftCR2d m = do
-    let mm = NL.rows m :: Int
-        mn = NL.cols m :: Int
-        arr = unsafePerformIO
-          $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m) ((0, 0), (mm-1, mn-1))
-        (n, ptr) = toForeignPtr $ dftCRN [0, 1] arr
-     in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
-          where
-            scaling2d m n = 1/(fromIntegral m * fromIntegral n)
+import Foreign.ForeignPtr (withForeignPtr)
 
 
 dftRH1d :: VS.Vector Double -> VS.Vector Double
@@ -152,6 +108,23 @@ idct2d m = do
         (n, ptr) = toForeignPtr $ dct3N [0, 1] arr
      in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
 
+dftRC1d :: VS.Vector Double -> VS.Vector (NL.Complex Double)
+dftRC1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ dftRC arr
+   in VS.unsafeFromForeignPtr0 ptr n
+
+
+dftCR1d :: VS.Vector (NL.Complex Double) -> VS.Vector Double
+dftCR1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ dftCR arr
+   -- in VS.map (1/fromIntegral len *) $ VS.unsafeFromForeignPtr0 ptr n
+   in VS.unsafeFromForeignPtr0 ptr n -- 1/N無しで元に戻る定義になっている
 
 
 scaling i n v = do
