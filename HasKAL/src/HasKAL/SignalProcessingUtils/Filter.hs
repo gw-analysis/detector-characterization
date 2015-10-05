@@ -43,6 +43,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , firFilter
   , filtfilt
   , sosfilter
+  , sos1filter
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
@@ -117,11 +118,23 @@ filtfilt (numCoeff, denomCoeff) inputV = do
 sosfilter :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
 sosfilter coeffs inputV =
   let (num, denom) = unzip coeffs
-      nums = map (\i->map (!!i) num) [0..length head num-1]
-      denoms = map (\i->map (!!i) denom) [0..length head denom-1]
+      nums = map (\i->d2cd $ map (!!i) num) [0..length (head num)-1]
+      denoms = map (\i->d2cd $ map (!!i) denom) [0..length (head denom)-1]
       ilen = VS.length inputV
-      nsec = length coeff
-   in cd2dV $ sosfilterCore inputV ilen (nums!!0) (num!!1) (num!!2) (denom!!0) (denom!!1) (denom!!2) nsec
+      nsec = length coeffs
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+   in cd2dV $ sosfilterCore inputV' ilen (nums!!0) (nums!!1) (nums!!2) (denoms!!0) (denoms!!1) (denoms!!2) nsec
+
+
+
+sos1filter :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
+sos1filter (num, denom) inputV =
+  let inputV' = d2cdV inputV :: VS.Vector CDouble
+      ilen = VS.length inputV
+      num' = d2cd num
+      denom' = d2cd denom
+      nsec = 1
+   in cd2dV $ sosfilterCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec
 
 
 -------------  Internal Functions  -----------------------------
