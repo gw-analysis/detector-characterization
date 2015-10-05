@@ -13,6 +13,8 @@ module HasKAL.MathUtils.FFTW
 -- * Real to Complex
 , dftRC1d
 , dftCR1d
+, dftRC2d
+, dftCR2d
 )
 where
 
@@ -94,7 +96,6 @@ dct2d m = do
         (n,  ptr) = toForeignPtr $ dct2N [0, 1] arr
         outM = matrixFromVector RowMajor mm mn
           $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
-
      in NL.mapMatrixWithIndex (\(r, c) v -> ar r c v) outM
 
 
@@ -107,6 +108,7 @@ idct2d m = do
           $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m') ((0, 0), (mm-1, mn-1))
         (n, ptr) = toForeignPtr $ dct3N [0, 1] arr
      in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
+
 
 dftRC1d :: VS.Vector Double -> VS.Vector (NL.Complex Double)
 dftRC1d vin = do
@@ -124,6 +126,28 @@ dftCR1d vin = do
         $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
       (n,  ptr) = toForeignPtr $ dftCR arr
    in VS.unsafeFromForeignPtr0 ptr n
+
+
+dftRC2d :: NL.Matrix Double -> NL.Matrix (NL.Complex Double)
+dftRC2d m = do
+    let mm = NL.rows m :: Int
+        mn = NL.cols m :: Int
+        arr = unsafePerformIO
+          $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m) ((0, 0), (mm-1, mn-1))
+        (n,  ptr) = toForeignPtr $  dftRCN [0, 1] arr
+     in matrixFromVector RowMajor mm mn $ VS.unsafeFromForeignPtr0 ptr n
+
+
+dftCR2d :: NL.Matrix (NL.Complex Double) -> NL.Matrix Double
+dftCR2d m = do
+    let mm = NL.rows m :: Int
+        mn = NL.cols m :: Int
+        arr = unsafePerformIO
+          $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m) ((0, 0), (mm-1, mn-1))
+        (n, ptr) = toForeignPtr $ dftCRN [0, 1] arr
+     in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
+          where
+            scaling2d m n = 1/(fromIntegral m * fromIntegral n)
 
 
 scaling i n v = do
