@@ -123,8 +123,7 @@ dftCR1d vin = do
       arr = unsafePerformIO $ createCArray (0, len-1)
         $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
       (n,  ptr) = toForeignPtr $ dftCR arr
-   -- in VS.map (1/fromIntegral len *) $ VS.unsafeFromForeignPtr0 ptr n
-   in VS.unsafeFromForeignPtr0 ptr n -- 1/N無しで元に戻る定義になっている
+   in VS.unsafeFromForeignPtr0 ptr n
 
 
 scaling i n v = do
