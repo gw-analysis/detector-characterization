@@ -17,6 +17,7 @@ import Data.Complex
 import Data.List (sort, foldl1')
 import Data.Matrix.Unboxed (toLists, fromColumns)
 import HasKAL.SpectrumUtils.Signature
+import HasKAL.MathUtils.FFTW (dftRC1d)
 
 
 -- | Bruco like tool
@@ -36,8 +37,8 @@ coherenceMon nfft fs xt yt = (fv, coh'f1)
         fv = V.fromList [0, fs/(fromIntegral nfft')..fs/2]
         xt1 = map (\i -> V.slice i nfft' xt) [0, nfft'..(V.length xt)-nfft']
         yt1 = map (\i -> V.slice i nfft' yt) [0, nfft'..(V.length yt)-nfft']
-        xf1 = map fft' xt1
-        yf1 = map fft' yt1
+        xf1 = map dftRC1d xt1
+        yf1 = map dftRC1d yt1
         pxx1 = ave $ map ps xf1
         pyy1 = ave $ map ps yf1
         pxy1 = ave $ zipWith cs xf1 yf1
@@ -65,10 +66,6 @@ coherenceTFMon nshift nchunck nfft fs xt yt = (tV, fV, coh'tf)
                  $ map (\i -> snd $ coherenceMon nfft fs (V.slice i nchunck' xt) (V.slice i nchunck' yt)) [0, nshift..nstop]
         nstop = min (V.length xt) (V.length yt) - nchunck'
 
--- | FFT for real part data
-fft' :: V.Vector Double          -- ^      time series: x(t)
-     -> V.Vector (Complex Double) -- ^ fourier spectrum: x(f)
-fft' xt = fft $ V.map r2c xt
 
 -- | power spectrum w/o FFT norm
 ps :: V.Vector (Complex Double) -- ^ fourier spectrum: x(f)
@@ -97,6 +94,4 @@ coh pxy pxx pyy = V.zipWith (/) coeff denom
   where coeff = V.map ((**2).magnitude) $ pxy
         denom = V.zipWith (*) pxx pyy
 
-r2c :: Double -> Complex Double
-r2c x = x :+ 0
 
