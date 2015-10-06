@@ -68,17 +68,13 @@ tf2cparallel (num', denom') = do
    in (c, gpf, alpha)
 
 
-d2clist :: [Double] -> [Complex Double]
-d2clist = map (:+0)
-
-
-
 iirp :: ([Double], [([Double], [Double])]) -> VS.Vector Double -> VS.Vector Double
 iirp (firpart, iirpart) v = case null firpart of
   True  -> applyIIR iirpart v
   False -> applyFIRIIR firpart iirpart v
 
 
+{- internal functions -}
 applyIIR :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
 applyIIR coeffs v = unsafePerformIO $ do
   jobs <- mapM (\c -> async (return $ sos1filter c v)) coeffs
@@ -93,6 +89,9 @@ applyFIRIIR firpart iirpart v = unsafePerformIO $ do
   outs <- mapM wait (firjob : iirjobs)
   return $ foldl1' (+) outs
 
+
+d2clist :: [Double] -> [Complex Double]
+d2clist = map (:+0)
 
 
 
