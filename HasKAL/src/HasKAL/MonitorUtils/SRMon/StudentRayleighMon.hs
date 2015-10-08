@@ -7,12 +7,11 @@ module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
   ,studentRayleighMonV
 ) where
 
-import Data.List (sort)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
-import qualified Data.Vector.Algorithms.Heap as H (sort)
+import qualified Data.Vector.Algorithms.Heap as H (sort,select)
 
 import HasKAL.Misc.UMatrixMapping
 import HasKAL.MonitorUtils.SRMon.Signature
@@ -85,10 +84,11 @@ getNuQuantV pVal dataF = getClosestValueV e t
         t = V.map (theoreticalQuantileV pVal) $ fromList [2.0, 2.1..200.0]
 
 empiricalQuantileV :: Double -> Vector Double -> Double
-empiricalQuantileV pVal dataF = V.unsafeIndex (sort4Vec dataF) (pIdx -1)
+-- empiricalQuantileV pVal dataF = V.unsafeIndex (sort4Vec dataF) (pIdx -1)
+empiricalQuantileV pVal dataF = V.head $ select4Vec (pIdx-1) dataF
   where pIdx = truncate $ pVal * (fromIntegral $ V.length dataF)
-        -- sort4Vec = fromList.sort.V.toList -- vectorのソートに変更する
-        sort4Vec = modify H.sort
+        -- sort4Vec = modify H.sort
+        select4Vec k = modify (flip H.select (k+1))
 
 theoreticalQuantileV :: Double -> Double -> (Double, Double)
 theoreticalQuantileV pVal nu = (hkalCdfStudentRayleighPinv sigma nu pVal, nu)
