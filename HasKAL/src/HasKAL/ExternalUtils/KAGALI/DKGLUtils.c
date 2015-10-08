@@ -25,7 +25,8 @@ void DKGLFIRBandPassFilter( //begin{proto}
   
   double *bpfh = NULL;
   KGLCallocAbortIfError(bpfh,nKernel,double,status);
-  KGLFIRBandPassFilterKernel(status,bpfh,iWindow,nKernel,flow/fs,fhigh/fs);
+  double Astop = 56.0;
+  KGLFIRBandPassFilterKernel(status,bpfh,iWindow,nKernel,Astop,flow/fs,fhigh/fs);
   
   for(int i = 0; i < npoint; i += iratio){
     dataout[i] = 0;
