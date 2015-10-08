@@ -10,16 +10,14 @@ import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Signature
-import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsDailyMon)
+import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 
 {-- memo
-    running time : ~10min 15s = 615s
-
+    running time : 10min ~ 12min
     usage : 
-
 --}
 
 main = do
@@ -34,8 +32,8 @@ main = do
 
  {-- parameters --}
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
-
  let totalduration = 86400 :: Int -- 1day = 86400s
+
 -- let totalduration = 100 :: Int
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
@@ -57,8 +55,13 @@ main = do
      f2band = ((read f2low::Double), (read f2high::Double))
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
- let rms   = rmsDailyMon fs ys freq
+ let nmon = floor (5760 * fs) ::Int -- 86400s / 15chunk = 5760s
+ let rms   = rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
+
+ print $ (DVG.length ys) `div` nmon
+ print $ (DVG.length ys)
+ print $ nmon
 
  let color = [BLUE, RED, PINK]
      title = setTitle f1low f1high f2low f2high f3low f3high channel
