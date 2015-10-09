@@ -6,7 +6,8 @@ import Data.Packed.Vector (subVector)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
+import SpectrumUtilsRefac (gwpsdV, gwspectrogramV)
+-- import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 
@@ -23,7 +24,7 @@ main = do
       -- for SRMon
       fftLength = 1    -- seconds
       srmLength = 3600 -- seconds
-      timeShift = 1800 -- seconds
+      timeShift = 3600 -- seconds
       freqResol = 16   -- Hz
       quantile  = 0.99 -- 0 < quantile < 1
       -- for Plot
