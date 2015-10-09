@@ -2,7 +2,7 @@
 #******************************************#
 #     File Name: test.sh
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/09/28 16:28:13
+# Last Modified: 2015/10/02 00:19:09
 #******************************************#
 
 
@@ -34,4 +34,5 @@ do
     day=`expr ${day} + 1`
 done
 
-${CMD} --jobs 4 "${MONITOR} {} 2015 ${month} {}" ::: ${days} ::: ${CHANNELS}
+${CMD} --joblog "zzz.log" --jobs 49 "${MONITOR} 2015 ${month} {1} {2}" ::: ${days} ::: ${CHANNELS}
+
