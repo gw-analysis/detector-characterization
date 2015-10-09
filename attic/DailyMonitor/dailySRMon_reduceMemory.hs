@@ -33,6 +33,8 @@ main = do
       tShiftMod = mod timeShift srmLength
       freqResol = 16   -- Hz
       quantile  = 0.99 -- 0 < quantile < 1
+      -- for data base
+      dbchunck = srmLength
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_SRMon.png"
       title = "StudentRayleighMon: " ++ ch
@@ -48,7 +50,6 @@ main = do
             Just a -> a
             Nothing -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
-  let dbchunck = truncate $ (fromIntegral srmLength*3) * fs / 2048 -- メモリ量を微調整
   mbDat1 <- kagraDataGet gps dbchunck ch
   let dat1 = case mbDat1 of
               Just a -> a
