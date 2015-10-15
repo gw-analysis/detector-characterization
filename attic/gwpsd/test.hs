@@ -8,7 +8,8 @@
 
 import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe)
-import TESTBEDGPWPSD(gwOnesidedPSDWelchP1, gwOnesidedPSDWelchP2)
+--import TESTBEDGPWPSD(gwOnesidedPSDWelchP1, gwOnesidedPSDWelchP2)
+import TESTBEDGPWPSD(gwpsdV)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 --import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV)
 import HasKAL.FrameUtils.Function (readFrameV)
@@ -16,7 +17,7 @@ import HasKAL.FrameUtils.FrameUtils(getChannelList)
 import HasKAL.SignalProcessingUtils.WindowType
 import Data.Time
 import Control.DeepSeq (deepseq)
-import SpectrumUtilsRefac (gwpsdV, gwpsdVP)
+--import SpectrumUtilsRefac (gwpsdV, gwpsdVP)
 
 main = do
   let fname = "L-L1_LOSC_4_V1-855318528-4096.gwf"
