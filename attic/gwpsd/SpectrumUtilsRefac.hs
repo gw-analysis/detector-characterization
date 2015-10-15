@@ -7,6 +7,7 @@ module SpectrumUtilsRefac
 -- , gwpsd
 -- , gwspectrogram
 , gwpsdV
+, gwpsdVP
 , gwspectrogramV
 )
 where
@@ -30,6 +31,7 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 --import HasKAL.SpectrumUtils.AuxFunction(sort, median)
 import Data.List (sort, foldl')
 
+import Control.Parallel.Strategies (runEval, parMap, rdeepseq)
 {- in case of List data type -}
 -- gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 -- gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
@@ -115,6 +117,48 @@ gwpsdWelchV dat nfft fs w = do
     applyWindow windowtype
       | windowtype==Hann = map (windowed (hanning nfft))
       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+
+gwpsdVP :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwpsdVP dat nfft fs = gwpsdCoreVP Welch dat nfft fs Hann
+
+
+gwpsdCoreVP :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdCoreVP method dat nfft fs w
+  | method==Welch = gwpsdWelchVP dat nfft fs w
+  | method==MedianAverage = gwpsdMedianAverageCoreV dat nfft fs w
+  | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
+
+
+gwpsdWelchVP :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdWelchVP dat nfft fs w = runEval $ do
+  let ndat = dim dat
+      maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
+      datlist = takesV (take maxitr (repeat nfft)) dat
+      -- fft_val = applyFFT . applytoComplex . applyTuplify2 . applyWindow w $ datlist
+      fft_val = applyFFT . applyWindow w $ datlist
+      -- power =  map (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
+      power =  parMap rdeepseq (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
+      -- meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros nfft) power
+      meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros (nfft`div`2+1)) power
+      scale_psd = 1/(fromIntegral nfft * fs)
+  -- (linspace nfft (0, fs), scale scale_psd meanpower)
+  return (linspace (nfft`div`2+1) (0, fs/2), scale scale_psd meanpower)
+  where
+    -- applyFFT :: [Vector (Complex Double)] -> [Vector (Complex Double)]
+    -- applyFFT = map fft
+    applyFFT :: [Vector Double] -> [Vector (Complex Double)]
+    applyFFT = parMap rdeepseq dftRC1d
+    -- applytoComplex :: [(Vector Double, Vector Double)] -> [Vector (Complex Double)]
+    -- applytoComplex = map toComplex
+    -- applyTuplify2 :: [Vector Double] -> [(Vector Double, Vector Double)]
+    -- applyTuplify2 = map (tuplify2 (constant 0 nfft))
+    applyWindow :: WindowType -> [Vector Double] -> [Vector Double]
+    applyWindow windowtype
+      | windowtype==Hann = parMap rdeepseq (windowed (hanning nfft))
+      | otherwise = error "No such window implemented. Check WindowType.hs"
+
 
 
 gwpsdMedianAverageCoreV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)

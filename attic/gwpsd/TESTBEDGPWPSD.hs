@@ -4,7 +4,8 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
 
 module TESTBEDGPWPSD
-( gwpsdWelchP
+( gwOnesidedPSDWelchP1
+, gwOnesidedPSDWelchP2
 )
 where
 
@@ -28,7 +29,7 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 --import HasKAL.SpectrumUtils.AuxFunction(sort, median)
 import Data.List (foldl1')
 import Control.Concurrent.Async (async, wait)
-import HasKAL.MathUtils.FFTW (dftRH1d)
+import HasKAL.MathUtils.FFTW (dftRH1d, dftRC1d)
 import System.IO.Unsafe (unsafePerformIO)
 import Numeric.LinearAlgebra.Devel (STVector, runSTVector, unsafeThawVector, modifyVector)
 import Control.Monad.ST (ST)
@@ -38,14 +39,29 @@ import Control.Parallel.Strategies (runEval, parMap, rdeepseq)
 
 
 -- | parallized
-gwpsdWelchP :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
-gwpsdWelchP dat nfft fs w = runEval $ do
+gwOnesidedPSDWelchP1 :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDWelchP1 dat nfft fs w = runEval $ do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
       datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
       onesided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v))) datlist
       outs = 1/(fromIntegral maxitr) * foldl1' (+) onesided
   return $ (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+
+
+
+gwOnesidedPSDWelchP2 :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDWelchP2 dat nfft fs w = runEval $ do
+  let ndat = dim dat
+      maxitr = ndat `div` nfft :: Int
+      datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      twosided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
+      outs = 1/(fromIntegral maxitr) * foldl1' (+) twosided
+  return (linspace (nfft `div` 2+1) (0, fs/2), outs)
+
+
+toSquaredSum :: (Vector Double, Vector Double) -> Vector Double
+toSquaredSum (v, w) = mapVector (**2.0) v + mapVector (**2.0) w
 
 
 calcPower :: Int -> Vector Double -> Vector Double

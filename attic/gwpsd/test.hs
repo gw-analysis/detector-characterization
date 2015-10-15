@@ -8,16 +8,15 @@
 
 import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe)
---import TESTBEDGPWPSD(gwpsdWelchVC)
-import TESTBEDGPWPSD(gwpsdWelchP)
+import TESTBEDGPWPSD(gwOnesidedPSDWelchP1, gwOnesidedPSDWelchP2)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV)
+--import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV)
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils(getChannelList)
 import HasKAL.SignalProcessingUtils.WindowType
 import Data.Time
 import Control.DeepSeq (deepseq)
-
+import SpectrumUtilsRefac (gwpsdV, gwpsdVP)
 
 main = do
   let fname = "L-L1_LOSC_4_V1-855318528-4096.gwf"
@@ -25,11 +24,12 @@ main = do
   let (ch, fs) = head [ (x, y) | (x, y) <- (fromMaybe (error "not valid data") ch'), isInfixOf "STRAIN" x]
   x <- readFrameV ch fname
   let dat = fromMaybe (error "not valid data") x
-  let nfft = truncate fs
+  dat `deepseq` return ()
+  let nfft = 10*truncate fs
 
   t1 <- getCurrentTime
-  let psd = gwpsdWelchP dat nfft fs Hann
---  let psd = gwpsdV dat nfft fs
+--  let psd = gwOnesidedPSDWelchP2 dat nfft fs Hann
+  let psd = gwpsdV dat nfft fs
   psd `deepseq` return ()
   t2 <- getCurrentTime
 
