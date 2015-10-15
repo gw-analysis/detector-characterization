@@ -8,7 +8,8 @@
 
 import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe)
-import TESTBEDGPWPSD(gwpsdWelchVC)
+--import TESTBEDGPWPSD(gwpsdWelchVC)
+import TESTBEDGPWPSD(gwpsdWelchP)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV)
 import HasKAL.FrameUtils.Function (readFrameV)
@@ -27,7 +28,7 @@ main = do
   let nfft = truncate fs
 
   t1 <- getCurrentTime
-  let psd = gwpsdWelchVC dat nfft fs Hann
+  let psd = gwpsdWelchP dat nfft fs Hann
 --  let psd = gwpsdV dat nfft fs
   psd `deepseq` return ()
   t2 <- getCurrentTime

@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -XBangPatterns #-}
 
 module TESTBEDGPWPSD
-( gwpsdWelchVC
+( gwpsdWelchP
 )
 where
 
@@ -34,15 +34,18 @@ import Numeric.LinearAlgebra.Devel (STVector, runSTVector, unsafeThawVector, mod
 import Control.Monad.ST (ST)
 
 
---main = do
-gwpsdWelchVC :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
-gwpsdWelchVC dat nfft fs w = unsafePerformIO $ do
+import Control.Parallel.Strategies (runEval, parMap, rdeepseq)
+
+
+-- | parallized
+gwpsdWelchP :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdWelchP dat nfft fs w = runEval $ do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
       datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
-  fftjobs <- mapM (\v->async (return $ scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v)))) datlist
-  outs <- mapM wait fftjobs
-  return $ (linspace (succ $ nfft `div` 2) (0, fs/2), 1/(fromIntegral maxitr) * foldl1' (+) outs)
+      onesided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v))) datlist
+      outs = 1/(fromIntegral maxitr) * foldl1' (+) onesided
+  return $ (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
 
 
 calcPower :: Int -> Vector Double -> Vector Double
