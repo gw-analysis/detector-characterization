@@ -35,7 +35,7 @@ import HasKAL.MathUtils.FFTW (dftRH1d, dftRC1d)
 import Numeric.LinearAlgebra.Devel (STVector, runSTVector, unsafeThawVector, modifyVector)
 import Control.Monad.ST (ST)
 
-
+-- paralell
 import Control.Parallel.Strategies (runEval, parMap, rdeepseq)
 
 

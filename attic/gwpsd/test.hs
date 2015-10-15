@@ -19,6 +19,8 @@ import Data.Time
 import Control.DeepSeq (deepseq)
 --import SpectrumUtilsRefac (gwpsdV, gwpsdVP)
 
+
+
 main = do
   let fname = "L-L1_LOSC_4_V1-855318528-4096.gwf"
   ch' <- getChannelList fname
