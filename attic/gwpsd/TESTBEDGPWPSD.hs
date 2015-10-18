@@ -48,7 +48,14 @@ gwpsdV dat nfft fs = gwpsdCoreVP Welch dat nfft fs Hann
 
 gwpsdCoreVP :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwpsdCoreVP method dat nfft fs w
-  | method==Welch = gwOnesidedPSDWelchP1 dat nfft fs w
+  | method==Welch = gwOnesidedPSDWelchP2 dat nfft fs w
+  | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
+
+
+
+gwpsdCoreVS :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwpsdCoreVS method dat nfft fs w
+  | method==Welch = gwOnesidedPSDWelchS2 dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
 
@@ -67,19 +74,98 @@ gwOnesidedPSDWelchP1 dat nfft fs w = do
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
 
 
+--slow
+gwOnesidedPSDWelchS1 dat nfft fs w = do
+  let ndat = dim dat
+      maxitr = ndat `div` nfft :: Int
+ --     !datlist = mkChunks dat nfft :: [Vector Double]
+      datlist = takesV (take maxitr (repeat nfft)) dat
+      onesided = map (\v-> scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v))) datlist
+      outs = 1/(fromIntegral maxitr) * foldl1' (+) onesided
+   in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+
+
 -- | parallized
-gwOnesidedPSDWelchP2 :: Vector Double
+gwOnesidedPSDWelchP2' :: Vector Double
                      -> Int
                      -> Double
                      -> WindowType
                      -> (Vector Double, Vector Double)
-gwOnesidedPSDWelchP2 dat nfft fs w = do
+gwOnesidedPSDWelchP2' dat nfft fs w = do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
       datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
       twosided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
       outs = 1/(fromIntegral maxitr) * foldl1' (+) twosided
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+
+
+-- fast
+gwOnesidedPSDWelchS2 dat nfft fs w = do
+  let ndat = dim dat
+      maxitr = ndat `div` nfft :: Int
+      --datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      --datlist = takesV (take maxitr (repeat nfft)) dat
+      datlist = mkChunks dat nfft :: [Vector Double]
+
+      psdgain = 2.0/(fromIntegral nfft * fs)
+      ffted = mapFFT . mapApplyWindowFunction w $ datlist
+      power = map (abs . fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      outs = scale (psdgain/(fromIntegral maxitr)) $ foldr1 (+) power
+   in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+   where
+     mapFFT = map dftRC1d
+     mapApplyWindowFunction windowtype
+       | windowtype==Hann = map (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+
+
+gwOnesidedPSDWelchP2 dat nfft fs w = do
+  let ndat = dim dat
+      maxitr = ndat `div` nfft :: Int
+      --datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      --datlist = takesV (take maxitr (repeat nfft)) dat
+      datlist = mkChunks dat nfft :: [Vector Double]
+
+      psdgain = 2.0/(fromIntegral nfft * fs)
+      ffted = parmapFFT . parmapApplyWindowFunction w $ datlist
+      power = map (abs . fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      outs = scale (psdgain/(fromIntegral maxitr)) $ foldr1 (+) power
+   in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+   where
+     parmapFFT = parMap rdeepseq dftRC1d
+     parmapApplyWindowFunction windowtype
+       | windowtype==Hann = parMap rdeepseq (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+-- | fast
+gwOnesidedPSDWelchS3 dat nfft fs w = do
+  let ndat = dim dat
+      maxitr = ndat `div` nfft :: Int
+      --datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      datlist = takesV (take maxitr (repeat nfft)) dat
+      --datlist = mkChunks dat nfft :: [Vector Double]
+
+      --twosided = map (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
+      ffted = mapFFT . mapApplyWindowFunction w $ datlist
+      power = map (abs . fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      --power =
+      outs = 1/(fromIntegral maxitr) * foldr (+) (zeros (nfft`div`2+1)) power
+      psdgain = 2.0/(fromIntegral nfft * fs)
+   in (linspace (succ $ nfft `div` 2) (0, fs/2),scale psdgain outs)
+   where
+     mapFFT = map dftRC1d
+     mapApplyWindowFunctions windowtype
+       | windowtype==Hann = map (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+     mapApplyWindowFunction w = map (applyWindowFunction2 w nfft)
+
+
+zeros :: Int -> Vector Double
+zeros nzero = constant 0 nzero
 
 
 toSquaredSum :: (Vector Double, Vector Double) -> Vector Double
@@ -106,6 +192,11 @@ applyWindowFunction windowtype x
   | windowtype==Hann = windowed (hanning nfft) x
   | otherwise = error "No such window implemented. Check WindowType.hs"
   where nfft = dim x
+
+applyWindowFunction2 :: WindowType -> Int -> Vector Double -> Vector Double
+applyWindowFunction2 windowtype nfft
+  | windowtype==Hann = windowed (hanning nfft)
+  | otherwise = error "No such window implemented. Check WindowType.hs"
 
 
 mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
