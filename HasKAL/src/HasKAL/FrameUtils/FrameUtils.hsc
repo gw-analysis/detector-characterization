@@ -511,32 +511,32 @@ foreign import ccall unsafe "FrameL.h FrameDump"
 -- foreign import ccall unsafe "stdio.h stdout"
 --    ciostdout :: IO (Ptr CFile)
 
-foreign import ccall unsafe "FrameL.h FrFileINew"
+foreign import ccall safe "FrameL.h FrFileINew"
   c_FrFileINew :: CString -> IO (Ptr FrFile)
 
-foreign import ccall unsafe "FrameL.h FrFileIEnd"
+foreign import ccall safe "FrameL.h FrFileIEnd"
   c_FrFileIEnd :: Ptr FrFile -> IO ()
 
-foreign import ccall unsafe "FrameL.h FrFileITStart"
+foreign import ccall safe "FrameL.h FrFileITStart"
   c_FrFileITStart :: Ptr FrFile -> IO (CDouble)
 
-foreign import ccall unsafe "FrameL.h FrFileITEnd"
+foreign import ccall safe "FrameL.h FrFileITEnd"
   c_FrFileITEnd :: Ptr FrFile -> IO (CDouble)
 
-foreign import ccall unsafe "FrameL.h FrFileIGetV"
+foreign import ccall safe "FrameL.h FrFileIGetV"
   c_FrFileIGetV :: Ptr FrFile
                    -> CString
                    -> CDouble
                    -> CDouble
                    -> IO (Ptr FrVect_partial)
 
-foreign import ccall unsafe "FrameL.h FrVectFree"
+foreign import ccall safe "FrameL.h FrVectFree"
   c_FrVectFree :: Ptr FrVect_partial -> IO ()
 
-foreign import ccall unsafe "FrameL.h FrameRead"
+foreign import ccall safe "FrameL.h FrameRead"
   c_FrameRead :: Ptr FrFile -> IO (Ptr FrameH_partial)
 
-foreign import ccall unsafe "FrameL.h FrFileIGetChannelList"
+foreign import ccall safe "FrameL.h FrFileIGetChannelList"
   c_FrFileIGetChannelList :: Ptr FrFile -> CInt -> IO CString
 
 
