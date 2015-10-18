@@ -43,7 +43,7 @@ import Control.Parallel.Strategies (runEval, parMap, rdeepseq, rseq, rpar, rparW
 
 
 gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
-gwpsdV dat nfft fs = gwpsdCoreVP Welch dat nfft fs Hann
+gwpsdV dat nfft fs = gwpsdCoreVS Welch dat nfft fs Hann
 
 
 gwpsdCoreVP :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
@@ -102,16 +102,12 @@ gwOnesidedPSDWelchP2' dat nfft fs w = do
 
 -- fast
 gwOnesidedPSDWelchS2 dat nfft fs w = do
-  let ndat = dim dat
-      maxitr = ndat `div` nfft :: Int
-      --datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
-      --datlist = takesV (take maxitr (repeat nfft)) dat
-      datlist = mkChunks dat nfft :: [Vector Double]
-
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      maxitr = length datlist
       psdgain = 2.0/(fromIntegral nfft * fs)
       ffted = mapFFT . mapApplyWindowFunction w $ datlist
       power = map (abs . fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
-      outs = scale (psdgain/(fromIntegral maxitr)) $ foldr1 (+) power
+      outs = scale (psdgain/fromIntegral maxitr) $ foldr1 (+) power
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
    where
      mapFFT = map dftRC1d
