@@ -17,7 +17,7 @@ import HasKAL.FrameUtils.FrameUtils(getChannelList)
 import HasKAL.SignalProcessingUtils.WindowType
 import Data.Time
 import Control.DeepSeq (deepseq)
---import SpectrumUtilsRefac (gwpsdV, gwpsdVP)
+import qualified SpectrumUtilsRefac as Seq
 
 
 
@@ -27,8 +27,8 @@ main = do
   let (ch, fs) = head [ (x, y) | (x, y) <- (fromMaybe (error "not valid data") ch'), isInfixOf "STRAIN" x]
   x <- readFrameV ch fname
   let dat = fromMaybe (error "not valid data") x
-  dat `deepseq` return ()
-  let nfft = 10*truncate fs
+--  dat `deepseq` return ()
+  let nfft = 100 * truncate fs
 
   t1 <- getCurrentTime
 --  let psd = gwOnesidedPSDWelchP2 dat nfft fs Hann

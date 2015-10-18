@@ -1,13 +1,13 @@
 
 
-
 {-# OPTIONS_GHC -XBangPatterns #-}
 
+
 module TESTBEDGPWPSD
-( gwpsdV
-, gwOnesidedPSDWelchP1
-, gwOnesidedPSDWelchP2
-)
+--( gwpsdV
+--, gwOnesidedPSDWelchP1
+--, gwOnesidedPSDWelchP2
+--)
 where
 
 
@@ -19,6 +19,7 @@ import HasKAL.SpectrumUtils.Function()
 --import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 --import qualified Numeric.LinearAlgebra as NL
+import qualified Data.Vector.Storable as VS
 
 {- psd method type -}
 import HasKAL.SpectrumUtils.GwPsdMethod
@@ -36,7 +37,7 @@ import Numeric.LinearAlgebra.Devel (STVector, runSTVector, unsafeThawVector, mod
 import Control.Monad.ST (ST)
 
 -- paralell
-import Control.Parallel.Strategies (runEval, parMap, rdeepseq)
+import Control.Parallel.Strategies (runEval, parMap, rdeepseq, rseq, rpar, rparWith)
 
 
 
@@ -50,26 +51,35 @@ gwpsdCoreVP method dat nfft fs w
   | method==Welch = gwOnesidedPSDWelchP1 dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
+
 -- | parallized
-gwOnesidedPSDWelchP1 :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
-gwOnesidedPSDWelchP1 dat nfft fs w = runEval $ do
+gwOnesidedPSDWelchP1 :: Vector Double
+                     -> Int
+                     -> Double
+                     -> WindowType
+                     -> (Vector Double, Vector Double)
+gwOnesidedPSDWelchP1 dat nfft fs w = do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
-      datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
-      onesided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v))) datlist
+      datlist = mkChunks dat nfft :: [Vector Double]
+      onesided = parMap (rparWith rdeepseq) (\v-> scale (2.0/(fromIntegral nfft * fs)) $ calcPower nfft $ (mapVector (**2.0) (dftRH1d . applyWindowFunction w $ v))) datlist
       outs = 1/(fromIntegral maxitr) * foldl1' (+) onesided
-  return $ (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+   in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
 
 
 -- | parallized
-gwOnesidedPSDWelchP2 :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
-gwOnesidedPSDWelchP2 dat nfft fs w = runEval $ do
+gwOnesidedPSDWelchP2 :: Vector Double
+                     -> Int
+                     -> Double
+                     -> WindowType
+                     -> (Vector Double, Vector Double)
+gwOnesidedPSDWelchP2 dat nfft fs w = do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
       datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
       twosided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
       outs = 1/(fromIntegral maxitr) * foldl1' (+) twosided
-  return (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+   in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
 
 
 toSquaredSum :: (Vector Double, Vector Double) -> Vector Double
@@ -98,6 +108,11 @@ applyWindowFunction windowtype x
   where nfft = dim x
 
 
+mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
+mkChunks vIn n = mkChunksCore vIn n (VS.length vIn `div` n)
+  where
+    mkChunksCore _ _ 0 = []
+    mkChunksCore vIn n m = VS.slice 0 n vIn :  mkChunksCore (VS.drop n vIn) n (m-1)
 
 
 
