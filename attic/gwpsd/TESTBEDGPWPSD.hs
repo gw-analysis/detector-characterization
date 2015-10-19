@@ -5,13 +5,14 @@
 
 module TESTBEDGPWPSD
 ( gwpsdV
+, gwspectrogramV
 )
 where
 
 
 {- Signature -}
-import HasKAL.SpectrumUtils.Signature()
-import HasKAL.SpectrumUtils.Function()
+import HasKAL.SpectrumUtils.Signature
+import HasKAL.SpectrumUtils.Function
 
 {- For fft -}
 --import Numeric.GSL.Fourier
@@ -179,6 +180,20 @@ gwOnesidedPSDWelchS3 dat nfft fs w = do
        | windowtype==Hann = map (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
      mapApplyWindowFunction w = map (applyWindowFunction2 w nfft)
+
+
+
+gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
+gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
+  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
+        tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
+        specgram = fromColumns
+          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..nt] :: Matrix Double
+        nt =  (dim x -nfft) `div` nshift
+        nshift = nfft - noverlap
+        nfft2 = div nfft 2
+
+
 
 
 zeros :: Int -> Vector Double
