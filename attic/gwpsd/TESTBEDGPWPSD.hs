@@ -4,10 +4,8 @@
 
 
 module TESTBEDGPWPSD
---( gwpsdV
---, gwOnesidedPSDWelchP1
---, gwOnesidedPSDWelchP2
---)
+( gwpsdV
+)
 where
 
 
@@ -39,7 +37,10 @@ import Control.Monad.ST (ST)
 -- paralell
 import Control.Parallel.Strategies (runEval, parMap, rdeepseq, rseq, rpar, rparWith, withStrategy, parBuffer, parList)
 
-import Control.Monad.Par.Scheds.Trace (new, get, put, fork, runPar)
+import qualified Control.Monad.Par.Scheds.Trace as Par
+import qualified Control.Monad.Par as Par
+import qualified Control.Monad.Par.Combinator as Par
+
 
 
 gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
@@ -48,7 +49,7 @@ gwpsdV dat nfft fs = gwpsdCoreVP Welch dat nfft fs Hann
 
 gwpsdCoreVP :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwpsdCoreVP method dat nfft fs w
-  | method==Welch = gwOnesidedPSDWelchP2 dat nfft fs w
+  | method==Welch = gwOnesidedPSDWelchP3 dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
 
@@ -118,7 +119,7 @@ gwOnesidedPSDWelchS2 dat nfft fs w = do
 
 
 
--- | fastest
+-- | second fastest
 gwOnesidedPSDWelchP2 dat nfft fs w = do
   let datlist = mkChunks dat nfft :: [Vector Double]
       maxitr = length datlist
@@ -135,6 +136,26 @@ gwOnesidedPSDWelchP2 dat nfft fs w = do
      parmapApplyWindowFunction windowtype
        | windowtype==Hann = map (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+
+-- | fastest,  using Par monad
+gwOnesidedPSDWelchP3 dat nfft fs w = Par.runPar $ do
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      maxitr = length datlist
+      psdgain = 2.0/(fromIntegral nfft * fs)
+  wed <- parmapApplyWindowFunction w $ datlist
+  ffted <- parmapFFT wed
+  power <- Par.parMap (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+  let outs = scale (psdgain/fromIntegral maxitr) $ foldr1 (+) power
+  return (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+   where
+     parmapFFT = Par.parMap dftRC1d
+     parmapApplyWindowFunction windowtype
+       | windowtype==Hann = Par.parMap (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
 
 
 -- | fast
