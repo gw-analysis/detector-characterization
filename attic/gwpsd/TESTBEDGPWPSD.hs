@@ -188,10 +188,10 @@ gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
   where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
         tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
-          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..nt] :: Matrix Double
+          $ map (\m -> (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs)) [0..nt] :: Matrix Double
         nt =  (dim x -nfft) `div` nshift
         nshift = nfft - noverlap
-        nfft2 = div nfft 2
+        nfft2 = succ $ div nfft 2
 
 
 
