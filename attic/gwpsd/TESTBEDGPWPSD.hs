@@ -185,7 +185,7 @@ gwOnesidedPSDWelchS3 dat nfft fs w = do
 
 gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
-  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs/2)
+  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
         tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
           $ map (\m -> (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs)) [0..nt] :: Matrix Double
