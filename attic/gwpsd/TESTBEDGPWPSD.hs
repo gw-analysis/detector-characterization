@@ -37,9 +37,9 @@ import Numeric.LinearAlgebra.Devel (STVector, runSTVector, unsafeThawVector, mod
 import Control.Monad.ST (ST)
 
 -- paralell
-import Control.Parallel.Strategies (runEval, parMap, rdeepseq, rseq, rpar, rparWith)
+import Control.Parallel.Strategies (runEval, parMap, rdeepseq, rseq, rpar, rparWith, withStrategy, parBuffer, parList)
 
-
+import Control.Monad.Par.Scheds.Trace (new, get, put, fork, runPar)
 
 
 gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
@@ -94,8 +94,9 @@ gwOnesidedPSDWelchP2' :: Vector Double
 gwOnesidedPSDWelchP2' dat nfft fs w = do
   let ndat = dim dat
       maxitr = ndat `div` nfft :: Int
-      datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
-      twosided = parMap rdeepseq (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
+      --datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      datlist = mkChunks dat nfft :: [Vector Double]
+      twosided = withStrategy (parBuffer 2 rdeepseq) $ map (\v-> scale (2.0/(fromIntegral nfft * fs)) (toSquaredSum . fromComplex . dftRC1d . applyWindowFunction w $ v)) datlist
       outs = 1/(fromIntegral maxitr) * foldl1' (+) twosided
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
 
@@ -106,7 +107,7 @@ gwOnesidedPSDWelchS2 dat nfft fs w = do
       maxitr = length datlist
       psdgain = 2.0/(fromIntegral nfft * fs)
       ffted = mapFFT . mapApplyWindowFunction w $ datlist
-      power = map (abs . fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      power = map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
       outs = scale (psdgain/fromIntegral maxitr) $ foldr1 (+) power
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
    where
@@ -117,19 +118,22 @@ gwOnesidedPSDWelchS2 dat nfft fs w = do
 
 
 
-
+-- | fastest
 gwOnesidedPSDWelchP2 dat nfft fs w = do
   let datlist = mkChunks dat nfft :: [Vector Double]
       maxitr = length datlist
       psdgain = 2.0/(fromIntegral nfft * fs)
-      ffted = parmapFFT . parmapApplyWindowFunction w $ datlist
+      ffted = withStrategy (parBuffer 3 rdeepseq) $  parmapFFT . parmapApplyWindowFunction w $ datlist
+--      wed = parmapApplyWindowFunction w $ datlist
+--      ffted = parmapFFT wed
+--      ffted = parmapFFT . parmapApplyWindowFunction w $ datlist
       power = map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
       outs = scale (psdgain/(fromIntegral maxitr)) $ foldr1 (+) power
    in (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
    where
-     parmapFFT = parMap rdeepseq dftRC1d
+     parmapFFT = map dftRC1d
      parmapApplyWindowFunction windowtype
-       | windowtype==Hann = parMap rdeepseq (windowed (hanning nfft))
+       | windowtype==Hann = map (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
 
 

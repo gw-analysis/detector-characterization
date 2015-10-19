@@ -28,7 +28,7 @@ main = do
   x <- readFrameV ch fname
   let dat = fromMaybe (error "not valid data") x
 --  dat `deepseq` return ()
-  let nfft = 100 * truncate fs
+  let nfft = 500 * truncate fs
 
   t1 <- getCurrentTime
 --  let psd = gwOnesidedPSDWelchP2 dat nfft fs Hann
