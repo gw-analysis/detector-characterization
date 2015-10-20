@@ -149,14 +149,12 @@ gwOnesidedPSDWelchP3 dat nfft fs w = Par.runPar $ do
   ffted <- parmapFFT wed
   power <- Par.parMap (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
   let outs = scale (psdgain/fromIntegral maxitr) $ foldr1 (+) power
-  return (linspace (succ $ nfft `div` 2) (0, fs/2), outs)
+  return (fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]], outs)
    where
      parmapFFT = Par.parMap dftRC1d
      parmapApplyWindowFunction windowtype
        | windowtype==Hann = Par.parMap (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
-
-
 
 
 -- | fast
@@ -182,16 +180,14 @@ gwOnesidedPSDWelchS3 dat nfft fs w = do
      mapApplyWindowFunction w = map (applyWindowFunction2 w nfft)
 
 
-
 gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
-  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs/2)
+  where freqV = fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]]
         tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
           $ map (\m -> (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs)) [0..nt] :: Matrix Double
         nt =  (dim x -nfft) `div` nshift
         nshift = nfft - noverlap
-        nfft2 = succ $ div nfft 2
 
 
 
