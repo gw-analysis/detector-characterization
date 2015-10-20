@@ -5,6 +5,7 @@ module Function
 , db2framecache
 , kagraDataFind
 , kagraDataGet
+, kagraDataGet'
 , kagraDataPoint
 , kagraDataFindCore
 , kagraDataPointCore
@@ -90,6 +91,31 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         maybex <- readFrame chname y
                         return $ fromJust maybex)
 
+
+
+kagraDataGet' :: Int -> Int -> String -> IO (Maybe (DPV.Vector Double))
+kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case flist of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = head x
+      getSamplingFrequency headfile chname >>= \maybefs -> do
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs -> do
+            getGPSTime headfile >>= \maybegps -> do
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                  x  <- forM x (\y -> do
+                        maybex <- readFrame chname y
+                        return $ fromJust maybex)
+                  return $ Just $ DPV.fromList.take nduration.drop headNum.concat x
 
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
