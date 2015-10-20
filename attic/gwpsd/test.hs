@@ -9,9 +9,9 @@
 import Data.List (isInfixOf)
 import Data.Maybe (fromMaybe)
 --import TESTBEDGPWPSD(gwOnesidedPSDWelchP1, gwOnesidedPSDWelchP2)
-import TESTBEDGPWPSD(gwpsdV)
+--import TESTBEDGPWPSD(gwpsdV)
 import HasKAL.PlotUtils.HROOT.PlotGraph
---import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV)
+import HasKAL.SpectrumUtils.SpectrumUtils(gwOnesidedPSDVP)
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.FrameUtils.FrameUtils(getChannelList)
 import HasKAL.SignalProcessingUtils.WindowType
@@ -32,7 +32,7 @@ main = do
 
   t1 <- getCurrentTime
 --  let psd = gwOnesidedPSDWelchP2 dat nfft fs Hann
-  let psd = gwpsdV dat nfft fs
+  let psd = gwOnesidedPSDVP dat nfft fs
   psd `deepseq` return ()
   t2 <- getCurrentTime
 
