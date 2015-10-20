@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -XBangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 
 module HasKAL.SpectrumUtils.SpectrumUtils
 ( module HasKAL.SpectrumUtils.Function
@@ -7,35 +7,37 @@ module HasKAL.SpectrumUtils.SpectrumUtils
 , gwpsd
 , gwspectrogram
 , gwpsdV
+, gwspectrogramV'
+, gwOnesidedPSDV
+, gwOnesidedPSDVP
 , gwspectrogramV
+, gwspectrogramVP1
 )
 where
 
-{- Signature -}
-import HasKAL.SpectrumUtils.Signature
-import HasKAL.SpectrumUtils.Function
 
-{- For fft -}
+import qualified Control.Monad.Par.Scheds.Trace as Par
+import qualified Control.Monad.Par as Par
+import qualified Control.Monad.Par.Combinator as Par
+import Data.List (sort, foldl')
+import qualified Data.Vector.Storable as VS
+import HasKAL.MathUtils.FFTW (dftRH1d,  dftRC1d)
+import HasKAL.SignalProcessingUtils.WindowType
+import HasKAL.SignalProcessingUtils.WindowFunction
+import HasKAL.SpectrumUtils.Function
+import HasKAL.SpectrumUtils.GwPsdMethod
+import HasKAL.SpectrumUtils.Signature
 import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 
-{- psd method type -}
-import HasKAL.SpectrumUtils.GwPsdMethod
-
-{- for windowing -}
-import HasKAL.SignalProcessingUtils.WindowType
-import HasKAL.SignalProcessingUtils.WindowFunction
-
---import HasKAL.SpectrumUtils.AuxFunction(sort, median)
-import Data.List (sort, foldl')
 
 {- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
   where freqV = take (div nfft 2) $ toList $ linspace nfft (0, fs)
-        tV    = [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
-        spec = map (\m -> (take (div nfft 2)).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft (fromList x)) nfft fs) [0..nt] :: [[Double]]
-        nt = floor $ (fromIntegral (length x -nfft)) /(fromIntegral nshift)
+        tV    = [fromIntegral nshift/fs*fromIntegral y | y<-[0..nt]]
+        spec = map (\m -> take (div nfft 2).snd.unzip $ gwpsd (toList $ subVector (m*nshift) nfft (fromList x)) nfft fs) [0..nt] :: [[Double]]
+        nt =  (length x -nfft)`div`nshift
         nshift = nfft -noverlap
 
 
@@ -65,13 +67,13 @@ gwpsdMedianAverageCore dat nfft fs w = do
 
 
 {- in case of Vector data type -}
-gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
-gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
+gwspectrogramV' :: Int -> Int -> Double -> Vector Double -> Spectrogram
+gwspectrogramV' noverlap nfft fs x = (tV, freqV, specgram)
   where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
-        tV    = fromList [(fromIntegral nshift)/fs*fromIntegral y | y<-[0..nt]]
+        tV    = fromList [fromIntegral nshift/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
           $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..nt] :: Matrix Double
-        nt = floor $ (fromIntegral (dim x -nfft)) /(fromIntegral nshift)
+        nt = (dim x -nfft)`div`nshift
         nshift = nfft - noverlap
         nfft2 = div nfft 2
 
@@ -90,11 +92,11 @@ gwpsdCoreV method dat nfft fs w
 gwpsdWelchV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwpsdWelchV dat nfft fs w = do
   let ndat = dim dat
-      maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
-      datlist = takesV (take maxitr (repeat nfft)) dat
+      maxitr = ndat `div` nfft
+      datlist = takesV (replicate maxitr nfft) dat
       fft_val = applyFFT . applytoComplex . applyTuplify2 . applyWindow w $ datlist
       power =  map (abs . fst . fromComplex) $ zipWith (*) fft_val (map conj fft_val)
-      meanpower = scale (1/(fromIntegral maxitr)) $ foldr (+) (zeros nfft) power
+      meanpower = scale (1/fromIntegral maxitr) $ foldr (+) (zeros nfft) power
       scale_psd = 1/(fromIntegral nfft * fs)
   (linspace nfft (0, fs), scale scale_psd meanpower)
   where
@@ -137,15 +139,98 @@ gwpsdMedianAverageCoreV dat nfft fs w = do
   (fvec, fromList medianAverageSpectrum)
 
 
+
+gwOnesidedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV Welch dat nfft fs Hann
+
+
+gwOnesidedPSDCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDCoreV method dat nfft fs w
+  | method==Welch = gwOnesidedPSDWelch dat nfft fs w
+  | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
+
+
+gwOnesidedPSDWelch :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDWelch dat nfft fs w =
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      maxitr = length datlist
+      psdgain = 2.0/(fromIntegral nfft * fs)
+      ffted = mapFFT . mapApplyWindowFunction w $ datlist
+      power = map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      outs = scale (psdgain/fromIntegral maxitr) $ sum power
+   in (fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]], outs)
+   where
+     mapFFT = map dftRC1d
+     mapApplyWindowFunction windowtype
+       | windowtype==Hann = map (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+gwOnesidedPSDVP :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwOnesidedPSDVP dat nfft fs = gwOnesidedPSDCoreVP Welch dat nfft fs Hann
+
+
+gwOnesidedPSDCoreVP :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDCoreVP method dat nfft fs w
+  | method==Welch = gwOnesidedPSDWelchP dat nfft fs w
+  | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
+
+
+gwOnesidedPSDWelchP dat nfft fs w = Par.runPar $ do
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      maxitr = length datlist
+      psdgain = 2.0/(fromIntegral nfft * fs)
+  wed <- parmapApplyWindowFunction w datlist
+  ffted <- parmapFFT wed
+  power <- Par.parMap (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+  let outs = scale (psdgain/fromIntegral maxitr) $ sum power
+  return (fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]], outs)
+   where
+     parmapFFT = Par.parMap dftRC1d
+     parmapApplyWindowFunction windowtype
+       | windowtype==Hann = Par.parMap (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
+gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
+  where freqV = fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]]
+        tV    = fromList [fromIntegral nshift/fs*fromIntegral y | y<-[0..nt]]
+        specgram = fromColumns
+          $ map (\m -> (snd $ gwOnesidedPSDV (subVector (m*nshift) nfft x) nfft fs)) [0..nt] :: Matrix Double
+        nt =  (dim x -nfft) `div` nshift
+        nshift = nfft - noverlap
+
+
+
+gwspectrogramVP1 :: Int -> Int -> Double -> Vector Double -> Spectrogram
+gwspectrogramVP1 noverlap nfft fs x = (tV, freqV, specgram)
+  where freqV = fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]]
+        tV    = fromList [fromIntegral nshift/fs*fromIntegral y | y<-[0..nt]]
+        specgram = fromColumns
+          $ map (\m -> (snd $ gwOnesidedPSDVP (subVector (m*nshift) nfft x) nfft fs)) [0..nt] :: Matrix Double
+        nt =  (dim x -nfft) `div` nshift
+        nshift = nfft - noverlap
+
+
+{- helper functions -}
+mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
+mkChunks vIn n = mkChunksCore vIn n (VS.length vIn `div` n)
+  where
+    mkChunksCore _ _ 0 = []
+    mkChunksCore vIn n m = VS.slice 0 n vIn :  mkChunksCore (VS.drop n vIn) n (m-1)
+
+
 --psdOdd:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
 psdOdd:: Vector Double -> Int -> WindowType -> [Vector Double]
 psdOdd dat nfft w = do
   let ndat = dim dat :: Int
-      maxitr = floor $ fromIntegral (ndat) / fromIntegral (nfft) :: Int
-      datlist = takesV (take maxitr (repeat nfft)) dat :: [Vector Double]
+      maxitr =  ndat `div` nfft
+      datlist = takesV (replicate maxitr nfft) dat :: [Vector Double]
 --      power = forM datlist $ \x -> calcPower x fs w
 --  forM power $ \x -> zipVector (linspace nfft (0, fs)) x
-  map (\x -> calcPower x w) datlist
+  map (`calcPower` w) datlist
+
 
 --psdEven:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
 psdEven:: Vector Double -> Int -> WindowType -> [Vector Double]
@@ -155,9 +240,6 @@ psdEven dat' nfft w = do
   psdOdd dat nfft w
 
 
-
-
-{- helper functions -}
 calcPower :: Vector Double -> WindowType -> Vector Double
 calcPower dat w = abs . fst . fromComplex $ fftVal * conj fftVal
   where
