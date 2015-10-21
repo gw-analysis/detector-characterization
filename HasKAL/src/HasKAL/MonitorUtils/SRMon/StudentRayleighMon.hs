@@ -42,8 +42,8 @@ studentRayleighMonV :: FitMethod
                     -> Spectrogram -- ^ h(t, f)
                     -> Spectrogram -- ^ nu(t, f)
 studentRayleighMonV method fsample stride chunck shift clusteringF (freqV1, specV1) (tV2, freqV2, specM2) = do
-  let snf' = V.map sqrt $ convert $ specV1
-      hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2
+  let snf' = V.map (sqrt.(*0.5)) $ convert $ specV1
+      hfs' = M.map sqrt $ convertS2U $ specM2
       wMat = whiteningSpectrogram snf' hfs'
       dt = fromIntegral (shift*stride) / fsample
       df = fromIntegral clusteringF * fsample / fromIntegral stride

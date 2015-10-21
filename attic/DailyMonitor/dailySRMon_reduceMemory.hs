@@ -9,8 +9,7 @@ import Data.Packed.Matrix (fromBlocks, cols, fromLists)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
--- import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
-import SpectrumUtilsRefac (gwpsdV, gwspectrogramV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.SpectrumUtils.Function 
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
@@ -57,7 +56,7 @@ main = do
 
 
   {-- 1st main --}
-  let snf1 = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat1) (truncate $ fftLength * fs) fs
+  let snf1 = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat1) (truncate $ fftLength * fs) fs
   let hf1 = gwspectrogramV 0 (truncate $ fftLength * fs) fs $ dat1
   nu1 <- do
     let res = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf1 hf1
@@ -74,7 +73,7 @@ main = do
      Just dat -> do
 
        {------ main ------}
-       let snf = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
+       let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
        let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs $ dat
            nus = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf1 hf
        deepseq nus $ return $ (\(_,fv,nu) -> (fromList $ map (\n -> fromIntegral (tau +  n * timeShift)) [0..cols nu - 1], fv, nu)) nus

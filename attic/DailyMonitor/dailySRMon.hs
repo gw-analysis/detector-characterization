@@ -6,8 +6,7 @@ import Data.Packed.Vector (subVector)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import SpectrumUtilsRefac (gwpsdV, gwspectrogramV)
--- import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 
@@ -45,7 +44,7 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
+  let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
   histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
