@@ -69,13 +69,12 @@ gwpsdMedianAverageCore dat nfft fs w = do
 {- in case of Vector data type -}
 gwspectrogramV' :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV' noverlap nfft fs x = (tV, freqV, specgram)
-  where freqV = subVector 0 nfft2 $ linspace nfft (0, fs)
+  where freqV = fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]]
         tV    = fromList [fromIntegral nshift/fs*fromIntegral y | y<-[0..nt]]
         specgram = fromColumns
-          $ map (\m -> (subVector 0 nfft2 (snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs))) [0..nt] :: Matrix Double
+          $ map (\m -> snd $ gwpsdV (subVector (m*nshift) nfft x) nfft fs) [0..nt] :: Matrix Double
         nt = (dim x -nfft)`div`nshift
         nshift = nfft - noverlap
-        nfft2 = div nfft 2
 
 
 gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
