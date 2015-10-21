@@ -74,11 +74,11 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
     Nothing -> return Nothing
     Just x -> do
       let headfile = head x
-      getSamplingFrequency headfile chname >>= \maybefs -> do
+      getSamplingFrequency headfile chname >>= \maybefs ->
         case maybefs of
           Nothing -> return Nothing
-          Just fs -> do
-            getGPSTime headfile >>= \maybegps -> do
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
@@ -92,7 +92,6 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         return $ fromJust maybex)
 
 
-
 kagraDataGet' :: Int -> Int -> String -> IO (Maybe (DPV.Vector Double))
 kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
@@ -100,11 +99,11 @@ kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
     Nothing -> return Nothing
     Just x -> do
       let headfile = head x
-      getSamplingFrequency headfile chname >>= \maybefs -> do
+      getSamplingFrequency headfile chname >>= \maybefs ->
         case maybefs of
           Nothing -> return Nothing
-          Just fs -> do
-            getGPSTime headfile >>= \maybegps -> do
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
