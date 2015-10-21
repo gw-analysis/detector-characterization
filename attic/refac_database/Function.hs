@@ -42,7 +42,7 @@ import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
 import HasKAL.FrameUtils.FrameUtils
-
+import HasKAL.Misc.StrictMapping (forM')
 
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO (Maybe [String])
@@ -111,7 +111,7 @@ kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                   then 0
                                   else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
                       nduration = floor $ fromIntegral duration * fs
-                  x  <- forM x (\y -> do
+                  x  <- forM' x (\y -> do
                         maybex <- readFrame chname y
                         return $ fromJust maybex)
                   return $ Just $ DPV.fromList.take nduration.drop headNum.concat x
