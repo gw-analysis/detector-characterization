@@ -84,7 +84,7 @@ applyIIR coeffs v = Par.runPar $ do
 
 
 applyFIRIIR :: [Double] -> [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
-applyFIRIIR firpart iirpart v = unsafePerformIO $ do
+applyFIRIIR firpart iirpart v = Par.runPar $ do
   firjob' <- Par.spawnP (fir firpart v)
   firjob <- Par.get firjob'
   iirjobs<- Par.parMap (`sos1filter` v) iirpart
