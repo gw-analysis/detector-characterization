@@ -21,7 +21,7 @@ import qualified Control.Monad.Par as Par
 import qualified Control.Monad.Par.Combinator as Par
 import Data.List (sort, foldl')
 import qualified Data.Vector.Storable as VS
-import HasKAL.MathUtils.FFTW (dftRH1d,  dftRC1d)
+import HasKAL.MathUtils.FFTW (dftRH1d,  dftRC1d, dft1d, idft1d)
 import HasKAL.SignalProcessingUtils.WindowType
 import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SpectrumUtils.Function
@@ -100,7 +100,7 @@ gwpsdWelchV dat nfft fs w = do
   (linspace nfft (0, fs), scale scale_psd meanpower)
   where
     applyFFT :: [Vector (Complex Double)] -> [Vector (Complex Double)]
-    applyFFT = map fft
+    applyFFT = map dft1d
     applytoComplex :: [(Vector Double, Vector Double)] -> [Vector (Complex Double)]
     applytoComplex = map toComplex
     applyTuplify2 :: [Vector Double] -> [(Vector Double, Vector Double)]
@@ -242,7 +242,7 @@ psdEven dat' nfft w = do
 calcPower :: Vector Double -> WindowType -> Vector Double
 calcPower dat w = abs . fst . fromComplex $ fftVal * conj fftVal
   where
-    fftVal = fft . applyRealtoComplex . applyWindowFunction w $ dat :: Vector (Complex Double)
+    fftVal = dft1d . applyRealtoComplex . applyWindowFunction w $ dat :: Vector (Complex Double)
 
 applyRealtoComplex :: Vector Double -> Vector (Complex Double)
 applyRealtoComplex x = toComplex $ tuplify2 (constant 0 nfft) x
