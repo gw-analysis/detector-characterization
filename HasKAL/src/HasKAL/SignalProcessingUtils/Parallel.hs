@@ -8,7 +8,9 @@ module HasKAL.SignalProcessingUtils.Parallel
 ) where
 
 
-import Control.Concurrent.Async (async, wait)
+import qualified Control.Monad.Par.Scheds.Trace as Par
+import qualified Control.Monad.Par as Par
+import qualified Control.Monad.Par.Combinator as Par
 import Data.List
 import Data.Maybe (fromJust)
 import qualified Data.Vector.Storable as VS
@@ -76,18 +78,17 @@ iirp (firpart, iirpart) v = case null firpart of
 
 {- internal functions -}
 applyIIR :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
-applyIIR coeffs v = unsafePerformIO $ do
-  jobs <- mapM (\c -> async (return $ sos1filter c v)) coeffs
-  outs <- mapM wait jobs
-  return $ foldl1' (+) outs
+applyIIR coeffs v = Par.runPar $ do
+  jobs <- Par.parMap (`sos1filter` v) coeffs
+  return $ sum outs
 
 
 applyFIRIIR :: [Double] -> [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
 applyFIRIIR firpart iirpart v = unsafePerformIO $ do
-  firjob <- async (return $ fir firpart v)
-  iirjobs<- mapM (\c -> async (return $ sos1filter c v)) iirpart
-  outs <- mapM wait (firjob : iirjobs)
-  return $ foldl1' (+) outs
+  firjob' <- Par.spawnP (fir firpart v)
+  firjob <- Par.get firjob'
+  iirjobs<- Par.parMap (`sos1filter` v) iirpart
+  return $ sum (firjob : iirjobs)
 
 
 d2clist :: [Double] -> [Complex Double]
