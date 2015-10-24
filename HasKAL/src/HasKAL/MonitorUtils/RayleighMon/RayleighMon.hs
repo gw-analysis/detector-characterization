@@ -39,8 +39,8 @@ rayleighMonV :: [Double] -- ^ pValues
              -> Spectrogram -- ^ spectrogram h(t, f)
              -> [(Spectrum, Spectrum)]
 rayleighMonV pVals fsample stride fClust (freqV1, specV1) (tV2, freqV2, specM2) = do
-  let snf' = V.map sqrt $ convert $ specV1
-      hfs' = M.map ((*sqrt 2.0).sqrt) $ convertS2U $ specM2
+  let snf' = V.map (sqrt.(*0.5)) $ convert $ specV1
+      hfs' = M.map sqrt $ convertS2U $ specM2
       wMat = whiteningSpectrogram snf' hfs'
       df = fromIntegral fClust * fsample / fromIntegral stride
       newFV = fromList [df, df*2 .. df * fromIntegral ((V.length $ convert freqV2)`div`fClust)]

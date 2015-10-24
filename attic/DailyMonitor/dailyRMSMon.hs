@@ -8,16 +8,14 @@ import System.Environment (getArgs)
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.FrameUtils.Function (readFrameV)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Signature
-import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
+import HasKAL.MonitorUtils.RMSMon.RMSMon (refac_rmsMon)
 
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 
 {-- memo
-    running time : 10min ~ 12min
-    usage : 
+    running time (24hour data) : ~6min
 --}
 
 main = do
@@ -56,12 +54,13 @@ main = do
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
  let nmon = floor (5760 * fs) ::Int -- 86400s / 15chunk = 5760s
- let rms   = rmsMon nmon fs ys freq
+ let rms   = refac_rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
 
- print $ (DVG.length ys) `div` nmon
- print $ (DVG.length ys)
- print $ nmon
+-- print $ (DVG.length ys) `div` nmon
+-- print $ (DVG.length ys)
+-- print $ nmon
+-- print $ head rms
 
  let color = [BLUE, RED, PINK]
      title = setTitle f1low f1high f2low f2high f3low f3high channel

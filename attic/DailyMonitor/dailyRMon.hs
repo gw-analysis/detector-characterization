@@ -6,8 +6,7 @@ import Data.Packed.Vector (subVector)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
--- import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
-import SpectrumUtilsRefac (gwpsdV, gwspectrogramV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph
 
@@ -43,7 +42,7 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwpsdV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
+  let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
   oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK]
