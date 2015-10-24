@@ -15,6 +15,9 @@ module HasKAL.MathUtils.FFTW
 , dftCR1d
 , dftRC2d
 , dftCR2d
+-- * Complex to Complex
+, dft1d
+, idft1d
 )
 where
 
@@ -148,6 +151,24 @@ dftCR2d m = do
      in matrixFromVector RowMajor mm mn $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
           where
             scaling2d m n = 1/(fromIntegral m * fromIntegral n)
+
+
+dft1d :: VS.Vector (NL.Complex Double) -> VS.Vector (NL.Complex Double)
+dft1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ dft arr
+   in VS.unsafeFromForeignPtr0 ptr n
+
+
+idft1d :: VS.Vector (NL.Complex Double) -> VS.Vector (NL.Complex Double)
+idft1d vin = do
+  let len = VS.length vin :: Int
+      arr = unsafePerformIO $ createCArray (0, len-1)
+        $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
+      (n,  ptr) = toForeignPtr $ idft arr
+   in VS.unsafeFromForeignPtr0 ptr n
 
 
 scaling i n v = do
