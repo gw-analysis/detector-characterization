@@ -1,8 +1,7 @@
 
 
 module PipelineFunction
-( TrigParam (..)
-, dataInfo
+( dataInfo
 , frameInfo
 , excludeOnePixelIsland
 )
@@ -17,34 +16,6 @@ import HasKAL.FrameUtils.Function (readFrameV)
 import Numeric.LinearAlgebra
 import HasKAL.TimeUtils.Signature(GPSTIME)
 import Data.Int (Int32)
-
-
-
-
-
-data TrigParam = TrigParam { detector :: Maybe String
-                           , event_gpsstarts :: Maybe Int32
-                           , event_gpsstartn :: Maybe Int32
-                           , event_gpsstops :: Maybe Int32
-                           , event_gpsstopn :: Maybe Int32
-                           , duration :: Maybe Double
-                           , energy :: Maybe Double
-                           , central_frequency :: Maybe Double
-                           , snr :: Maybe Double
-                           , significance :: Maybe Double
-                           , latitude :: Maybe Double
-                           , longitude :: Maybe Double
-                           , chname :: Maybe String
-                           , sampling_rate :: Maybe Int32
-                           , segment_gpsstarts :: Maybe Int32
-                           , segment_gpsstartn :: Maybe Int32
-                           , segment_gpsstops :: Maybe Int32
-                           , segment_gpsstopn :: Maybe Int32
-                           , dq_flag :: Maybe Int32
-                           , pipeline :: Maybe String
-                           }
-
-
 
 
 excludeOnePixelIsland :: [(Int, Int)] -> [(Int, Int)]
@@ -95,7 +66,6 @@ dataInfo cachefile chname = do
                       return Nothing
                     Just (gpsS, gpsN, dt) -> do
                       return $ Just $ (fdata, fs, (gpsS, gpsN), dt)
-
 
 
 frameInfo :: String -> String -> IO (Maybe (Vector Double, Double, GPSTIME, Double))
