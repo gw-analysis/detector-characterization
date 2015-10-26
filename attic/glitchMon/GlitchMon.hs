@@ -37,7 +37,7 @@ import RegisterGlitchEvent (registGlitchEvent2DB)
 
 
 
-runGlitchMon watchdir chname s = runStateT go s
+runGlitchMon watchdir chname = runStateT go
   where go = do param <- get
                 runResourceT $ source watchdir $$ sink param chname
 
@@ -57,7 +57,7 @@ source watchdir = do
                            return Nothing
   case maybefname of
     Nothing -> source
-    Just fname -> yield fname >> source
+    Just fname -> yield fname >> source watchdir
 
 
 sink param chname = do
@@ -244,7 +244,7 @@ mean x = fst $ foldl' (\(!m,  !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
 var :: (Fractional a) => [a] -> a
 var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
     where mu = mean xs
-    n = fromIntegral $ length $ xs
+          n = fromIntegral $ length xs
 
 std :: (RealFloat a) => [a] -> a
 std x = sqrt $ var x
