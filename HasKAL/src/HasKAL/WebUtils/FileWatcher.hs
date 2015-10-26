@@ -16,19 +16,20 @@ import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import System.Process (rawSystem)
 import Data.Text
 
+
 watchNewfile :: String            -- | executive filename
              -> String            -- | location where index.html will be
              -> String            -- | location to watch new file added
              -> IO ()
 watchNewfile f webhomedir watchdir = do
   withManager $ \manager -> do
-    watchDir manager (decodeString watchdir) (const True)
+    watchDir manager watchdir (const True)
       $ \event -> case event of
         Removed _ _ -> print "file removed"
-        _ -> case extension (eventPath event) of
+        _ -> case extension (decodeString $ eventPath event) of
                Just "filepart" -> print "file downloading"
                Just "gwf" -> do
-                 let gwfname = encodeString $ eventPath event
+                 let gwfname = eventPath event
                  print gwfname
                  rawSystem f [webhomedir, gwfname]
                  print "event display updated."
@@ -49,13 +50,13 @@ watchNewfilewDB :: String            -- | command name
                 -> IO ()
 watchNewfilewDB f g webhomedir watchdir = do
   withManager $ \manager -> do
-    watchDir manager (decodeString watchdir) (const True)
+    watchDir manager watchdir (const True)
       $ \event -> case event of
         Removed _ _ -> print "file removed"
-        _ -> case extension (eventPath event) of
+        _ -> case extension (decodeString $ eventPath event) of
                Just "filepart" -> print "file downloading"
                Just "gwf" -> do
-                 let gwfname = encodeString $ eventPath event
+                 let gwfname = eventPath event
                  print gwfname
                  rawSystem f [webhomedir, gwfname]
                  print "event display updated."
@@ -75,13 +76,13 @@ updatingDB :: String            -- | DB command
            -> IO ()
 updatingDB f watchdir = do
   withManager $ \manager -> do
-    watchDir manager (decodeString watchdir) (const True)
+    watchDir manager watchdir (const True)
       $ \event -> case event of
         Removed _ _ -> print "file removed"
-        _ -> case extension (eventPath event) of
+        _ -> case extension (decodeString $ eventPath event) of
                Just "filepart" -> print "file downloading"
                Just "gwf" -> do
-                 let gwfname = encodeString $ eventPath event
+                 let gwfname = eventPath event
                  print gwfname
                  rawSystem f [gwfname]
                  print "framefile database updated."
