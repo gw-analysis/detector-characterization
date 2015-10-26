@@ -37,12 +37,12 @@ import RegisterGlitchEvent (registGlitchEvent2DB)
 
 
 
-runGlitchMon chname = runStateT go s
+runGlitchMon watchdir chname s = runStateT go s
   where go = do param <- get
-                runResourceT $ source $$ sink param chname
-        s = undefined
+                runResourceT $ source watchdir $$ sink param chname
 
-source = do
+
+source watchdir = do
   maybefname <- withManager $ \manager ->
     watchDirChan manager watchdir (const True)
      $ \event -> case event of
@@ -142,7 +142,7 @@ calcWhiteningCoeffCore param (whtCoeffList, train) =
       )
 
 
-checkingWhitening = undefined
+checkingWhitening wave = std (NL.toList wave)  < 2.0
 
 
 applyWhitening :: [([Double],  Double)]
@@ -237,4 +237,15 @@ section'RegisterEventtoDB =
   registGlitchEvent2DB
 
 
+mean :: Floating a => [a] -> a
+mean x = fst $ foldl' (\(!m,  !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
+
+
+var :: (Fractional a) => [a] -> a
+var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
+    where mu = mean xs
+    n = fromIntegral $ length $ xs
+
+std :: (RealFloat a) => [a] -> a
+std x = sqrt $ var x
 
