@@ -1,43 +1,93 @@
 
 
-
-
-
 module GlitchMon
---( runGlitchMon
+( runGlitchMon
 --,
---)
+)
 where
 
 
+import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad ((>>=))
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
-import qualified Data.Set as Set
+import Data.Conduit (yield,  await)
+import qualified Data.Conduit.List as CL
 import Data.List (nub)
+import qualified Data.Set as Set
+import Filesystem.Path (extension)
+import Filesystem.Path.CurrentOS (decodeString,  encodeString)
+import HasKAL.FrameUtils.FrameUtils (getGPSTime)
+import HasKAL.FrameUtils.Function (readFrameWaveData)
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
 import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec)
-import HasKAL.SpectrumUtils.Signature
-import HasKAL.SpectrumUtils.SpectrumUtils(gwpsdV, gwOnesidedPSDV)
-import HasKAL.SignalProcessingUtils.LinearPrediction(lpefCoeffV, whiteningWaveData)
-import HasKAL.TimeUtils.Function (formatGPS)
+import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
+import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
+import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector)
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra as NL
+import System.FSNotify (withManager, watchDirChan)
+
 import qualified GlitchParam as GP
 import PipelineFunction
 import Data (TrigParam (..))
-import RegisterGlitchEvent (registGlitchEventCandidate2DB)
+import RegisterGlitchEvent (registGlitchEvent2DB)
 
 
--- runGlitchMon :: WaveData
---              -> GP.GlitchParam
--- runGlitchMon w = flip execStateT param $ \w ->
---   partDataConditioning w
 
 
-partDataConditioning :: WaveData
+runGlitchMon chname = runStateT go s
+  where go = do param <- get
+                runResourceT $ source $$ sink param chname
+        s = undefined
+
+source = do
+  maybefname <- withManager $ \manager ->
+    watchDirChan manager watchdir (const True)
+     $ \event -> case event of
+      Removed _ _ -> print "file removed"
+      _ -> case extension (decodeString $ eventPath event) of
+             Just "filepart" -> do print "file downloading"
+                                   return Nothing
+             Just "gwf" -> do
+               let gwfname = eventPath event
+               return gwfname
+             Nothing -> do print "file extension should be .filepart or .gwf"
+                           return Nothing
+  case maybefname of
+    Nothing -> source
+    Just fname -> yield fname >> source
+
+
+sink param chname = do
+  c <- await
+  case c of
+    Nothing -> sink
+    Just fname -> do
+      maybegps <- getGPSTime fname
+      case maybegps of
+        Nothing -> sink
+        Just (s, n, dt') -> do
+          let gps = deformatGPS (s, n)
+              dt = floor dt'
+          maybewave <- readFrameWaveData "General" gps dt chname fname
+          case maybewave of
+            Nothing -> sink
+            Just wave -> glitchMon param wave
+
+
+glitchMon :: GP.GlitchParam
+             -> WaveData
+             -> StateT GP.GlitchParam IO ()
+glitchMon param wave =
+  runStateT part'DataConditioning w param >>= \(a, s) ->
+    runStateT part'EventTriggerGeneration a s
+
+
+part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
-partDataConditioning wave = do
+part'DataConditioning wave = do
   param <- get
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
@@ -48,7 +98,18 @@ partDataConditioning wave = do
     True  -> return $ applyWhitening whtcoeff wave
 
 
+part'EventTriggerGeneration :: WaveData
+                           -> StateT GP.GlitchParam IO ()
+part'EventTriggerGeneration wave = do
+  param <- get
+  runStateT section'TimeFrequencyExpression wave param >>= \(a, s) ->
+    runStateT section'Clustering a s >>= \(a', s') ->
+      runStateT section'ParameterEstimation a' s' >>= \(a'', s'') ->
+        runStateT section'RegisterEventtoDB a'' s''
+
+
 section'LineRemoval = id
+
 
 section'Whitening :: WaveData -> StateT GP.GlitchParam IO ([([Double],  Double)],  WaveData)
 section'Whitening wave = do
@@ -92,15 +153,9 @@ applyWhitening (x:xs) wave =
   applyWhitening xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
 
 
--- partEventTriggerGeneration :: GP.GlitchParam
---                            -> WaveData
---                            -> IO ()
--- partEventTriggerGeneration param dat =
---   return $ section'TimeFrequencyExpression . section'Clustering . section'ParameterEstimation . section'RegisterParametertoDB $ dat
---
 
 section'TimeFrequencyExpression :: WaveData
-                                -> StateT GP.GlitchParam IO (NL.Vector Double, NL.Vector Double, NL.Matrix Double)
+                                -> StateT GP.GlitchParam IO Spectrogram
 section'TimeFrequencyExpression whnWaveData = do
   param <- get
   let refpsd = GP.refpsd param
@@ -110,16 +165,17 @@ section'TimeFrequencyExpression whnWaveData = do
       ntime = GP.ntimeSlide param
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
+      snrMatT' = deformatGPS (startGPSTime whnWaveData) + snrMatT
       snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
         (
         snd $ gwOnesidedPSDV (subVector (nfreq*i) nfreq (gwdata whnWaveData)) nfreq fs)
         (snd refpsd)
         )) [0..ntime-1]) [0..nfreq2] :: Matrix Double
-  return (snrMatT, snrMatF, snrMatP)
+  return (snrMatT', snrMatF, snrMatP)
 
 
-section'Clustering :: (NL.Vector Double,  NL.Vector Double,  NL.Matrix Double)
-                   -> StateT GP.GlitchParam IO (NL.Vector Double,  NL.Vector Double,  NL.Matrix Double)
+section'Clustering :: Spectrogram
+                   -> StateT GP.GlitchParam IO Spectrogram
 section'Clustering (snrMatT, snrMatF, snrMatP') = do
   param <- get
   let dcted' = dct2d snrMatP'
@@ -141,43 +197,44 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   return newM
 
 
-section'ParameterEstimation whnWaveData m = do
+section'ParameterEstimation :: Spectrogram
+                            -> StateT GP.GlitchParam IO TrigParam
+section'ParameterEstimation m = do
   param <- get
   let fs = GP.samplingFrequency param
   let (trigT, trigF, trigM) = m
       indxBlack = maxIndex trigM
       tsnr = trigM @@> indxBlack
-      gps' = formatGPS $ trigT @> fst indxBlack
-      gps = (fst (startGPSTime whnWaveData)+fst gps', snd (startGPSTime whnWaveData)+snd gps')
+      gps = formatGPS $ trigT @> fst indxBlack
       gpss = fromIntegral $ fst gps :: Int
       gpsn = fromIntegral $ snd gps :: Int
       fc = trigF @> snd indxBlack
-      tfs = fromIntegral $ truncate fs :: Int
-  return   TrigParam { detector = Just "XE"
-                     , event_gpsstarts = Just gpss
-                     , event_gpsstartn = Just gpsn
-                     , event_gpsstops  = Nothing
-                     , event_gpsstopn  = Nothing
-                     , duration = Nothing
-                     , energy = Nothing
-                     , central_frequency = Just fc
-                     , snr = Just tsnr
-                     , significance = Nothing
-                     , latitude = Nothing
-                     , longitude = Nothing
-                     , chname = Nothing
-                     , sampling_rate = Just tfs
-                     , segment_gpsstarts = Nothing
-                     , segment_gpsstartn = Nothing
-                     , segment_gpsstops = Nothing
-                     , segment_gpsstopn = Nothing
-                     , dq_flag = Nothing
-                     , pipeline = Just "iKAGRA Burst pipeline"
-                     }
+      tfs = truncate fs :: Int
+  return TrigParam { detector = Just "XE"
+                   , event_gpsstarts = Just gpss
+                   , event_gpsstartn = Just gpsn
+                   , event_gpsstops  = Nothing
+                   , event_gpsstopn  = Nothing
+                   , duration = Nothing
+                   , energy = Nothing
+                   , central_frequency = Just fc
+                   , snr = Just tsnr
+                   , significance = Nothing
+                   , latitude = Nothing
+                   , longitude = Nothing
+                   , chname = Nothing
+                   , sampling_rate = Just tfs
+                   , segment_gpsstarts = Nothing
+                   , segment_gpsstartn = Nothing
+                   , segment_gpsstops = Nothing
+                   , segment_gpsstopn = Nothing
+                   , dq_flag = Nothing
+                   , pipeline = Just "iKAGRA Burst pipeline"
+                   }
 
 
-section'RegisterParametertoDB =
-  registGlitchEventCandidate2DB
+section'RegisterEventtoDB =
+  registGlitchEvent2DB
 
 
 
