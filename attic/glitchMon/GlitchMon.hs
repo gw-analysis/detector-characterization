@@ -78,11 +78,29 @@ sink param chname = do
 
 
 glitchMon :: GP.GlitchParam
-             -> WaveData
-             -> StateT GP.GlitchParam IO ()
-glitchMon param wave =
+          -> WaveData
+          -> StateT GP.GlitchParam IO ()
+glitchMon param w =
   runStateT part'DataConditioning w param >>= \(a, s) ->
     runStateT part'EventTriggerGeneration a s
+
+
+glitchMonF :: GP.GlitchParam
+           -> FilePath
+           -> String
+           -> StateT GP.GlitchParam IO ()
+glitchMonF param fname chname = do
+  maybegps <- getGPSTime fname
+  case maybegps of
+    Nothing -> sink
+    Just (s, n, dt') -> do
+      let gps = deformatGPS (s, n)
+          dt = floor dt'
+      maybewave <- readFrameWaveData "General" gps dt chname fname
+      case maybewave of
+        Nothing -> sink
+        Just w -> runStateT part'DataConditioning w param >>= \(a, s) ->
+                    runStateT part'EventTriggerGeneration a s
 
 
 part'DataConditioning :: WaveData
