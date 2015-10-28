@@ -1,21 +1,28 @@
+{-# LANGUAGE BangPatterns #-}
 
 
 module GlitchMon
 ( runGlitchMon
---,
+, glitchMon
+, glitchMonF
 )
 where
 
 
+import Control.Concurrent (forkIO)
+import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar,takeMVar)
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad ((>>=))
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
-import Data.Conduit (yield,  await)
+import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
 import qualified Data.Conduit.List as CL
-import Data.List (nub)
+import Data.Int (Int32)
+import Data.List (nub, foldl')
 import qualified Data.Set as Set
+import Data.Text ( pack )
 import Filesystem.Path (extension)
 import Filesystem.Path.CurrentOS (decodeString,  encodeString)
+import HasKAL.DetectorUtils.Detector(Detector(..))
 import HasKAL.FrameUtils.FrameUtils (getGPSTime)
 import HasKAL.FrameUtils.Function (readFrameWaveData)
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
@@ -24,10 +31,10 @@ import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
-import HasKAL.WaveUtils.Data hiding (detector)
+import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra as NL
-import System.FSNotify (withManager, watchDirChan)
+import System.FSNotify (startManager, stopManager, withManager, watchTree, Event(..), eventPath)
 
 import qualified GlitchParam as GP
 import PipelineFunction
@@ -37,70 +44,76 @@ import RegisterGlitchEvent (registGlitchEvent2DB)
 
 
 
-runGlitchMon watchdir chname = runStateT go
-  where go = do param <- get
-                runResourceT $ source watchdir $$ sink param chname
+runGlitchMon watchdir param chname =
+  source watchdir $$ sink param chname
 
 
+source :: FilePath
+       -> Source IO FilePath
 source watchdir = do
-  maybefname <- withManager $ \manager ->
-    watchDirChan manager watchdir (const True)
+  x <- liftIO $ withManager $ \manager -> do
+    goC <- liftIO newEmptyMVar
+    _ <- watchTree manager watchdir (const True)
      $ \event -> case event of
       Removed _ _ -> print "file removed"
       _ -> case extension (decodeString $ eventPath event) of
-             Just "filepart" -> do print "file downloading"
-                                   return Nothing
-             Just "gwf" -> do
+             Just filepart -> print "file downloading"
+             Just gwf -> do
                let gwfname = eventPath event
-               return gwfname
-             Nothing -> do print "file extension should be .filepart or .gwf"
-                           return Nothing
-  case maybefname of
-    Nothing -> source
-    Just fname -> yield fname >> source watchdir
+               putMVar goC gwfname
+             Nothing -> print "file extension should be .filepart or .gwf"
+    takeMVar goC
+  yield x >> source watchdir
+  where filepart = pack "filepart"
+        gwf = pack "gwf"
 
 
+sink :: GP.GlitchParam
+     -> String
+     -> Sink String IO ()
 sink param chname = do
   c <- await
   case c of
-    Nothing -> sink
+    Nothing -> return ()
     Just fname -> do
-      maybegps <- getGPSTime fname
+      maybegps <- liftIO $ getGPSTime fname
       case maybegps of
-        Nothing -> sink
+        Nothing -> return ()
         Just (s, n, dt') -> do
-          let gps = deformatGPS (s, n)
+          let gps = floor $ deformatGPS (s, n)
               dt = floor dt'
-          maybewave <- readFrameWaveData "General" gps dt chname fname
+          maybewave <- liftIO $ readFrameWaveData General gps dt chname fname
           case maybewave of
-            Nothing -> sink
-            Just wave -> glitchMon param wave
+            Nothing -> return ()
+            Just wave -> do s <- liftIO $ glitchMon param wave
+                            sink s chname
 
 
 glitchMon :: GP.GlitchParam
           -> WaveData
-          -> StateT GP.GlitchParam IO ()
+          -> IO GP.GlitchParam
 glitchMon param w =
-  runStateT part'DataConditioning w param >>= \(a, s) ->
-    runStateT part'EventTriggerGeneration a s
+  runStateT (part'DataConditioning w) param >>= \(a, s) ->
+    part'EventTriggerGeneration s a
 
 
 glitchMonF :: GP.GlitchParam
            -> FilePath
            -> String
-           -> StateT GP.GlitchParam IO ()
+           -> IO ()
 glitchMonF param fname chname = do
   maybegps <- getGPSTime fname
   case maybegps of
-    Nothing -> sink
+    Nothing -> return ()
     Just (s, n, dt') -> do
-      let gps = deformatGPS (s, n)
+      let gps = floor $ deformatGPS (s, n)
           dt = floor dt'
-      maybewave <- readFrameWaveData "General" gps dt chname fname
+      maybewave <- readFrameWaveData General gps dt chname fname
       case maybewave of
-        Nothing -> sink
-        Just w -> runStateT part'DataConditioning w param >>= \(a, s) ->
-                    runStateT part'EventTriggerGeneration a s
+        Nothing -> return ()
+        Just w -> runStateT (part'DataConditioning w) param >>= \(a, s) ->
+                    do part'EventTriggerGeneration s a
+                       return ()
 
 
 part'DataConditioning :: WaveData
@@ -116,14 +129,15 @@ part'DataConditioning wave = do
     True  -> return $ applyWhitening whtcoeff wave
 
 
-part'EventTriggerGeneration :: WaveData
-                           -> StateT GP.GlitchParam IO ()
-part'EventTriggerGeneration wave = do
-  param <- get
-  runStateT section'TimeFrequencyExpression wave param >>= \(a, s) ->
-    runStateT section'Clustering a s >>= \(a', s') ->
-      runStateT section'ParameterEstimation a' s' >>= \(a'', s'') ->
-        runStateT section'RegisterEventtoDB a'' s''
+part'EventTriggerGeneration :: GP.GlitchParam
+                            -> WaveData
+                            -> IO GP.GlitchParam
+part'EventTriggerGeneration param wave =
+  runStateT (section'TimeFrequencyExpression wave) param >>= \(a, s) ->
+    runStateT (section'Clustering a) s >>= \(a', s') ->
+      runStateT (section'ParameterEstimation a') s' >>= \(a'', s'') ->
+         do section'RegisterEventtoDB a''
+            return s''
 
 
 section'LineRemoval = id
@@ -160,7 +174,7 @@ calcWhiteningCoeffCore param (whtCoeffList, train) =
       )
 
 
-checkingWhitening wave = std (NL.toList wave)  < 2.0
+checkingWhitening wave = std (NL.toList (gwdata wave))  < 2.0
 
 
 applyWhitening :: [([Double],  Double)]
@@ -183,7 +197,7 @@ section'TimeFrequencyExpression whnWaveData = do
       ntime = GP.ntimeSlide param
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
-      snrMatT' = deformatGPS (startGPSTime whnWaveData) + snrMatT
+      snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
       snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
         (
         snd $ gwOnesidedPSDV (subVector (nfreq*i) nfreq (gwdata whnWaveData)) nfreq fs)
@@ -224,10 +238,10 @@ section'ParameterEstimation m = do
       indxBlack = maxIndex trigM
       tsnr = trigM @@> indxBlack
       gps = formatGPS $ trigT @> fst indxBlack
-      gpss = fromIntegral $ fst gps :: Int
-      gpsn = fromIntegral $ snd gps :: Int
+      gpss = fromIntegral $ fst gps :: Int32
+      gpsn = fromIntegral $ snd gps :: Int32
       fc = trigF @> snd indxBlack
-      tfs = truncate fs :: Int
+      tfs = fromIntegral $ truncate fs :: Int32
   return TrigParam { detector = Just "XE"
                    , event_gpsstarts = Just gpss
                    , event_gpsstartn = Just gpsn
@@ -259,7 +273,7 @@ mean :: Floating a => [a] -> a
 mean x = fst $ foldl' (\(!m,  !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
 
 
-var :: (Fractional a) => [a] -> a
+var :: (Fractional a, Floating a) => [a] -> a
 var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
     where mu = mean xs
           n = fromIntegral $ length xs

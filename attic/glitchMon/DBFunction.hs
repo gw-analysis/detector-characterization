@@ -28,7 +28,7 @@ import Database.HDBC.Session     (withConnectionIO, handleSqlError')
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC              (quickQuery', runRaw, fromSql)
 
---import Data.Int                   (Int32)
+import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
 import Data.Maybe                 (fromJust, fromMaybe)
 import qualified Data.Packed.Vector as DPV
@@ -42,8 +42,8 @@ import qualified Glitchdb as Glitch
 
 extractTrigInfoTSNR :: Int -> Int -> Double -> Double -> IO (Maybe [(Double, Double)])
 extractTrigInfoTSNR gpsstart gpsstop snrlow snrhigh = runMaybeT $ MaybeT $ do
-  let gpsstart' = fromIntegral gpsstart :: Int
-      gpsstop'  = fromIntegral gpsstop :: Int
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
   items <- extractTrigInfoTSNRCore gpsstart' gpsstop' snrlow snrhigh
   let out = [(fromIntegral u :: Double, v)
             | (Just u, Just v) <- items
