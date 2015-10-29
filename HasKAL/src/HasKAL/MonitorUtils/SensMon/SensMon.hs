@@ -17,12 +17,13 @@ import HasKAL.MonitorUtils.SensMon.Data
 import HasKAL.MonitorUtils.SensMon.Function
 
 
-runSensMon :: VS.Vector Double -> Double -> Int -> SensSpectrum
-runSensMon input fs n =
+runSensMon :: VS.Vector Double -> Double -> Int -> (Double, Int, Double) -> SensSpectrum
+runSensMon input fs n (hmin, n, hmax) =
   let param = SensParam
-        { histmax = 1.0E-18
-        , histmin = 1.0E-24
-        , binInterval = (logBase 10 (histmax param) - logBase 10 (histmin param))/100.0
+        { histmax = hmax
+        , histmin = hmin
+        , ndiv = n
+        , binInterval = (logBase 10 (histmax param) - logBase 10 (histmin param))/fromIntegral (ndiv param)
         , binlist = map (10**) [logBase 10 (histmin param), logBase 10 (histmin param)
             +(binInterval param) ..logBase 10 (histmax param)]
         }
