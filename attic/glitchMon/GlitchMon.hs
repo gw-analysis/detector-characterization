@@ -122,9 +122,10 @@ part'DataConditioning wave = do
   param <- get
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
-    False -> do (whtCoeffList, refwave) <- section'Whitening wave
-                put $ GP.updateParam param "whnCoeff" whtCoeffList
-                put $ GP.updateParam param "refpsd" (gwpsdV (gwdata refwave))
+    False -> do (whtCoeffList, rfwave) <- section'Whitening wave
+                put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+                put $ GP.updateGlitchParam'refpsd param
+                  (gwpsdV (gwdata rfwave) (GP.chunklen param) (GP.samplingFrequency param))
                 return $ applyWhitening whtCoeffList wave
     True  -> return $ applyWhitening whtcoeff wave
 
