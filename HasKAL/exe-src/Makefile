@@ -8,7 +8,9 @@ USELIB= libframe
 # program
 TAR1= plottimeseries
 TAR2= plotspectrum
-TARs= ${TAR1} ${TAR2}
+TAR3= gps2localtime
+TAR4= localtime2gps
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
@@ -29,6 +31,12 @@ ${TAR1}: ${TAR1}.hs ${DEPs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 ${TAR2}: ${TAR2}.hs ${DEPs}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR3}: ${TAR3}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR4}: ${TAR4}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
