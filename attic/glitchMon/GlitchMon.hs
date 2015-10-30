@@ -3,8 +3,8 @@
 
 module GlitchMon
 ( runGlitchMon
-, glitchMon
-, glitchMonF
+, eventDisplay
+, eventDisplayF
 )
 where
 
@@ -94,26 +94,41 @@ glitchMon :: GP.GlitchParam
           -> IO GP.GlitchParam
 glitchMon param w =
   runStateT (part'DataConditioning w) param >>= \(a, s) ->
-    part'EventTriggerGeneration s a
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
+         case a'' of
+           Just t -> part'RegisterEventtoDB t >> return s''
+           Nothing -> return s''
 
 
-glitchMonF :: GP.GlitchParam
-           -> FilePath
-           -> String
-           -> IO ()
-glitchMonF param fname chname = do
+eventDisplay :: GP.GlitchParam
+             -> WaveData
+             -> IO (Maybe TrigParam, GP.GlitchParam, Spectrogram)
+eventDisplay param w =
+  runStateT (part'DataConditioning w) param >>= \(a, s) ->
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+       do (trigparam, param') <- runStateT (part'ParameterEstimation a') s'
+          return (trigparam, param',a')
+
+
+eventDisplayF :: GP.GlitchParam
+              -> FilePath
+              -> String
+              -> IO (Maybe TrigParam, GP.GlitchParam, Spectrogram)
+eventDisplayF param fname chname = do
   maybegps <- getGPSTime fname
   case maybegps of
-    Nothing -> return ()
+    Nothing -> error "file broken"
     Just (s, n, dt') -> do
       let gps = floor $ deformatGPS (s, n)
           dt = floor dt'
       maybewave <- readFrameWaveData General gps dt chname fname
       case maybewave of
-        Nothing -> return ()
+        Nothing -> error "file broken"
         Just w -> runStateT (part'DataConditioning w) param >>= \(a, s) ->
-                    do part'EventTriggerGeneration s a
-                       return ()
+                    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+                       do (trigparam, param') <- runStateT (part'ParameterEstimation a') s'
+                          return (trigparam, param',a')
 
 
 part'DataConditioning :: WaveData
@@ -130,15 +145,12 @@ part'DataConditioning wave = do
     True  -> return $ applyWhitening whtcoeff wave
 
 
-part'EventTriggerGeneration :: GP.GlitchParam
-                            -> WaveData
-                            -> IO GP.GlitchParam
-part'EventTriggerGeneration param wave =
-  runStateT (section'TimeFrequencyExpression wave) param >>= \(a, s) ->
-    runStateT (section'Clustering a) s >>= \(a', s') ->
-      runStateT (section'ParameterEstimation a') s' >>= \(a'', s'') ->
-         do section'RegisterEventtoDB a''
-            return s''
+part'EventTriggerGeneration :: WaveData
+                            -> StateT GP.GlitchParam IO Spectrogram
+part'EventTriggerGeneration wave = do
+  param <- get
+  (a, s) <- liftIO $ runStateT (section'TimeFrequencyExpression wave) param
+  section'Clustering a
 
 
 section'LineRemoval = id
@@ -230,44 +242,51 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   return newM
 
 
-section'ParameterEstimation :: Spectrogram
-                            -> StateT GP.GlitchParam IO TrigParam
-section'ParameterEstimation m = do
+part'ParameterEstimation :: Spectrogram
+                         -> StateT GP.GlitchParam IO (Maybe TrigParam)
+part'ParameterEstimation m = do
   param <- get
   let fs = GP.samplingFrequency param
   let (trigT, trigF, trigM) = m
-      indxBlack = maxIndex trigM
-      tsnr = trigM @@> indxBlack
-      gps = formatGPS $ trigT @> fst indxBlack
-      gpss = fromIntegral $ fst gps :: Int32
-      gpsn = fromIntegral $ snd gps :: Int32
-      fc = trigF @> snd indxBlack
-      tfs = fromIntegral $ truncate fs :: Int32
-  return TrigParam { detector = Just "XE"
-                   , event_gpsstarts = Just gpss
-                   , event_gpsstartn = Just gpsn
-                   , event_gpsstops  = Nothing
-                   , event_gpsstopn  = Nothing
-                   , duration = Nothing
-                   , energy = Nothing
-                   , central_frequency = Just fc
-                   , snr = Just tsnr
-                   , significance = Nothing
-                   , latitude = Nothing
-                   , longitude = Nothing
-                   , chname = Nothing
-                   , sampling_rate = Just tfs
-                   , segment_gpsstarts = Nothing
-                   , segment_gpsstartn = Nothing
-                   , segment_gpsstops = Nothing
-                   , segment_gpsstopn = Nothing
-                   , dq_flag = Nothing
-                   , pipeline = Just "iKAGRA Burst pipeline"
-                   }
+      mrow = NL.rows trigM
+      mcol = NL.cols trigM
+      zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
+  case (trigM == zerom) of
+    True -> do
+      let indxBlack = maxIndex trigM
+          tsnr = trigM @@> indxBlack
+          gps = formatGPS $ trigT @> fst indxBlack
+          gpss = fromIntegral $ fst gps :: Int32
+          gpsn = fromIntegral $ snd gps :: Int32
+          fc = trigF @> snd indxBlack
+          tfs = fromIntegral $ truncate fs :: Int32
+      return $ Just TrigParam { detector = Just "XE"
+                              , event_gpsstarts = Just gpss
+                              , event_gpsstartn = Just gpsn
+                              , event_gpsstops  = Nothing
+                              , event_gpsstopn  = Nothing
+                              , duration = Nothing
+                              , energy = Nothing
+                              , central_frequency = Just fc
+                              , snr = Just tsnr
+                              , significance = Nothing
+                              , latitude = Nothing
+                              , longitude = Nothing
+                              , chname = Nothing
+                              , sampling_rate = Just tfs
+                              , segment_gpsstarts = Nothing
+                              , segment_gpsstartn = Nothing
+                              , segment_gpsstops = Nothing
+                              , segment_gpsstopn = Nothing
+                              , dq_flag = Nothing
+                              , pipeline = Just "iKAGRA Burst pipeline"
+                              }
+    False -> return Nothing
 
-
-section'RegisterEventtoDB =
+part'RegisterEventtoDB =
   registGlitchEvent2DB
+
+
 
 
 mean :: Floating a => [a] -> a
