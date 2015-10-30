@@ -356,7 +356,6 @@ show0 "month" n
   | n==12 = ("12", "Dec.")
   | otherwise = ("00", "???")
 show0 _ n
-  | n==0 = ("00", "0")
-  | n==1 = ("0"++(show n), show n)
-  | otherwise = (show n, show n)
-
+  | len==1 = ("0"++(show n), show n)
+  | len=>2 = (show n, show n)
+  where len = length.show.n
