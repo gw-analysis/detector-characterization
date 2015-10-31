@@ -7,12 +7,10 @@ module HasKAL.MonitorUtils.SensMon.SensMon
 --,
 ) where
 
-import Control.Monad (forM)
-import Data.Maybe (fromMaybe)
 import qualified Data.Packed.Matrix as M
 import qualified Data.Vector.Storable as VS
 import Numeric.LinearAlgebra
-import HasKAL.DataBaseUtils.Function (kagraDataGet)
+import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SpectrumUtils.Function (updateMatrixElement)
@@ -23,32 +21,7 @@ import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.TimeUtils.Function(deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature
-import System.IO.Unsafe (unsafePerformIO)
 
-
-type Date = (Int, Int, Int)
-
-dailySensMon :: Date -> String -> (Double, Double) -> (Double, Double) -> IO ()
-dailySensMon (year, month, day) ch (fl, fu) (hmin, hmax) = do
-  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
-      day = 86400
-      hr = 3600
-      min = 60
-      gpslist = [gps, gps+hr..gps+day]
-      file = head $ fromMaybe (error "file not found")
-               $ kagraDataFind (fromIntegral gps) (fromIntegral hr) ch
-  fs <- getSamplingFequency file ch >>= \maybefs ->
-          return $ fromMaybe (error "fs not loaded") maybefs
-  let x = go gpslist ch
-      fname = ch++"-"++year++"-"++month++"-"++day++"_SensMon.png"
-      title = "SensMon: " ++ ch
-  histgram2dM LogXYZ COLZ ("frequency [Hz]", "ASD [1/rHz]", "count") title fname ((fl,fu), (hmin,hmax)) x
-  where
-    go (t:ts) ch =
-      let maybev = unsafePerformIO $ kagraDataGet t hr ch
-       in case maybev of
-            Nothing -> go ts ch
-            Just v -> updateSensMon (runSensMon v fs (min*fs) (hmin, min*fs, hmax)) (go ts ch)
 
 
 runSensMon :: VS.Vector Double -> Double -> Int -> (Double, Int, Double) -> SensSpectrum
