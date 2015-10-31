@@ -25,7 +25,7 @@ import HasKAL.TimeUtils.Signature
 
 
 runSensMon :: VS.Vector Double -> Double -> Int -> (Double, Int, Double) -> SensSpectrum
-runSensMon input fs n (hmin, n, hmax) =
+runSensMon input fs m (hmin, n, hmax) =
   let param = SensParam
         { histmax = hmax
         , histmin = hmin
@@ -34,7 +34,7 @@ runSensMon input fs n (hmin, n, hmax) =
         , binlist = map (10**) [logBase 10 (histmin param), logBase 10 (histmin param)
             +binInterval param ..logBase 10 (histmax param)]
         }
-   in runSensMonCore input fs n param
+   in runSensMonCore input fs m param
 
 
 updateSensMon :: SensSpectrum -> SensSpectrum -> SensSpectrum
@@ -56,7 +56,7 @@ runSensMonCore input fs n param =
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
-   in ( fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..n2]]
+   in ( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
       , VS.fromList $ init bins
       , M.fromColumns
         $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
