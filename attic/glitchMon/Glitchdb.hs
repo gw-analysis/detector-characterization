@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Glitchdb where
+module GlitchMon.Glitchdb where
 
 import Prelude hiding (id)
 import HasKAL.DataBaseUtils.DataSource (defineTable)

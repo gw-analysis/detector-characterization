@@ -1,7 +1,7 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, TemplateHaskell, MultiParamTypeClasses, FlexibleInstances #-}
 
 
-module RegisterGlitchEvent
+module GlitchMon.RegisterGlitchEvent
 ( registGlitchEvent2DB
 )
 where
@@ -22,14 +22,15 @@ import Control.Monad (forM)
 import HasKAL.DataBaseUtils.DataSource (connect)
 --import HasKAL.DataBaseUtils.Framedb (Framedb, framedb, tableOfFramedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Framedb
-
-import Glitchdb (Glitchdb, glitchdb, tableOfGlitchdb)
-import qualified Glitchdb as Glitchdb
 import System.Process (rawSystem)
 import System.Environment (getArgs)
-import PipelineFunction
-import Data (TrigParam(..))
 import Data.Int (Int32)
+
+import qualified GlitchMon.Glitchdb as Glitchdb
+import GlitchMon.PipelineFunction
+import GlitchMon.Data (TrigParam(..))
+import GlitchMon.Glitchdb (Glitchdb, glitchdb, tableOfGlitchdb)
+
 
 registGlitchEvent2DB :: TrigParam -> IO()
 registGlitchEvent2DB p = handleSqlError' $ withConnectionIO connect $ \conn -> do

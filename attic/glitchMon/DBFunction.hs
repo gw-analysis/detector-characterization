@@ -1,6 +1,6 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
 
-module DBFunction
+module GlitchMon.DBFunction
 ( extractTrigInfoTFSNR
 )
 where
@@ -38,8 +38,8 @@ import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 
 import HasKAL.DataBaseUtils.DataSource (connect)
-import Glitchdb (Glitchdb)
-import qualified Glitchdb as Glitch
+import GlitchMon.Glitchdb (Glitchdb)
+import qualified GlitchMon.Glitchdb as Glitch
 
 
 

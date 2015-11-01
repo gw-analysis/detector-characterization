@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
 
-module GlitchMon
+module GlitchMon.GlitchMon
 ( runGlitchMon
 , eventDisplay
 , eventDisplayF
@@ -36,10 +36,10 @@ import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra as NL
 import System.FSNotify (startManager, stopManager, withManager, watchTree, Event(..), eventPath)
 
-import qualified GlitchParam as GP
-import PipelineFunction
-import Data (TrigParam (..))
-import RegisterGlitchEvent (registGlitchEvent2DB)
+import qualified GlitchMon.GlitchParam as GP
+import GlitchMon.PipelineFunction
+import GlitchMon.Data (TrigParam (..))
+import GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
 
 
 

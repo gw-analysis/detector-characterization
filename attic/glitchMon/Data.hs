@@ -1,5 +1,5 @@
 
-module Data
+module GlitchMon.Data
 ( TrigParam (..))
 where
 

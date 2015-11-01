@@ -1,7 +1,7 @@
 
 
 
-module GlitchPlot
+module GlitchMon.GlitchPlot
 ( scatterplot
 , scatterplot'png
 ) where

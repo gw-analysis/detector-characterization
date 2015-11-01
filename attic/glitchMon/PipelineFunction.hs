@@ -1,6 +1,6 @@
 
 
-module PipelineFunction
+module GlitchMon.PipelineFunction
 ( dataInfo
 , frameInfo
 , excludeOnePixelIsland

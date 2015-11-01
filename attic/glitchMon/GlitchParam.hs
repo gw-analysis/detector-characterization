@@ -1,6 +1,6 @@
 
 
-module GlitchParam
+module GlitchMon.GlitchParam
 where
 
 --import qualified Data.Vector.Storable as V
