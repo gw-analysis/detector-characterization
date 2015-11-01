@@ -7,7 +7,9 @@ module HasKAL.MonitorUtils.SensMon.SensMon
 --,
 ) where
 
+import qualified Data.List as DL
 import qualified Data.Packed.Matrix as M
+import qualified Data.Vector.Algorithms.Intro as I
 import qualified Data.Vector.Storable as VS
 import Numeric.LinearAlgebra
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
@@ -24,12 +26,12 @@ import HasKAL.TimeUtils.Signature
 
 
 
-runSensMon :: VS.Vector Double -> Double -> Int -> (Double, Int, Double) -> SensSpectrum
-runSensMon input fs m (hmin, n, hmax) =
+runSensMon :: VS.Vector Double -> Double -> Int -> (SensSpectrum, SensParam)
+runSensMon input fs m =
   let param = SensParam
-        { histmax = hmax
-        , histmin = hmin
-        , ndiv = n
+        { histmax = 0
+        , histmin = 0
+        , ndiv = 50
         , binInterval = (logBase 10 (histmax param) - logBase 10 (histmin param))/fromIntegral (ndiv param)
         , binlist = map (10**) [logBase 10 (histmin param), logBase 10 (histmin param)
             +binInterval param ..logBase 10 (histmax param)]
@@ -47,19 +49,21 @@ updateSensMon history new =
    in updateSensMonInternal history updatedM
 
 
-runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> SensSpectrum
-runSensMonCore input fs n param =
-  let chunks = mkChunks input n
+runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> (SensSpectrum, SensParam)
+runSensMonCore input fs n param' =
+  let (chunks, param) = setHistParam  dat nfft fs param'
+      mchunks = mkChunks input n
       n2 = n `div` 2
       vlist  = map (\x -> snd $ gwOnesidedPSDV x n fs) chunks
       eachFbin = M.toColumns . M.fromRows $ vlist
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
-   in ( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
+   in (( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
       , VS.fromList $ init bins
       , M.fromColumns
         $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
+      , param)
 
 
 mkChunks :: VS.Vector Double -> Int -> [VS.Vector Double]
@@ -76,5 +80,18 @@ histogram1d xmin xmax bins input =
    in (map fst intervals, map ((fromIntegral.length) . (\u -> filter (within u) input)) intervals)
 
 
+setHistParam :: VS.Vector Double -> Int -> Double -> SensParam -> ([Vector Double], SensParam)
+setHistParam  dat nfft fs param =
+  let chunk = mkChunks dat nfft
+      vlist = map (\x -> snd $ gwOnesidedPSDV x nfft fs) chunks
+--      vmax = DL.maximum $ map (\v->VS.maximum v) vlist
+--      vmin= DL.minimum $ map (\v->VS.minimum v) vlist
+      sdat = VS.modify I.sort dat
+      nv = VS.length ndat
+      hmin = sdat VS.(!) floor (0.003*nv)
+      hmax = sdat VS.(!) (nv - floor (0.003*nv))
+      param' = updateSensParam'histmin param hmin
+      param''= updateSensParam'histmin param hmax
+   in (vlist, param'')
 
 

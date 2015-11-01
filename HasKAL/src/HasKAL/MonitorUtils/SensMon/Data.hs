@@ -13,20 +13,20 @@ data SensParam = SensParam
        , binlist :: [Double]
        }
 
-updateSensParam'histmin :: Double -> SensParam
-updateSensParam'histmin x = SensParam {histmin = x}
+updateSensParam'histmin :: SensParam -> Double -> SensParam
+updateSensParam'histmin p x = p {histmin = x}
 
-updateSensParam'histmax :: Double -> SensParam
-updateSensParam'histmax x = SensParam {histmax = x}
+updateSensParam'histmax :: SensParam -> Double -> SensParam
+updateSensParam'histmax p x = p {histmax = x}
 
-updateSensParam'ndiv :: Int -> SensParam
-updateSensParam'ndiv n = SensParam {ndiv = n}
+updateSensParam'ndiv :: SensParam -> Int -> SensParam
+updateSensParam'ndiv p n = p {ndiv = n}
 
-updateSensParam'inInterval :: Double -> SensParam
-updateSensParam'inInterval bi = SensParam {binInterval = bi}
+updateSensParam'inInterval :: SensParam -> Double -> SensParam
+updateSensParam'inInterval p bi = p {binInterval = bi}
 
-updateSensParam'binlist :: [Double] -> SensParam
-updateSensParam'binlist bl = SensParam {binlist = bl}
+updateSensParam'binlist :: SensParam -> [Double] -> SensParam
+updateSensParam'binlist p bl = p {binlist = bl}
 
 
 
