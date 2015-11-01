@@ -51,8 +51,7 @@ updateSensMon history new =
 
 runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> (SensSpectrum, SensParam)
 runSensMonCore input fs n param' =
-  let (chunks, param) = setHistParam  dat nfft fs param'
-      mchunks = mkChunks input n
+  let (chunks, param) = setHistParam input n fs param'
       n2 = n `div` 2
       vlist  = map (\x -> snd $ gwOnesidedPSDV x n fs) chunks
       eachFbin = M.toColumns . M.fromRows $ vlist
@@ -80,16 +79,16 @@ histogram1d xmin xmax bins input =
    in (map fst intervals, map ((fromIntegral.length) . (\u -> filter (within u) input)) intervals)
 
 
-setHistParam :: VS.Vector Double -> Int -> Double -> SensParam -> ([Vector Double], SensParam)
+setHistParam :: VS.Vector Double -> Int -> Double -> SensParam -> ([VS.Vector Double], SensParam)
 setHistParam  dat nfft fs param =
-  let chunk = mkChunks dat nfft
+  let chunks = mkChunks dat nfft
       vlist = map (\x -> snd $ gwOnesidedPSDV x nfft fs) chunks
 --      vmax = DL.maximum $ map (\v->VS.maximum v) vlist
 --      vmin= DL.minimum $ map (\v->VS.minimum v) vlist
       sdat = VS.modify I.sort dat
-      nv = VS.length ndat
-      hmin = sdat VS.(!) floor (0.003*nv)
-      hmax = sdat VS.(!) (nv - floor (0.003*nv))
+      nv = VS.length sdat
+      hmin = sdat VS.! floor (0.003*fromIntegral nv)
+      hmax = sdat VS.! (nv - floor (0.003*fromIntegral nv))
       param' = updateSensParam'histmin param hmin
       param''= updateSensParam'histmin param hmax
    in (vlist, param'')
