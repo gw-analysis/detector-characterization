@@ -3,8 +3,10 @@
 module HasKAL.DataBaseUtils.Function
 ( db2framelist
 , db2framecache
+, kagraChannelList
 , kagraDataFind
 , kagraDataGet
+, kagraDataGPS
 , kagraDataPoint
 , kagraDataFindCore
 , kagraDataPointCore
@@ -43,6 +45,13 @@ import qualified HasKAL.DataBaseUtils.Framedb as Frame
 import HasKAL.FrameUtils.FrameUtils
 
 
+kagraChannelList :: Int32 -> IO (Maybe [String])
+kagraChannelList gpstime = runMaybeT $ MaybeT $ do
+  file <- kagraDataGPS gpstime >>= \maybel ->
+    return $ head $ fromMaybe (error "no file in this gps") maybel
+  getChannelList file >>= \maybech ->
+    return $ Just $ fst . unzip $ fromMaybe (error "no channel in this gps") maybech
+
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO (Maybe [String])
 kagraDataFind gpsstrt duration chname = runMaybeT $ MaybeT $ do
@@ -66,6 +75,17 @@ kagraDataPoint gpstime chname = runMaybeT $ MaybeT $ do
     x -> return (Just x)
 
 
+kagraDataGPS :: Int32 -> IO (Maybe [String])
+kagraDataGPS gpstime = runMaybeT $ MaybeT $ do
+  flist <- kagraDataGPSCore gpstime
+  let out = [ u
+            | (Just u) <- flist
+            ]
+  case out of
+    []     -> return Nothing
+    x -> return (Just x)
+
+
 kagraDataGet :: Int -> Int -> String -> IO (Maybe (DPV.Vector Double))
 kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
@@ -73,11 +93,11 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
     Nothing -> return Nothing
     Just x -> do
       let headfile = head x
-      getSamplingFrequency headfile chname >>= \maybefs -> do
+      getSamplingFrequency headfile chname >>= \maybefs ->
         case maybefs of
           Nothing -> return Nothing
-          Just fs -> do
-            getGPSTime headfile >>= \maybegps -> do
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
@@ -139,6 +159,29 @@ kagraDataPointCore gpstime chname =
       wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
       wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
       return $ ch ! Frame.fname'
+
+
+
+kagraDataGPSCore :: Int32 -> IO [Maybe String]
+kagraDataGPSCore gpstime =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+--  setSqlMode conn
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+
+    channel = relation
+      [ u
+      | u <- query framedb
+      ]
+
+    core :: Relation () (Maybe String)
+    core = relation $ do
+      ch <- query channel
+      wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
+      wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
+      return $ ch ! Frame.fname'
+
 
 
 db2framecache :: Relation () Frame.Framedb -> IO (Maybe [String])
