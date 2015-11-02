@@ -47,7 +47,7 @@ genDailySummaryPage dir date chlist monlist subsystem = do
   writeFile fnamehtml contents
 
 
-fomatTable [] _ = []
+formatTable [] _ = []
 formatTable tlist n =
    startTR ++ foldl1' (++) (take n tlist) ++ endTR ++ formatTable (drop n tlist) n
 
