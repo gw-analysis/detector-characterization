@@ -30,7 +30,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
   let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
-      fnamepng = [dir </> x++".png"|x<-fname]
+      fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
