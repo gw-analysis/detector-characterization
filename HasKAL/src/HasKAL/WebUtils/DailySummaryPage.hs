@@ -41,16 +41,17 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ addTitle date subsystem 
               ++ startTABLE
               ++ startTBODY
-              ++ (formatTable tables ncol)
+              ++ (layoutTable [c++":"++m|c<-chs,m<-mons] ncol)
+              ++ (layoutTable tables ncol)
               ++ endTBODY
               ++ endTABLE
               ++ endHTML
   writeFile fnamehtml contents
 
 
-formatTable [] _ = []
-formatTable tlist n =
-   startTR ++ foldl1' (++) (take n tlist) ++ endTR ++ formatTable (drop n tlist) n
+layoutTable [] _ = []
+layoutTable tlist n =
+   startTR ++ foldl1' (++) (take n tlist) ++ endTR ++ layoutTable (drop n tlist) n
 
 
 startHTML = concat [
