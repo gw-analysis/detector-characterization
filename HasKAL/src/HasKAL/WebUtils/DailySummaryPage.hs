@@ -2,7 +2,7 @@
 
 
 
-module DailySummaryPage
+module HasKAL.WebUtils.DailySummaryPage
 ( genDailySummaryPage
 , startHTML
 , addStyle
