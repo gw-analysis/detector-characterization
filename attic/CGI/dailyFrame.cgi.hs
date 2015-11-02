@@ -1,15 +1,3 @@
-{- |
-Module      : frame.cgi
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : Takahiro Yamamoto %mail%
-Stability   : test
-Portability : POSIX
-
--}{-
-  * Last Modified: 2015/11/02 18:50:56
--}
 
 import Network.CGI
 
@@ -23,7 +11,13 @@ cgiMain :: CGI CGIResult
 cgiMain = do
   gps <- liftIO getCurrentGps
   subSys <- getInput "subSys"
-  let (yyyy, mm, dd, _,_,_,_) = gps2localTimetuple (read gps) "JST"
+  [year,month,day] <- mapM getInput ["year", "month", "day"]
+  let (yyyy, mm, dd, _,_,_,_) = case (year,month,day) of 
+                                 (Just "", _, _) -> gps2localTimetuple (read gps) "JST"
+                                 (_, Just "", _) -> gps2localTimetuple (read gps) "JST"
+                                 (_, _, Just "") -> gps2localTimetuple (read gps) "JST"
+                                 (Just x, Just y, Just z) -> (read x, read y, (read z)+1, 1,1,1,"")
+                                 (_, _, _) -> gps2localTimetuple (read gps) "JST"
   output $ html subSys (yyyy, mm, dd)
 
 html :: Maybe String -> (Int, Int, Int) -> String
@@ -50,9 +44,10 @@ html subSys (yyyy, mm, dd) = concat [
                    Just x  -> "_"++x
                    Nothing -> ""
         uri mbx = case mbx of
-                   Just "" -> ""
-                   Just x  -> "?subSys="++x
-                   Nothing -> ""
+                   Just "" -> "?"++date
+                   Just x  -> "?subSys="++x++"&"++date
+                   Nothing -> "?"++date
+                  where date="year="++(show yyyy)++"&month="++(show0 mm)++"&day="++(show0 $ dd - 1)
 
 show0 x
   | x < 10    = "0"++(show x)

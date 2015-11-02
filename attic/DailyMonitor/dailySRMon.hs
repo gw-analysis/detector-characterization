@@ -27,7 +27,7 @@ main = do
       freqResol = 16   -- Hz
       quantile  = 0.99 -- 0 < quantile < 1
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_SRMon.png"
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailySRMon.png"
       title = "StudentRayleighMon: " ++ ch
       xlabel = "Date: "++year++"/"++month
 

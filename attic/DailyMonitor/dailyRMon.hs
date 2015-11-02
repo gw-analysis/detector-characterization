@@ -25,7 +25,7 @@ main = do
       freqResol = 16   -- Hz
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_RMon.png"
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailyRMon.png"
       title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 

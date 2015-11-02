@@ -22,7 +22,7 @@ main = do
       -- for CoherenceMon
       fftLength = 64   -- seconds
       -- for Plot
-      oFile = ch1++"_"++ch2++"-"++year++"-"++month++"-"++day++"_Coherence.png"
+      oFile = ch1++"_"++ch2++"-"++year++"-"++month++"-"++day++"_dailyCoherenceMon.png"
       title = "CoherenceMon: " ++ ch1 ++ " vs " ++ ch2
       xlabel = "Date: "++year++"/"++month++"/"++day
 

@@ -1,3 +1,4 @@
+
 import Network.CGI
 
 main :: IO ()
