@@ -4,7 +4,7 @@ import Data.Maybe
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps, gps2localTimetuple)
 
-startDate = (2012, 1)
+startDate = (2015, 4)
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
@@ -83,12 +83,11 @@ dailyLink :: Maybe String -> (Int, Int, Int) -> (Int, Int, Int) -> String
 dailyLink subSys today (yyyy, mm, dd) 
   | dd == 0                 = "<td></td>"
   | (yyyy, mm, dd) >= today = "<td align=\"right\">"++(show dd)++"&ensp;</td>"
-  | otherwise               = "<td align=\"right\"><a href=\""++linkfile++"\" target=\"plotframe\">"++(show dd)++"</a>&ensp;</td>"
-  where linkfile = "../"++(show yyyy)++"/"++(show0 mm)++"/"++(show0 dd)++"/"
-                   ++(show yyyy)++"-"++(show0 mm)++"-"++(show0 dd)++str subSys++".html"
+  | otherwise               = "<td align=\"right\"><a href=\""++linkfile++"\" target=\"_top\">"++(show dd)++"</a>&ensp;</td>"
+  where linkfile = "./dailyFrame.cgi?year="++(show yyyy)++"&month="++(show0 mm)++"&day="++(show0 dd)++"&subSys="++str subSys
         str mbx = case mbx of 
                    (Just "") -> ""
-                   (Just x)  -> "_"++x
+                   (Just x)  -> x
                    Nothing   -> ""
 
 lastDay :: (Int, Int) -> Int
