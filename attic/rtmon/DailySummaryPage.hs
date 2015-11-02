@@ -24,12 +24,12 @@ module DailySummaryPage
 import Data.List (foldl1')
 
 
-genDailySummaryPage date chlist monlist subsystem = do
+genDailySummaryPage dir date chlist monlist subsystem = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
-  let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
-      fnamepng = [x++".png"|x<-fname]
-      fnamehtml = date++"_"++subsystem++".html"
+  let fname = [dir++"/"++c++"-"++date++"_"++m|c<-chs,m<-mons]
+      fnamepng = [dir++"/"++x++".png"|x<-fname]
+      fnamehtml = dir++"/"++date++"_"++subsystem++".html"
       nf = length fname
       ncol = 3
       tables = zipWith (\x y -> addTelement x y) fname fnamepng
