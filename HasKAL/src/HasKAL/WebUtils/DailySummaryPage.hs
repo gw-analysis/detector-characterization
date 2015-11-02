@@ -22,14 +22,15 @@ module HasKAL.WebUtils.DailySummaryPage
 
 
 import Data.List (foldl1')
+import System.FilePath ((</>))
 
 
 genDailySummaryPage dir date chlist monlist subsystem ncol = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
   let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
-      fnamepng = [dir++"/"++x++".png"|x<-fname]
-      fnamehtml = dir++"/"++date++"_"++subsystem++".html"
+      fnamepng = [dir </> x++".png"|x<-fname]
+      fnamehtml = dir </> date++"_"++subsystem++".html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
       contents = startHTML 
