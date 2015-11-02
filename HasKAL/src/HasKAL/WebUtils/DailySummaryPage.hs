@@ -34,6 +34,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
+      titles = map addTableTitle [c++":"++m|c<-chs,m<-mons]
       contents = startHTML 
               ++ addHEAD "32000"
               ++ addStyle 
@@ -41,7 +42,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ addTitle date subsystem 
               ++ startTABLE
               ++ startTBODY
-              ++ (layoutTable [c++":"++m|c<-chs,m<-mons] ncol)
+              ++ (layoutTable titles ncol)
               ++ (layoutTable tables ncol)
               ++ endTBODY
               ++ endTABLE
@@ -52,6 +53,9 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
 layoutTable [] _ = []
 layoutTable tlist n =
    startTR ++ foldl1' (++) (take n tlist) ++ endTR ++ layoutTable (drop n tlist) n
+
+
+addTableTitle title = concat ["<th style=\"vertical-align: top;\">"++title++"</th>"]
 
 
 startHTML = concat [
