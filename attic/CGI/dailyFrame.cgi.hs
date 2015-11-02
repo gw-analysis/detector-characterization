@@ -8,7 +8,7 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/11/02 18:14:49
+  * Last Modified: 2015/11/02 18:50:56
 -}
 
 import Network.CGI
@@ -34,17 +34,22 @@ html subSys (yyyy, mm, dd) = concat [
         "<title>HasKAL</title>",
       "</head>",
       "<frameset rows=\"100,*\">",
-        "<frame src=\"./dailySubSys.cgi"++str subSys++"\" name=\"portal\">",
+        "<frame src=\"./dailySubSys.cgi"++uri subSys++"\" name=\"portal\">",
           "<frameset cols=\"220,*\">",
-            "<frame src=\"./calSubSys.cgi"++str subSys++"\" name=\"calendar\">",
-            "<frame src=\""++today++str subSys++"\" name=\"plotframe\">",
+            "<frame src=\"./calSubSys.cgi"++uri subSys++"\" name=\"calendar\">",
+            "<frame src=\""++today++"\" name=\"plotframe\">",
           "</frameset>",
       "</frameset>",
   "</html>"
   ]
   where today = "../"++(show yyyy)++"/"++(show0 mm)++"/"++(show0 $ dd - 1)++"/"
                    ++(show yyyy)++"-"++(show0 mm)++"-"++(show0 $ dd - 1)++str subSys++".html"
+        
         str mbx = case mbx of
+                   Just "" -> ""
+                   Just x  -> "_"++x
+                   Nothing -> ""
+        uri mbx = case mbx of
                    Just "" -> ""
                    Just x  -> "?subSys="++x
                    Nothing -> ""
