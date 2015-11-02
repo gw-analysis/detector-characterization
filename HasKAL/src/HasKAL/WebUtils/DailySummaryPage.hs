@@ -27,11 +27,11 @@ import Data.List (foldl1')
 genDailySummaryPage dir date chlist monlist subsystem ncol = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
-  let fname = [dir++"/"++c++"-"++date++"_"++m|c<-chs,m<-mons]
-      fnamepng = [dir++"/"++drop (succ $ length dir) x++".png"|x<-fname]
+  let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
+      fnamepng = [dir++"/"++x++".png"|x<-fname]
       fnamehtml = dir++"/"++date++"_"++subsystem++".html"
       nf = length fname
-      tables = zipWith (\x y -> addTelement x y) fname fnamepng
+      tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
       contents = startHTML 
               ++ addHEAD "32000"
               ++ addStyle 
