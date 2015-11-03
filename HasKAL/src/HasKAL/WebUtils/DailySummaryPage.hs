@@ -44,7 +44,6 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ startTABLE
               ++ startTBODY
               ++ (layoutTitleTable titles tables ncol)
-              ++ (layoutTable tables ncol)
               ++ endTBODY
               ++ endTABLE
               ++ endHTML
