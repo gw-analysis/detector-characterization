@@ -3,9 +3,11 @@
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
   hBruco,
+  hBrucoSameFs,
   coherenceMon,
-  delayCoherenceMon,
-  coherenceTFMon
+  coherenceMonSameFs,
+  delayCoherenceMonSameFs,
+  coherenceTFMonSameFs
 ) where
 
 
@@ -21,18 +23,48 @@ import HasKAL.MathUtils.FFTW (dftRC1d)
 
 
 -- | Bruco like tool
-hBruco :: Int -> Double -> (V.Vector Double, String) -> [(V.Vector Double, String)] -> [(Double, [(Double, String)])]
-hBruco nfft fs (xt, xch) yts = zip fvec result
-  where result = map (reverse.sort.(`zip` (map snd yts))).toLists.fromColumns $ map (snd.(coherenceMon nfft fs xt).fst) yts
+hBruco :: Double -> (Double, V.Vector Double, String) -> [(Double, V.Vector Double, String)] -> [(Double, [(Double, String)])]
+hBruco sec (fsx, xt, xch) yts = zip fvec result
+  where fvec = [0, 1/sec..]
+        result = map (ranked.labeled) cohList
+          where ranked x = reverse $ sort x
+                labeled x = zip x (map trd' yts)
+        cohList = toLists.fromColumns $ map (snd.(\x -> coherenceMon sec fsx (fst' x) xt (snd' x))) yts
+        fst' (a,_,_) = a
+        snd' (_,b,_) = b
+        trd' (_,_,c) = c
+
+hBrucoSameFs :: Int -> Double -> (V.Vector Double, String) -> [(V.Vector Double, String)] -> [(Double, [(Double, String)])]
+hBrucoSameFs nfft fs (xt, xch) yts = zip fvec result
+  where result = map (reverse.sort.(`zip` (map snd yts))).toLists.fromColumns $ map (snd.(coherenceMonSameFs nfft fs xt).fst) yts
         fvec = [0, fs/(fromIntegral nfft)..]
 
 -- | frequency based coherency
-coherenceMon :: Int              -- ^ length of FFT
-          -> Double           -- ^      sampling: fs
-          -> V.Vector Double  -- ^ time series 1: x(t)
-          -> V.Vector Double  -- ^ time series 2: y(t)
-          -> Spectrum         -- ^     coherency: |coh(f)|^2
-coherenceMon nfft fs xt yt = (fv, coh'f1)
+coherenceMon :: Double              -- ^ length of FFT [s]
+             -> Double           -- ^ sampling of x(t): fs
+             -> Double           -- ^ sampling of y(t): fs
+             -> V.Vector Double  -- ^    time series 1: x(t)
+             -> V.Vector Double  -- ^    time series 2: y(t)
+             -> Spectrum         -- ^     coherency: |coh(f)|^2
+coherenceMon sec fsx fsy xt yt = (fv, coh'f1)
+  where nfftx = truncate $ fsx * sec
+        nffty = truncate $ fsy * sec
+        fv = V.fromList [0, fsx/(fromIntegral nfftx)..fsx/2]
+        xt1 = map (\i -> V.slice i nfftx xt) [0, nfftx..(V.length xt)-nfftx]
+        yt1 = map (\i -> V.slice i nffty yt) [0, nffty..(V.length yt)-nffty]
+        xf1 = map dftRC1d xt1
+        yf1 = map dftRC1d yt1
+        pxx1 = ave $ map ps xf1
+        pyy1 = ave $ map ps yf1
+        pxy1 = ave $ zipWith cs xf1 yf1
+        coh'f1 = V.slice 0 (V.length fv) $ coh pxy1 pxx1 pyy1
+
+coherenceMonSameFs :: Int              -- ^ length of FFT
+                   -> Double           -- ^      sampling: fs
+                   -> V.Vector Double  -- ^ time series 1: x(t)
+                   -> V.Vector Double  -- ^ time series 2: y(t)
+                   -> Spectrum         -- ^     coherency: |coh(f)|^2
+coherenceMonSameFs nfft fs xt yt = (fv, coh'f1)
   where nfft' = min nfft $ min (V.length xt) (V.length yt)
         fv = V.fromList [0, fs/(fromIntegral nfft')..fs/2]
         xt1 = map (\i -> V.slice i nfft' xt) [0, nfft'..(V.length xt)-nfft']
@@ -44,26 +76,26 @@ coherenceMon nfft fs xt yt = (fv, coh'f1)
         pxy1 = ave $ zipWith cs xf1 yf1
         coh'f1 = V.slice 0 (V.length fv) $ coh pxy1 pxx1 pyy1
 
-delayCoherenceMon :: Int -> Double -> V.Vector Double -> V.Vector Double -> Spectrum
-delayCoherenceMon nfft fs xt yt = (fv1, V.zipWith max coh1 coh2)
-  where (fv1, coh1) = coherenceMon nfft fs xt yt
-        (fv2, coh2) = coherenceMon nfft fs (V.drop (nfft`div`2) xt) (V.drop (nfft`div`2) yt)
+delayCoherenceMonSameFs :: Int -> Double -> V.Vector Double -> V.Vector Double -> Spectrum
+delayCoherenceMonSameFs nfft fs xt yt = (fv1, V.zipWith max coh1 coh2)
+  where (fv1, coh1) = coherenceMonSameFs nfft fs xt yt
+        (fv2, coh2) = coherenceMonSameFs nfft fs (V.drop (nfft`div`2) xt) (V.drop (nfft`div`2) yt)
 
 
 -- | TF map of coherency
-coherenceTFMon :: Int             -- ^   shift point
+coherenceTFMonSameFs :: Int             -- ^   shift point
                -> Int             -- ^ average point
                -> Int             -- ^ length of FFT
                -> Double          -- ^      sampling: fs
                -> V.Vector Double -- ^ time series 1: x(t)
                -> V.Vector Double -- ^ time series 2: y(t)
                -> Spectrogram     -- ^     coherency: |coh(t, f)|^2|
-coherenceTFMon nshift nchunck nfft fs xt yt = (tV, fV, coh'tf)
+coherenceTFMonSameFs nshift nchunck nfft fs xt yt = (tV, fV, coh'tf)
   where nchunck' = min nchunck $ min (V.length xt) (V.length yt)
         tV = V.fromList [0, (fromIntegral nshift)/fs..(fromIntegral nstop)/fs]
         fV = V.fromList [0, fs/(fromIntegral nfft)..fs/2]
         coh'tf = M.fromColumns
-                 $ map (\i -> snd $ coherenceMon nfft fs (V.slice i nchunck' xt) (V.slice i nchunck' yt)) [0, nshift..nstop]
+                 $ map (\i -> snd $ coherenceMonSameFs nfft fs (V.slice i nchunck' xt) (V.slice i nchunck' yt)) [0, nshift..nstop]
         nstop = min (V.length xt) (V.length yt) - nchunck'
 
 
