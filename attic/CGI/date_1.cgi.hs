@@ -37,10 +37,10 @@ cgiMain = do
 
 fork :: ParamCGI -> IO String
 fork params = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps 
+  nowGps <- return $ show 1120543424 -- getCurrentGps
   case (gps params, channel1 params, monitors params) of
-   (Nothing, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   (Just "", _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
+   (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (_, [], []) -> do
      let params' = defaultMon ["TS"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
      fnames <- process params'
@@ -201,33 +201,13 @@ process params = do
             return [pngfile]
        return (show fs, ch, concat filesL)
 
-inputDateForm :: ParamCGI -> String
-inputDateForm params = inputDateHeader dateformbody
-  where dateformbody = concat [
-          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          (dateForm'' params),
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</form>"
-          ]
-        inputDateHeader x = concat [
-          "<html><head><title>Date</title></head>",
-          "<body><h1>Date</h1>",x,"</body></html>"
-          ]
-
-
-resultPage :: ParamCGI -> [(Message, String, [String])] -> String
-resultPage params filenames = resultFrame' params (genePngTable filenames) (inputForm params)
-
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
   where formbody = concat [
-          "<br><form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          "<div style=\"background: #EFEFEF; border: 1px solid #CC0000; height:100％;",
-          "padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:10px;\">",
-          timeForm' params,
-          "<div style=\"float:left; margin-right:50\">", channelForm params [Multi], "</div>",
-          "<div style=\"float:left;\">", paramForm [NHA], "</div>",
-          "<div style=\"clear:both;\"></div><br>",
+          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
+          (dateForm params),
+          channelForm params [Multi],
+          paramForm [NHA],
           monitorForm Multi [(False, TS, "Time Series"),
                              (False, PSD, "Spectrum"),
                              (False, SPE, "Spectrogram"),
@@ -237,12 +217,14 @@ inputForm params = inputFrame params formbody
                              (False, Sens, "<s>SensMon</s>"),
                              (False, Glitch, "<s>GlitchMon</s>"),
                              (False, LineFind, "<s>LineFinder</s>"),
-                             (False, NHA, "<s>LineTracking</s>"){--,
+                             (False, NHA, "LineTracking"){--,
                               (False, NFM, "<s>NoiseFloorMon</s>") --}
                              ],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</div></form>"]
+          "</form>"]
 
+resultPage :: ParamCGI -> [(Message, String, [String])] -> String
+resultPage params filenames = resultFrame params (genePngTable filenames)
 
 {--
 Channel名

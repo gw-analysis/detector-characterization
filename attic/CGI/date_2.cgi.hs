@@ -27,8 +27,8 @@ fork :: ParamCGI -> IO String
 fork params = do
   nowGps <- return $ show 1120543424 -- getCurrentGps
   case (gps params, channel1 params, channel2 params, monitors params) of
-   (Nothing, _, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   (Just "", _, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
+   (Nothing, _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (Just "", _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (_, [], [], []) -> do
      let params' = defaultMon ["COH"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] ["K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
      fnames <- process params'
@@ -37,15 +37,15 @@ fork params = do
      let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] ["K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
      fnames <- process params'
      return $ resultPage params' fnames 
-   (_, [], _, _)  -> return $ inputDateForm $ updateMsg "unselected channel1" params
-   (_, _, [], _)  -> return $ inputDateForm $ updateMsg "unselected channel2" params   
+   (_, [], _, _)  -> return $ inputForm $ updateMsg "unselected channel1" params
+   (_, _, [], _)  -> return $ inputForm $ updateMsg "unselected channel2" params   
    (_, _, _, [])  -> do
      let params' = defaultMon ["COH"] params
      fnames <- process params'
      return $ resultPage params' fnames 
    (Just x,  _, _, _)  -> do
      fnames <- process params
-     return $ resultPage params fnames 
+     return $ resultPage params fnames
 
 defaultChs :: [String] -> [String] -> ParamCGI -> ParamCGI
 defaultChs defch1 defch2 params =
@@ -79,7 +79,7 @@ defaultMon defmon params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
-           } 
+           }
 
 process :: ParamCGI -> IO [(Message, String, [String])]
 process params = do
@@ -142,36 +142,19 @@ process params = do
           return ("", ch2, refpng2:files)
      return $ ("", "Reference: "++ch1, [refpng]):result
 
-inputDateForm :: ParamCGI -> String
-inputDateForm params = inputDateHeader dateformbody
-  where dateformbody = concat [
-          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          (dateForm'' params),
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</form>"
-          ]
-        inputDateHeader x = concat [
-          "<html><head><title>Date</title></head>",
-          "<body><h1>Date</h1>",x,"</body></html>"
-          ] 
-
-resultPage :: ParamCGI -> [(Message, String, [String])] -> String
-resultPage params filenames = resultFrame' params (genePngTable filenames) (inputForm params)
-
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
   where formbody = concat [
-          "<br><form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          "<div style=\"background: #EFEFEF; border: 1px solid #CC0000; height:100％;",
-          "padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:10px;\">", 
-          timeForm' params,
-          "<div style=\"float:left; margin-right:50\">", channelForm params [Single, Multi], "</div>",
-          "<div style=\"float:left;\">", paramForm [], "</div>",
-          "<div style=\"clear:both;\"></div><br>", 
+          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
+          (dateForm params),
+          channelForm params [Multi],
+          paramForm [NHA],
           monitorForm Multi [(True, COH, "CoherenceMon")
                             ,(False, Peason, "Peason Correlation")
                             ,(False, MIC, "<s>MIC</s>")
                             ],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</div></form>"]
+          "</form>"] 
 
+resultPage :: ParamCGI -> [(Message, String, [String])] -> String
+resultPage params filenames = resultFrame params (genePngTable filenames) 

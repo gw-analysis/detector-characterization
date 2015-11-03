@@ -10,7 +10,6 @@ import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV) 
 import HasKAL.WebUtils.CGI.Function
 
-
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
@@ -24,8 +23,8 @@ fork :: ParamCGI -> IO String
 fork params = do
   nowGps <- return $ show 1120543424 -- getCurrentGps
   case (gps params, channel1 params, monitors params) of
-   (Nothing, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   (Just "", _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
+   (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (_, [], []) -> do
      let params' = defaultMon ["Peason"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
      fnames <- process params'
@@ -74,7 +73,7 @@ defaultMon defmon params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
-           } 
+           }
 
 process :: ParamCGI -> IO [(Message, String, [String])]
 process params = do
@@ -100,35 +99,18 @@ process params = do
             return $ show $ V.maximum $ takeCorrelationV (read $ mon) (fromJust datMaybe) (fromJust datMaybe2) 16
        return ("", ch1, vals)
 
-inputDateForm :: ParamCGI -> String
-inputDateForm params = inputDateHeader dateformbody
-  where dateformbody = concat [
-          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          (dateForm'' params),
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</form>"
-          ]
-        inputDateHeader x = concat [
-          "<html><head><title>Date</title></head>",
-          "<body><h1>Date</h1>",x,"</body></html>"
-          ]
-
-resultPage :: ParamCGI -> [(Message, String, [String])] -> String
-resultPage params result = resultFrame' params (geneChMap params result) (inputForm params)
-
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
   where formbody = concat [
-          "<br><form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          "<div style=\"background: #EFEFEF; border: 1px solid #CC0000; height:100％;",
-          "padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:10px;\">",
-          timeForm' params,
-          "<div style=\"float:left; margin-right:50\">", channelForm params [Multi], "</div>",
-          "<div style=\"float:left;\">", paramForm [], "</div>",
-          "<div style=\"clear:both;\"></div><br>",
+          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
+          (dateForm params),
+          channelForm params [Multi],
+          paramForm [NHA],
           monitorForm Single [(True, Peason, "Peason Correlation"),
                               (False, MIC, "<s>MIC</s>")
                              ],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</div></form>"]
+          "</form>"]
 
+resultPage :: ParamCGI -> [(Message, String, [String])] -> String
+resultPage params result = resultFrame params (geneChMap params result) 

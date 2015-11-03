@@ -28,8 +28,8 @@ fork params = do
   nowGps <- return $ show 1120543424 -- getCurrentGps
   -- let params = updateGps nowGps params''
   case (gps params, channel1 params, monitors params) of
-   -- (Nothing, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   -- (Just "", _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
+   -- (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   -- (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Nothing, _, _) -> do
      let params' = updateGps nowGps $ defaultMon ["COH"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
      fnames <- process params'
@@ -109,34 +109,16 @@ process params = do
      mbFs2 <- mapM (getSamplingFrequency (fromJust mbFiles)) chlist'
      return $ hBruco 1 (fromJust mbFs1, fromJust datMaybe1, ch1) $ zip3 (map fromJust mbFs2) (map fromJust datMaybe2) chlist'
             
-inputDateForm :: ParamCGI -> String
-inputDateForm params = inputDateHeader dateformbody
-  where dateformbody = concat [
-          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          (dateForm'' params),
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</form>"
-          ]
-        inputDateHeader x = concat [
-          "<html><head><title>Date</title></head>",
-          "<body><h1>Date</h1>",x,"</body></html>"
-          ]
-
-resultPage :: ParamCGI -> [(Double, [(Double, String)])] -> String
-resultPage params result = resultFrame' params (geneRankTable params result) (inputForm params)
-
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
   where formbody = concat [
-          "<br><form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
-          "<div style=\"background: #EFEFEF; border: 1px solid #CC0000; height:100％;",
-          "padding-left:10px; padding-right:10px; padding-top:10px; padding-bottom:10px;\">",
-          "<form action=\"", (script params), "\" method=\"GET\">",
-          timeForm' params,
-          "<div style=\"float:left; margin-right:50\">", channelForm params [Single], "</div>",
-          "<div style=\"float:left;\">", paramForm [], "</div>",
-          "<div style=\"clear:both;\"></div><br>",
+          "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
+          (dateForm params),
+          channelForm params [Multi],
+          paramForm [NHA],
           monitorForm Single [(True, COH, "Bruco")],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</div></form>"]
+          "</form>"]
 
+resultPage :: ParamCGI -> [(Double, [(Double, String)])] -> String
+resultPage params result = resultFrame params (geneRankTable params result)
