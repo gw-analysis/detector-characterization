@@ -126,7 +126,7 @@ process params = do
              False -> do
                case mon of
                 "COH" -> do
-                  let coh = coherenceMon (truncate fs1) fs1 dat1 dat2
+                  let coh = coherenceMon 1 fs1 fs2 dat1 dat2 -- length of FFT = 1 second
                   plotV Linear Line 1 BLUE ("Hz", "|Coh(f)|^2") 0.05 ("Coherence: "++ch1++" vs "++ch2++" GPS="++gps')
                     pngfile ((read fmin',read fmax'),(-0.05,1.05)) coh
                 "Peason" -> do

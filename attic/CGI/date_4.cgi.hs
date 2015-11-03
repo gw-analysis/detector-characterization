@@ -91,11 +91,14 @@ process params = do
   case fileMaybe of
    Nothing -> return [((-1), [(0.0, "")])]
    _       -> do
+     mbFiles <- kagraDataFind (read gps') (read duration') ch1
      datMaybe1 <- kagraDataGet (read gps') (read duration') ch1
+     mbFs1 <- getSamplingFrequency (fromJust mbFiles) ch1
      chlist <- liftM fromJust $ getChannelList $ (fromJust fileMaybe)!!0
      let chlist' = filter (/=ch1) $ filter (isInfixOf "K1:") $ map fst chlist
+     mbFs2 <- mapM (getSamplingFrequency (fromJust mbFiles)) chlist'
      datMaybe2 <- mapM (kagraDataGet (read gps') (read duration')) $ filter (/=ch1) chlist'
-     return $ hBruco 2048 2048 (fromJust datMaybe1, ch1) $ zip (map fromJust datMaybe2) chlist'
+     return $ hBruco 1 (fromJust mbFs1, fromJust datMaybe1, ch1) $ zip3 (map fromJust mbFs2) (map fromJust datMaybe2) chlist'
             
 inputDateForm :: ParamCGI -> String
 inputDateForm params = inputDateHeader dateformbody

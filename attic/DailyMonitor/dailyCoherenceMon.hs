@@ -43,12 +43,8 @@ main = do
                    (_, _, _, Nothing) -> error $ "Can't read sampling frequency: "++ch2++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  case (fs1/=fs2) of
-   True  -> error "sampling frequency of ch1 and ch2 are difference"
-   False -> do
-     let coh = coherenceMon (truncate $ fftLength*fs1) fs1 dat1 dat2
-     plotV Linear Line 1 BLUE (xlabel, "coh(f)") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
-
+  let coh = coherenceMon fftLength fs1 fs2 dat1 dat2
+  plotV Linear Line 1 BLUE (xlabel, "coh(f)") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
