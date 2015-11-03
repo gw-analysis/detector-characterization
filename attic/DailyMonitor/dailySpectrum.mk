@@ -1,7 +1,7 @@
 #******************************************#
-#     File Name: dailySRMon.mk
+#     File Name: dailySpectrum.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 14:55:48
+# Last Modified: 2015/11/03 15:03:53
 #******************************************#
 
 # compiler option
@@ -11,8 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailySRMon
-TAR2= dailySRMon_reduceMemory
+TAR1= dailySpectrum
 TARs= ${TAR1} 
 
 # dependency
@@ -33,11 +32,6 @@ all: ${TARs}
 ${TAR1}: ${TAR1}.hs ${DEPs}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-
-${TAR2}: ${TAR2}.hs ${DEPs}
-	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi

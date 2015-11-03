@@ -17,7 +17,7 @@ LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
 DAILY_DIR=${HOME}/public_html/`date -d '1 day ago' "+%Y/%m/%d/"`
 #####  for test
 # YESTERDAY="2015 07 17"
-# LOG_FILE="dailyMon-2015-07-17.log"
+# LOG_FILE="2015-07-17.log"
 # DAILY_DIR="2015/07/17/"
 
 
@@ -38,7 +38,7 @@ then
     MVPNG_CMD="echo mv ./*.png ${HOME}/public_html/${DAILY_DIR}"
 else
     MKDIR_CMD="mkdir -p ${HOME}/public_html/${DAILY_DIR}"
-    MVPNG_CMD="mv ./*.png ${HOME}/public_html/${DAILY_DIR}"
+    MVPNG_CMD="mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
 fi
 
 if test ${MAX_CORE} -a ${MAX_CORE} -ge 1
@@ -49,8 +49,8 @@ fi
 
 if test ${LOG_FILE}
 then
-    LOGGING="--joblog dailyMon-s_${LOG_FILE}"
-    LOGGING_MUL="--joblog dailyMon-m_${LOG_FILE}"
+    LOGGING="--joblog dailyMon-s${1}_${LOG_FILE}"
+    LOGGING_MUL="--joblog dailyMon-m${1}_${LOG_FILE}"
 fi
 
 if test ${DEBUG_MODE} = "1"
@@ -64,6 +64,7 @@ else
     exit 1
 fi
 
+FLAG=0
 if test -e ${CMD_PARA}
 then
     if test "${MONITORS}"
@@ -77,6 +78,8 @@ then
 		    if test ${multi} != ${MON}
 		    then
 			monitors="${monitors} ${MON}"
+		    else
+			FLAG=1
 		    fi
 		done
 	    else
@@ -90,7 +93,7 @@ then
 	${MKDIR_CMD}
 	${MVPNG_CMD}
     fi
-    if test "${multi}" -a "${CHANNELS}"
+    if test "${multi}" -a "${CHANNELS}" -a ${FLAG} == "1"
     then
 	${CMD_PARA} ${DEBUG} ${JOB_NUM_MUL} ${LOGGING_MUL} "./{1} ${YESTERDAY} ${MAIN_CH} {2}" ::: ${multi} ::: ${CHANNELS}
 	${MKDIR_CMD}

@@ -40,11 +40,11 @@ html subSys (yyyy, mm, dd) = concat [
                    ++(show yyyy)++"-"++(show0 mm)++"-"++(show0 $ dd - 1)++str subSys++".html"
         
         str mbx = case mbx of
-                   Just "" -> ""
+                   Just "" -> "_General"
                    Just x  -> "_"++x
-                   Nothing -> ""
+                   Nothing -> "_General"
         uri mbx = case mbx of
-                   Just "" -> "?"++date
+                   Just "" -> "?subSys=General"++date
                    Just x  -> "?subSys="++x++"&"++date
                    Nothing -> "?"++date
                   where date="year="++(show yyyy)++"&month="++(show0 mm)++"&day="++(show0 $ dd - 1)

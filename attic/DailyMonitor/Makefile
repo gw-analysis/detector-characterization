@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 00:59:29
+# Last Modified: 2015/11/03 17:05:43
 #******************************************#
 
 MAKE=make -f
@@ -12,7 +12,10 @@ TAR2= dailyRMon
 TAR3= dailyRMSMon
 TAR4= dailyCoherenceMon
 TAR5= genDailySummaryPage
-TARs= ${TAR1} ${TAR2} ${TAR4} ${TAR3} ${TAR5}
+TAR6= dailySpectrum
+TAR7= dailySpectrogram
+#TAR8= dailyTimeSeries # <-- メモリ消費激しいので注意
+TARs= ${TAR1} ${TAR2} ${TAR4} ${TAR6} ${TAR7} ${TAR8} ${TAR3} ${TAR5}
 
 # compile rule
 all: ${TARs}
@@ -31,6 +34,15 @@ ${TAR4}: ${TAR4}.hs
 
 ${TAR5}: ${TAR5}.hs
 	${MAKE} ${TAR5}.mk
+
+${TAR6}: ${TAR6}.hs
+	${MAKE} ${TAR6}.mk
+
+${TAR7}: ${TAR7}.hs
+	${MAKE} ${TAR7}.mk
+
+${TAR8}: ${TAR8}.hs
+	${MAKE} ${TAR8}.mk
 
 
 clean:
