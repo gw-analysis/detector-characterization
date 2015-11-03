@@ -10,7 +10,12 @@ module HasKAL.WebUtils.CGI.Function (
 -- HTML Frame
 , inputFrame
 , resultFrame
+, resultFrame'
 , dateForm
+, dateForm'
+, dateForm''
+, timeForm
+, timeForm'
 -- input Form
 , fileUpForm
 , channelForm
@@ -115,10 +120,14 @@ getInputDefVar defvar tagName = do
    Just x  -> return x
 
 {-- HTML Frame --}
+-----------------------------------------------------------------------------------------------
+------------------------------------- test ----------------------------------------------------
 inputFrame :: ParamCGI -> String -> String
-inputFrame params x = htmlFrame $ inputHeader++x++inputFooter
+inputFrame params x = inputHeader++x++inputFooter
   where inputHeader = "<div style=\"color:#ff0000;\"><b>"++(message params)++"</b></div>"
         inputFooter = ""
+------------------------------------- test ----------------------------------------------------
+-----------------------------------------------------------------------------------------------
         
 resultFrame :: ParamCGI -> String -> String
 resultFrame params x = htmlFrame $ errorMsg++resultHeader++x++resultFooter
@@ -134,6 +143,25 @@ resultFrame params x = htmlFrame $ errorMsg++resultHeader++x++resultFooter
         gps' = fromJust $ gps params
         locale' = locale params
         errorMsg = "<div style=\"color:#ff0000;\"><b>"++(message params)++"</b></div>"
+
+-----------------------------------------------------------------------------------------------
+------------------------------------- test ----------------------------------------------------
+resultFrame' :: ParamCGI -> String -> String -> String
+resultFrame' params x y = htmlFrame $ errorMsg++resultHeader++x++resultFooter++y
+  where resultHeader = concat ["<h3>GPS Time: "++gps'++"&nbsp; ("++(gps2localTime (read gps') locale')++")</h3>"
+                              ,"<p><b>duration: </b>"++(duration params)++"s&emsp;&emsp;"
+                              ,"<b>Freq. band: </b>"++(fmin params)++" - "
+                               ++(fmaxfN $ fmax params)++" Hz</b>"]
+        fmaxfN x = case (read x) == 0.0 of
+                    True -> "f<font size=\"1\">Nyquist</font>"
+                    False -> x
+                    
+        resultFooter = cgiNavi params
+        gps' = fromJust $ gps params
+        locale' = locale params
+        errorMsg = "<div style=\"color:#ff0000;\"><b>"++(message params)++"</b></div>"
+------------------------------------- test ----------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
 htmlFrame :: String -> String
 htmlFrame x = htmlHeader++x++htmlFooter
@@ -218,17 +246,21 @@ channelForm params flags = concat [
         multi Multi = "multiple"
         multi Single = ""
 
+-----------------------------------------------------------------------------------------------
+------------------------------------- test ----------------------------------------------------
 monitorForm :: MultiSelect -> [(Bool, MonitorType, String)] -> String
 monitorForm x mons = concat [
   "<div><h3> Monitors: </h3>",
   concat $ map (\(c, s, l) -> do
-                   "<p><input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\""++chk c++">"++l++"</p>") mons,
+                   "<input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp") mons,
   "</div>"
   ]
   where chk True = "checked=\"checked\""
         chk False = ""
         multi Single = "radio"
         multi Multi = "checkbox"
+------------------------------------- test ----------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
 dateForm :: ParamCGI -> String
 dateForm params = concat [
@@ -247,6 +279,58 @@ dateForm params = concat [
   "</select></p></div>"
   ]
   where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
+
+-----------------------------------------------------------------------------------------------
+------------------------------------- test ----------------------------------------------------
+dateForm' :: ParamCGI -> String
+dateForm' params = concat [
+  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
+  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
+  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ",
+  setDef "year" yr [2015..2020], setDef "month" mon [1..12], setDef "day" day [1..31], "&ensp;",
+  "<select name=\"local\">",
+  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
+  "</select></p>"
+  ]
+  where (yr, mon, day, _, _, _, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
+
+dateForm'' :: ParamCGI -> String
+dateForm'' params = concat [
+  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
+  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
+  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ", "<br>",
+  setDef "year" yr [2015..2020], setDef "month" mon [1..12], setDef "day" day [1..31], "<br>",
+  setDef "hour" hrs [0..23], ":", setDef "minute" min [0..59], ":", setDef "second" sec [0..59], "&ensp;",
+  "<select name=\"local\">",
+  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
+  "</select></p>"
+  ]
+  where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
+
+timeForm :: ParamCGI -> String
+timeForm params = concat [
+  "<div><h3> Date: </h3>",
+  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
+  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
+  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ",
+  setDef "hour" hrs [0..23], ":",
+  setDef "minute" min [0..59], ":",
+  setDef "second" sec [0..59], "&ensp;",
+  "<select name=\"local\">",
+  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
+  "</select></p></div>"
+  ]
+  where (_, _, _, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
+
+timeForm' :: ParamCGI -> String
+timeForm' params = concat [
+  "<input type=\"hidden\" name=\"Date\" value=\"GPS\" />",
+  "<input type=\"hidden\" name=\"gps\"  value=\"", fromJust (gps params), "\" />",
+  "<input type=\"hidden\" name=\"Date\" value=\"Local\" />"
+  ]
+
+------------------------------------- test ----------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
 {-- Result Body --}
 -- For display PNG 
@@ -280,7 +364,7 @@ geneChMapCore params chs (msg, ch1, xs) = result
   where result = case (msg=="") of
                   True -> concat [
                     "<tr><th bgcolor=\"#eeeeee\">"++ch1++"</th>",
-                    concat $ zipWith (\x y-> "<td bgcolor="++(color x)++"><a href=\""++url ch1 y
+                    concat $ zipWith (\x y-> "<td bgcolor="++(color x)++"><a href=\""++(url ch1 y)
                                         ++"\" target=\"_blank\">"++(showFFloat (Just 5) x "")++"</td>") xs' chs,
                     "</tr>"]
                   False -> ""
@@ -299,7 +383,7 @@ geneChMapCore params chs (msg, ch1, xs) = result
 -- For Bruco
 geneRankTable :: ParamCGI -> [(Double, [(Double, String)])] -> String 
 geneRankTable params xs = concat [
-  "<h3>Channel: "++(head $ channel1 params)++"<h3>",
+  "<h3>Channel: "++(head $ channel1 params)++"</h3>",
   "<table cellspacing=\"10\"><tr>",
   concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(num-1)],
   "</tr><tr>",
