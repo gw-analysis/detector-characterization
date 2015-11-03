@@ -11,6 +11,7 @@ module HasKAL.WebUtils.DailySummaryPage
 , startTABLE
 , startTBODY
 , startTR
+, addTableTitle
 , addTelement
 , endTR
 , endTBODY
@@ -42,8 +43,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ addTitle date subsystem 
               ++ startTABLE
               ++ startTBODY
-              ++ (layoutTable titles ncol)
-              ++ (layoutTable tables ncol)
+              ++ (layoutTitleTable titles tables ncol)
               ++ endTBODY
               ++ endTABLE
               ++ endHTML
@@ -53,6 +53,13 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
 layoutTable [] _ = []
 layoutTable tlist n =
    startTR ++ foldl1' (++) (take n tlist) ++ endTR ++ layoutTable (drop n tlist) n
+
+
+layoutTitleTable [] _ _ = []
+layoutTitleTable _ [] _ = []
+layoutTitleTable titlelist tablelist n =
+   startTR ++ foldl1' (++) (take n titlelist ++ [endTR] ++ [startTR] ++ take n tablelist) ++ endTR 
+     ++ layoutTitleTable (drop n titlelist) (drop n tablelist) n
 
 
 addTableTitle title = concat ["<th style=\"vertical-align: top;\">"++title++"</th>"]
