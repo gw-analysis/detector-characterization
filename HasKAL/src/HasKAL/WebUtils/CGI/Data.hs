@@ -11,7 +11,7 @@ module HasKAL.WebUtils.CGI.Data (
 
 type Message = String
 data MultiSelect = Single | Multi deriving Eq
-data MonitorType = TS | PSD | SPE | RM | SRM | RMS | Sens | Glitch | LineTrack | LineFind | NHA | NFM |
+data MonitorType = TS | PSD | SPE | RM | SRM | RMS | Sens | Glitch | LineFind | NHA | NFM |
                    COH | Peason | MIC |
                    INSP | RD | IMBH | Stoch
                  deriving (Eq, Show, Read)

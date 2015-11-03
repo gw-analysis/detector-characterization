@@ -179,9 +179,6 @@ process params = do
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
                return ()
-             {-- Line Trancking --}
-             (_, "LineTrack") -> do
-               return ()
              {-- Line Finder --}
              (_, "LineFind") -> do
                return ()
@@ -239,9 +236,8 @@ inputForm params = inputFrame params formbody
                              (False, RMS, "RMSMon"),
                              (False, Sens, "<s>SensMon</s>"),
                              (False, Glitch, "<s>GlitchMon</s>"),
-                             (False, LineTrack, "<s>LineTracking</s>"),
                              (False, LineFind, "<s>LineFinder</s>"),
-                             (False, NHA, "<s>NHA</s>"){--,
+                             (False, NHA, "<s>LineTracking</s>"){--,
                               (False, NFM, "<s>NoiseFloorMon</s>") --}
                              ],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
