@@ -357,5 +357,5 @@ show0 "month" n
   | otherwise = ("00", "???")
 show0 _ n
   | len==1 = ("0"++(show n), show n)
-  | len=>2 = (show n, show n)
-  where len = length.show.n
+  | len>=2 = (show n, show n)
+  where len = length $ (show n)
