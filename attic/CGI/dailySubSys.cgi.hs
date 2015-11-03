@@ -20,10 +20,12 @@ html subSys = concat [
   "<div align=center>",
   "<table border=0 cellspacing=0 cellpadding=0>",
   "<tr>",
-  concat $ map (subhtml subSys) [{--"TUN", "FCL", "VAC", "CRY", --}
-    "VIS", {--"MIR", "LAS", "MIF",--}
-    "IOO"{--, "AOS", "AEL", "DGS",--}
-    {--"DMG", "DAS", "GIF", "DEC",--}],
+  concat $ map (subhtml subSys) [
+    "General",
+    {- "TUN", "FCL", "VAC", "CRY", -}
+    "VIS", {- "MIR", "LAS", "MIF", -}
+    "IOO" {-, "AOS", "AEL", "DGS", -}
+    {- "DMG", "DAS", "GIF", "DEC"  -}],
   "<td align=center valign=middle width=98 height=30>",
   "<div align=center><a href=\"./main_frame_1.html\">Web Tools</a></div>",
   "</td>",
@@ -44,5 +46,7 @@ subhtml subSys sys = concat [
                             Just x -> case x==sys of
                                        True -> "bgcolor=\"#ccffff\""
                                        False -> ""
-                            Nothing -> ""
-                                         
+                            Nothing -> case sys=="General" of
+                                        True -> "bgcolor=\"#ccffff\""
+                                        False -> ""
+
