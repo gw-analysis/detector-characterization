@@ -43,6 +43,7 @@ module HasKAL.FrameUtils.FrameUtils
 ( writeFrame
 , addChannel
 , readFrame
+, readFrameV
 , readFramePtr
 , readFrameVCD
 , getChannelList
@@ -375,6 +376,45 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       return $ Just (V.fromList (map fromIntegral array_vdata))
 
 
+readFrameV :: String -> String -> IO (Maybe (V.Vector Double))
+readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
+
+    withCString channel_Name $ \channel ->
+      withCString framefile_Name $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v==nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                let datatype = frvect_type v
+                case datatype of
+             --       frvect_r4 -> do
+                    3 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (V.fromList (map realToFrac array_vdata))
+            --        frvect_r8 -> do
+                    2 -> do
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      vcddat <- newForeignPtr_ (frvect_dataD v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (cd2dV vcddat)
+                    1 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (V.fromList (map fromIntegral array_vdata))
+
+
 getChannelList :: String -> IO (Maybe [(String, Double)])
 getChannelList frameFile = do
     withCString frameFile $ \frameFile' -> do
@@ -453,6 +493,11 @@ getGPSTime frameFile = do
           c_FrFileIEnd ifile
           c_FrameFree ptr_frameH
           return $ Just (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
+
+
+{-- helper function --}
+cd2dV :: V.Vector CDouble -> V.Vector Double
+cd2dV = V.map realToFrac
 
 
 {-- Storable Type for structure--}
