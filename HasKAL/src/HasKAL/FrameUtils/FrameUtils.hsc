@@ -44,6 +44,7 @@ module HasKAL.FrameUtils.FrameUtils
 , addChannel
 , readFrame
 , readFramePtr
+, readFrameVCD
 , getChannelList
 , getGPSTime
 , getSamplingFrequency
@@ -54,9 +55,11 @@ import Control.Applicative
 import Control.Monad.Trans.Maybe (runMaybeT,  MaybeT(..))
 import Data.List
 import Data.List.Split
+import qualified Data.Vector.Storable as V
 -- Foreigns
 import Foreign
 import Foreign.Ptr
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.Marshal.Array
@@ -331,6 +334,45 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
+
+
+readFrameVCD :: String -> String -> IO (Maybe (V.Vector CDouble))
+readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
+
+    withCString channel_Name $ \channel ->
+      withCString framefile_Name $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v==nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                let datatype = frvect_type v
+                case datatype of
+             --       frvect_r4 -> do
+                    3 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (V.fromList (map realToFrac array_vdata))
+            --        frvect_r8 -> do
+                    2 -> do
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      vcddat <- newForeignPtr_ (frvect_dataD v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (vcddat)
+                    1 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (V.fromList (map fromIntegral array_vdata))
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
