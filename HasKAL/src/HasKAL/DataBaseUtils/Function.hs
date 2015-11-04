@@ -6,6 +6,7 @@ module HasKAL.DataBaseUtils.Function
 , kagraChannelList
 , kagraDataFind
 , kagraDataGet
+, kagraDataGet'
 , kagraDataGPS
 , kagraDataPoint
 , kagraDataFindCore
@@ -43,7 +44,8 @@ import HasKAL.DataBaseUtils.DataSource                 (connect)
 import HasKAL.DataBaseUtils.Framedb                    (framedb)
 import qualified HasKAL.DataBaseUtils.Framedb as Frame
 import HasKAL.FrameUtils.FrameUtils
-
+import qualified Data.Vector.Storable as V
+import Foreign.C.Types
 
 kagraChannelList :: Int32 -> IO (Maybe [String])
 kagraChannelList gpstime = runMaybeT $ MaybeT $ do
@@ -111,6 +113,30 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         maybex <- readFrame chname y
                         return $ fromJust maybex)
 
+
+kagraDataGet' :: Int -> Int -> String -> IO (Maybe (V.Vector CDouble))
+kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case flist of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = head x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                  DT.sequence $ Just $ liftM (V.force . (V.slice headNum nduration) . V.concat)
+                    $ forM x (\y -> do
+                        maybex <- readFrameVCD chname y
+                        return $ fromJust maybex)
 
 
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
