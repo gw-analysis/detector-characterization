@@ -45,6 +45,7 @@ module HasKAL.FrameUtils.FrameUtils
 , readFrame
 , readFrameV
 , readFramePtr
+, readFramePtr'
 , readFrameVCD
 , getChannelList
 , getGPSTime
@@ -298,8 +299,8 @@ readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       return $ Just (map fromIntegral array_vdata)
 
 
-readFramePtr :: String -> String -> IO (Maybe (Ptr CDouble, Int))
-readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
+readFramePtr' :: String -> String -> IO (Maybe (Ptr CDouble, Int))
+readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 
     withCString channel_Name $ \channel ->
       withCString framefile_Name $ \framefileName -> do
@@ -329,6 +330,47 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (frvect_dataD v, read (show (frvect_nData v)) :: Int)
+                    1 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
+                      ptrdatD <- newArray (map fromIntegral array_vdata)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
+
+
+readFramePtr :: String -> String -> IO (Maybe (Ptr Double, Int))
+readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
+
+    withCString channel_Name $ \channel ->
+      withCString framefile_Name $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v==nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                let datatype = frvect_type v
+                case datatype of
+             --       frvect_r4 -> do
+                    3 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
+                      ptrdatD <- newArray (map realToFrac array_vdata)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
+            --        frvect_r8 -> do
+                    2 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
+                      ptrdatD <- newArray (map realToFrac array_vdata)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
                     1 -> do
                       array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
                       ptrdatD <- newArray (map fromIntegral array_vdata)
