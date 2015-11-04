@@ -88,7 +88,7 @@ kagraDataGPS gpstime = runMaybeT $ MaybeT $ do
     x -> return (Just x)
 
 
-kagraDataGet :: Int -> Int -> String -> IO (Maybe (DPV.Vector Double))
+kagraDataGet :: Int -> Int -> String -> IO (Maybe (V.Vector Double))
 kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
   case flist of
@@ -107,10 +107,9 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                   then 0
                                   else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
                       nduration = floor $ fromIntegral duration * fs
---      DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat) $ mapM (readFrame chname) x
-                  DT.sequence $ Just $ liftM (DPV.fromList.take nduration.drop headNum.concat)
+                  DT.sequence $ Just $ liftM (V.force . (V.slice headNum nduration) . V.concat)
                     $ forM x (\y -> do
-                        maybex <- readFrame chname y
+                        maybex <- readFrameV chname y
                         return $ fromJust maybex)
 
 
