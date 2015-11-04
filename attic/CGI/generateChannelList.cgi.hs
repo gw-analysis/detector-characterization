@@ -86,8 +86,8 @@ finalPage params = inputFrame params body
           "<div><input type=\"submit\" value=\"return\" /></div>",
           "</form>"]
 
-script_orig ="calSubSys.cgi" -- 元いた入力フォームの名前
-target="HOGE" -- 入力フォームのあったフレーム
+script_orig ="date_1.cgi" -- 元いた入力フォームの名前
+target="input" -- 入力フォームのあったフレーム
 
 geneListBox :: [String] -> String
 geneListBox list = concat [
