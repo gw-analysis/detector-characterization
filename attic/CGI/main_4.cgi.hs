@@ -102,11 +102,11 @@ process params = do
    _       -> do
      mbFiles <- kagraDataFind (read gps') (read duration') ch1
      datMaybe1 <- kagraDataGet (read gps') (read duration') ch1
-     mbFs1 <- getSamplingFrequency (fromJust mbFiles) ch1
+     mbFs1 <- getSamplingFrequency (head $ fromJust mbFiles) ch1
      chlist <- liftM fromJust $ getChannelList $ (fromJust fileMaybe)!!0
      let chlist' = filter (/=ch1) $ filter (isInfixOf "K1:") $ map fst chlist
      datMaybe2 <- mapM (kagraDataGet (read gps') (read duration')) $ filter (/=ch1) chlist'
-     mbFs2 <- mapM (getSamplingFrequency (fromJust mbFiles)) chlist'
+     mbFs2 <- mapM (getSamplingFrequency (head $ fromJust mbFiles)) chlist'
      return $ hBruco 1 (fromJust mbFs1, fromJust datMaybe1, ch1) $ zip3 (map fromJust mbFs2) (map fromJust datMaybe2) chlist'
             
 inputForm :: ParamCGI -> String
