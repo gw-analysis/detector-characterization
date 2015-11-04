@@ -12,10 +12,6 @@ module HasKAL.WebUtils.CGI.Function (
 , resultFrame
 , resultFrame'
 , dateForm
-, dateForm'
-, dateForm''
-, timeForm
-, timeForm'
 -- input Form
 , fileUpForm
 , channelForm
@@ -267,70 +263,16 @@ dateForm params = concat [
   "<div><h3> Date: </h3>",
   "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
   " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ",
-  setDef "year" yr [2015..2020],
-  setDef "month" mon [1..12],
-  setDef "day" day [1..31], "&ensp;",
-  setDef "hour" hrs [0..23], ":",
-  setDef "minute" min [0..59], ":",
-  setDef "second" sec [0..59], "&ensp;",
-  "<select name=\"local\">",
-  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
-  "</select></p></div>"
-  ]
-  where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
-
------------------------------------------------------------------------------------------------
-------------------------------------- test ----------------------------------------------------
-dateForm' :: ParamCGI -> String
-dateForm' params = concat [
-  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
-  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ",
-  setDef "year" yr [2015..2020], setDef "month" mon [1..12], setDef "day" day [1..31], "&ensp;",
-  "<select name=\"local\">",
-  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
-  "</select></p>"
-  ]
-  where (yr, mon, day, _, _, _, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
-
-dateForm'' :: ParamCGI -> String
-dateForm'' params = concat [
-  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
-  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
   "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ", "<br>",
   setDef "year" yr [2015..2020], setDef "month" mon [1..12], setDef "day" day [1..31], "<br>",
   setDef "hour" hrs [0..23], ":", setDef "minute" min [0..59], ":", setDef "second" sec [0..59], "&ensp;",
   "<select name=\"local\">",
   concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
   "</select></p>"
+  , "<p>test type date</p>"
+  ,"<input type=\"date\" name=\"date\">"
   ]
   where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
-
-timeForm :: ParamCGI -> String
-timeForm params = concat [
-  "<div><h3> Date: </h3>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
-  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ",
-  setDef "hour" hrs [0..23], ":",
-  setDef "minute" min [0..59], ":",
-  setDef "second" sec [0..59], "&ensp;",
-  "<select name=\"local\">",
-  concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
-  "</select></p></div>"
-  ]
-  where (_, _, _, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
-
-timeForm' :: ParamCGI -> String
-timeForm' params = concat [
-  "<input type=\"hidden\" name=\"Date\" value=\"GPS\" />",
-  "<input type=\"hidden\" name=\"gps\"  value=\"", fromJust (gps params), "\" />",
-  "<input type=\"hidden\" name=\"Date\" value=\"Local\" />"
-  ]
-
-------------------------------------- test ----------------------------------------------------
------------------------------------------------------------------------------------------------
 
 {-- Result Body --}
 -- For display PNG 
