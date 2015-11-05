@@ -6,36 +6,35 @@ DEBUG_MODE=1
 
 CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
+CMD_PRINT="./genDailyCmd"
 
 MAX_CORE=8
-MULTI="dailyCoherenceMon"
+LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
 MAIN_CH="K1:PEM-EX_REF"
 
-YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
-LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
-DAILY_DIR=${HOME}/public_html/`date -d '1 day ago' "+%Y/%m/%d/"`
+# YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
+# DAILY_DIR=${HOME}/public_html/`date -d '1 day ago' "+%Y/%m/%d/"`
+# LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
 #####  for test
-# YESTERDAY="2015 07 17"
-# LOG_FILE="2015-07-17.log"
-# DAILY_DIR="2015/07/17/"
+YESTERDAY="2015 07 17"
+DAILY_DIR="2015/07/17/"
+LOG_FILE="2015-07-17.log"
 
-
-###  Main
+###  Parameter check
 if test ! ${1}
 then 
-    echo "Usage: dailyAll subSystem_name"
+    echo "Usage: dailyAll master.lst"
     exit 1
 else
-    CHANNELS=`cat ch_${1}.lst`
-    MONITORS=`cat mon_${1}.lst`
+    MASTER=${1}
 fi
 
 if test ${DEBUG_MODE} = "1"
 then
     DEBUG="--dry-run"
     MKDIR_CMD="echo mkdir -p ${HOME}/public_html/${DAILY_DIR}"
-    MVPNG_CMD="echo mv ./*.png ${HOME}/public_html/${DAILY_DIR}"
+    MVPNG_CMD="echo mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
 else
     MKDIR_CMD="mkdir -p ${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
@@ -53,56 +52,50 @@ then
     LOGGING_MUL="--joblog dailyMon-m${1}_${LOG_FILE}"
 fi
 
-if test ${DEBUG_MODE} = "1"
+#### Generate Web Page ####
+printf "\n#### Generate Web Page\n"
+x=`cat ${1}`
+IFS=$'\n'
+for y in $x
+do
+    z=${y%%.lst*}
+    if test ${DEBUG_MODE} = "1"
+    then
+	echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} ${z#*_} ${HTML_NCOL}"
+    elif test -f ${CMD_HTML}
+    then
+	echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} ${z#*_} ${HTML_NCOL}"
+	${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} TEST ${HTML_NCOL}
+    else
+	echo "Can't find ${CMD_HTML}"
+	exit 1
+    fi
+done
+IFS=$' '
+
+
+#### Generate Execute Command ####
+printf "\n#### Generate Execute Command\n"
+if test -f ${CMD_PRINT}
 then
-    echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ch_${1}.lst mon_${1}.lst ${1} ${HTML_NCOL}"
-elif test -f ${CMD_HTML}
-then
-    ${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ch_${1}.lst mon_${1}.lst ${1} ${HTML_NCOL}
+    echo "${CMD_PRINT} ${1} ${YESTERDAY}"
+    EXE_CMD=`${CMD_PRINT} ${1} ${YESTERDAY}`
 else
-    echo "Can't find ${CMD_HTML}"
+    echo "Can't find ${CMD_PRINT}"
     exit 1
 fi
 
-FLAG=0
-if test -e ${CMD_PARA}
+#### Main ####
+printf "\n#### Execute dailyMonitor\n"
+if test "${EXE_CMD}"
 then
-    if test "${MONITORS}"
-    then
-	for MON in ${MONITORS}
-	do
-	    if test "${MULTI}"
-	    then
-		for multi in ${MULTI}
-		do
-		    if test ${multi} != ${MON}
-		    then
-			monitors="${monitors} ${MON}"
-		    else
-			FLAG=1
-		    fi
-		done
-	    else
-		monitors="${monitors} ${MON}"
-	    fi
-	done
-    fi
-    if test "${monitors}" -a "${CHANNELS}"
-    then
-	${CMD_PARA} ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1} ${YESTERDAY} {2}" ::: ${monitors} ::: ${CHANNELS}
-	${MKDIR_CMD}
-	${MVPNG_CMD}
-    fi
-    if test "${multi}" -a "${CHANNELS}" -a ${FLAG} == "1"
-    then
-	${CMD_PARA} ${DEBUG} ${JOB_NUM_MUL} ${LOGGING_MUL} "./{1} ${YESTERDAY} ${MAIN_CH} {2}" ::: ${multi} ::: ${CHANNELS}
-	${MKDIR_CMD}
-	${MVPNG_CMD}
-    fi
+    ${CMD_PARA} -d"\n" ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1}" ::: "${EXE_CMD}"
+    # ${MKDIR_CMD}
+    # ${MVPNG_CMD}
 else
-    echo "Can't find ${CMD_PARA}"
-    exit 1
+    echo "empty: \${EXE_CMD}"
 fi
+
 
 exit 0
 
