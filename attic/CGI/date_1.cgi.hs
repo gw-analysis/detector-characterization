@@ -23,7 +23,7 @@ import HasKAL.MonitorUtils.SensMon.SensMon (runSensMon)
 -- import HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon (getNoiseFloorStatusV, makeNFMparam, estimateThreshold)
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
-import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
+-- import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
 import HasKAL.WebUtils.CGI.Function
 
 main :: IO ()
@@ -116,24 +116,25 @@ process params = do
        filesL <- forM monitors' $ \mon -> do
          case mon of
           "NHA" -> do -- 1モニタ複数プロット
-            let pngfile1 = pngDir++ch++"_"++gps'++"_"++mon++"-A_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
-                pngfile2 = pngDir++ch++"_"++gps'++"_"++mon++"-F_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
-            pngExist <- doesFileExist pngfile1
-            case pngExist of
-             True -> return [pngfile1, pngfile2] -- 既にPNGがあれば何もしない
-             False -> do
-               let eiDat = butterBandPass dat fs (read fmin') (fmaxfs $ read fmax') 6 -- とりあえず6次固定
-                     where fmaxfs 0 = fs/2
-                           fmaxfs f = f
-               case eiDat of
-                Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
-                Right dat' -> do
-                  let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat')
-                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
-                    ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
-                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
-                    ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
-                  return [pngfile1, pngfile2]
+            -- let pngfile1 = pngDir++ch++"_"++gps'++"_"++mon++"-A_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+            --     pngfile2 = pngDir++ch++"_"++gps'++"_"++mon++"-F_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+            -- pngExist <- doesFileExist pngfile1
+            -- case pngExist of
+            --  True -> return [pngfile1, pngfile2] -- 既にPNGがあれば何もしない
+            --  False -> do
+            --    let eiDat = butterBandPass dat fs (read fmin') (fmaxfs $ read fmax') 6 -- とりあえず6次固定
+            --          where fmaxfs 0 = fs/2
+            --                fmaxfs f = f
+            --    case eiDat of
+            --     Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
+            --     Right dat' -> do
+            --       let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat')
+            --       oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
+            --         ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
+            --       oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
+            --         ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
+            --       return [pngfile1, pngfile2]
+            return [""]
           _ -> do -- 1モニタ1プロット
             let pngfile = pngDir++ch++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
             pngExist <- doesFileExist pngfile
@@ -174,7 +175,7 @@ process params = do
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
-               let sens = runSensMon dat fs (truncate fs)
+               let (sens, _) = runSensMon dat fs (truncate fs)
                histgram2dM LogXYZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"/rHz","yield") ("Spectrogram: "++ch) pngfile ((0,0),fRange) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
@@ -217,7 +218,7 @@ inputForm params = inputFrame params formbody
                              (False, Sens, "<s>SensMon</s>"),
                              (False, Glitch, "<s>GlitchMon</s>"),
                              (False, LineFind, "<s>LineFinder</s>"),
-                             (False, NHA, "LineTracking"){--,
+                             (False, NHA, "<s>LineTracking</s>"){--,
                               (False, NFM, "<s>NoiseFloorMon</s>") --}
                              ],
           "<div><input type=\"submit\" value=\"plot view\" /></div>",
