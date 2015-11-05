@@ -1,6 +1,6 @@
 
 import Network.CGI
-import Data.List (isInfixOf)
+import Data.List (isInfixOf, isPrefixOf, nub, foldl')
 
 import HasKAL.WebUtils.CGI.Function
 import HasKAL.DataBaseUtils.Function (kagraChannelList)
@@ -12,17 +12,17 @@ cgiMain :: CGI CGIResult
 cgiMain = do
   params <- getInputParams
   flag <- getInput "ch_flag"
-  words <- getInput "keyword"
+  word <- getInput "keyword"
   oName <- getInput "outputname"
-  str <- liftIO $ fork params flag words oName
+  str <- liftIO $ fork params flag word oName
   output $ str 
 
 fork :: ParamCGI -> Maybe String -> Maybe String -> Maybe String -> IO String
-fork params flag words oName = do
+fork params flag word oName = do
   nowGps <- return $ show 1120543424 -- getCurrentGps 
   case flag of
    Nothing -> do
-     case (gps params, words) of
+     case (gps params, word) of
       (Nothing, _) -> return $ inputForm $ updateGps nowGps params
       (Just "", _) -> return $ inputForm $ updateGps nowGps params
       (_, Nothing) -> return $ inputForm params
@@ -33,10 +33,14 @@ fork params flag words oName = do
          Nothing -> return $ inputForm params
          Just [] -> return $ inputForm params
          Just list -> do
-           let list' = filter (isInfixOf y) list :: [String]
-           return $ listPage params list'
+           let keys = words y
+           let allow = filter (not.isPrefixOf "-") keys
+               list' = nub.concat $ map (\x -> filter (isInfixOf x) list) allow
+           let deny = map (drop 1) $ filter (isPrefixOf "-") keys
+               list'' = foldl' (\xs y -> filter (not.isInfixOf y) xs) list' deny
+           return $ listPage params list''
    Just "" -> do
-     case (gps params, words) of
+     case (gps params, word) of
       (Nothing, _) -> return $ inputForm $ updateGps nowGps params
       (Just "", _) -> return $ inputForm $ updateGps nowGps params
       (_, Nothing) -> return $ inputForm params
@@ -47,8 +51,12 @@ fork params flag words oName = do
          Nothing -> return $ inputForm params
          Just [] -> return $ inputForm params
          Just list -> do
-           let list' = filter (isInfixOf y) list :: [String]
-           return $ listPage params list'
+           let keys = words y
+           let allow = filter (not.isPrefixOf "-") keys
+               list' = nub.concat $ map (\x -> filter (isInfixOf x) list) allow
+           let deny = map (drop 1) $ filter (isPrefixOf "-") keys
+               list'' = foldl' (\xs y -> filter (not.isInfixOf y) xs) list' deny
+           return $ listPage params list''
    Just "1" -> do
      case (channel1 params, oName) of
       ([], _) -> return $ inputForm params
@@ -64,7 +72,7 @@ inputForm params = inputFrame params formbody
   where formbody = concat [
           "<form action=\"", (script params), "\" method=\"GET\" target=\""++target++"\">",
           (dateForm params),
-          "<p>keyword: <input type=\"text\" name=\"keyword\" size=\"15\" /></p>",
+          "<p>keyword: <input type=\"text\" name=\"keyword\" size=\"30\" /></p>",
           "<div><input type=\"submit\" value=\"channel search\" /></div>",
           "</form>"]
 
