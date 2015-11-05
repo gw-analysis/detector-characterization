@@ -3,6 +3,7 @@
 module HasKAL.WebUtils.CGI.Function (
   module Exports
 -- Constants
+, chlistDir
 , pngDir
 -- CGI
 , uploadFile

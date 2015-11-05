@@ -55,7 +55,7 @@ fork params flag words oName = do
       (xs, Nothing) -> return $ listPage params $ xs
       (xs, Just "") -> return $ listPage params $ xs
       (xs, Just y) -> do
-        writeFile ("../ch_list/"++y++".txt") (unlines xs)
+        writeFile (chlistDir++y++".txt") (unlines xs)
         return $ finalPage params
 
    
