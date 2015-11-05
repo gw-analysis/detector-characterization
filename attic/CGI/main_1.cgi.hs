@@ -37,67 +37,38 @@ cgiMain = do
 
 fork :: ParamCGI -> IO String
 fork params = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps 
+  nowGps <- return $ show 1120543424 -- getCurrentGps
   case (gps params, channel1 params, monitors params) of
-   -- (Nothing, _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   -- (Just "", _, _) -> return $ inputDateForm $ updateMsg "" $ updateGps nowGps params
-   (Nothing, _, _) -> do
-     let params' = updateGps nowGps $ defaultMon ["TS"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (Just "", _, _) -> do
-     let params' = updateGps nowGps $ defaultMon ["TS"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, [], []) -> do
-     let params' = defaultMon ["TS"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, [], _) -> do
-     let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, _, []) ->  do
-     let params' = defaultMon ["TS"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (Just x,  _, _) -> do
+   (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (_, [], _)      -> return $ inputForm $ updateMsg "unselected channel" params
+   (_, _, [])      -> return $ inputForm $ updateMsg "unselected monitor" params
+   (Just x,  _, _)  -> do
      fnames <- process params
      return $ resultPage params fnames
-
-defaultChs :: [String] -> ParamCGI -> ParamCGI
-defaultChs defch params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = defch
-           , channel2 = channel2 params
-           , monitors = monitors params
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
-
-defaultMon :: [String] -> ParamCGI -> ParamCGI
-defaultMon defmon params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = channel1 params
-           , channel2 = channel2 params
-           , monitors = defmon
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
+	 -- (Nothing, _, _) -> do
+	 --   let params' = updateGps nowGps $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] $ defaultMon ["TS"] params
+	 --   fnames <- process params'
+	 --   return $ resultPage params' fnames
+	 -- (Just "", _, _) -> do
+	 --   let params' = updateGps nowGps $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] $ defaultMon ["TS"] params
+	 --   fnames <- process params'
+	 --   return $ resultPage params' fnames
+   -- (_, [], []) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] $ defaultMon ["TS"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, [], _) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, _, []) ->  do
+   --   let params' = defaultMon ["TS"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (Just x,  _, _) -> do
+   --   fnames <- process params
+   --   return $ resultPage params fnames
 
 process :: ParamCGI -> IO [(String, String, [String])]
 process params = do
@@ -183,7 +154,7 @@ process params = do
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
-               let (sens, _) = runSensMon dat fs (truncate fs) 
+               let (sens, _) = runSensMon dat fs (truncate fs)
                histgram2dM LogXYZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"/rHz","yield") ("Spectrogram: "++ch) pngfile ((0,0),fRange) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
@@ -216,6 +187,7 @@ inputForm params = inputFrame params formbody
           "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
           (dateForm params),
           channelForm params [Multi],
+          "<a href=\"generateChannelList.cgi\" target=\"input\"> make channel list </a>",
           paramForm [NHA],
           monitorForm Multi [(False, TS, "Time Series"),
                              (False, PSD, "Spectrum"),

@@ -7,6 +7,8 @@ module HasKAL.WebUtils.CGI.Data (
 , MonitorType(..)
 , updateMsg
 , updateGps
+, defaultChs
+, defaultMon
 ) where
 
 type Message = String
@@ -103,4 +105,37 @@ updateGps newGps params =
            , fmax = fmax params
            }
 
+defaultChs :: [String] -> [String] -> ParamCGI -> ParamCGI
+defaultChs defch1 defch2 params =
+  ParamCGI { script = script params
+           , message = message params
+           , files = files params
+           , lstfile = lstfile params
+           , chlist = chlist params
+           , gps = gps params
+           , locale = locale params
+           , channel1 = defch1
+           , channel2 = defch2
+           , monitors = monitors params
+           , duration = duration params
+           , fmin = fmin params
+           , fmax = fmax params
+           }
+
+defaultMon :: [String] -> ParamCGI -> ParamCGI
+defaultMon defmon params =
+  ParamCGI { script = script params
+           , message = message params
+           , files = files params
+           , lstfile = lstfile params
+           , chlist = chlist params
+           , gps = gps params
+           , locale = locale params
+           , channel1 = channel1 params
+           , channel2 = channel2 params
+           , monitors = defmon
+           , duration = duration params
+           , fmin = fmin params
+           , fmax = fmax params
+           }
 
