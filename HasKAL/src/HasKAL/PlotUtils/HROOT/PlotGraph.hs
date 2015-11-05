@@ -21,6 +21,8 @@ module HasKAL.PlotUtils.HROOT.PlotGraph (
   ,plotDateXV
   ,oPlotDateV
   ,oPlotDateXV
+  ,plotBaseV'
+  ,plotBasePtr
 ) where
 
 import qualified Control.Monad as CM
@@ -153,6 +155,67 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   CM.mapM HR.delete tGras
   HR.delete tCan
 
+plotBaseV' :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [(Vector FCT.CDouble, Vector FCT.CDouble)] -> IO ()
+plotBaseV' log mark lineWidth colors xyLables labelSize titles fname ranges gps dats = do
+  tApp <- HRS.newTApp' fname
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  HAF.setGrid tCan
+  HRS.setLog' tCan log
+  HAF.setPadMargin 0.15 1 1 1
+
+  tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ toList freqV) (list2ptr $ toList specV)
+  CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
+  CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
+  setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
+  CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
+  CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+  mapM (flip setLabelSize' labelSize) tGras -- font size
+
+  let multi = Over
+  case multi of -- :: IO ()
+    Over -> do 
+      draws' tGras mark
+    Divide -> do
+      HR.divide_tvirtualpad tCan 2 2 0.01 0.01 0 -- 最大4つ(2x2)に固定
+      CM.forM_ [1..(min 4 $ length dats)] $ \lambda -> do
+        HR.cd tCan (toEnum $ lambda)
+        draws' [tGras !! (lambda-1)] mark
+
+  HRS.runOrSave' tCan tApp fname
+  CM.mapM HR.delete tGras
+  HR.delete tCan
+
+plotBasePtr :: LogOption -> PlotTypeOption -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [([FCT.CDouble], (FP.Ptr FCT.CDouble, Int))] -> IO ()
+plotBasePtr log mark lineWidth colors xyLables labelSize titles fname ranges gps dats = do
+  tApp <- HRS.newTApp' fname
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  HAF.setGrid tCan
+  HRS.setLog' tCan log
+  HAF.setPadMargin 0.15 1 1 1
+
+  tGras <- CM.forM dats $ \(freqV, (specV,numf)) -> HR.newTGraph (toEnum $ numf) (list2ptr freqV) specV
+  CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
+  CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
+  setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
+  mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
+  CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
+  CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+  mapM (flip setLabelSize' labelSize) tGras -- font size
+
+  let multi = Over
+  case multi of -- :: IO ()
+    Over -> do 
+      draws' tGras mark
+    Divide -> do
+      HR.divide_tvirtualpad tCan 2 2 0.01 0.01 0 -- 最大4つ(2x2)に固定
+      CM.forM_ [1..(min 4 $ length dats)] $ \lambda -> do
+        HR.cd tCan (toEnum $ lambda)
+        draws' [tGras !! (lambda-1)] mark
+
+  HRS.runOrSave' tCan tApp fname
+  CM.mapM HR.delete tGras
+  HR.delete tCan
 
 
 {--  Supplementary Functions for TGraph --}
