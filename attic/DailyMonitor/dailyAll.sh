@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -e
 
 ###  Parameters
 DEBUG_MODE=1
@@ -90,8 +90,8 @@ printf "\n#### Execute dailyMonitor\n"
 if test "${EXE_CMD}"
 then
     ${CMD_PARA} -d"\n" ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1}" ::: "${EXE_CMD}"
-    # ${MKDIR_CMD}
-    # ${MVPNG_CMD}
+    ${MKDIR_CMD}
+    ${MVPNG_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
