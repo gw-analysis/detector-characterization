@@ -82,7 +82,7 @@ listPage params list = inputFrame params body
           "<form action=\"", (script params), "\" method=\"GET\" target=\""++target++"\">",
           "<input type=\"hidden\" name=\"ch_flag\" value=\"1\" />",
           geneListBox list,
-          "<p>file name: <input type=\"text\" name=\"outputname\" size=\"15\" /></p>",
+          "<p>output name: <input type=\"text\" name=\"outputname\" size=\"30\" /></p>",
           "<div><input type=\"submit\" value=\"generate\" /></div>",
           "</form>"]
 
@@ -100,5 +100,7 @@ target="input" -- 入力フォームのあったフレーム
 geneListBox :: [String] -> String
 geneListBox list = concat [
   "<div><h3> Hit Channels: </h3>",
-  concat $ map (\x -> "<p><input type=\"checkbox\" name=\"channel1\" value=\""++x++"\" checked=\"checked\">"++x++"&nbsp</p>") list,
+  "<div style=\"overflow:scroll; width:100%; height:500px; background-color:#eeeeee\">",
+  concat $ map (\x -> "<p><input type=\"checkbox\" name=\"channel1\" value=\""++x++"\" checked=\"checked\"> "++x++"&nbsp</p>") list,
+  "</div>",
   "</div>"]
