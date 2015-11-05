@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/05 17:50:01
+# Last Modified: 2015/11/05 22:09:13
 #******************************************#
 
 # compiler option
@@ -9,8 +9,7 @@ CC = gcc -O2 -std=c99 -Wall -Wextra
 HC = ghc -O2 -optc -std=c99
 
 # use library
-USELIB=libframe 
-#kagali
+USELIB=libframe kagali
 
 # program
 TAR1=date_1.cgi
@@ -36,8 +35,8 @@ DEP2=./HasKAL/SignalProcessingUtils/filterFunctions.o
 DEPs= ${DEP1} ${DEP2}
 
 # kagali 関連
-# DEPK1=./HasKAL/ExternalUtils/KAGALI/DKGLUtils.o
-# DEPKs= ${DEPK1} ${DEPK2} ${DEPK3}
+DEPK1=./HasKAL/ExternalUtils/KAGALI/DKGLUtils.o
+DEPKs= ${DEPK1} ${DEPK2} ${DEPK3}
 
 # link path
 ifneq (${USELIB},)
