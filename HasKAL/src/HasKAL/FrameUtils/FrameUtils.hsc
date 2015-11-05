@@ -43,7 +43,6 @@ import HasKAL.FrameUtils.FileManipulation
 import HasKAL.TimeUtils.Function (formatGPS)
 import System.IO
 
-
 #include "FrameL.h"
 #include "FrVect.h"
 -- #include "stdio.h"
@@ -294,22 +293,22 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
+                      free ptr_v
                       let ptrdatD = castPtr (frvect_dataF v) :: Ptr CDouble
                       ptrdatD `deepseq` do
-  --                      c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
             --        frvect_r8 -> do
                     2 -> do
+                      free ptr_v
                       let ptrdatD = frvect_dataD v :: Ptr CDouble
                       ptrdatD `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
                     1 -> do
+                      free ptr_v
                       let ptrdatD = castPtr (frvect_dataS v) :: Ptr CDouble
                       ptrdatD `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
 
@@ -335,22 +334,22 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
+                      free ptr_v
                       let ptrdatD = castPtr (frvect_dataF v) :: Ptr Double
                       ptrdatD `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
             --        frvect_r8 -> do
                     2 -> do
+                      free ptr_v
                       let ptrdatD = castPtr (frvect_dataD v) :: Ptr Double
                       ptrdatD `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
                     1 -> do
+                      free ptr_v
                       let ptrdatD = castPtr (frvect_dataS v) :: Ptr Double
                       ptrdatD `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
 
@@ -376,27 +375,25 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
-                      print "aa"
-                      c_FrVectFree ptr_v
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataF v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
-            --            c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (cf2cdV vcddat)
             --        frvect_r8 -> do
                     2 -> do
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataD v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (vcddat)
                     1 -> do
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataS v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ci2cdV vcddat)
 
@@ -422,25 +419,25 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataF v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (cf2dV vcddat)
             --        frvect_r8 -> do
                     2 -> do
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataD v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (cd2dV vcddat)
                     1 -> do
+                      free ptr_v
                       vcddat <- newForeignPtr_ (frvect_dataS v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
---                        c_FrVectFree ptr_v
                         c_FrFileIEnd ifile
                         return $ Just (ci2dV vcddat)
 
