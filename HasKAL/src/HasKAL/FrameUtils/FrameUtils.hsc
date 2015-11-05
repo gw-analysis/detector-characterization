@@ -6,34 +6,6 @@
 ----------------------------------------------------------------------
 
 
-{-
-compiling
-
-hsc2hs HasKAL.FrameUtils.FrameUtils.hsc -I/opt/lscsoft/libframe-8.20/include
-ghc -c HasKAL.FrameUtils.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
-
-
-ghci HasKAL.FrameUtils.FrameUtils.hs -I/opt/lscsoft/libframe-8.20/include -L/opt/lscsoft/libframe-8.20/lib -lFrame
-
-let xs :: [CFloat]
-xs = [1..163840]
-let sampleRate :: CDouble
-sampleRate = 16384
-let dt :: CDouble
-dt = 10
-let
-let experiment_Name  :: String
-    experiment_Name = "K1"
-let head_Name :: String
-    head_Name = "K-V"
-let frametype_Name  :: String
-    frametype_Name = "FrFull"
-let channel_Name :: String
-channel_Name = "Channel_Name"
-let framefile_Name :: String
-framefile_Name = "test-1065803961-10.gwf"
--}
-
 {-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 {-# LANGUAGE EmptyDataDecls #-}
 --{-# LANGUAGE ExplicitForAll #-}
@@ -54,6 +26,7 @@ module HasKAL.FrameUtils.FrameUtils
 where
 
 import Control.Applicative
+import Control.DeepSeq
 import Control.Monad.Trans.Maybe (runMaybeT,  MaybeT(..))
 import Data.List
 import Data.List.Split
@@ -277,6 +250,7 @@ readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
+                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
              --       frvect_r4 -> do
@@ -316,6 +290,7 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
+                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
              --       frvect_r4 -> do
@@ -353,6 +328,7 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
+                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
              --       frvect_r4 -> do
@@ -391,6 +367,7 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
+                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
              --       frvect_r4 -> do
@@ -432,6 +409,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
+                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
              --       frvect_r4 -> do
@@ -443,10 +421,10 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       return $ Just (cf2dV vcddat)
             --        frvect_r8 -> do
                     2 -> do
-                      c_FrVectFree ptr_v
-                      c_FrFileIEnd ifile
                       vcddat <- newForeignPtr_ (frvect_dataD v) >>= \foreignptrOutput ->
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
                       return $ Just (cd2dV vcddat)
                     1 -> do
                       c_FrVectFree ptr_v
@@ -620,6 +598,8 @@ instance Storable FrVect_partial where
                               , frvect_dataF    = ptr_dataF
                               , frvect_dataD    = ptr_dataD }
 
+
+instance NFData (FrVect_partial)
 
 instance Storable FrProcData_partial where
   sizeOf = const #size struct FrProcData
