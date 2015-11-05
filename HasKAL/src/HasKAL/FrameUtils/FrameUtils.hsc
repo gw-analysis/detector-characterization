@@ -320,8 +320,7 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
-                      ptrdatD <- newArray (map realToFrac array_vdata)
+                      let ptrdatD = castPtr (frvect_dataF v) :: Ptr CDouble
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
@@ -331,8 +330,7 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                       c_FrFileIEnd ifile
                       return $ Just (frvect_dataD v, read (show (frvect_nData v)) :: Int)
                     1 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
-                      ptrdatD <- newArray (map fromIntegral array_vdata)
+                      let ptrdatD = castPtr (frvect_dataS v) :: Ptr CDouble
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
@@ -359,21 +357,18 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
-                      ptrdatD <- newArray (map realToFrac array_vdata)
+                      let ptrdatD = castPtr (frvect_dataF v) :: Ptr Double
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
             --        frvect_r8 -> do
                     2 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataD v)
-                      ptrdatD <- newArray (map realToFrac array_vdata)
+                      let ptrdatD = castPtr (frvect_dataD v) :: Ptr Double
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD, read (show (frvect_nData v)) :: Int)
                     1 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
-                      ptrdatD <- newArray (map fromIntegral array_vdata)
+                      let ptrdatD = castPtr (frvect_dataS v) :: Ptr Double
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
                       return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
@@ -400,10 +395,11 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
-                      return $ Just (V.fromList (map realToFrac array_vdata))
+                      vcddat <- newForeignPtr_ (frvect_dataF v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (cf2cdV vcddat)
             --        frvect_r8 -> do
                     2 -> do
                       c_FrVectFree ptr_v
@@ -412,10 +408,11 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       return $ Just (vcddat)
                     1 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
-                      return $ Just (V.fromList (map fromIntegral array_vdata))
+                      vcddat <- newForeignPtr_ (frvect_dataS v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (ci2cdV vcddat)
 
 
 readFrameV :: String -> String -> IO (Maybe (V.Vector Double))
@@ -439,10 +436,11 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 case datatype of
              --       frvect_r4 -> do
                     3 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
-                      return $ Just (V.fromList (map realToFrac array_vdata))
+                      vcddat <- newForeignPtr_ (frvect_dataF v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (cf2dV vcddat)
             --        frvect_r8 -> do
                     2 -> do
                       c_FrVectFree ptr_v
@@ -451,10 +449,11 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       return $ Just (cd2dV vcddat)
                     1 -> do
-                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataS v)
                       c_FrVectFree ptr_v
                       c_FrFileIEnd ifile
-                      return $ Just (V.fromList (map fromIntegral array_vdata))
+                      vcddat <- newForeignPtr_ (frvect_dataS v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      return $ Just (ci2dV vcddat)
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
@@ -540,6 +539,19 @@ getGPSTime frameFile = do
 {-- helper function --}
 cd2dV :: V.Vector CDouble -> V.Vector Double
 cd2dV = V.map realToFrac
+
+cf2dV :: V.Vector CFloat -> V.Vector Double
+cf2dV = V.map realToFrac
+
+ci2dV :: V.Vector CShort -> V.Vector Double
+ci2dV = V.map fromIntegral
+
+cf2cdV :: V.Vector CFloat -> V.Vector CDouble
+cf2cdV = V.map realToFrac
+
+ci2cdV :: V.Vector CShort -> V.Vector CDouble
+ci2cdV = V.map fromIntegral
+
 
 
 {-- Storable Type for structure--}
