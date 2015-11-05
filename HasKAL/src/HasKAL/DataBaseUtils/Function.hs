@@ -1,10 +1,11 @@
-{-# LANGUAGE MonadComprehensions, ScopedTypeVariables #-}
+{-# LANGUAGE MonadComprehensions, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
 
 module HasKAL.DataBaseUtils.Function
 ( db2framelist
 , db2framecache
 , kagraChannelList
 , kagraDataFind
+, kagraDataFind'
 , kagraDataGet
 , kagraDataGet'
 , kagraDataGPS
@@ -14,6 +15,7 @@ module HasKAL.DataBaseUtils.Function
 )
 where
 
+import Control.Applicative ((<$>), Applicative(pure, (<*>)))
 import Control.Monad
 import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import Database.Relational.Query ( relationalQuery
@@ -29,10 +31,16 @@ import Database.Relational.Query ( relationalQuery
                                  , (.<=.)
                                  , (.=.)
                                  , (!)
+                                 , (|*|)
+                                 , (|$|)
                                  )
 import Database.HDBC.Session     (withConnectionIO, handleSqlError')
 import Database.HDBC.Record.Query (runQuery')
-import Database.HDBC              (quickQuery', runRaw, fromSql)
+import Database.HDBC as DH
+import Database.HDBC              (quickQuery', runRaw, fromSql, SqlValue)
+import Database.Relational.Query.Pure (ProductConstructor,  productConstructor)
+import Database.Record
+import Database.Record.ToSql
 
 import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
@@ -64,6 +72,19 @@ kagraDataFind gpsstrt duration chname = runMaybeT $ MaybeT $ do
   case out of
     []     -> return Nothing
     x -> return (Just x)
+
+
+kagraDataFind' :: Int32 -> Int32 -> String -> IO (Maybe [((Int, Int), String)])
+kagraDataFind' gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  flist <- kagraDataFindCore' gpsstrt duration chname
+  let out = [ ((fromIntegral ts :: Int, fromIntegral te :: Int), u)
+            | (Just ts, Just te, Just u) <- flist
+            ]
+  case out of
+    []     -> return Nothing
+    x -> return (Just x)
+
+
 
 
 kagraDataPoint :: Int32 -> String -> IO (Maybe [String])
@@ -164,6 +185,32 @@ kagraDataFindCore gpsstrt duration chname =
       return $ ch ! Frame.fname'
 
 
+kagraDataFindCore' :: Int32 -> Int32 -> String -> IO [(Maybe Int32, Maybe Int32, Maybe String)]
+kagraDataFindCore' gpsstrt duration chname =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+--  setSqlMode conn
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+
+    gpsend = gpsstrt + duration
+
+    channel = relation
+      [ u
+      | u <- query framedb
+      , () <- wheres $ u ! Frame.chname' .=. value (Just chname)
+      ]
+
+    core :: Relation () (Maybe Int32, Maybe Int32, Maybe String)
+    core = relation $ do
+      ch <- query channel
+      wheres $ not' ((ch ! Frame.gpsStart' .<=. value (Just gpsstrt)
+        `and'` ch ! Frame.gpsStop'  .<=. value (Just gpsstrt))
+        `or'` (ch ! Frame.gpsStart' .>=. value (Just gpsend)
+        `and'` ch ! Frame.gpsStop'  .>=. value (Just gpsend)))
+      return $ (,,) |$| ch ! Frame.gpsStart' |*| ch ! Frame.gpsStop' |*| ch ! Frame.fname'
+
+
 kagraDataPointCore :: Int32 -> String -> IO [Maybe String]
 kagraDataPointCore gpstime chname =
   handleSqlError' $ withConnectionIO connect $ \conn ->
@@ -232,12 +279,27 @@ setSqlMode conn = do
   mode <- quickQuery' conn "SELECT @@SESSION.sql_mode" []
   newmode <- case mode of
     [[sqlval]] ->
-      let val = fromSql sqlval in
+      let val = DH.fromSql sqlval in
         if "IGNORE_SPACE" `isInfixOf` val
           then return val
           else return $ val ++ ", IGNORE_SPACE"
     _          ->
       error "failed to get 'sql_mode'"
   runRaw conn $ "SET SESSION sql_mode = '" ++ newmode ++ "'"
+
+
+
+instance ProductConstructor (a -> b -> c -> (a, b, c)) where
+  productConstructor = (,,)
+
+instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
+         => FromSql SqlValue (a, b, c) where
+  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
+
+instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
+         => ToSql SqlValue (a, b, c) where
+  recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
+
+
 
 
