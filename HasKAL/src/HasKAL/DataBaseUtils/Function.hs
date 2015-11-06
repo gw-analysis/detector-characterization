@@ -185,30 +185,35 @@ kagraTimeDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                   return $ Just $ consecutive (readFrameV chname) x nInd
 
 
-consecutive :: (String -> IO (Maybe (V.Vector Double))) 
-            -> [((Int,Int),String)] 
-            -> [Int] 
+consecutive :: (String -> IO (Maybe (V.Vector Double)))
+            -> [((Int,Int),String)]
+            -> [Int]
             -> [((Int,Int),V.Vector Double)]
 consecutive f [] _ = []
 consecutive f _ [] = []
 consecutive f x (j:js) = do
-  let y = take j x 
+  let y = take j x
       (tlist, flist) = unzip y
       v = V.concat $ for flist (fromJust . unsafePerformIO . f)
    in (((fst . head) tlist, (snd . last) tlist), v) : consecutive f (drop j x) js
 
 
 findConsecutiveInd :: [(Int,Int)] -> [Int]
-findConsecutiveInd x = 
+findConsecutiveInd x =
   let (tss,tes) = unzip x
       y = zip (zip (tail tss) (init tes)) [1..]
-   in snd . unzip $ filter (\(x,y) -> fst x /= snd x) y
+      judge = filter (\(x,y) -> fst x /= snd x) y
+   in case null judge of
+        False -> snd . unzip $ judge
+        True  -> [0]
 
 
 nConsecutive :: [(Int,Int)] -> [Int]
-nConsecutive x = 
+nConsecutive x =
   let ind = findConsecutiveInd x
-   in head ind : zipWith (-) (tail ind) (init ind)
+   in case (ind==[0]) of
+        True -> [length x]
+        False-> head ind : zipWith (-) (tail ind) (init ind)
 
 
 for = flip map
