@@ -73,6 +73,7 @@ inputForm params = inputFrame params formbody
           "<form action=\"", (script params), "\" method=\"GET\" target=\""++target++"\">",
           (dateForm params),
           "<p>keyword: <input type=\"text\" name=\"keyword\" size=\"30\" /></p>",
+          "<input type=\"hidden\" name=\"prevScript\" value=\""++(fromJust $ prevScript params)++"\" />",
           "<div><input type=\"submit\" value=\"channel search\" /></div>",
           "</form>"]
 
@@ -83,6 +84,7 @@ listPage params list = inputFrame params body
           "<input type=\"hidden\" name=\"ch_flag\" value=\"1\" />",
           geneListBox list,
           "<p>output name: <input type=\"text\" name=\"outputname\" size=\"30\" /></p>",
+          "<input type=\"hidden\" name=\"prevScript\" value=\""++(fromJust $ prevScript params)++"\" />",
           "<div><input type=\"submit\" value=\"generate\" /></div>",
           "</form>"]
 
@@ -91,6 +93,7 @@ finalPage params = inputFrame params body
   where body = concat [
           "<h2>Success full<h2>",
           "<form action=\"", origScript params, "\" method=\"GET\" target=\""++target++"\">",
+          "<input type=\"hidden\" name=\"prevScript\" value=\""++(fromJust $ prevScript params)++"\" />",
           "<div><input type=\"submit\" value=\"return\" /></div>",
           "</form>"]
 
