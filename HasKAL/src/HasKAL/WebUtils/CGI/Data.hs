@@ -33,6 +33,7 @@ data ParamCGI = ParamCGI
   , duration :: String
   , fmin :: String
   , fmax  :: String
+  , prevScript :: Maybe String
   } deriving (Show, Eq, Read)
 
 updateMsg :: Message -> ParamCGI -> ParamCGI
@@ -50,6 +51,7 @@ updateMsg msg params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
 addedMsg :: Message -> ParamCGI -> ParamCGI
@@ -67,6 +69,7 @@ addedMsg msg params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
 
@@ -85,6 +88,7 @@ clearMsg params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
 
@@ -103,6 +107,7 @@ updateGps newGps params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
 defaultChs :: [String] -> [String] -> ParamCGI -> ParamCGI
@@ -120,6 +125,7 @@ defaultChs defch1 defch2 params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
 defaultMon :: [String] -> ParamCGI -> ParamCGI
@@ -137,5 +143,6 @@ defaultMon defmon params =
            , duration = duration params
            , fmin = fmin params
            , fmax = fmax params
+           , prevScript = prevScript params
            }
 
