@@ -90,11 +90,17 @@ finalPage :: ParamCGI -> String
 finalPage params = inputFrame params body
   where body = concat [
           "<h2>Success full<h2>",
-          "<form action=\"", script_orig, "\" method=\"GET\" target=\""++target++"\">",
+          "<form action=\"", origScript params, "\" method=\"GET\" target=\""++target++"\">",
           "<div><input type=\"submit\" value=\"return\" /></div>",
           "</form>"]
 
-script_orig ="date_1.cgi" -- 元いた入力フォームの名前
+origScript :: ParamCGI -> String
+origScript params =
+  case prevScript params of
+   Nothing -> "date_1.cgi"
+   Just "" -> "date_1.cgi"
+   Just x  -> x
+
 target="input" -- 入力フォームのあったフレーム
 
 geneListBox :: [String] -> String
