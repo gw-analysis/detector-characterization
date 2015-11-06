@@ -1,6 +1,7 @@
 
 import Network.CGI
 import Data.List (isInfixOf, isPrefixOf, nub, foldl')
+import Data.Maybe (fromJust)
 
 import HasKAL.WebUtils.CGI.Function
 import HasKAL.DataBaseUtils.Function (kagraChannelList)
@@ -91,7 +92,7 @@ listPage params list = inputFrame params body
 finalPage :: ParamCGI -> String
 finalPage params = inputFrame params body
   where body = concat [
-          "<h2>Success full<h2>",
+          "<h2>Success full</h2>",
           "<form action=\"", origScript params, "\" method=\"GET\" target=\""++target++"\">",
           "<input type=\"hidden\" name=\"prevScript\" value=\""++(fromJust $ prevScript params)++"\" />",
           "<div><input type=\"submit\" value=\"return\" /></div>",
