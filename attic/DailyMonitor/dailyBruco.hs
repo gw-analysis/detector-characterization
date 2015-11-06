@@ -17,7 +17,7 @@ main = do
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
-      duration = 86400 -- seconds
+      duration = 1024 --86400 -- seconds
       -- for Bruco
       gwCh = "K1:PEM-EX_REF" -- <- 後で変える
       fftLength = 1 -- seconds
@@ -55,17 +55,21 @@ geneRankTable :: String -> [(Double, [(Double, String)])] -> String
 geneRankTable channel1 xs = concat [
   "<h3>Channel: "++channel1++"<h3>",
   "<table cellspacing=\"10\"><tr>",
-  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(num-1)],
+  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
   "</tr><tr>",
   concat $ map (\n -> concat [
                    "<td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
-                   concat $ map nthLabel [1..num],
-                   concat $ map (geneRankTableCore num) $ take len $ drop (len*n) xs,
-                   "</table></td>"]) [0..(num-1)],
+                   concat $ map nthLabel [1..numNth],
+                   concat $ map (geneRankTableCore numNth) $ take len $ drop (len*n) xs,
+                   "</table></td>"]) [0..(numRow-1)],
   "</tr></table>"]
-  where len = length xs `div` num
-        num = 5
+  where len = length xs `div` numRow
+        numRow = 3
+        numNth = 5
+        nthLabel 1 = "<th>1st ch.</th>"
+        nthLabel 2 =  "<th>2nd ch.</th>"
+        nthLabel 3 =  "<th>3rd ch.</th>"
         nthLabel n = "<th>"++(show n)++"th ch.</th>"
 
 geneRankTableCore :: Int -> (Double, [(Double, String)]) -> String
