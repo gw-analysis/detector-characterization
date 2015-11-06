@@ -19,15 +19,19 @@ main = do
                              
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
+{--      duration = 86400 -- seconds --}
+{--      duration = 2048 -- seconds --}
       duration = 86400 -- seconds
-      nsig = 2
-      nframe = 2048
-      nshift = 512
-      nstart = 0
+      order  = 6      :: Int
+      nsig   = 2      :: Int
+      nframe = 2048   :: Int
+      nstart = 0      :: Int
+      fmin   = 300    :: Double
+      fmax   = 400    :: Double
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_amp_dailyNHA.png"
-      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_freq_dailyNHA.png"
+      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_amp_dailyLT.png"
+      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_freq_dailyLT.png"
       title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
       xlabel = "time [sec] at "++year++"/"++month++"/"++day
 
@@ -42,15 +46,23 @@ main = do
                    (Just a, Just b) -> (a, b)
                    (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
-
+                   
   {-- main --}
-  let nend = fs*duration
-      result = formatNHA $ nha dat fs nsig nframe nshift nstart nend
-  oPlotV Linear LinePoint 1 [RED, BLUE]
-    (xlabel, "normalized noise Lv.") 0.05 title oFile0 ((0,0),(0,10)) (result!!0)
-  oPlotV Linear LinePoint 1 [RED, BLUE]
-    (xlabel, "normalized noise Lv.") 0.05 title oFile1 ((0,0),(0,10)) (result!!1)
-
+  let nend = (truncate fs*duration)
+{--      nshift = nend `div` 2048 --}
+{--      nshift = nend `div` 16 --}
+      nshift = nend `div` 2048
+      output = butterBandPass dat fs fmin fmax order
+  case output of
+    Left message -> print message
+    Right datBP -> do
+      let result = formatNHA $ nha datBP fs nsig nframe nshift nstart nend
+{--      oPlotV Linear LinePoint 1 [RED, BLUE] --}
+{--      oPlotV Linear LinePoint 1 [RED, BLUE] --}
+      oPlotV Linear Point 1 [RED, BLUE]
+          (xlabel, "Amplitude") 0.05 title oFile0 ((0,0),(0,0)) (result!!0)
+      oPlotV Linear Point 1 [RED, BLUE]
+          (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),(fmin,fmax)) (result!!1)
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
