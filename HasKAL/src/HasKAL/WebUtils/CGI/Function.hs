@@ -225,13 +225,11 @@ paramForm mons = concat [
 
 channelForm :: ParamCGI -> [MultiSelect]  -> String
 channelForm params flags = concat [
-  "<div><h3>Channel List file:</h3>",
-  "<p><select name=\"lstfile\" />",
-  "<option value=\"\">Default</option>",
-  concat $ map (\x-> "<option value=\""++x++"\" "++select (x==(lstfile params))++">"++x++"</option>"
-               ) $ filter (isSuffixOf ".txt") (files params),
-  "</select>&emsp;",
-  "<input type=\"submit\" value=\"reload\" /></p>",
+  "<div><h3>Channel List :</h3>",
+  "<p><a href=\"generateChannelList.cgi?prevScript="++script params
+  ++"\" target=\"input\"> <b>make channel list</b></a></p>",
+  "<p><a href=\"selectChannelList.cgi?prevScript="++script params
+  ++"\" target=\"input\"> <b>select channel list</b></a> ("++lstfile params++")</p>",
   "<table><tr>",
   concat $ map (\i -> "<th>Channel "++(show i)++":</th>") [1..length flags],
   "</tr><tr>",
