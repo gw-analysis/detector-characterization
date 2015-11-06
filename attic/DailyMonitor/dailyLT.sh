@@ -4,7 +4,8 @@ uname -a
 
 date 
 
-time ./dailyLT 2015 7 17 K1:PEM-EX_MIC_FLOOR
+time ./dailyLT 2015 7 17 K1:PEM-EX_MAG_X_FLOOR
+#time ./dailyLT 2015 7 17 K1:PEM-EX_MIC_FLOOR
 
 date
 

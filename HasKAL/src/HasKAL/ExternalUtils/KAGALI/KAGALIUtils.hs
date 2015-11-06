@@ -53,11 +53,11 @@ dKGLIterativeLeastSquare2DNewton frame fs nsig = do
    in (cd2dV out1, cd2dV out2, cd2dV out3)
 
 
-nha :: VS.Vector Double->Double->Int->Int->Int->Int->Int->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
-nha datV fs nsig nframe nshift nstart nend = retVal
+nha :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha datV fs nsig nframe nshift nstart nend t0 = retVal
   where retVal = zipWith3 (\v w (x, y, z) -> ((v+w)/2, x, y, z)) tstart tend result
-        tstart = map ( (/fs) . fromIntegral ) nIdx
-        tend = map ( (/fs) . fromIntegral . (+nframe) ) nIdx
+        tstart = map ( (+t0) . (/fs) . fromIntegral) nIdx
+        tend = map ( (+t0) . (/fs) . fromIntegral . (+nframe) ) nIdx
         nIdx = [nstart, nstart + nshift .. nstop]
         nstop = min (VS.length datV - nframe) nend
         result =
@@ -65,6 +65,7 @@ nha datV fs nsig nframe nshift nstart nend = retVal
 
 
 formatNHA :: [(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)] -> [[(VS.Vector Double, VS.Vector Double)]]
+{- Ueno's Comment: [[(time, para)]]   inner list: nsig;   outer list: (a,f,p) -}
 formatNHA input = output
   where tVec = VS.fromList $ map (\(x, _, _, _) -> x) input
         aVecL = toColumns.fromRows $ map (\(_, y, _, _) -> y) input
