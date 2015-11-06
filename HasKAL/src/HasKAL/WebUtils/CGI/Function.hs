@@ -76,6 +76,7 @@ getInputParams = do
   duration <- getInputDefVar "32" "duration"
   fmin <- getInputDefVar "0" "fmin"
   fmax <- getInputDefVar "0" "fmax"
+  prevScript <- getInput "prevScript"
   return $ ParamCGI { script = script
                     , message = ""
                     , files = files
@@ -89,6 +90,7 @@ getInputParams = do
                     , duration = duration
                     , fmin = fmin
                     , fmax = fmax
+                    , prevScript = prevScript
                     }
 
 getInputGPS :: (MonadCGI m) => m ((Maybe String), String)
