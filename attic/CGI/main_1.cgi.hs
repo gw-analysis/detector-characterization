@@ -13,7 +13,7 @@ import System.Directory (doesFileExist)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D (LogOption(..), PlotTypeOption3D(..), spectrogramM, histgram2dM)
@@ -89,7 +89,7 @@ process params = do
            nfft = case (truncate fs * 2) < (V.length dat) of -- データが1秒以下の時のケア
                    True -> truncate fs
                    False -> V.length dat `div` 20 -- 1秒以下のデータは20分割(20は適当)
-           snf = gwpsdV dat nfft fs
+           snf = gwOnesidedPSDV dat nfft fs
            hfs = gwspectrogramV 0 nfft fs dat
            fRange = (read fmin', read fmax') -- plotツール用レンジ
        filesL <- forM monitors' $ \mon -> do
