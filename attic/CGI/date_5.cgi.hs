@@ -34,30 +34,17 @@ fork params = do
   case (gps params, monitors params) of
    (Nothing, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   (_, []) ->  do
-     let params' = defaultMon ["INSP"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
+   (_, [])      -> return $ "<html><body><h1>unselected monitor</h1></body></html>"
    (Just x, _)  -> do
      fnames <- process params
      return $ resultPage params fnames
-
-defaultMon :: [String] -> ParamCGI -> ParamCGI
-defaultMon defmon params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = channel1 params
-           , channel2 = channel2 params
-           , monitors = defmon
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
+   -- (_, []) ->  do
+   --   let params' = defaultMon ["INSP"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (Just x, _)  -> do
+   --   fnames <- process params
+   --   return $ resultPage params fnames
 
 process :: ParamCGI -> IO [(Message, String, [String])]
 process params = do
@@ -105,8 +92,7 @@ inputForm params = inputFrame params formbody
   where formbody = concat [
           "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
           (dateForm params),
-          channelForm params [Multi],
-          paramForm [NHA],
+          paramForm [],
           monitorForm Multi [(True, INSP, "Inspiral")
                             ,(False, RD, "RingDown")
                             ,(False, IMBH, "Inspiral-Merger-RingDown")

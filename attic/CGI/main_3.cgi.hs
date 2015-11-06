@@ -23,65 +23,36 @@ fork :: ParamCGI -> IO String
 fork params = do
   nowGps <- return $ show 1120543424 -- getCurrentGps
   case (gps params, channel1 params, monitors params) of
-   -- (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   -- (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   (Nothing, _, _) -> do
-     let params' = updateGps nowGps $ defaultMon ["Peason"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (Just "", _, _) -> do
-     let params' = updateGps nowGps $ defaultMon ["Peason"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, [], []) -> do
-     let params' = defaultMon ["Peason"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, [], _) -> do
-     let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, _, []) ->  do
-     let params' = defaultMon ["Peason"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (Just x,  _, _) -> do
+   (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
+   (_, [], _)      -> return $ inputForm $ updateMsg "unselected channel" params
+   (_, _, [])      -> return $ inputForm $ updateMsg "unselected monitor" params
+   (Just x,  _, _)  -> do
      fnames <- process params
      return $ resultPage params fnames
-
-defaultChs :: [String] -> ParamCGI -> ParamCGI
-defaultChs defch params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = defch
-           , channel2 = channel2 params
-           , monitors = monitors params
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
-
-defaultMon :: [String] -> ParamCGI -> ParamCGI
-defaultMon defmon params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = channel1 params
-           , channel2 = channel2 params
-           , monitors = defmon
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
+   -- (Nothing, _, _) -> do
+   --   let params' = updateGps nowGps $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] $ defaultMon ["Peason"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (Just "", _, _) -> do
+   --   let params' = updateGps nowGps $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] $ defaultMon ["Peason"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, [], []) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] $ defaultMon ["Peason"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, [], _) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, _, []) ->  do
+   --   let params' = defaultMon ["Peason"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (Just x,  _, _) -> do
+   --   fnames <- process params
+   --   return $ resultPage params fnames
 
 process :: ParamCGI -> IO [(Message, String, [String])]
 process params = do
@@ -113,7 +84,7 @@ inputForm params = inputFrame params formbody
           "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
           (dateForm params),
           channelForm params [Multi],
-          paramForm [NHA],
+          paramForm [],
           monitorForm Single [(True, Peason, "Peason Correlation"),
                               (False, MIC, "<s>MIC</s>")
                              ],

@@ -64,23 +64,23 @@ void DKGLButterworthBandPassFilter( //begin{proto}
   
   if((flow > 0 && flow < fs/2.0) && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
-    KGLZeroPhaseFilter(status,datatmp,datain,npoint,num_coeff,den_coeff,order);
+    KGLZeroPhaseFilter(status,datatmp,datain,npoint,num_coeff,den_coeff,order,1);
     KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
-    KGLZeroPhaseFilter(status,dataout,datatmp,npoint,num_coeff,den_coeff,order);
+    KGLZeroPhaseFilter(status,dataout,datatmp,npoint,num_coeff,den_coeff,order,1);
     
   }else if(flow >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = 0;
     
   }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassFilterKernel(status,num_coeff,den_coeff,npoint,fhigh,fs,order);
-    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
+    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order,1);
     
   }else if(flow == 0 && fhigh >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = datain[i];
     
   }else if(fhigh >= fs/2.0){
     KGLButterworthHighPassFilterKernel(status,num_coeff,den_coeff,npoint,flow,fs,order);
-    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order);
+    KGLZeroPhaseFilter(status,dataout,datain,npoint,num_coeff,den_coeff,order,1);
   }
   
   KGLDestroyStatus(status);
@@ -110,23 +110,23 @@ void DKGLButterworthBandPassSOSFilter( //begin{proto}
   
   if((flow > 0 && flow < fs/2.0) && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassSOSFilterKernel(status,&gain,sos,npoint,fhigh,fs,order);
-    KGLZeroPhaseSOSFilter(status,datatmp,datain,npoint,gain,sos,order);
+    KGLZeroPhaseSOSFilter(status,datatmp,datain,npoint,gain,sos,order,1);
     KGLButterworthHighPassSOSFilterKernel(status,&gain,sos,npoint,flow,fs,order);
-    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order,1);
     
   }else if(flow >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = 0;
     
   }else if(flow == 0 && (fhigh > 0 && fhigh < fs/2.0)){
     KGLButterworthLowPassSOSFilterKernel(status,&gain,sos,npoint,fhigh,fs,order);
-    KGLZeroPhaseSOSFilter(status,dataout,datain,npoint,gain,sos,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datain,npoint,gain,sos,order,1);
     
   }else if(flow == 0 && fhigh >= fs/2.0){
     for(int i = 0; i < npoint; i++) dataout[i] = datain[i];
     
   }else if(fhigh >= fs/2.0){
     KGLButterworthHighPassSOSFilterKernel(status,&gain,sos,npoint,flow,fs,order);
-    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order);
+    KGLZeroPhaseSOSFilter(status,dataout,datatmp,npoint,gain,sos,order,1);
   }
   
   KGLDestroyStatus(status);

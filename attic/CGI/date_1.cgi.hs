@@ -23,7 +23,7 @@ import HasKAL.MonitorUtils.SensMon.SensMon (runSensMon)
 -- import HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon (getNoiseFloorStatusV, makeNFMparam, estimateThreshold)
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
--- import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
+import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
 import HasKAL.WebUtils.CGI.Function
 
 main :: IO ()
@@ -41,55 +41,26 @@ fork params = do
   case (gps params, channel1 params, monitors params) of
    (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   (_, [], []) -> do
-     let params' = defaultMon ["TS"] $ defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, [], _) -> do
-     let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (_, _, []) ->  do
-     let params' = defaultMon ["TS"] params
-     fnames <- process params'
-     return $ resultPage params' fnames
-   (Just x,  _, _) -> do
+   (_, [], _)      -> return $ "<html><body><h1>unselected channel</h1></body></html>"
+   (_, _, [])      -> return $ "<html><body><h1>unselected monitor</h1></body></html>"
+   (Just x,  _, _)  -> do
      fnames <- process params
      return $ resultPage params fnames
-
-defaultChs :: [String] -> ParamCGI -> ParamCGI
-defaultChs defch params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = defch
-           , channel2 = channel2 params
-           , monitors = monitors params
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
-
-defaultMon :: [String] -> ParamCGI -> ParamCGI
-defaultMon defmon params =
-  ParamCGI { script = script params
-           , message = message params
-           , files = files params
-           , lstfile = lstfile params
-           , chlist = chlist params
-           , gps = gps params
-           , locale = locale params
-           , channel1 = channel1 params
-           , channel2 = channel2 params
-           , monitors = defmon
-           , duration = duration params
-           , fmin = fmin params
-           , fmax = fmax params
-           }
+   -- (_, [], []) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] $ defaultMon ["TS"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, [], _) -> do
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR"] [] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (_, _, []) ->  do
+   --   let params' = defaultMon ["TS"] params
+   --   fnames <- process params'
+   --   return $ resultPage params' fnames
+   -- (Just x,  _, _) -> do
+   --   fnames <- process params
+   --   return $ resultPage params fnames
 
 process :: ParamCGI -> IO [(String, String, [String])]
 process params = do
@@ -116,25 +87,25 @@ process params = do
        filesL <- forM monitors' $ \mon -> do
          case mon of
           "NHA" -> do -- 1モニタ複数プロット
-            -- let pngfile1 = pngDir++ch++"_"++gps'++"_"++mon++"-A_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
-            --     pngfile2 = pngDir++ch++"_"++gps'++"_"++mon++"-F_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
-            -- pngExist <- doesFileExist pngfile1
-            -- case pngExist of
-            --  True -> return [pngfile1, pngfile2] -- 既にPNGがあれば何もしない
-            --  False -> do
-            --    let eiDat = butterBandPass dat fs (read fmin') (fmaxfs $ read fmax') 6 -- とりあえず6次固定
-            --          where fmaxfs 0 = fs/2
-            --                fmaxfs f = f
-            --    case eiDat of
-            --     Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
-            --     Right dat' -> do
-            --       let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat')
-            --       oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
-            --         ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
-            --       oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
-            --         ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
-            --       return [pngfile1, pngfile2]
-            return [""]
+            let pngfile1 = pngDir++ch++"_"++gps'++"_"++mon++"-A_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+                pngfile2 = pngDir++ch++"_"++gps'++"_"++mon++"-F_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+            pngExist <- doesFileExist pngfile1
+            case pngExist of
+             True -> return [pngfile1, pngfile2] -- 既にPNGがあれば何もしない
+             False -> do
+               let eiDat = butterBandPass dat fs (read fmin') (fmaxfs $ read fmax') 6 -- とりあえず6次固定
+                     where fmaxfs 0 = fs/2
+                           fmaxfs f = f
+               case eiDat of
+                Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
+                Right dat' -> do
+                  let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat')
+                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
+                    ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
+                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
+                    ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
+                  return [pngfile1, pngfile2]
+            -- return [""]
           _ -> do -- 1モニタ1プロット
             let pngfile = pngDir++ch++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
             pngExist <- doesFileExist pngfile
@@ -208,6 +179,7 @@ inputForm params = inputFrame params formbody
           "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
           (dateForm params),
           channelForm params [Multi],
+          "<a href=\"generateChannelList.cgi\" target=\"input\"> make channel list </a>",
           paramForm [NHA],
           monitorForm Multi [(False, TS, "Time Series"),
                              (False, PSD, "Spectrum"),
