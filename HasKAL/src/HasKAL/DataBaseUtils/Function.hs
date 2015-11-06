@@ -12,8 +12,10 @@ module HasKAL.DataBaseUtils.Function
 , kagraDataPoint
 , kagraDataFindCore
 , kagraDataPointCore
+, kagraTimeDataGet
 )
 where
+
 
 import Control.Applicative ((<$>), Applicative(pure, (<*>)))
 import Control.Monad
@@ -54,6 +56,9 @@ import qualified HasKAL.DataBaseUtils.Framedb as Frame
 import HasKAL.FrameUtils.FrameUtils
 import qualified Data.Vector.Storable as V
 import Foreign.C.Types
+import System.IO.Unsafe (unsafePerformIO)
+
+
 
 kagraChannelList :: Int32 -> IO (Maybe [String])
 kagraChannelList gpstime = runMaybeT $ MaybeT $ do
@@ -83,8 +88,6 @@ kagraDataFind' gpsstrt duration chname = runMaybeT $ MaybeT $ do
   case out of
     []     -> return Nothing
     x -> return (Just x)
-
-
 
 
 kagraDataPoint :: Int32 -> String -> IO (Maybe [String])
@@ -159,6 +162,58 @@ kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         return $ fromJust maybex)
 
 
+kagraTimeDataGet :: Int -> Int -> String -> IO (Maybe [((Int,Int),V.Vector Double)])
+kagraTimeDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case tf of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = snd . head $ x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                      nInd = nConsecutive $ (fst . unzip) x
+                  return $ Just $ consecutive (readFrameV chname) x nInd
+
+
+consecutive :: (String -> IO (Maybe (V.Vector Double))) 
+            -> [((Int,Int),String)] 
+            -> [Int] 
+            -> [((Int,Int),V.Vector Double)]
+consecutive f [] _ = []
+consecutive f _ [] = []
+consecutive f x (j:js) = do
+  let y = take j x 
+      (tlist, flist) = unzip y
+      v = V.concat $ for flist (fromJust . unsafePerformIO . f)
+   in (((fst . head) tlist, (snd . last) tlist), v) : consecutive f (drop j x) js
+
+
+findConsecutiveInd :: [(Int,Int)] -> [Int]
+findConsecutiveInd x = 
+  let (tss,tes) = unzip x
+      y = zip (zip (tail tss) (init tes)) [1..]
+   in snd . unzip $ filter (\(x,y) -> fst x /= snd x) y
+
+
+nConsecutive :: [(Int,Int)] -> [Int]
+nConsecutive x = 
+  let ind = findConsecutiveInd x
+   in head ind : zipWith (-) (tail ind) (init ind)
+
+
+for = flip map
+
+
 kagraDataFindCore :: Int32 -> Int32 -> String -> IO [Maybe String]
 kagraDataFindCore gpsstrt duration chname =
   handleSqlError' $ withConnectionIO connect $ \conn ->
@@ -166,15 +221,12 @@ kagraDataFindCore gpsstrt duration chname =
   outputResults conn core
   where
     outputResults c q = runQuery' c (relationalQuery q) ()
-
     gpsend = gpsstrt + duration
-
     channel = relation
       [ u
       | u <- query framedb
       , () <- wheres $ u ! Frame.chname' .=. value (Just chname)
       ]
-
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query channel
@@ -192,15 +244,12 @@ kagraDataFindCore' gpsstrt duration chname =
   outputResults conn core
   where
     outputResults c q = runQuery' c (relationalQuery q) ()
-
     gpsend = gpsstrt + duration
-
     channel = relation
       [ u
       | u <- query framedb
       , () <- wheres $ u ! Frame.chname' .=. value (Just chname)
       ]
-
     core :: Relation () (Maybe Int32, Maybe Int32, Maybe String)
     core = relation $ do
       ch <- query channel
@@ -218,20 +267,17 @@ kagraDataPointCore gpstime chname =
   outputResults conn core
   where
     outputResults c q = runQuery' c (relationalQuery q) ()
-
     channel = relation
       [ u
       | u <- query framedb
       , () <- wheres $ u ! Frame.chname' .=. value (Just chname)
       ]
-
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query channel
       wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
       wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
       return $ ch ! Frame.fname'
-
 
 
 kagraDataGPSCore :: Int32 -> IO [Maybe String]
@@ -241,12 +287,10 @@ kagraDataGPSCore gpstime =
   outputResults conn core
   where
     outputResults c q = runQuery' c (relationalQuery q) ()
-
     channel = relation
       [ u
       | u <- query framedb
       ]
-
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query channel
@@ -274,7 +318,6 @@ db2framelist dbname =
         return $ lists ! Frame.fname'
 
 
-
 setSqlMode conn = do
   mode <- quickQuery' conn "SELECT @@SESSION.sql_mode" []
   newmode <- case mode of
@@ -286,7 +329,6 @@ setSqlMode conn = do
     _          ->
       error "failed to get 'sql_mode'"
   runRaw conn $ "SET SESSION sql_mode = '" ++ newmode ++ "'"
-
 
 
 instance ProductConstructor (a -> b -> c -> (a, b, c)) where

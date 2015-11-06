@@ -10,7 +10,10 @@ TAR1= plottimeseries
 TAR2= plotspectrum
 TAR3= gps2localtime
 TAR4= localtime2gps
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4}
+TAR5= showChannels
+TAR6= showChannelandSamplingRate
+
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
@@ -37,6 +40,12 @@ ${TAR3}: ${TAR3}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 ${TAR4}: ${TAR4}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR5}: ${TAR5}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR6}: ${TAR6}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:

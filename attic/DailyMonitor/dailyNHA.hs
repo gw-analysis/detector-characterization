@@ -9,7 +9,7 @@ import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+import HasKAL.ExternalUtils.KAGALI.KAGALIUtils
 
 main = do
   args <- getArgs
