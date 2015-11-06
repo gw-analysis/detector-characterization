@@ -36,11 +36,11 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
       titles = map addTableTitle [c++":"++m|c<-chs,m<-mons]
-      contents = startHTML 
+      contents = startHTML
               ++ addHEAD "32000"
-              ++ addStyle 
-              ++ startBODY 
-              ++ addTitle date subsystem 
+              ++ addStyle
+              ++ startBODY
+              ++ addTitle date subsystem
               ++ startTABLE
               ++ startTBODY
               ++ (layoutTitleTable titles tables ncol)
@@ -58,7 +58,7 @@ layoutTable tlist n =
 layoutTitleTable [] _ _ = []
 layoutTitleTable _ [] _ = []
 layoutTitleTable titlelist tablelist n =
-   startTR ++ foldl1' (++) (take n titlelist ++ [endTR] ++ [startTR] ++ take n tablelist) ++ endTR 
+   startTR ++ foldl1' (++) (take n titlelist ++ [endTR] ++ [startTR] ++ take n tablelist) ++ endTR
      ++ layoutTitleTable (drop n titlelist) (drop n tablelist) n
 
 
@@ -109,10 +109,9 @@ addTitle phLocalTime phSubSystem = concat [
   "<h1 style=\"color: rgb(51, 51, 255);\">HasKAL: Daily Summary Page</h1>"
   ,"<br><h2>Local Time :"++phLocalTime++"</h2>"
   ,"<br><h2>"++phSubSystem++"</h2>"
-  ,"<table cellpadding=\"2\" cellspacing=\"2\" border=\"1\" style=\"text-align: left;width: 100%%;\""
   ]
 
-startTABLE = "<table>"
+startTABLE = "<table cellpadding=\"2\" cellspacing=\"2\" border=\"1\" style=\"text-align: left;width: 100%%;\">"
 
 startTBODY = "<tbody>"
 
