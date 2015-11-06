@@ -33,8 +33,9 @@ html subSys date = concat [
     "General",
     {- "TUN", "FCL", "VAC", "CRY", -}
     "VIS", {- "MIR", "LAS", "MIF", -}
-    "IOO" {-, "AOS", "AEL", "DGS", -}
-    {- "DMG", "DAS", "GIF", "DEC"  -}],
+    "IOO", {- "AOS", "AEL", "DGS", -}
+    {- "DMG", "DAS", "GIF", "DEC"  -}
+    "Bruco"],
   "<td align=center valign=middle width=98 height=30>",
   "<div align=center><a href=\"../main_frame_1.html\">Web Tools</a></div>",
   "</td>",

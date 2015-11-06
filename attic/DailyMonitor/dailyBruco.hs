@@ -9,6 +9,13 @@ import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.MonitorUtils.CoherenceMon.Function
 import HasKAL.WebUtils.DailySummaryPage
+import HasKAL.PlotUtils.HROOT.PlotGraph 
+
+import Data.Packed.Vector (Vector)
+import Data.Packed.Matrix (Matrix, fromColumns, toLists)
+import Control.Monad (zipWithM_)
+import Data.List (sort)
+import HasKAL.SpectrumUtils.Signature (Spectrum)
 
 main = do
   args <- getArgs
@@ -17,13 +24,13 @@ main = do
                              _ -> error "Usage: dailyBruco yyyy mm dd ch.lst"
 
   {-- parameters --}
-  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
-      duration = 64 --86400 -- seconds
+  let gps = read $ time2gps $ year+-+month+-+day++" 00:00:00 JST"
+      duration = 86400 -- seconds
       -- for Bruco
       gwCh = "K1:PEM-EX_REF" -- <- 後で変える
       fftLength = 1 -- seconds
       -- for Result
-      oFile = gwCh++"-"++year++"-"++month++"-"++day++"_dailyBruco.html"
+      oFile = year+-+month+-+day++"_Bruco.html"
 
   {-- read data --}
   mbFiles1 <- kagraDataFind (fromIntegral gps) (fromIntegral duration) gwCh
@@ -47,23 +54,40 @@ main = do
      (_, Nothing) -> return (0, fromList [], "")
 
   {-- main --}
-  let body = geneRankTable gwCh $ hBruco fftLength (fs1, dat1, gwCh) $ filter ((/=0).(\(x,_,_) -> x)) dat2
+  result <- hBrucoPng (year+-+month+-+day) fftLength (fs1, dat1, gwCh) $ filter ((/=0).(\(x,_,_) -> x)) dat2
+  let body = geneRankTable (year,month,day) gwCh result
   writeFile oFile $
     startHTML
     ++ addStyle 
     ++ startBODY 
-    ++"<h1 style=\"color: rgb(51, 51, 255);\">HasKAL: Daily Summary Page</h1>"
-    ++"<br><h2>Local Time :"++year+-+month+-+day++"</h2>"
-    ++"<br><h2>Bruco</h2>"
+    ++ addTitle (year+-+month+-+day) "Bruco"
     ++ body
     ++ endHTML
   
 
 {-- Internal Functions --}
+hBrucoPng :: String -> Double -> (Double, Vector Double, String) -> [(Double, Vector Double, String)] -> IO [(Double, [(Double, String)])]
+hBrucoPng dateStr sec (fsx, xt, xch) yts = do
+  let cohResults = map (\x -> coherenceMon sec fsx (fst' x) xt (snd' x) ) yts
+  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "coh(f)^2") 0.05 (xch++" vs "++x) (xch+-+x+-+dateStr++"_dailyBruco.png") ((0,0),(0,0)) y)
+    (map trd' yts) cohResults
+  let cohList = toLists.fromColumns $ map snd cohResults
+      fvec = [0, 1/sec..]
+      result = map (ranked.labeled) cohList
+        where ranked x = reverse $ sort x
+              labeled x = zip x (map trd' yts)
+  return $ zip fvec result
+
+fst' (a,_,_) = a
+snd' (_,b,_) = b
+trd' (_,_,c) = c
+
+
 (+-+) x y = x ++ "-" ++ y
 
-geneRankTable :: String -> [(Double, [(Double, String)])] -> String 
-geneRankTable channel1 xs = concat [
+
+geneRankTable :: (String,String,String) -> String -> [(Double, [(Double, String)])] -> String 
+geneRankTable (yyyy,mm,dd) channel1 xs = concat [
   "<h3>Channel: "++channel1++"</h3>",
   "<table cellspacing=\"10\"><tr>",
   concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
@@ -72,24 +96,24 @@ geneRankTable channel1 xs = concat [
                    "<td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
                    concat $ map nthLabel [1..numNth],
-                   concat $ map (geneRankTableCore numNth) $ take len $ drop (len*n) xs,
+                   concat $ map (geneRankTableCore numNth (yyyy,mm,dd) channel1) $ take len $ drop (len*n) xs,
                    "</table></td>"]) [0..(numRow-1)],
   "</tr></table>"]
   where len = length xs `div` numRow
-        numRow = 3
+        numRow = 5
         numNth = 5
         nthLabel 1 = "<th>1st ch.</th>"
         nthLabel 2 =  "<th>2nd ch.</th>"
         nthLabel 3 =  "<th>3rd ch.</th>"
         nthLabel n = "<th>"++(show n)++"th ch.</th>"
 
-geneRankTableCore :: Int -> (Double, [(Double, String)]) -> String
-geneRankTableCore n (freq, res) = concat [
+geneRankTableCore :: Int -> (String,String,String) -> String -> (Double, [(Double, String)]) -> String
+geneRankTableCore n (yyyy,mm,dd) ch1 (freq, res) = concat [
   "<tr><th bgcolor=\"#cccccc\"><nobr>"++(show freq)++" Hz&emsp;</nobr></th>",
   concat.(take n') $ map (\(val, ch) -> "<td bgcolor="++(color val)++"><nobr>"
-                                        -- ++"<a href=\""++url freq ch++"\" target=\"_blank\">"
+                                        ++"<a href=\""++url ch++"\" >"
                                         ++ch
-                                        -- ++"</a>"
+                                        ++"</a>"
                                         ++"&emsp;</nobr><br>") res,
   "</tr>"]
   where color val | val > 0.8 = "\"#ff5555\""
@@ -97,9 +121,7 @@ geneRankTableCore n (freq, res) = concat [
                   | val > 0.4 = "\"#ffeeee\""
                   | otherwise = "\"#ffffff\""
         n' = min n (length res)
-        -- url freq ch2 = "./main2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
-        --                ++(head $ channel1 params)++"&channel2="++ch2++"&monitor="++(head $ monitors params)
-        --                ++"&fmin="++(show $freq-10)++"&fmax="++(show $freq+10)
+        url ch2 = "./"++ch1+-+ch2+-+yyyy+-+mm+-+dd++"_dailyBruco.png"
 
 
 show0 :: Int -> String -> String

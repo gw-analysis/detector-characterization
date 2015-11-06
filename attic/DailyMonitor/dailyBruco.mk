@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailyBruco.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 19:31:21
+# Last Modified: 2015/11/06 16:16:01
 #******************************************#
 
 # compiler option
@@ -15,8 +15,8 @@ TAR1= dailyBruco
 TARs= ${TAR1}
 
 # dependency
-# DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-# DEPs= ${DEP1}
+DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
+DEPs= ${DEP1}
 
 #########################################
 # link path

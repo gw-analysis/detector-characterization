@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/05 22:09:13
+# Last Modified: 2015/11/06 19:25:27
 #******************************************#
 
 # compiler option
@@ -27,7 +27,8 @@ TAR12=calSubSys.cgi
 TAR13=dailyFrame.cgi
 TAR14=dailySubSys.cgi
 TAR15=generateChannelList.cgi
-TARs= ${TAR11} ${TAR10} ${TAR9} ${TAR8} ${TAR7} ${TAR6} ${TAR5} ${TAR4} ${TAR3} ${TAR2} ${TAR1} ${TAR12} ${TAR13} ${TAR14} ${TAR15}
+TAR16=selectChannelList.cgi
+TARs= ${TAR11} ${TAR10} ${TAR9} ${TAR8} ${TAR7} ${TAR6} ${TAR5} ${TAR4} ${TAR3} ${TAR2} ${TAR1} ${TAR12} ${TAR13} ${TAR14} ${TAR15} ${TAR16}
 
 # HasKAL 関連
 DEP1=./HasKAL/PlotUtils/HROOT/AppendFunction.o
@@ -122,6 +123,11 @@ ${TAR15}: ${TAR15}.hs
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	mv -f ${TAR15} ~/public_html/cgi-bin/
+
+${TAR16}: ${TAR16}.hs
+	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
+	mv -f ${TAR16} ~/public_html/cgi-bin/
 
 
 clean:
