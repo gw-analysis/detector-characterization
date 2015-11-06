@@ -8,6 +8,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.MonitorUtils.CoherenceMon.Function
+import HasKAL.WebUtils.DailySummaryPage
 
 main = do
   args <- getArgs
@@ -17,7 +18,7 @@ main = do
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
-      duration = 1024 --86400 -- seconds
+      duration = 64 --86400 -- seconds
       -- for Bruco
       gwCh = "K1:PEM-EX_REF" -- <- 後で変える
       fftLength = 1 -- seconds
@@ -47,13 +48,23 @@ main = do
 
   {-- main --}
   let body = geneRankTable gwCh $ hBruco fftLength (fs1, dat1, gwCh) $ filter ((/=0).(\(x,_,_) -> x)) dat2
-  writeFile oFile $ body
-
+  writeFile oFile $
+    startHTML
+    ++ addStyle 
+    ++ startBODY 
+    ++"<h1 style=\"color: rgb(51, 51, 255);\">HasKAL: Daily Summary Page</h1>"
+    ++"<br><h2>Local Time :"++year+-+month+-+day++"</h2>"
+    ++"<br><h2>Bruco</h2>"
+    ++ body
+    ++ endHTML
+  
 
 {-- Internal Functions --}
+(+-+) x y = x ++ "-" ++ y
+
 geneRankTable :: String -> [(Double, [(Double, String)])] -> String 
 geneRankTable channel1 xs = concat [
-  "<h3>Channel: "++channel1++"<h3>",
+  "<h3>Channel: "++channel1++"</h3>",
   "<table cellspacing=\"10\"><tr>",
   concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
   "</tr><tr>",
