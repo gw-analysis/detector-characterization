@@ -5,7 +5,7 @@
 module HasKAL.DataBaseUtils.XEndEnv 
 where
 
-import KAGRADataSource (defineTable)
+import HasKAL.DataBaseUtils.KAGRADataSource (defineTable)
 
 
 $(defineTable "xendenv")
