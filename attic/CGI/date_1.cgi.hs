@@ -179,7 +179,6 @@ inputForm params = inputFrame params formbody
           "<form action=\"", (script params), "\" method=\"GET\" target=\"plotframe\">",
           (dateForm params),
           channelForm params [Multi],
-          "<a href=\"generateChannelList.cgi\" target=\"input\"> make channel list </a>",
           paramForm [NHA],
           monitorForm Multi [(False, TS, "Time Series"),
                              (False, PSD, "Spectrum"),
