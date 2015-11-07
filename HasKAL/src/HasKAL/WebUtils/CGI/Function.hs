@@ -230,14 +230,20 @@ channelForm params flags = concat [
   ++"\" target=\"input\"> <b>make channel list</b></a></p>",
   "<p><a href=\"selectChannelList.cgi?prevScript="++script params
   ++"\" target=\"input\"> <b>select channel list</b></a> ("++lstfile params++")</p>",
-  "<table><tr>",
-  concat $ map (\i -> "<th>Channel "++(show i)++":</th>") [1..length flags],
-  "</tr><tr>",
+  -- "<table><tr>",
+  -- concat $ map (\i -> "<th>Channel "++(show i)++":</th>") [1..length flags],
+  -- "</tr><tr>",
+  -- concat $ map (\(i, j) ->
+  --                "<td><select name=\"channel"++(show i)++"\" size=\"5\""++multi j++" style=\"font-size:90%; \">"
+  --                ++(concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") $ chlist params)
+  --                ++"</select></td>") $ zip [1..length flags] flags,
+  -- "</tr></table></div>"]
   concat $ map (\(i, j) ->
-                 "<td><select name=\"channel"++(show i)++"\" size=\"5\""++multi j++" style=\"font-size:90%; \">"
+                 "Channel "++(show i)++":"
+                 ++"<br><select name=\"channel"++(show i)++"\" size=\"5\""++multi j++" style=\"font-size:90%; \">"
                  ++(concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") $ chlist params)
-                 ++"</select></td>") $ zip [1..length flags] flags,
-  "</tr></table></div>"]
+                 ++"</select><br>") $ zip [1..length flags] flags
+  ]
   where select True = "selected"
         select False = ""
         multi Multi = "multiple"
@@ -261,7 +267,8 @@ monitorForm x mons = concat [
 
 dateForm :: ParamCGI -> String
 dateForm params = concat [
-  "<div><h3> Date: </h3>",
+  -- "<div><h3> Date: </h3>",
+  "<div><fieldset><legend> Date: </legend>",
   "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
   " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
   "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ", "<br>",
@@ -270,8 +277,9 @@ dateForm params = concat [
   "<select name=\"local\">",
   concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
   "</select></p>"
-  , "<p>test type date</p>"
-  ,"<input type=\"date\" name=\"date\">"
+  -- , "<p>test type date</p>"
+  -- ,"<input type=\"date\" name=\"date\">"
+  ,"</fieldset>"
   ]
   where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
 
