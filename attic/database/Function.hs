@@ -105,7 +105,7 @@ kagraDataPoint gpstime chname = runMaybeT $ MaybeT $ do
 existChannel chname fname = unsafePerformIO $ do
   getChannelList fname >>= \maybech -> case maybech of 
     Nothing -> return []
-    Just x -> let judge = filter (\ch -> ch == chname) $ (fsn . unzip) x 
+    Just x -> let judge = filter (\ch -> ch == chname) $ (fst . unzip) x 
                in case null judge of
                     True -> return []
                     False-> return fname
@@ -238,16 +238,16 @@ kagraDataFindCore gpsstrt duration =
     gpsend = gpsstrt + duration
     flist = relation
       [ u
-      | u <- query framedb
+      | u <- query XEndEnv.xendenv
       ]
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query flist
-      wheres $ not' ((ch ! Frame.gpsStart' .<=. value (Just gpsstrt)
-        `and'` ch ! Frame.gpsStop'  .<=. value (Just gpsstrt))
-        `or'` (ch ! Frame.gpsStart' .>=. value (Just gpsend)
-        `and'` ch ! Frame.gpsStop'  .>=. value (Just gpsend)))
-      return $ ch ! Frame.fname'
+      wheres $ not' ((ch ! XEndEnv.gpsStart' .<=. value (Just gpsstrt)
+        `and'` ch ! XEndEnv.gpsStop'  .<=. value (Just gpsstrt))
+        `or'` (ch ! XEndEnv.gpsStart' .>=. value (Just gpsend)
+        `and'` ch ! XEndEnv.gpsStop'  .>=. value (Just gpsend)))
+      return $ ch ! XEndEnv.fname'
 
 
 kagraDataFindCore' :: Int32 -> Int32 -> IO [(Maybe Int32, Maybe Int32, Maybe String)]
@@ -259,16 +259,16 @@ kagraDataFindCore' gpsstrt duration =
     gpsend = gpsstrt + duration
     flist = relation
       [ u
-      | u <- query framedb
+      | u <- query XEndEnv.xendenv
       ]
     core :: Relation () (Maybe Int32, Maybe Int32, Maybe String)
     core = relation $ do
       ch <- query flist
-      wheres $ not' ((ch ! Frame.gpsStart' .<=. value (Just gpsstrt)
-        `and'` ch ! Frame.gpsStop'  .<=. value (Just gpsstrt))
-        `or'` (ch ! Frame.gpsStart' .>=. value (Just gpsend)
-        `and'` ch ! Frame.gpsStop'  .>=. value (Just gpsend)))
-      return $ (,,) |$| ch ! Frame.gpsStart' |*| ch ! Frame.gpsStop' |*| ch ! Frame.fname'
+      wheres $ not' ((ch ! XEndEnv.gpsStart' .<=. value (Just gpsstrt)
+        `and'` ch ! XEndEnv.gpsStop'  .<=. value (Just gpsstrt))
+        `or'` (ch ! XEndEnv.gpsStart' .>=. value (Just gpsend)
+        `and'` ch ! XEndEnv.gpsStop'  .>=. value (Just gpsend)))
+      return $ (,,) |$| ch ! XEndEnv.gpsStart' |*| ch ! XEndEnv.gpsStop' |*| ch ! XEndEnv.fname'
 
 
 kagraDataPointCore :: Int32 -> IO [Maybe String]
@@ -279,14 +279,14 @@ kagraDataPointCore gpstime =
     outputResults c q = runQuery' c (relationalQuery q) ()
     channel = relation
       [ u
-      | u <- query framedb
+      | u <- query XEndEnv.xendenv
       ]
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query channel
-      wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
-      wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
-      return $ ch ! Frame.fname'
+      wheres $ ch ! XEndEnv.gpsStart' .<=. value (Just gpstime)
+      wheres $ ch ! XEndEnv.gpsStop'  .>=. value (Just gpstime)
+      return $ ch ! XEndEnv.fname'
 
 
 kagraDataGPSCore :: Int32 -> IO [Maybe String]
@@ -298,18 +298,18 @@ kagraDataGPSCore gpstime =
     outputResults c q = runQuery' c (relationalQuery q) ()
     channel = relation
       [ u
-      | u <- query framedb
+      | u <- query XEndEnv.xendenv
       ]
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query channel
-      wheres $ ch ! Frame.gpsStart' .<=. value (Just gpstime)
-      wheres $ ch ! Frame.gpsStop'  .>=. value (Just gpstime)
-      return $ ch ! Frame.fname'
+      wheres $ ch ! XEndEnv.gpsStart' .<=. value (Just gpstime)
+      wheres $ ch ! XEndEnv.gpsStop'  .>=. value (Just gpstime)
+      return $ ch ! XEndEnv.fname'
 
 
 
-db2framecache :: Relation () Frame.Framedb -> IO (Maybe [String])
+db2framecache :: Relation () XEndEnv.Xendenv -> IO (Maybe [String])
 db2framecache dbname = do
   maybefrlist <- db2framelist dbname
   case catMaybes maybefrlist of
@@ -317,14 +317,14 @@ db2framecache dbname = do
     x  -> return (Just x)
 
 
-db2framelist :: Relation () Frame.Framedb -> IO [Maybe String]
+db2framelist :: Relation () XEndEnv.Xendenv -> IO [Maybe String]
 db2framelist dbname =
   handleSqlError' $ withConnectionIO connect $ \ conn ->
   runQuery' conn (relationalQuery core) ()
     where
       core = relation $ do
         lists <- query dbname
-        return $ lists ! Frame.fname'
+        return $ lists ! XEndEnv.fname'
 
 
 setSqlMode conn = do
