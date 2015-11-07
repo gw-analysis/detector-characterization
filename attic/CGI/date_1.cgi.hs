@@ -99,7 +99,7 @@ process params = do
                case eiDat of
                 Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
                 Right dat' -> do
-                  let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat')
+                  let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat') 0.0
                   oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
                     ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
                   oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
