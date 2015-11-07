@@ -38,7 +38,7 @@ getRecursiveFileSystem topdir = do
 genFileList :: FilePath -> FilePath -> IO()
 genFileList fileName absDir = do
     contents <- getRecursiveFileSystem absDir
-    writeFile fileName $ unlines contents
+    writeFile fileName $ (unlines . filter (\x -> (last . splitOn ".") x == "gwf")) contents
 
 extractstartGPStime :: String -> Integer
 extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
