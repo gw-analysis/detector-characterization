@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/06 04:17:33
+# Last Modified: 2015/11/08 23:21:41
 #******************************************#
 
 MAKE=make -f
@@ -16,6 +16,7 @@ TAR6= dailySpectrum
 TAR7= dailySpectrogram
 #TAR8= dailyTimeSeries # <-- メモリ消費激しいので注意
 #TAR9= dailyBruco
+TAR10= dailyLT
 TARs= ${TAR1} ${TAR2} ${TAR4} ${TAR6} ${TAR7} ${TAR8} ${TAR3} ${TAR5} ${TAR9}
 
 # compile rule
@@ -47,6 +48,9 @@ ${TAR8}: ${TAR8}.hs
 
 ${TAR9}: ${TAR9}.hs
 	${MAKE} ${TAR9}.mk
+
+${TAR10}: ${TAR10}.hs
+	${MAKE} ${TAR10}.mk
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
