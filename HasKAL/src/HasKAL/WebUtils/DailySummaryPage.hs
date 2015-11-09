@@ -25,7 +25,7 @@ module HasKAL.WebUtils.DailySummaryPage
 import Data.List (foldl1', intercalate, elemIndex)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
-import System.Directory (doesDirectoryExist, createDirectory)
+import System.Directory (doesDirectoryExist, createDirectoryIfMissing, createDirectory)
 import System.FilePath ((</>))
 import System.Environment (getEnv)
 
@@ -33,8 +33,9 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
-  let pth = tail . init $ splitOn "/" dir
-  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
+  let pth = init $ splitOn "/" dir
+--  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
+  createDirectoryIfMissing True (home++"/public_html/"++dir)
   let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
