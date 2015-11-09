@@ -47,7 +47,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
       tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
                 ++ [c++":"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
                 ++ [c++":"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
-      titles = map addTableTitle [c++":"++m|c<-chs,m<-mons]
+      titles = map addTableTitle tagname
       contents = startHTML
               ++ addHEAD "32000"
               ++ addStyle
