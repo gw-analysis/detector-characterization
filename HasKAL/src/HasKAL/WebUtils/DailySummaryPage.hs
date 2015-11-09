@@ -22,7 +22,7 @@ module HasKAL.WebUtils.DailySummaryPage
 
 
 
-import Data.List (foldl1', intercalate, elemIndex)
+import Data.List (foldl1', intercalate, elemIndex, isInfixOf)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import System.Directory (doesDirectoryExist, createDirectoryIfMissing, createDirectory)
@@ -36,7 +36,10 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   let pth = init $ splitOn "/" dir
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
   createDirectoryIfMissing True (home++"/public_html/"++dir)
-  let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
+  let fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
+      fname = fname' 
+              ++ [c++"-"++date++"_"++"_amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+              ++ [c++"-"++date++"_"++"_freq_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       nf = length fname
