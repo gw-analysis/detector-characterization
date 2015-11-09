@@ -69,29 +69,26 @@ updatePlotParam'colorbar p x = p {colorbar = x}
 
 
 dailySensMonCore :: Int -> (String, Double) -> (Double, Double) -> PlotParam -> IO ()
-dailySensMonCore gps (ch, fs) (fl, fu) param = do
-  let day = 86400
+dailySensMonCore gps (ch, fs) (fl, fu) plotparam = do
+  let day = 7200 -- 86400
       hr = 3600
       min = 60
-      gpslist = [gps, gps+hr..gps+day]
-  let x = go gpslist (hr*floor fs) (ch, fs)
-      hmin = VS.minimum (snd' x)
-      hmax = VS.maximum (snd' x)
-      title' = title param
-      fname' = filename param
-      xlabel' = xlabel param
-      ylabel' = ylabel param
-      zlabel' = zlabel param
-      scale' = scale param
-      color' = colorbar param
-  histgram2dM scale' color' (xlabel', ylabel', zlabel') title' fname' ((fl,fu), (hmin,hmax)) x
-  where
-    go (t:ts) n (ch, fs) =
-      let maybev = unsafePerformIO $ kagraDataGet t n ch
-       in case maybev of
-            Nothing -> go ts n (ch, fs)
-            Just v -> updateSensMon (fst $ runSensMon v fs (n`div`60))
-              (go ts n (ch, fs))
+      nfft = floor fs * min
+      maybev = unsafePerformIO $ kagraDataGet gps day ch
+   in case maybev of
+        Nothing -> return ()
+        Just v ->
+          do let (x, param) =  runSensMon v fs nfft
+                 hmin = histmin param
+                 hmax = histmax param
+                 title' = title plotparam
+                 fname' = filename plotparam
+                 xlabel' = xlabel plotparam
+                 ylabel' = ylabel plotparam
+                 zlabel' = zlabel plotparam
+                 scale' = scale plotparam
+                 color' = colorbar plotparam
+             histgram2dM scale' color' (xlabel', ylabel', zlabel') title' fname' ((fl,fu), (hmin,hmax)) x
 
 
 {-- Internal Functions --}
