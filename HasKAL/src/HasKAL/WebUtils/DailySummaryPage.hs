@@ -34,7 +34,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
   let pth = splitOn "/" dir
-  recurrentCreateDirectory pth pth
+  _ <- recurrentCreateDirectory pth pth
   let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
