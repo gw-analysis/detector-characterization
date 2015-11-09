@@ -35,6 +35,8 @@ import qualified Foreign.Storable as FS
 import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
 import Data.Packed.Vector
+import Data.Vector.Storable (unsafeToForeignPtr0)
+import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 
 import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
@@ -133,7 +135,10 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 1 1 1
 
-  tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
+  -- new (vector -> ptr)
+  tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (unsafeForeignPtrToPtr $ fst $ unsafeToForeignPtr0 $ mapVector realToFrac freqV) (unsafeForeignPtrToPtr $ fst $ unsafeToForeignPtr0 $ mapVector realToFrac specV)
+  -- old (vector -> list -> ptr)
+  -- tGras <- CM.forM dats $ \(freqV, specV) -> HR.newTGraph (toEnum $ dim specV) (list2ptr $ map realToFrac $ toList freqV) (list2ptr $ map realToFrac $ toList specV)
   CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
   setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
