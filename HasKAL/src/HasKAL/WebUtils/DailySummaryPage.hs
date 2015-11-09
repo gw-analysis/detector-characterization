@@ -38,12 +38,15 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   createDirectoryIfMissing True (home++"/public_html/"++dir)
   let fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
       fname = fname' 
-              ++ [c++"-"++date++"_"++"_amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
-              ++ [c++"-"++date++"_"++"_freq_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+              ++ [c++"-"++date++"_"++"amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+              ++ [c++"-"++date++"_"++"freq_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
+      tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
+                ++ [c++":"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+                ++ [c++":"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       titles = map addTableTitle [c++":"++m|c<-chs,m<-mons]
       contents = startHTML
               ++ addHEAD "32000"
