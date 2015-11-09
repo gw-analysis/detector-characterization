@@ -33,8 +33,8 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
-  let pth = splitOn "/" dir
-  _ <- recurrentCreateDirectory pth pth
+  let pth = init $ splitOn "/" dir
+  _ <- recurrentCreateDirectory [home,"public_html",pth] pth
   let fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
@@ -59,8 +59,9 @@ recurrentCreateDirectory _ [] = return ()
 recurrentCreateDirectory f (dir:dirs) = 
   doesDirectoryExist dir >>= \b -> case b of
     True -> recurrentCreateDirectory f dirs
-    False -> do createDirectory (intercalate "/" (take (succ $ fromMaybe (error "no such dir") (elemIndex dir f)) f))
-                recurrentCreateDirectory f dirs
+    False -> do 
+      createDirectory (intercalate "/" (take (succ $ fromMaybe (error "no such dir") (elemIndex dir f)) f))
+      recurrentCreateDirectory f dirs
 
 
 layoutTable [] _ = []
