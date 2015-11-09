@@ -22,8 +22,8 @@ updateSensParam'histmax p x = p {histmax = x}
 updateSensParam'ndiv :: SensParam -> Int -> SensParam
 updateSensParam'ndiv p n = p {ndiv = n}
 
-updateSensParam'inInterval :: SensParam -> Double -> SensParam
-updateSensParam'inInterval p bi = p {binInterval = bi}
+updateSensParam'binInterval :: SensParam -> Double -> SensParam
+updateSensParam'binInterval p bi = p {binInterval = bi}
 
 updateSensParam'binlist :: SensParam -> [Double] -> SensParam
 updateSensParam'binlist p bl = p {binlist = bl}

@@ -89,8 +89,10 @@ setHistParam  dat nfft fs param =
       nv = VS.length sdat
       hmin = sdat VS.! floor (0.003*fromIntegral nv)
       hmax = sdat VS.! (nv - floor (0.003*fromIntegral nv))
-      param' = updateSensParam'histmin param hmin
-      param''= updateSensParam'histmin param hmax
-   in (vlist, param'')
+      param1 = updateSensParam'histmin param hmin
+      param2 = updateSensParam'histmax param1 hmax
+      param3 = updateSensParam'binInterval param2 binInterval
+      param4 = updateSensParam'binlist param3 binlist
+   in (vlist, param4)
 
 
