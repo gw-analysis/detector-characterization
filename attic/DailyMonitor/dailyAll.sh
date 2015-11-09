@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+#set -e
 
 ###  Parameters
 DEBUG_MODE=1
@@ -8,7 +8,7 @@ CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
 CMD_PRINT="./genDailyCmd"
 
-MAX_CORE=8
+MAX_CORE=4
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
 MAIN_CH="K1:PEM-EX_REF"
@@ -36,7 +36,7 @@ then
     MKDIR_CMD="echo mkdir -p ${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="echo mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
 else
-    MKDIR_CMD="mkdir -p ${HOME}/public_html/${DAILY_DIR}"
+    MKDIR_CMD="${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
 fi
 
@@ -64,15 +64,14 @@ do
 	echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} ${z#*_} ${HTML_NCOL}"
     elif test -f ${CMD_HTML}
     then
-	echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} ${z#*_} ${HTML_NCOL}"
-	${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` ${y} TEST ${HTML_NCOL}
+	echo "${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` `echo ${y} | awk '{print $1}'` `echo ${y} | awk '{print $2}'` ${z#*_} ${HTML_NCOL}"
+	${CMD_HTML} ${DAILY_DIR} `echo ${YESTERDAY} | sed -e 's/ /-/g'` `echo ${y} | awk '{print $1}'` `echo ${y} | awk '{print $2}'` ${z#*_} ${HTML_NCOL}
     else
 	echo "Can't find ${CMD_HTML}"
 	exit 1
     fi
 done
 IFS=$' '
-
 
 #### Generate Execute Command ####
 printf "\n#### Generate Execute Command\n"
@@ -89,8 +88,8 @@ fi
 printf "\n#### Execute dailyMonitor\n"
 if test "${EXE_CMD}"
 then
-    ${CMD_PARA} -d"\n" ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1}" ::: "${EXE_CMD}"
-    ${MKDIR_CMD}
+    ${CMD_PARA} --noswap -d"\n" ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1}" ::: "${EXE_CMD}"
+    mkdir -p ${MKDIR_CMD}
     ${MVPNG_CMD}
 else
     echo "empty: \${EXE_CMD}"
