@@ -125,8 +125,12 @@ inputForm params = inputFrame params formbody
                             ,(False, Peason, "Peason Correlation")
                             ,(False, MIC, "<s>MIC</s>")
                             ],
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
-          "</form>"] 
+          "<br><center>",
+          "<div style=\"padding:15px 15px;",
+          "background-color:coral;width:80px;border-radius:20px;\">",
+          "<input type=\"submit\" value=\"plot view\" style=\"font-size:16px\"></div>",
+          "</center>",
+          "</form>"]
 
 resultPage :: ParamCGI -> [(Message, String, [String])] -> String
 resultPage params filenames = resultFrame params (genePngTable filenames) 

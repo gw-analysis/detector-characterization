@@ -187,13 +187,17 @@ inputForm params = inputFrame params formbody
                              (False, RM, "RayleighMon"),
                              (False, SRM, "StudentRayleighMon"),
                              (False, RMS, "RMSMon"),
-                             (False, Sens, "<s>SensMon</s>"),
+                             (False, Sens, "SensMon"),
                              (False, Glitch, "<s>GlitchMon</s>"),
                              (False, LineFind, "<s>LineFinder</s>"),
-                             (False, NHA, "<s>LineTracking</s>"){--,
+                             (False, NHA, "LineTracking"){--,
                               (False, NFM, "<s>NoiseFloorMon</s>") --}
                              ],
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
+          "<br><center>",
+          "<div style=\"padding:15px 15px;",
+          "background-color:coral;width:80px;border-radius:20px;\">",
+          "<input type=\"submit\" value=\"plot view\" style=\"font-size:16px\"></div>",
+          "</center>",
           "</form>"]
 
 resultPage :: ParamCGI -> [(Message, String, [String])] -> String
