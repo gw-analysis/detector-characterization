@@ -51,8 +51,7 @@ runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> (SensSpectru
 runSensMonCore input fs n param' =
   let (chunks, param) = setHistParam input n fs param'
       n2 = n `div` 2
-      vlist  = map (\x -> sqrt . snd $ gwOnesidedPSDV x n fs) chunks
-      eachFbin = M.toColumns . M.fromRows $ vlist
+      eachFbin = M.toColumns . M.fromRows $ chunks
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
