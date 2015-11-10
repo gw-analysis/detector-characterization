@@ -41,7 +41,7 @@ main = do
 
   {-- main --}
   let snf = gwOnesidedPSDV dat (truncate $ fftLength * fs) fs
-  plotV LogXY Line 1 RED (xlabel, "[x/Hz]") 0.05 title oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
+  plotV LogXY Line 1 RED (xlabel, "[x/rHz]") 0.05 title oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
 
 
 {-- Internal Functions --}

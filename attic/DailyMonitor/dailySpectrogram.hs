@@ -41,7 +41,7 @@ main = do
 
   {-- main --}
   let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/Hz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
+  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
 
 
 {-- Internal Functions --}
