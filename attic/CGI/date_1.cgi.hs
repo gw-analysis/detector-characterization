@@ -134,7 +134,7 @@ process params = do
                let ndf = case (truncate fs `div` nfft) > 16 of -- 周波数分解能
                           True -> 1 -- データ長T<1/16s なら df=1/T
                           False -> truncate $ 16 * (fromIntegral nfft) / fs -- 16Hz に固定
-                   size = V.length dat `div` nfft - 1 -- 0から数えているので1引く(iKAGRA後直す)
+                   size = V.length dat `div` nfft
                    nus = studentRayleighMonV (QUANT 0.95) fs nfft size size ndf snf hfs
                plotV Linear LinePoint 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "nu") 0.05 ("StudentRayleighMon: "++ch) pngfile
                  (fRange,(0,0)) (getSpectrum 0 nus)
