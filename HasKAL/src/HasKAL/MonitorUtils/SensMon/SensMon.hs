@@ -19,7 +19,6 @@ import HasKAL.SpectrumUtils.Function (updateMatrixElement)
 import HasKAL.MonitorUtils.SensMon.Signature
 import HasKAL.MonitorUtils.SensMon.Data
 import HasKAL.MonitorUtils.SensMon.Function
-import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.TimeUtils.Function(deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature
@@ -89,6 +88,8 @@ setHistParam  dat nfft fs param =
       nv = VS.length sdat
       hmin = sdat VS.! floor (0.003*fromIntegral nv)
       hmax = sdat VS.! (nv - floor (0.003*fromIntegral nv))
+      binInterval = (logBase 10 hmax - logBase 10 hmin)/fromIntegral (ndiv param)
+      binlist = map (10**) [logBase 10 hmin, logBase 10 hmin+binInterval ..logBase 10 hmax]
       param1 = updateSensParam'histmin param hmin
       param2 = updateSensParam'histmax param1 hmax
       param3 = updateSensParam'binInterval param2 binInterval
