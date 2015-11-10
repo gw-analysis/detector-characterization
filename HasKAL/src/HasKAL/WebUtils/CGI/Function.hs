@@ -316,7 +316,7 @@ geneChMapCore params chs (msg, ch1, xs) = result
                   True -> concat [
                     "<tr><th bgcolor=\"#eeeeee\">"++ch1++"</th>",
                     concat $ zipWith (\x y-> "<td bgcolor="++(color x)++"><a href=\""++(url ch1 y)
-                                        ++"\" target=\"_blank\">"++(showFFloat (Just 5) x "")++"</td>") xs' chs,
+                                        ++"\" target=\"plotframe\">"++(showFFloat (Just 5) x "")++"</td>") xs' chs,
                     "</tr>"]
                   False -> ""
         url ch1 ch2 = "./date_2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
@@ -353,7 +353,7 @@ geneRankTableCore :: ParamCGI -> Int -> (Double, [(Double, String)]) -> String
 geneRankTableCore params n (freq, res) = concat [
   "<tr><th bgcolor=\"#cccccc\"><nobr>"++(show freq)++" Hz&emsp;</nobr></th>",
   concat.(take n') $ map (\(val, ch) -> "<td bgcolor="++(color val)++"><nobr><a href=\""++url freq ch
-                                        ++"\" target=\"_blank\">"++ch++"</a>&emsp;</nobr><br>") res,
+                                        ++"\" target=\"plotframe\">"++ch++"</a>&emsp;</nobr><br>") res,
   "</tr>"]
   where color val | val > 0.8 = "\"#ff5555\""
                   | val > 0.6 = "\"#ffaaaa\""

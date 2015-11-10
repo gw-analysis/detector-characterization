@@ -134,15 +134,16 @@ process params = do
                let ndf = case (truncate fs `div` nfft) > 16 of -- 周波数分解能
                           True -> 1 -- データ長T<1/16s なら df=1/T
                           False -> truncate $ 16 * (fromIntegral nfft) / fs -- 16Hz に固定
-                   size = V.length dat `div` nfft - 1 -- 0から数えているので1引く(iKAGRA後直す)
+                   size = V.length dat `div` nfft
                    nus = studentRayleighMonV (QUANT 0.95) fs nfft size size ndf snf hfs
                plotV Linear LinePoint 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "nu") 0.05 ("StudentRayleighMon: "++ch) pngfile
                  (fRange,(0,0)) (getSpectrum 0 nus)
-             {-- Rayleigh Monitor --}
+             {-- RMS Monitor --}
              (_, "RMS") -> do -- パラメータは適当
-               let rms = rmsMon (truncate $ (*0.5) $ read duration') fs dat [(read fmin', fmaxfs $ read fmax')]
+               let rms = rmsMon (V.length dat `div` n) fs dat [(read fmin', fmaxfs $ read fmax')]
                      where fmaxfs 0 = fs/2
                            fmaxfs x = min x (fs/2)
+                           n = 32
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
