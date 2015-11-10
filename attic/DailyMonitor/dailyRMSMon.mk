@@ -25,8 +25,8 @@ sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
 dailyRMSMon:${OBJ1} ${DEP1}
-	-ghc -threaded -rtsopts --make -o $@ dailyRMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc -threaded -rtsopts --make -o $@ dailyRMSMon.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	-ghc --make -o $@ dailyRMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ dailyRMSMon.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
 
 clean:
