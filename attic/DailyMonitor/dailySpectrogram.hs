@@ -7,6 +7,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
+import HasKAL.SpectrumUtils.Function (mapSpectrogram)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 
 
@@ -40,7 +41,7 @@ main = do
 
   {-- main --}
   let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/Hz]") title oFile ((0,0),(0,0)) gps hf
+  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/Hz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
 
 
 {-- Internal Functions --}

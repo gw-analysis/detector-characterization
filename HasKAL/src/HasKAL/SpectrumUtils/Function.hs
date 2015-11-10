@@ -15,6 +15,8 @@ module HasKAL.SpectrumUtils.Function
 , fromSpectrum
 , normalizeSpectrum
 , normalizeSpectrogram
+, mapSpectrum
+, mapSpectrogram
 , readSpectrum
 , writeSpectrum
 , readSpectrogram
@@ -27,7 +29,8 @@ import Data.Packed.ST
 import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.Signature
 import Data.List (nub)
-import Data.Packed.Vector (zipVectorWith)
+import Data.Packed.Vector (zipVectorWith, mapVector)
+import Data.Packed.Matrix (mapMatrix)
 import HasKAL.Misc.SMatrixMapping (mapCols1)
 
 plotFormatedSpectogram :: Spectrogram -> [(Double, Double, Double)]
@@ -90,6 +93,14 @@ normalizeSpectrogram (fv, snf) (tV, fV, hfs) = (tV, fV, newSpecgram)
 normalizeSpectrum :: Spectrum -> Spectrum -> Spectrum
 normalizeSpectrum (fv, snf) (fV, hf) = (fV, newSpec)
   where newSpec = zipVectorWith (/) hf snf
+
+
+-- mapping
+mapSpectrum :: (Double -> Double) -> Spectrum -> Spectrum
+mapSpectrum f (xv, yv) = (xv, mapVector f yv)
+
+mapSpectrogram :: (Double -> Double) -> Spectrogram -> Spectrogram
+mapSpectrogram f (tv, fv, xm) = (tv, fv, mapMatrix f xm)
 
 
 -- text IO

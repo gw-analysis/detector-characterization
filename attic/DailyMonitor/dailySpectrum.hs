@@ -7,6 +7,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
+import HasKAL.SpectrumUtils.Function (mapSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 
 
@@ -40,7 +41,7 @@ main = do
 
   {-- main --}
   let snf = gwOnesidedPSDV dat (truncate $ fftLength * fs) fs
-  plotV LogXY Line 1 RED (xlabel, "[x/Hz]") 0.05 title oFile ((0,0),(0,0)) snf
+  plotV LogXY Line 1 RED (xlabel, "[x/Hz]") 0.05 title oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
 
 
 {-- Internal Functions --}
