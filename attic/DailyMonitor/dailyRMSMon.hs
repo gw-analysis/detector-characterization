@@ -64,7 +64,7 @@ main = do
 
  let color = [BLUE, RED, PINK]
      title = setTitle f1low f1high f2low f2high f3low f3high channel
-     fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMS_Mon.png"
+     fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_dailyRMSMon.png"
 
  oPlotDateV Linear LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(0,rms_max*1.2)) gps rms
  return 0
