@@ -319,7 +319,7 @@ geneChMapCore params chs (msg, ch1, xs) = result
                                         ++"\" target=\"_blank\">"++(showFFloat (Just 5) x "")++"</td>") xs' chs,
                     "</tr>"]
                   False -> ""
-        url ch1 ch2 = "./main2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
+        url ch1 ch2 = "./date_2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
                        ++ch1++"&channel2="++ch2++"&monitor="++(head $ monitors params)
                        ++"&fmin="++(fmin params)++"&fmax="++(fmax params)
         xs' = map read xs :: [Double]
@@ -360,7 +360,7 @@ geneRankTableCore params n (freq, res) = concat [
                   | val > 0.4 = "\"#ffeeee\""
                   | otherwise = "\"#ffffff\""
         n' = min n (length res)
-        url freq ch2 = "./main2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
+        url freq ch2 = "./date_2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
                        ++(head $ channel1 params)++"&channel2="++ch2++"&monitor="++(head $ monitors params)
                        ++"&fmin="++(show $freq-10)++"&fmax="++(show $freq+10)
 
