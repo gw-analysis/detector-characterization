@@ -33,7 +33,7 @@ fi
 if test ${DEBUG_MODE} = "1"
 then
     DEBUG="--dry-run"
-    MKDIR_CMD="echo mkdir -p ${HOME}/public_html/${DAILY_DIR}"
+    MKDIR_CMD="${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="echo mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
 else
     MKDIR_CMD="${HOME}/public_html/${DAILY_DIR}"
