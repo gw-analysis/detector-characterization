@@ -1,4 +1,3 @@
-
 import qualified Data.Vector.Generic as DVG
 import qualified Numeric.LinearAlgebra as NLA
 import Data.Maybe (fromMaybe, fromJust)
@@ -9,7 +8,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.Signature
-import HasKAL.MonitorUtils.RMSMon.RMSMon (refac_rmsMon)
+import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -24,7 +23,7 @@ main = do
      10 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, args!!8, args!!9)
      8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
      6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
-     4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "1", "1", "4", "4", "8")
+     4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "10", "50", "200", "300", "1000")
      _ ->  error "Usage: dailyRMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\ndailyRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 1 1 4 4 8"
 
 
@@ -54,7 +53,7 @@ main = do
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
  let nmon = floor (5760 * fs) ::Int -- 86400s / 15chunk = 5760s
- let rms   = refac_rmsMon nmon fs ys freq
+ let rms   = rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
 
 -- print $ (DVG.length ys) `div` nmon
