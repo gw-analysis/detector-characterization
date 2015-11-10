@@ -3,6 +3,7 @@
 module HasKAL.MonitorUtils.SensMon.SensMon
 ( SensParam
 , runSensMon
+, execSensMon
 , updateSensMon
 --,
 ) where
@@ -51,7 +52,7 @@ runSensMonCore :: VS.Vector Double -> Double -> Int -> SensParam -> (SensSpectru
 runSensMonCore input fs n param' =
   let (chunks, param) = setHistParam input n fs param'
       n2 = n `div` 2
-      vlist  = map (\x -> snd $ gwOnesidedPSDV x n fs) chunks
+      vlist  = map (\x -> sqrt . snd $ gwOnesidedPSDV x n fs) chunks
       eachFbin = M.toColumns . M.fromRows $ vlist
       hmax = histmax param
       hmin = histmin param
@@ -88,7 +89,7 @@ setHistParam  dat nfft fs param =
       hmin = sdat VS.! floor (0.003*fromIntegral nv)
       hmax = sdat VS.! (nv - floor (0.003*fromIntegral nv))
       binInterval' = (logBase 10 hmax - logBase 10 hmin)/fromIntegral (ndiv param)
-      binlist' = map (10**) [logBase 10 hmin, logBase 10 hmin+binInterval ..logBase 10 hmax]
+      binlist' = map (10**) [logBase 10 hmin, logBase 10 hmin+binInterval' ..logBase 10 hmax]
       param1 = updateSensParam'histmin param hmin
       param2 = updateSensParam'histmax param1 hmax
       param3 = updateSensParam'binInterval param2 binInterval'
