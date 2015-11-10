@@ -138,11 +138,12 @@ process params = do
                    nus = studentRayleighMonV (QUANT 0.95) fs nfft size size ndf snf hfs
                plotV Linear LinePoint 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "nu") 0.05 ("StudentRayleighMon: "++ch) pngfile
                  (fRange,(0,0)) (getSpectrum 0 nus)
-             {-- Rayleigh Monitor --}
+             {-- RMS Monitor --}
              (_, "RMS") -> do -- パラメータは適当
-               let rms = rmsMon (truncate $ (*0.5) $ read duration') fs dat [(read fmin', fmaxfs $ read fmax')]
+               let rms = rmsMon (V.length dat `div` n) fs dat [(read fmin', fmaxfs $ read fmax')]
                      where fmaxfs 0 = fs/2
                            fmaxfs x = min x (fs/2)
+                           n = 32
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
