@@ -3,7 +3,6 @@
 module HasKAL.MonitorUtils.SensMon.SensMon
 ( SensParam
 , runSensMon
-, execSensMon
 , updateSensMon
 --,
 ) where
