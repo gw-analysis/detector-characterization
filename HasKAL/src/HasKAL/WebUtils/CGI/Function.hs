@@ -200,14 +200,17 @@ fileUpForm params = concat [
              
 paramForm :: [MonitorType] -> String
 paramForm mons = concat [
-  "<div><h3> Parameters: </h3>",
-  "<h4>For General</h4>",
-  "<p>Duration: <input type=\"text\" name=\"duration\" size=\"5\" /> sec.",
-  "&emsp;(default is 32s)</p>",
-  "<p>Freq. band: <input type=\"text\" name=\"fmin\" size=\"5\" /> Hz ~ ",
-  "<input type=\"text\" name=\"fmax\" size=\"5\" /> Hz",
-  "&emsp;(default is from 0Hz to Nyquist freq.)</p>",
+  --"<div><h3> Parameters: </h3>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Parameters: </legend>",
+  --"<h4>For General</h4>",
+  "<b>For General</b><br>",
+  "&nbsp;Duration: <input type=\"text\" name=\"duration\" size=\"5\" /> sec.",
+  "&emsp;(default is 32s)",
+  "<br>&nbsp;Freq. band: <input type=\"text\" name=\"fmin\" size=\"5\" /> Hz ~ ",
+  "<input type=\"text\" name=\"fmax\" size=\"5\" /> Hz<br>",
+  "&nbsp;(default is from 0Hz to Nyquist freq.)",
   concat $ map eachMon mons,
+  "</fieldset>",
   "</div>"
   ]
   where eachMon mon
@@ -225,9 +228,10 @@ paramForm mons = concat [
 
 channelForm :: ParamCGI -> [MultiSelect]  -> String
 channelForm params flags = concat [
-  "<div><h3>Channel List :</h3>",
-  "<p><a href=\"generateChannelList.cgi?prevScript="++script params
-  ++"\" target=\"input\"> <b>make channel list</b></a></p>",
+  --"<div><h3>Channel List :</h3>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Channel List: </legend>",
+  "<a href=\"generateChannelList.cgi?prevScript="++script params
+  ++"\" target=\"input\"> <b>make channel list</b></a>",
   "<p><a href=\"selectChannelList.cgi?prevScript="++script params
   ++"\" target=\"input\"> <b>select channel list</b></a> ("++lstfile params++")</p>",
   -- "<table><tr>",
@@ -243,6 +247,7 @@ channelForm params flags = concat [
                  ++"<br><select name=\"channel"++(show i)++"\" size=\"5\""++multi j++" style=\"font-size:90%; \">"
                  ++(concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") $ chlist params)
                  ++"</select><br>") $ zip [1..length flags] flags
+  ,"</fieldset>"
   ]
   where select True = "selected"
         select False = ""
@@ -253,9 +258,11 @@ channelForm params flags = concat [
 ------------------------------------- test ----------------------------------------------------
 monitorForm :: MultiSelect -> [(Bool, MonitorType, String)] -> String
 monitorForm x mons = concat [
-  "<div><h3> Monitors: </h3>",
+  --"<div><h3> Monitors: </h3>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Monitors: </legend>",
   concat $ map (\(c, s, l) -> do
                    "<input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp") mons,
+  "</fieldset>",
   "</div>"
   ]
   where chk True = "checked=\"checked\""
@@ -268,15 +275,15 @@ monitorForm x mons = concat [
 dateForm :: ParamCGI -> String
 dateForm params = concat [
   -- "<div><h3> Date: </h3>",
-  "<div><fieldset><legend> Date: </legend>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
-  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /></p>",
-  "<p><input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ", "<br>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Date: </legend>",
+  "<input type=\"radio\" name=\"Date\" value=\"GPS\" checked=\"checked\" />",
+  " GPS Time: <input type=\"text\" name=\"gps\" value=\"", fromJust (gps params), "\" size=\"13\" /><br>",
+  "<input type=\"radio\" name=\"Date\" value=\"Local\" /> Local Time: ", "<br>",
   setDef "year" yr [2015..2020], setDef "month" mon [1..12], setDef "day" day [1..31], "<br>",
   setDef "hour" hrs [0..23], ":", setDef "minute" min [0..59], ":", setDef "second" sec [0..59], "&ensp;",
   "<select name=\"local\">",
   concat $ map (\x -> "<option value=\""++x++"\" >"++x++"</option>") ["JST", "UTC"],
-  "</select></p>"
+  "</select>"
   -- , "<p>test type date</p>"
   -- ,"<input type=\"date\" name=\"date\">"
   ,"</fieldset>"

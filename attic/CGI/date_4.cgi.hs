@@ -78,7 +78,11 @@ inputForm params = inputFrame params formbody
           channelForm params [Single, Multi],
           paramForm [],
           monitorForm Single [(True, COH, "Bruco")],
-          "<div><input type=\"submit\" value=\"plot view\" /></div>",
+          "<br><center>",
+          "<div style=\"padding:15px 15px;",
+          "background-color:coral;width:80px;border-radius:20px;\">",
+          "<input type=\"submit\" value=\"plot view\" style=\"font-size:16px\"></div>",
+          "</center>",
           "</form>"]
 
 resultPage :: ParamCGI -> [(Double, [(Double, String)])] -> String
