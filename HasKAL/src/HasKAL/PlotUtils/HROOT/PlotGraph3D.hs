@@ -38,7 +38,7 @@ import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.GlobalTApplication as HPG
 import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
-
+import HasKAL.Misc.StrictMapping (forM')
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
 
@@ -123,7 +123,7 @@ plot3dBaseM wmap log mark xyzLabel title fname range gps (tV, fV, specM) = do
       (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
   HAF.setXAxisDateTH2D tH2d gps
-  CM.forM [1..xNum-1] $ \idxX -> CM.forM [1..yNum-1] $ \idxY ->
+  forM' [1..xNum-1] $ \idxX -> forM' [1..yNum-1] $ \idxY ->
     HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
