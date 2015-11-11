@@ -55,10 +55,12 @@ runSensMonCore input fs n param' =
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
+      (histx', histy') = map (histogram1d hmin hmax bins . VS.toList) eachFbin
+      histx = VS.fromList histx'
+      histy = M.fromColumns $ map VS.fromList histy'
    in (( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
-      , VS.fromList $ init bins
-      , M.fromColumns
-        $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
+      , histx
+      , histy)
       , param)
 
 
@@ -80,8 +82,8 @@ setHistParam :: VS.Vector Double -> Int -> Double -> SensParam -> ([VS.Vector Do
 setHistParam  dat nfft fs param =
   let chunks = mkChunks dat nfft
       vlist = map (\x -> sqrt . snd $ gwOnesidedPSDV x nfft fs) chunks
-      hmax = DL.maximum $ map (\v->VS.maximum v) vlist
-      hmin = DL.minimum $ map (\v->VS.minimum v) vlist
+      hmax = DL.maximum $ map VS.maximum vlist
+      hmin = DL.minimum $ map VS.minimum vlist
 --      sdat = VS.modify I.sort $ VS.concat vlist
 --      nv = VS.length sdat
 --      hmin = sdat VS.! floor (0.05*fromIntegral nv)
