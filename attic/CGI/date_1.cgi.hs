@@ -7,7 +7,7 @@ import HasKAL.SpectrumUtils.Function (writeSpectrum, writeSpectrogram)
 import Network.CGI
 import Control.Monad (liftM, forM)
 import Data.Maybe (fromJust)
-import qualified Data.Vector.Storable as V (fromList, length, toList)
+import qualified Data.Vector.Storable as V (fromList, length, toList, map)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
@@ -149,8 +149,9 @@ process params = do
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
-               let (sens, _) = runSensMon dat fs (truncate fs)
-               histgram2dM LogXYZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"/rHz","yield") ("Spectrogram: "++ch) pngfile ((0,0),fRange) sens
+               let (sens, _) = logScaling $ runSensMon dat fs (truncate fs)
+                     where logScaling = (\((x, y, z), w) -> ((x, V.map (logBase 10) y, z), w))
+               histgram2dM LogXZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"/rHz","yield") ("Spectrogram: "++ch) pngfile ((0,0),fRange) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
                return ()
