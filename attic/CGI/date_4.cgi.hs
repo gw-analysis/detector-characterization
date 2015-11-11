@@ -56,19 +56,22 @@ process params = do
       fmin' = fmin params
       fmax' = fmax params
       ch1 = head $ channel1 params
-      chlist = channel2 params
+      chlist = filter (/=ch1) $ channel2 params
       mon = head $ monitors params
-  fileMaybe <- kagraDataFind (read gps') (read duration') ch1
-  case fileMaybe of
-   Nothing -> return [((-1), [(0.0, "")])]
-   _       -> do
-     mbFiles <- kagraDataFind (read gps') (read duration') ch1
-     datMaybe1 <- kagraDataGet (read gps') (read duration') ch1
-     mbFs1 <- getSamplingFrequency (head $ fromJust mbFiles) ch1
-     let chlist' = {-- take 100 $ --} filter (/=ch1) $ filter (isInfixOf "K1:") $ chlist
-     mbFs2 <- mapM (getSamplingFrequency (head $ fromJust mbFiles)) chlist'
-     datMaybe2 <- mapM (kagraDataGet (read gps') (read duration')) $ chlist'
-     return $ hBruco 1 (fromJust mbFs1, fromJust datMaybe1, ch1) $ zip3 (map fromJust mbFs2) (map fromJust datMaybe2) chlist'
+  datMaybe1 <- kagraDataGet (read gps') (read duration') ch1
+  case datMaybe1 of
+   Nothing -> return [((0), [(0.0, "")])]
+   Just dat1 -> do
+     fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
+     let chlist' = case chlist==[] of
+                    True -> [ch1]
+                    False -> take 20 chlist -- 最大20chで制限
+     dat2List <- forM chlist' $ \ch2 -> do
+       datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
+       mbFs2 <- (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
+       return (mbFs2, datMaybe2, ch2)
+     return $ hBruco 1 (fs1, dat1, ch1) $
+       map (\(x, y, z) -> (fromJust x, fromJust y, z)) $ filter ((/=Nothing).(\(x,_,_) -> x)) dat2List
             
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody

@@ -73,7 +73,7 @@ process params = do
      refExist <- doesFileExist refpng
      case refExist of
       True -> return ()
-      False -> plotV LogY Line 1 BLUE ("Hz", "/Hz") 0.05 ("Spectrum: "++ch1++" GPS="++gps') refpng
+      False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/Hz") 0.05 ("Spectrum: "++ch1) refpng
                ((read fmin',read fmax'),(0,0)) $ (\(x, y) -> (V.take (V.length x `div`2) x, V.take (V.length x `div`2) y)) snf1
      result <- forM chs $ \ch2 -> do
        datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
@@ -82,13 +82,12 @@ process params = do
         _ -> do
           fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
           let dat2 = fromJust datMaybe2
-              tvec = V.fromList [0,1/fs1..(fromIntegral $ V.length dat2-1)/fs1]
               snf2 = gwpsdV dat2 (truncate fs2) fs2
               refpng2 = pngDir++ch2++"_"++gps'++"_"++"REFSPE"++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
           refExist2 <- doesFileExist refpng2
           case refExist2 of
            True -> return () -- 既にPNGがあれば何もしない
-           False -> plotV LogY Line 1 BLUE ("Hz", "/Hz") 0.05 ("Spectrum: "++ch2++" GPS="++gps') refpng2
+           False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/Hz") 0.05 ("Spectrum: "++ch2) refpng2
                     ((read fmin',read fmax'),(0,0)) $ (\(x, y) -> (V.take (V.length x `div`2) x, V.take (V.length x `div`2) y)) snf2
           files <- forM monitors' $ \mon -> do
             let pngfile = pngDir++ch1++"-vs-"++ch2++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
@@ -99,16 +98,18 @@ process params = do
                case mon of
                 "COH" -> do
                   let coh = coherenceMon 1 fs1 fs2 dat1 dat2 -- length of FFT = 1 second
-                  plotV Linear Line 1 BLUE ("Hz", "|Coh(f)|^2") 0.05 ("Coherence: "++ch1++" vs "++ch2++" GPS="++gps')
+                  plotV Linear Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "|Coh(f)|^2") 0.05 ("Coherence: "++ch1++" vs "++ch2)
                     pngfile ((read fmin',read fmax'),(-0.05,1.05)) coh
                 "Peason" -> do
                   let cor = takeCorrelationV (read mon) dat1 dat2 16
-                  plotV Linear LinePoint 1 BLUE ("s", "correlation") 0.05 ("Peason: "++ch1++" vs "++ch2++" GPS="++gps')
+                      tvec = V.fromList [0, 1/fs2..(fromIntegral $ V.length cor-1)/fs2]
+                  plotV Linear LinePoint 1 BLUE ("time [s] since GPS="++gps', "correlation") 0.05 ("Peason: "++ch1++" vs "++ch2)
                     pngfile ((0,0),(0,0)) (tvec, cor)
                 "MIC" -> do
                   return () -- 未実装
                   -- let cor = takeCorrelationV (read mon) dat1 dat2 16
-                  -- plotV Linear LinePoint 1 BLUE ("s", "correlation") 0.05 ("MIC: "++ch1++" vs "++ch2++" GPS="++gps')
+                  --     tvec = V.fromList [0, 1/fs2..(fromIntegral $ V.length cor-1)/fs2]
+                  -- plotV Linear LinePoint 1 BLUE ("time [s] since GPS="++gps', "correlation") 0.05 ("MIC: "++ch1++" vs "++ch2)
                   --   pngfile ((0,0),(0,0)) (tvec, cor)
             return pngfile
           return (show fs2, ch2, refpng2:files)
