@@ -70,10 +70,10 @@ updatePlotParam'colorbar p x = p {colorbar = x}
 
 dailySensMonCore :: Int -> (String, Double) -> (Double, Double) -> PlotParam -> IO ()
 dailySensMonCore gps (ch, fs) (fl, fu) plotparam = do
-  let day = 7200 -- 86400
+  let day = 86400
       hr = 3600
-      min = 60
-      nfft = floor fs * min
+      x = 120
+      nfft = floor fs * x
       maybev = unsafePerformIO $ kagraDataGet gps day ch
    in case maybev of
         Nothing -> return ()
