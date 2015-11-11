@@ -56,7 +56,7 @@ runSensMonCore input fs n param' =
       hmin = histmin param
       bins = binlist param
    in (( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
-      , VS.fromList $ init bins
+      , VS.fromList $ map (logBase 10) (init bins)
       , M.fromColumns
         $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
       , param)
@@ -86,7 +86,7 @@ setHistParam  dat nfft fs param =
       nv = VS.length sdat
       hmin = sdat VS.! floor (0.05*fromIntegral nv)
 -- --      hmax = sdat VS.! (nv - floor (0.001*fromIntegral nv))
-      hmax = 10.0*sdat VS.! (nv -1)
+      hmax = sdat VS.! (nv -1)
       binInterval' = (logBase 10 hmax - logBase 10 hmin)/fromIntegral (ndiv param)
       binlist' = map (10**) [logBase 10 hmin, logBase 10 hmin+binInterval' ..logBase 10 hmax]
       param1 = updateSensParam'histmin param hmin
