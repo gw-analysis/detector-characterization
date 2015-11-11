@@ -85,7 +85,7 @@ process params = do
            "Stoch" -> do
              return ()
        return pngfile
-     return [("", "", files)]
+     return [("", ch1, files)] -- [(show fs1, ch1, files)] -- 後で変える
 
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody

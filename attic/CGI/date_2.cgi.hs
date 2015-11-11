@@ -111,8 +111,8 @@ process params = do
                   -- plotV Linear LinePoint 1 BLUE ("s", "correlation") 0.05 ("MIC: "++ch1++" vs "++ch2++" GPS="++gps')
                   --   pngfile ((0,0),(0,0)) (tvec, cor)
             return pngfile
-          return ("", ch2, refpng2:files)
-     return $ ("", "Reference: "++ch1, [refpng]):result
+          return (show fs2, ch2, refpng2:files)
+     return $ (show fs1, "Reference: "++ch1, [refpng]):result
 
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody

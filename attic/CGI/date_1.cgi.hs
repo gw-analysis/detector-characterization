@@ -149,8 +149,7 @@ process params = do
                oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
-               let (sens, _) = logScaling $ runSensMon dat fs (truncate fs)
-                     where logScaling = (\((x, y, z), w) -> ((x, V.map (logBase 10) y, z), w))
+               let (sens, _) = runSensMon dat fs (truncate fs)
                histgram2dM LogXZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"/rHz","yield") ("Spectrogram: "++ch) pngfile ((0,0),fRange) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
