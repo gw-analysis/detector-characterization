@@ -18,7 +18,7 @@ main = do
      4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
      _ -> error "Usage: DailyGlitchMon yyyy mm dd ch"
   let gps = read (time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST") :: Int
-      plotfname = ch++"-"++show year++"-"++show month++"-"++show day++"_GlitchsMon.png"
+      plotfname = ch++"-"++year++"-"++month++"-"++day++"_DailyGlitchMon.png"
       day = 86400
       snrlow = 2
       snrhigh = 1000

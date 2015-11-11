@@ -43,7 +43,7 @@ main = do
             , xlabel = "frequency [Hz]"
             , ylabel = "ASD [1/rHz]"
             , zlabel = "count"
-            , scale = LogXYZ
+            , scale = LogXZ
             , colorbar = COLZ
             }
 
