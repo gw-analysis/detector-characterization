@@ -88,7 +88,7 @@ dailySensMonCore gps (ch, fs) (fl, fu) plotparam = do
                  zlabel' = zlabel plotparam
                  scale' = scale plotparam
                  color' = colorbar plotparam
-             histgram2dM scale' color' (xlabel', ylabel', zlabel') title' fname' ((fl,fu), (hmin*10,hmax*10)) x
+             histgram2dM scale' color' (xlabel', ylabel', zlabel') title' fname' ((fl,fu), (hmin,hmax+1)) x
 
 
 {-- Internal Functions --}

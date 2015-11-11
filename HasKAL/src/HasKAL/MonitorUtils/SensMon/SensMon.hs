@@ -34,7 +34,10 @@ runSensMon input fs m =
         , binInterval = 0
         , binlist = []
         }
-   in runSensMonCore input fs m param
+   in convertoLogScale $ runSensMonCore input fs m param
+     where convertoLogScale = \((x, y, z), w) -> ((x, VS.map (logBase 10) y, z),  logs w)
+             where logs x = updateSensParam'histmax (updateSensParam'histmin x (logBase 10  (histmin x)))
+                     (logBase 10 (histmax x))
 
 
 updateSensMon :: SensSpectrum -> SensSpectrum -> SensSpectrum
