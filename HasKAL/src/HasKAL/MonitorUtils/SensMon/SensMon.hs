@@ -55,8 +55,9 @@ runSensMonCore input fs n param' =
       hmax = histmax param
       hmin = histmin param
       bins = binlist param
-      (histx', histy') = map (histogram1d hmin hmax bins . VS.toList) eachFbin
-      histx = VS.fromList histx'
+      hist = map (histogram1d hmin hmax bins . VS.toList) eachFbin
+      (histx', histy') = unzip hist
+      histx = VS.fromList $ head histx'
       histy = M.fromColumns $ map VS.fromList histy'
    in (( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
       , histx
