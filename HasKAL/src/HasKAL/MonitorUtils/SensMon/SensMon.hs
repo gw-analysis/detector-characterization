@@ -56,7 +56,8 @@ runSensMonCore input fs n param' =
       hmin = histmin param
       bins = binlist param
    in (( fromList [fs*fromIntegral i/fromIntegral n|i<-[0..n2]]
-      , VS.fromList $ map (logBase 10) (init bins)
+--      , VS.fromList $ map (logBase 10) (init bins)
+      , VS.fromList $ init bins
       , M.fromColumns
         $ map (VS.fromList . snd . histogram1d hmin hmax bins . VS.toList) eachFbin)
       , param)
