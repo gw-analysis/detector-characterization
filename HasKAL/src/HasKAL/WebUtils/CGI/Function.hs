@@ -167,7 +167,7 @@ htmlFrame x = htmlHeader++x++htmlFooter
   where htmlHeader = "<html><head><title>HasKAL</title></head><body><h1>HasKAL</h1>"
         htmlFooter = concat [
           "<br><Hr><footer>",
-          "<div><p>Real time quick look page is <a href=\"../\">here</a><p>",
+          "<div><p>Real time quick look page is <a href=\"../\" target=\"_top\">here</a><p>",
           "<small>Powerd by <a href=\"https://github.com/gw-analysis\">HasKAL</a></small></footer>"
           ]
 
