@@ -14,7 +14,7 @@ import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
-import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum)
+import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum, mapSpectrum, mapSpectrogram)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D (LogOption(..), PlotTypeOption3D(..), spectrogramM, histgram2dM)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonV)
@@ -81,8 +81,8 @@ process params = do
            nfft = case (truncate fs * 2) < (V.length dat) of -- データが1秒以下の時のケア
                    True -> truncate fs
                    False -> V.length dat `div` 20 -- 1秒以下のデータは20分割(20は適当)
-           snf = gwOnesidedPSDV dat nfft fs
-           hfs = gwspectrogramV 0 nfft fs dat
+           snf = gwOnesidedPSDV dat nfft fs -- モニタの引数に合わせて [/Hz]
+           hfs = gwspectrogramV 0 nfft fs dat -- モニタの引数に合わせて [/Hz]
            fRange = (read fmin', read fmax') -- plotツール用レンジ
        filesL <- forM monitors' $ \mon -> do
          case mon of
@@ -116,10 +116,12 @@ process params = do
                plotV Linear Line 1 BLUE ("time [s] since GPS="++gps', "") 0.05 ("Time Series: "++ch) pngfile ((0,0),(0,0)) (tvec, dat)
              {-- Spectrum Plot --}
              (_, "PSD") -> do
-               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch) pngfile (fRange,(0,0)) snf
+               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch)
+                 pngfile (fRange,(0,0)) $ mapSpectrum sqrt snf
              {-- Spectrogram Plot --}
              (_, "SPE") -> do
-               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", "/rHz") ("Spectrogram: "++ch) pngfile ((0,0),fRange) hfs
+               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", "/rHz") ("Spectrogram: "++ch)
+                 pngfile ((0,0),fRange) $ mapSpectrogram sqrt hfs
              {-- Rayleigh Monitor --}
              (_, "RM") -> do
                let ndf = case (truncate fs `div` nfft) > 16 of -- 周波数分解能
