@@ -22,7 +22,7 @@ html portal gps = concat [
       "</head>",
       "<frameset rows=\"100,*\">",
         "<frame src=\"./webToolPortal.cgi"++uri portal++"\" name=\"portal\">",
-          "<frameset cols=\"300,*\">",
+          "<frameset cols=\"310,*\">",
           "<frame src=\""++(func portal)++"\" name=\"input\">",
           "<frame src=\""++(func2 portal gps)++"\" name=\"plotframe\">",
           "</frameset>",
