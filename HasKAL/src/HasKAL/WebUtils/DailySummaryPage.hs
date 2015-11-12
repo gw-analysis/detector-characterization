@@ -53,11 +53,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ addStyle
               ++ startBODY
               ++ addTitle date subsystem
-              ++ startTABLE
-              ++ startTBODY
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
-              ++ endTBODY
-              ++ endTABLE
               ++ endHTML
   writeFile fnamehtml contents
 
