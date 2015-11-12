@@ -27,7 +27,7 @@ html portal = concat [
     "Bruco",
     "Detection Range"],
   "<td align=center valign=middle width=98 height=30>",
-  "<div align=center><a href=\"dailyFrame.cgi\">Web Tools</a></div>",
+  "<div align=center><a href=\"dailyFrame.cgi\">Daily Summary page</a></div>",
   "</td>",
   "</tr>",
   "</table>",
