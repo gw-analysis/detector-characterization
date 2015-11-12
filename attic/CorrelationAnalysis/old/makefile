@@ -18,13 +18,15 @@ OBJ14=outputCorrelatedData2Text.hs
 OBJ15=generateUpconvNoise.hs
 
 
-#DEP1 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
+DEP = ./HasKAL/PlotUtils/HROOT/SignalHandlerHROOT.cc \
+      ./HasKAL/PlotUtils/HROOT/SetRangeROOT.cc
+DEP2 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
 LIBLINK=-L/opt/work/libframe-8.21/lib -L/opt/work/root-5.34.19/lib/root -lFrame -lm
 INCLINK=-I/opt/work/libframe-8.21/include -I/opt/work/root-5.34.19/include/root 
 
 HASKALPATH=../..//HasKAL/src/HasKAL
 
-TARGET=check_correlation
+TARGET=generateUpconvNoise
 
 all:$(TARGET)
 
@@ -105,10 +107,9 @@ generateHtml:${OBJ2}
 	$(CC) -O ${OBJ2} -o $@ ${INKLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
-check_correlation:${OBJ1} ${DEP1}
+check_correlation:${OBJ1}
 	ln -fs ${HASKALPATH} ./
-	-ghc --make -o $@ check_correlation.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc --make -o $@ check_correlation.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	$(CC) -O ${OBJ1} -o $@ ${INKLINK} ${LIBLINK}
 	@echo "*** Making $@ ***"
 
 

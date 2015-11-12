@@ -5,7 +5,7 @@ module HasKAL.MonitorUtils.RMSMon.RMSMon(
 import qualified Data.Vector.Generic as DVG
 import qualified Numeric.LinearAlgebra as NLA
 import Data.Maybe (fromMaybe, fromJust)
-import Data.List (transpose)
+import Data.List (transpose, partition)
 
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDVP)
 import HasKAL.SpectrumUtils.Signature
@@ -48,7 +48,10 @@ rmsMoncore nmon duration fs freq yschunk = do
 --                 let gwpsd = gwOnesidedPSDVP yschunk nmon fs
                  let gwpsd = gwpsdV yschunk nmon fs
                      df = 1.0/duration :: Double 
-                     freq' = filter (\(f1, f2) -> f1 > 0.0 && f2 > 0.0) freq
+                     -- remove the elements of negative value or zero
+                     freq'' = snd $ partition (\(f1, f2) -> f1<=0.0 && f2<=0.0) freq
+                     -- remove the larger elements than Nyquist frequency
+                     freq' = snd $ partition (\(f1, f2) -> f1>(fs/2.0) || f2>(fs/2.0) ) freq''
                  map sqrt $ map (*df) $ map (\(f1, f2) -> sumHoff fs gwpsd f1 f2) freq'
 
 {-- Internal Functions --}

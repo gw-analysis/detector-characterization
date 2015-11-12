@@ -24,14 +24,13 @@ main = do
      8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
      6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
      4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "10", "50", "200", "300", "1000")
-     _ ->  error "Usage: dailyRMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\ndailyRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 1 1 4 4 8"
+     _ ->  error "Usage: dailyRMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\ndailyRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000"
 
 
  {-- parameters --}
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
  let totalduration = 86400 :: Int -- 1day = 86400s
 
--- let totalduration = 100 :: Int
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
      ylabel = "Voltage[V]"::String
@@ -52,9 +51,10 @@ main = do
      f2band = ((read f2low::Double), (read f2high::Double))
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
- let nmon = floor (5760 * fs) ::Int -- 86400s / 15chunk = 5760s
+ let nmon = floor (900 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
  let rms   = rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
+     rms_min = DVG.minimum $ DVG.concat ( map snd rms)
 
 -- print $ (DVG.length ys) `div` nmon
 -- print $ (DVG.length ys)
@@ -65,9 +65,9 @@ main = do
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_dailyRMSMon.png"
 
- oPlotDateV Linear LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(0,rms_max*1.2)) gps rms
+ oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
+-- oPlotDateV Linear LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(0,rms_max*1.2)) gps rms
  return 0
-
 
 
 {-- Internal Functions --}
@@ -79,5 +79,5 @@ show0 digit number
 
 setTitle :: String -> String -> String -> String -> String -> String -> String -> String
 setTitle f1low f1high f2low f2high f3low f3high channel = 
-         "RMS Mon(BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, RED=" ++ f2low ++ "-" ++ f2high ++ "Hz, PINK=" ++ 
+         "RMS Mon(BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, GREEN=" ++ f2low ++ "-" ++ f2high ++ "Hz, RED=" ++ 
              f3low ++ "-" ++ f3high ++ " : " ++ channel

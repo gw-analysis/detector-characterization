@@ -16,33 +16,34 @@ import qualified Data.Vector.Storable as S
 import qualified Data.Vector.Unboxed as U
 
 takeCorrelation :: CorrelationMethod -> [Double] -> [Double] -> Int -> [Double]
-takeCorrelation method x y maxN = U.toList $ takeCorrelationCore method (U.fromList x) (U.fromList y) maxN
+takeCorrelation method x y maxn = U.toList $ takeCorrelationCore method (U.fromList x) (U.fromList y) maxn
 
 takeCorrelationV :: CorrelationMethod -> S.Vector Double -> S.Vector Double -> Int -> S.Vector Double
-takeCorrelationV method x y maxN = U.convert $ takeCorrelationCore method (U.convert x) (U.convert y) maxN
+takeCorrelationV method x y maxn = U.convert $ takeCorrelationCore method (U.convert x) (U.convert y) maxn
 
 takeCorrelationCore :: CorrelationMethod -> U.Vector Double -> U.Vector Double -> Int -> U.Vector Double
-takeCorrelationCore method x y maxN = case method of
-  Peason -> twoChannelData2CorrelationV x y maxN
-  MIC    -> twoChannelData2CorrelationV x y maxN
+takeCorrelationCore method x y maxn = case method of
+  Peason -> twoChannelData2CorrelationV x y maxn
+  MIC    -> twoChannelData2CorrelationV x y maxn
 
 twoChannelData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> U.Vector Double
-twoChannelData2CorrelationV x y maxN
+twoChannelData2CorrelationV x y maxn
   | U.length x == 0 = U.fromList []
   | U.length y == 0 = U.fromList []
-  | maxN < 0        = U.fromList []
-  | otherwise       = U.map (timeshiftedData2CorrelationV x y) $ U.fromList [0..maxN]
+  | maxn < 0        = U.fromList []
+  | otherwise       = U.map (timeshiftedData2CorrelationV x y) $ U.fromList [-maxn..maxn]
   where timeshiftedData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> Double
-        timeshiftedData2CorrelationV listX listY intN
-          | intN < dataLength = pearsonCorrelationV (dataHeadDropNV listX intN) listY
-          | otherwise         = pearsonCorrelationV (dataHeadDropNV listX dataLength) listY
-          where dataLength = max (U.length listX) (U.length listY)
+        timeshiftedData2CorrelationV x y n
+          | n > dataLength = pearsonCorrelationV (dataHeadDropNV x dataLength) y
+          | n < 0          = pearsonCorrelationV (dataHeadDropNV y (-n) ) x
+          | otherwise      = pearsonCorrelationV (dataHeadDropNV x n    ) y
+          where dataLength = max (U.length x) (U.length y)
 
 dataHeadDropNV ::  U.Vector Double -> Int -> U.Vector Double
-dataHeadDropNV listData intN = U.drop intN listData
+dataHeadDropNV listData n = U.drop n listData
 
-dataTailDropNV ::  U.Vector Double -> Int -> U.Vector Double
-dataTailDropNV listData intN = U.take ((U.length listData) - intN) listData
+--dataTailDropNV ::  U.Vector Double -> Int -> U.Vector Double
+--dataTailDropNV listData n = U.take ((U.length listData) - n) listData
 
 
 -- index of max correlation = 
