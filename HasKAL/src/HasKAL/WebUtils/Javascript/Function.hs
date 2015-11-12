@@ -1,6 +1,7 @@
 
 module HasKAL.WebUtils.Javascript.Function (
-  expandFont
+  expandFont,
+  getFrameURL
 ) where
 
 
@@ -28,6 +29,20 @@ expandFont defPx shiftPx className = jsFrame defJS body
           "<span>font size: </span>",
           "<input type=\"submit\" value=\"-\" onclick=\"smaller();\">",
           "<input type=\"submit\" value=\"+\" onclick=\"larger();\">",
+          "</div>"
+          ]
+
+getFrameURL :: String -> String
+getFrameURL frameName = jsFrame defJS body
+  where defJS = concat [
+          "function alertURL () {",
+            "var url = document.location.href;",
+            "window.prompt(\"URL of these results. Please, press down Ctrl-c or Cmd-c\",url);",
+          "}"
+          ]
+        body = concat [
+          "<div>",
+          "<input type=\"submit\" value=\"Get URL\" onclick=\"alertURL();\" style=\"font-size:16px\">",
           "</div>"
           ]
 

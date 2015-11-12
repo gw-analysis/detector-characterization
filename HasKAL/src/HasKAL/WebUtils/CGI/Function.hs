@@ -34,7 +34,7 @@ import Numeric (showFFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTimetuple, gps2localTime)
 import HasKAL.WebUtils.CGI.Data as Exports (Message, ParamCGI(..), MultiSelect(..), MonitorType(..), updateGps, updateMsg)
-import HasKAL.WebUtils.Javascript.Function (expandFont)
+import HasKAL.WebUtils.Javascript.Function (expandFont, getFrameURL)
 
 {--  Constants  --}
 chlistDir :: String
@@ -174,6 +174,7 @@ htmlFrame x = htmlHeader++x++htmlFooter
 
 cgiNavi :: ParamCGI -> String
 cgiNavi params = concat [
+  getFrameURL "plotframe" ++"<br>",
   "[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
   "&duration="++duration', uris, "\">&lt; Prev</a>] ",
   " [<a href=\"", path, "\">Back</a>] ",
@@ -315,7 +316,7 @@ geneChMap params x = concat [
   "<table border=\"1\" cellpadding=\"6\"><tr bgcolor=\"dddddd\"><th></th>",
   concat $ map (\(_, y, _) -> "<th>"++y++"</th>") x,
   concat $ map (geneChMapCore params chs) x,
-  "</table>"]
+  "</table><Hr>"]
   where chs = map (\(_, b, _) -> b) x
 
 geneChMapCore :: ParamCGI -> [String] -> (Message, String, [String]) -> String
@@ -353,7 +354,7 @@ geneRankTable params xs = concat [
                    concat $ map nthLabel [1..numNth],
                    concat $ map (geneRankTableCore params numNth) $ take len $ drop (len*n) xs,
                    "</table></td>"]) [0..(numRow-1)],
-  "</tr></table>"]
+  "</tr></table><Hr>"]
   where len = length xs `div` numRow
         numRow = 5
         numNth = 5
