@@ -61,7 +61,7 @@ main = do
 -- print $ nmon
 -- print $ head rms
 
- let color = [BLUE, RED, PINK]
+ let color = [BLUE, GREEN, RED, PINK, CYAN]
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_dailyRMSMon.png"
 

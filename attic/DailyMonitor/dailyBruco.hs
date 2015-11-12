@@ -9,6 +9,7 @@ import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.MonitorUtils.CoherenceMon.Function
 import HasKAL.WebUtils.DailySummaryPage
+import HasKAL.WebUtils.Javascript.Function (expandFont)
 import HasKAL.PlotUtils.HROOT.PlotGraph 
 
 import Data.Packed.Vector (Vector)
@@ -89,11 +90,12 @@ trd' (_,_,c) = c
 geneRankTable :: (String,String,String) -> String -> [(Double, [(Double, String)])] -> String 
 geneRankTable (yyyy,mm,dd) channel1 xs = concat [
   "<h3>Channel: "++channel1++"</h3>",
+  expandFont 3 1 "resizable",
   "<table cellspacing=\"10\"><tr>",
   concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
   "</tr><tr>",
   concat $ map (\n -> concat [
-                   "<td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
+                   "<td><table class=\"resizable\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
                    concat $ map nthLabel [1..numNth],
                    concat $ map (geneRankTableCore numNth (yyyy,mm,dd) channel1) $ take len $ drop (len*n) xs,
