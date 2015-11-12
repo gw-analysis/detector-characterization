@@ -71,7 +71,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ startBODY
               ++ addTitle pageTitle 
               ++ addDate date
-              ++ addLayout fnamehtmledCh fnamehtmledMo
+              ++ addLayout relativepthCh relativepthMo
               ++ addSubs subsystem
               ++ concat (for mons $ \mon -> layoutChannelBase mon titles tables ncol)
               ++ endHTML
