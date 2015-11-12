@@ -33,7 +33,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
   chs <- readFile chlist >>= \x -> return $ lines x
   mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
-  let pth = init $ splitOn "/" dir
+--  let pth = init $ splitOn "/" dir
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
   createDirectoryIfMissing True (home++"/public_html/"++dir)
   let fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
@@ -55,12 +55,24 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ addTitle date subsystem
               ++ startTABLE
               ++ startTBODY
-              ++ (layoutTitleTable titles tables ncol)
+              ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endTBODY
               ++ endTABLE
               ++ endHTML
   writeFile fnamehtml contents
 
+
+
+layoutChannelBase ch titles tables ncol = do
+  let titlesch = [x | x<-titles, isInfixOf ch x]
+      tablesch= [x | x<-tables, isInfixOf ch x]
+   in startTABLE
+       ++ startTBODY
+       ++ (layoutTitleTable titlesch tablesch ncol)
+       ++ endTBODY
+       ++ endTABLE
+
+for = flip map
 
 recurrentCreateDirectory _ [] = return ()
 recurrentCreateDirectory f (dir:dirs) = 
