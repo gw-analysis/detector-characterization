@@ -34,6 +34,7 @@ import Numeric (showFFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTimetuple, gps2localTime)
 import HasKAL.WebUtils.CGI.Data as Exports (Message, ParamCGI(..), MultiSelect(..), MonitorType(..), updateGps, updateMsg)
+import HasKAL.WebUtils.Javascript.Function (expandFont)
 
 {--  Constants  --}
 chlistDir :: String
@@ -342,11 +343,12 @@ geneChMapCore params chs (msg, ch1, xs) = result
 geneRankTable :: ParamCGI -> [(Double, [(Double, String)])] -> String 
 geneRankTable params xs = concat [
   "<h3>Channel: "++(head $ channel1 params)++"</h3>",
+  expandFont 3 1 "resizable",
   "<table cellspacing=\"10\"><tr>",
   concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(num-1)],
   "</tr><tr>",
   concat $ map (\n -> concat [
-                   "<td><table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
+                   "<td><table class=\"resizable\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\" >",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
                    concat $ map nthLabel [1..num],
                    concat $ map (geneRankTableCore params num) $ take len $ drop (len*n) xs,
@@ -370,6 +372,7 @@ geneRankTableCore params n (freq, res) = concat [
         url freq ch2 = "./date_2.cgi?Date=GPS&gps="++(fromJust $ gps params)++"&duration="++(duration params)++"&channel1="
                        ++(head $ channel1 params)++"&channel2="++ch2++"&monitor="++(head $ monitors params)
                        ++"&fmin="++(show $freq-10)++"&fmax="++(show $freq+10)
+ 
 
 {--  supplement function --}
 setDef :: String -> Int -> [Int] -> String
