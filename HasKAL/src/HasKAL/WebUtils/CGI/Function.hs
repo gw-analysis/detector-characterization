@@ -345,17 +345,21 @@ geneRankTable params xs = concat [
   "<h3>Channel: "++(head $ channel1 params)++"</h3>",
   expandFont 3 1 "resizable",
   "<table cellspacing=\"10\"><tr>",
-  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(num-1)],
+  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
   "</tr><tr>",
   concat $ map (\n -> concat [
                    "<td><table class=\"resizable\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\" >",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
-                   concat $ map nthLabel [1..num],
-                   concat $ map (geneRankTableCore params num) $ take len $ drop (len*n) xs,
-                   "</table></td>"]) [0..(num-1)],
+                   concat $ map nthLabel [1..numNth],
+                   concat $ map (geneRankTableCore params numNth) $ take len $ drop (len*n) xs,
+                   "</table></td>"]) [0..(numRow-1)],
   "</tr></table>"]
-  where len = length xs `div` num
-        num = 5
+  where len = length xs `div` numRow
+        numRow = 5
+        numNth = 5
+        nthLabel 1 = "<th>1st ch.</th>"
+        nthLabel 2 = "<th>2nd ch.</th>"
+        nthLabel 3 = "<th>3rd ch.</th>"
         nthLabel n = "<th>"++(show n)++"th ch.</th>"
 
 geneRankTableCore :: ParamCGI -> Int -> (Double, [(Double, String)]) -> String
