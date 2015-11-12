@@ -8,6 +8,9 @@ module HasKAL.WebUtils.DailySummaryPage
 , addStyle
 , startBODY
 , addTitle
+, addDate
+, addLayout
+, addSubs
 , startTABLE
 , startTBODY
 , startTR
@@ -36,27 +39,42 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
 --  let pth = init $ splitOn "/" dir
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
   createDirectoryIfMissing True (home++"/public_html/"++dir)
-  let fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
+  let pageTitle = "HasKAL: Daily Summary Page"
+      fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
       fname = fname' 
               ++ [c++"-"++date++"_"++"freq_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
               ++ [c++"-"++date++"_"++"amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       fnamepng = ["." </> x++".png"|x<-fname]
-      fnamehtml = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
+      fnamehtmledCh = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
+      fnamehtmledMo = home </> "public_html" </> dir </> date++"_"++subsystem++"_mon.html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
       tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
                 ++ [c++":"++"F_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
                 ++ [c++":"++"A_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       titles = map addTableTitle tagname
-      contents = startHTML
-              ++ addHEAD "32000"
+      contentsCh = startHTML
+              ++ addHEAD
               ++ addStyle
               ++ startBODY
-              ++ addTitle date subsystem
+              ++ addTitle pageTitle 
+              ++ addDate date
+              ++ addLayout fnamehtmledCh fnamehtmledMo
+              ++ addSubs subsystem
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
-  writeFile fnamehtml contents
-
+      contentsMo = startHTML
+              ++ addHEAD
+              ++ addStyle
+              ++ startBODY
+              ++ addTitle pageTitle 
+              ++ addDate date
+              ++ addLayout fnamehtmledCh fnamehtmledMo
+              ++ addSubs subsystem
+              ++ concat (for mons $ \mon -> layoutChannelBase mon titles tables ncol)
+              ++ endHTML
+  writeFile fnamehtmledCh contentsCh
+  writeFile fnamehtmledMo contentsMo
 
 
 layoutChannelBase ch titles tables ncol = do
@@ -68,7 +86,9 @@ layoutChannelBase ch titles tables ncol = do
        ++ endTBODY
        ++ endTABLE
 
+
 for = flip map
+
 
 recurrentCreateDirectory _ [] = return ()
 recurrentCreateDirectory f (dir:dirs) = 
@@ -99,7 +119,7 @@ startHTML = concat [
   ,"<html>"
   ]
 
-addHEAD phReloadTime = concat [
+addHEADJ phReloadTime = concat [
   "<head>"
   ,"<SCRIPT LANGUAGE=\"JavaScript\">"
   ,"<!--"
@@ -110,6 +130,15 @@ addHEAD phReloadTime = concat [
   ,"<title>Daily Summary Page</title>"
   ,"</head>"
   ]
+
+
+addHEAD = concat [
+  "<head>"
+  ,"<meta http-equiv=\"content-type\" content=\"text/html; charset=ISO-8859-1\">"
+  ,"<title>Daily Summary Page</title>"
+  ,"</head>"
+  ]
+
 
 addStyle = concat [
   "<style type=\"text/css\">"
@@ -134,11 +163,23 @@ addStyle = concat [
 
 startBODY = "<body>"
 
-addTitle phLocalTime phSubSystem = concat [
-  "<h1 style=\"color: rgb(51, 51, 255);\">HasKAL: Daily Summary Page</h1>"
-  ,"<br><h2>Local Time :"++phLocalTime++"</h2>"
-  ,"<br><h2>"++phSubSystem++"</h2>"
+addTitle x = concat ["<h1 style=\"color: rgb(51, 51, 255);\">"++x++"</h1>"]
+
+addDate x = concat ["<h2>Local Date :"++x++"</h2>"]
+
+addSubs x = concat ["<h2>"++x++"</h2>"]
+
+addLayout abshtmlch abshtmlmo = concat [
+  "<h2>"
+  , "Layout"
+  , "<br>"
+  , "<a href=\""++abshtmlch++"\"><b>- Channel Order</b></a>"
+  , "<br>"
+  , "<a href=\""++abshtmlmo++"\"><b>- Monitor Order</b></a>"
+  , "</h2>"
   ]
+
+addBR = "<br>"
 
 startTABLE = "<table cellpadding=\"2\" cellspacing=\"2\" border=\"1\" style=\"text-align: left;width: 100%%;\">"
 
