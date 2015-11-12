@@ -46,7 +46,9 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ [c++"-"++date++"_"++"amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtmledCh = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
+      relativepthCh = "." </> date++"_"++subsystem++".html"
       fnamehtmledMo = home </> "public_html" </> dir </> date++"_"++subsystem++"_mon.html"
+      relativepthMo = "." </> date++"_"++subsystem++"_mon.html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
       tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
@@ -59,7 +61,7 @@ genDailySummaryPage dir date chlist monlist subsystem ncol = do
               ++ startBODY
               ++ addTitle pageTitle 
               ++ addDate date
-              ++ addLayout fnamehtmledCh fnamehtmledMo
+              ++ addLayout relativepthCh relativepthMo
               ++ addSubs subsystem
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
@@ -169,13 +171,13 @@ addDate x = concat ["<h2>Local Date :"++x++"</h2>"]
 
 addSubs x = concat ["<h2>"++x++"</h2>"]
 
-addLayout abshtmlch abshtmlmo = concat [
+addLayout pathch pathmo = concat [
   "<h2>"
   , "Layout"
   , "<br>"
-  , "<a href=\""++abshtmlch++"\"><b>- Channel Order</b></a>"
+  , "<a href=\""++pathch++"\"><b>- Channel Order</b></a>"
   , "<br>"
-  , "<a href=\""++abshtmlmo++"\"><b>- Monitor Order</b></a>"
+  , "<a href=\""++pathmo++"\"><b>- Monitor Order</b></a>"
   , "</h2>"
   ]
 
