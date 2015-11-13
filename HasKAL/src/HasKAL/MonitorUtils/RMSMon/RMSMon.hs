@@ -48,11 +48,13 @@ rmsMoncore nmon duration fs freq yschunk = do
 --                 let gwpsd = gwOnesidedPSDVP yschunk nmon fs
                  let gwpsd = gwpsdV yschunk nmon fs
                      df = 1.0/duration :: Double 
-                     -- remove the elements of negative value or zero
-                     freq'' = snd $ partition (\(f1, f2) -> f1<=0.0 && f2<=0.0) freq
+                     -- remove the elements of zero
+                     freq1 = snd $ partition (\(f1, f2) -> f1==0.0 && f2==0.0) freq
+                     -- remove the elements of negative
+                     freq2 = snd $ partition (\(f1, f2) -> f1<0.0 || f2<0.0) freq1
                      -- remove the larger elements than Nyquist frequency
-                     freq' = snd $ partition (\(f1, f2) -> f1>(fs/2.0) || f2>(fs/2.0) ) freq''
-                 map sqrt $ map (*df) $ map (\(f1, f2) -> sumHoff fs gwpsd f1 f2) freq'
+                     freq3 = snd $ partition (\(f1, f2) -> f1>(fs/2.0) || f2>(fs/2.0) ) freq2
+                 map sqrt $ map (*df) $ map (\(f1, f2) -> sumHoff fs gwpsd f1 f2) freq3
 
 {-- Internal Functions --}
 sumHoff::Double -- ^ sampling rate [Hz]
