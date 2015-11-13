@@ -530,7 +530,7 @@ getFrVectUnitY frameFile channelName = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
-                unit' <- return (frvect_unitY v) :: IO (Ptr CChar) -- (= IO CString)
+                let unit' = (frvect_unitY v) :: (Ptr CChar) -- (= CString)
                 unit <- peekCString unit' :: IO String
                 c_FrVectFree ptr_v
                 c_FrFileIEnd ifile
