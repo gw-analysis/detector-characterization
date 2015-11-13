@@ -16,7 +16,8 @@ main = do
   genDailySummaryPage dir date chs mons' subsystem (read ncol::Int)
 
 
-removeCommentLines = concatMap (\x-> words $ take (head' $ elemIndices '#' x) x)
-head' x | x ==[] = 0 | otherwise = head x
+removeCommentLines = concatMap (\x-> words $ take (head' x $ elemIndices '#' x) x)
+
+head' y x | x ==[] = length y | otherwise = head x
 
 dealingwithLT xs = ["LTF"|x<-xs,x=="LT"] ++ ["LTA"|x<-xs,x=="LT"] ++[x|x<-xs,x/="LT"]
