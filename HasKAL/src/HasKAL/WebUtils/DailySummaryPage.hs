@@ -40,10 +40,10 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
   createDirectoryIfMissing True (home++"/public_html/"++dir)
   let pageTitle = "HasKAL: Daily Summary Page"
-      fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
+      fname' = [c++"-"++date++"_"++m|c<-chs,m<-mons, not . isInfixOf "LT" $ m]
       fname = fname' 
-              ++ [c++"-"++date++"_"++"freq_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
-              ++ [c++"-"++date++"_"++"amp_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+              ++ [c++"-"++date++"_"++"freq_"++m|c<-chs,m<-mons, isInfixOf "LTF" m]
+              ++ [c++"-"++date++"_"++"amp_"++m|c<-chs,m<-mons, isInfixOf "LTA" m]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtmledCh = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       relativepthCh = "." </> date++"_"++subsystem++".html"
@@ -51,9 +51,9 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
       relativepthMo = "." </> date++"_"++subsystem++"_mon.html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
-      tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "dailyLT" $ m]
-                ++ [c++":"++"F_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
-                ++ [c++":"++"A_"++m|c<-chs,m<-mons, isInfixOf "dailyLT" m]
+      tagname = [c++":"++m|c<-chs,m<-mons, not . isInfixOf "LT" $ m]
+                ++ [c++":"++"F_"++m|c<-chs,m<-mons, isInfixOf "LTF" m]
+                ++ [c++":"++"A_"++m|c<-chs,m<-mons, isInfixOf "LTA" m]
       titles = map addTableTitle tagname
       contentsCh = startHTML
               ++ addHEAD

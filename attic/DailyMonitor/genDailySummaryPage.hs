@@ -12,11 +12,11 @@ main = do
     _ -> error "Usage: genDailySummaryPage dir date chlist monlist subsystem ncol"
   chs <- readFile chlist >>= \x -> return $ removeCommentLines (lines x)
   mons <- readFile monlist >>= \x -> return $ removeCommentLines (lines x)
-  let mons' = map show $ sort $ map (\x->read x :: Monitor) mons
+  let mons' = map show $ sort $ map (\x->read x :: Monitor) (dealingwithLT mons)
   genDailySummaryPage dir date chs mons' subsystem (read ncol::Int)
 
 
 removeCommentLines = concatMap (\x-> words $ take (head' $ elemIndices '#' x) x)
 head' x | x ==[] = 0 | otherwise = head x
 
-
+dealingwithLT xs = ["LTF"|x<-xs,x=="LT"] ++ ["LTA"|x<-xs,x=="LT"] ++[x|x<-xs,x/="LT"]
