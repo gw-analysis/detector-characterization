@@ -36,8 +36,8 @@ main = do
       fcenter3 = 550    :: Double
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_amp_LT.png"
-      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_freq_LT.png"
+      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_LTA.png"
+      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_LTF.png"
       title = "LineTracker(RED=1st, BLUE=2nd): " ++ ch
       xlabel = "time [sec] at "++year++"/"++month++"/"++day
       
