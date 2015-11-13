@@ -255,6 +255,11 @@ readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 --                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataI v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (map fromIntegral array_vdata)
              --       frvect_r4 -> do
                     3 -> do
                       array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
@@ -294,6 +299,12 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr CDouble
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -335,6 +346,12 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr Double
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -376,6 +393,13 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      vcddat <- newForeignPtr_ (frvect_dataI v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      vcddat `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ci2cdV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -398,7 +422,7 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2cdV vcddat)
+                        return $ Just (cs2cdV vcddat)
 
 
 readFrameV :: String -> String -> IO (Maybe (V.Vector Double))
@@ -570,8 +594,11 @@ cs2dV = V.map fromIntegral
 cf2cdV :: V.Vector CFloat -> V.Vector CDouble
 cf2cdV = V.map realToFrac
 
-ci2cdV :: V.Vector CShort -> V.Vector CDouble
+ci2cdV :: V.Vector CInt -> V.Vector CDouble
 ci2cdV = V.map fromIntegral
+
+cs2cdV :: V.Vector CShort -> V.Vector CDouble
+cs2cdV = V.map fromIntegral
 
 
 
