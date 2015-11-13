@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailyCoherenceMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/10/01 13:52:28
+# Last Modified: 2015/11/13 15:08:07
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailyCoherenceMon
+TAR1= CoherenceMon
 TARs= ${TAR1}
 
 # dependency

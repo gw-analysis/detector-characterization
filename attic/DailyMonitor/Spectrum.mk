@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailySpectrum.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 15:03:53
+# Last Modified: 2015/11/13 15:09:02
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailySpectrum
+TAR1= Spectrum
 TARs= ${TAR1} 
 
 # dependency

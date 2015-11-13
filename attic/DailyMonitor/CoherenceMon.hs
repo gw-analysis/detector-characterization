@@ -14,7 +14,7 @@ main = do
   args <- getArgs
   (year, month, day, ch1, ch2) <- case length args of
                               5 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4)
-                              _ -> error "Usage: dailyCoherenceMon yyyy mm dd ch1 ch2"
+                              _ -> error "Usage: CoherenceMon yyyy mm dd ch1 ch2"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
@@ -22,7 +22,7 @@ main = do
       -- for CoherenceMon
       fftLength = 64   -- seconds
       -- for Plot
-      oFile = ch1++"_"++ch2++"-"++year++"-"++month++"-"++day++"_dailyCoherenceMon.png"
+      oFile = ch1++"_"++ch2++"-"++year++"-"++month++"-"++day++"_CoherenceMon.png"
       title = "CoherenceMon: " ++ ch1 ++ " vs " ++ ch2
       xlabel = "Date: "++year++"/"++month++"/"++day
 

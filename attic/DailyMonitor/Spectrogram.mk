@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailySpectrogram.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 15:08:51
+# Last Modified: 2015/11/13 15:08:52
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailySpectrogram
+TAR1= Spectrogram
 TARs= ${TAR1} 
 
 # dependency

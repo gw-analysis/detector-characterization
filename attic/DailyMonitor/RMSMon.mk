@@ -2,14 +2,14 @@
 
 HC=ghc --make
 
-OBJ1=dailyRMSMon.hs
+OBJ1=RMSMon.hs
 
 DEP1 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 LIBLINK= -lFrame -lm -lgsl -lgslcblas
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=sypoliclink dailyRMSMon
+TARGET=sypoliclink RMSMon
 
 #########################################
 # link path
@@ -24,9 +24,9 @@ all:$(TARGET)
 sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
-dailyRMSMon:${OBJ1} ${DEP1}
-	-ghc --make -o $@ dailyRMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc --make -o $@ dailyRMSMon.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+RMSMon:${OBJ1} ${DEP1}
+	-ghc --make -o $@ RMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ RMSMon.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
 
 clean:

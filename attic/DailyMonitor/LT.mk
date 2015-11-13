@@ -5,7 +5,7 @@ HC = ghc -O2 -optc -std=c99
 USELIB= libframe kagali
 
 # program
-TAR1= dailyLT
+TAR1= LT
 TARs= ${TAR1}
 
 # dependency

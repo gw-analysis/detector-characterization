@@ -15,7 +15,7 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailySpectrogram yyyy mm dd channel"
+                             _ -> error "Usage: Spectrogram yyyy mm dd channel"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
@@ -23,7 +23,7 @@ main = do
       -- for Spectrogram
       fftLength = 1    -- seconds
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailySpectrogram.png"
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrogram.png"
       title = "Spectrogram: " ++ ch
       xlabel = "Date: "++year++"/"++month
 

@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailyTimeSeries.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 15:15:24
+# Last Modified: 2015/11/13 15:09:10
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailyTimeSeries
+TAR1= TimeSeries
 TARs= ${TAR1} 
 
 # dependency

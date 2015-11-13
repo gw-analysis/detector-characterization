@@ -15,7 +15,7 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailyRMon yyyy mm dd channel"
+                             _ -> error "Usage: RMon yyyy mm dd channel"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
@@ -25,7 +25,7 @@ main = do
       freqResol = 16   -- Hz
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailyRMon.png"
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_RMon.png"
       title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 

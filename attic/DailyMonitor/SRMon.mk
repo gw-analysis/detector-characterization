@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailySRMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 14:55:48
+# Last Modified: 2015/11/13 15:08:42
 #******************************************#
 
 # compiler option
@@ -11,8 +11,8 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailySRMon
-TAR2= dailySRMon_reduceMemory
+TAR1= SRMon
+TAR2= SRMon_reduceMemory
 TARs= ${TAR1} 
 
 # dependency

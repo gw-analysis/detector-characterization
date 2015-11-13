@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: DailySensMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/10 22:06:36
+# Last Modified: 2015/11/13 15:15:13
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= DailySensMon
+TAR1= SensMon
 TARs= ${TAR1}
 
 # dependency
