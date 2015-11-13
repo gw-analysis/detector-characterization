@@ -32,9 +32,9 @@ import System.Directory (doesDirectoryExist, createDirectoryIfMissing, createDir
 import System.FilePath ((</>))
 import System.Environment (getEnv)
 
-genDailySummaryPage dir date chlist monlist subsystem ncol = do
-  chs <- readFile chlist >>= \x -> return $ lines x
-  mons <- readFile monlist >>= \x -> return $ lines x
+genDailySummaryPage dir date chs mons subsystem ncol = do
+--  chs <- readFile chlist >>= \x -> return $ lines x
+--  mons <- readFile monlist >>= \x -> return $ lines x
   home <- getEnv "HOME"
 --  let pth = init $ splitOn "/" dir
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
