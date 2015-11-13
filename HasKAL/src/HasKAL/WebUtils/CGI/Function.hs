@@ -34,7 +34,7 @@ import Numeric (showFFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTimetuple, gps2localTime)
 import HasKAL.WebUtils.CGI.Data as Exports (Message, ParamCGI(..), MultiSelect(..), MonitorType(..), updateGps, updateMsg)
-import HasKAL.WebUtils.Javascript.Function (expandFont, getFrameURL)
+import HasKAL.WebUtils.Javascript.Function -- .(expandFont, getFrameURL)
 
 {--  Constants  --}
 chlistDir :: String
@@ -174,8 +174,8 @@ htmlFrame x = htmlHeader++x++htmlFooter
 
 cgiNavi :: ParamCGI -> String
 cgiNavi params = concat [
-  getFrameURL "plotframe" ++"<br>",
-  "[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
+  "<div>"++getFrameURL++mailtoURL++"</div>",
+  "<br>[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
   "&duration="++duration', uris, "\">&lt; Prev</a>] ",
   " [<a href=\"", path, "\">Back</a>] ",
   " [<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') + (read duration')),

@@ -1,7 +1,8 @@
 
 module HasKAL.WebUtils.Javascript.Function (
   expandFont,
-  getFrameURL
+  getFrameURL,
+  mailtoURL
 ) where
 
 
@@ -32,18 +33,32 @@ expandFont defPx shiftPx className = jsFrame defJS body
           "</div>"
           ]
 
-getFrameURL :: String -> String
-getFrameURL frameName = jsFrame defJS body
+getFrameURL :: String
+getFrameURL = jsFrame defJS body
   where defJS = concat [
           "function alertURL () {",
             "var url = document.location.href;",
-            "window.prompt(\"URL of these results. Please, press down Ctrl-c or Cmd-c\",url);",
+            "window.prompt(\"URL of these results.\",url);",
           "}"
           ]
         body = concat [
-          "<div>",
+          "<span>",
           "<input type=\"submit\" value=\"Get URL\" onclick=\"alertURL();\" style=\"font-size:16px\">",
-          "</div>"
+          "</span>"
+          ]
+
+mailtoURL :: String
+mailtoURL = jsFrame defJS body
+  where defJS = concat [
+          "function mailtoURL (){",
+          "var url = document.location.href;",
+          "window.open('mailto:?body='+url);",
+          "}"
+          ]
+        body = concat [
+          "<span>",
+          "<input type=\"submit\" value=\"Send URL\" onclick=\"mailtoURL();\" style=\"font-size:16px\">",
+          "</span>"
           ]
 
 {-- Internal Functions --}
