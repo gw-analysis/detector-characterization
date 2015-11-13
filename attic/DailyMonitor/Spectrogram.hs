@@ -2,6 +2,7 @@
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
 import Data.Packed.Vector (subVector)
+import Numeric (showGFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -21,10 +22,10 @@ main = do
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
       -- for Spectrogram
-      fftLength = 1    -- seconds
+      fftLength = 120    -- seconds
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrogram.png"
-      title = "Spectrogram: " ++ ch
+      title = "Spectrogram " ++"(df="++(showGFloat (Just 4) (1/fftLength) "")++"): " ++ ch
       xlabel = "Date: "++year++"/"++month
 
   {-- read data --}
@@ -41,7 +42,7 @@ main = do
 
   {-- main --}
   let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
+  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
 
 
 {-- Internal Functions --}

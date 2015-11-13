@@ -2,6 +2,7 @@
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
 import Data.Packed.Vector (subVector)
+import Numeric (showGFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -21,10 +22,10 @@ main = do
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
       -- for Spectrum
-      fftLength = 1    -- seconds
+      fftLength = 120  -- seconds
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrum.png"
-      title = "Spectrum " ++"(df="++(show $ 1 / fftLength)++"): " ++ ch
+      title = "Spectrum " ++"(df="++(showGFloat (Just 4) (1/fftLength) "")++"): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 
   {-- read data --}
