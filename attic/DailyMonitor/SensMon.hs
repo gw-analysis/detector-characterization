@@ -28,7 +28,7 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
      4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-     _ -> error "Usage: dailySensMon yyyy mm dd ch"
+     _ -> error "Usage: SensMon yyyy mm dd ch"
 
   let gps = read (time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST") :: Int
   file <- kagraDataFind (fromIntegral gps) 3600 ch >>= \maybef ->
@@ -39,7 +39,7 @@ main = do
       fu = fs/2
       p = PlotParam
             { title = "SensMon: " ++ ch
-            , filename = ch++"-"++year++"-"++month++"-"++day++"_DailySensMon.png"
+            , filename = ch++"-"++year++"-"++month++"-"++day++"_SensMon.png"
             , xlabel = "frequency [Hz]"
             , ylabel = "ASD [1/rHz]"
             , zlabel = "count"

@@ -19,7 +19,7 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailyRMon yyyy mm dd channel"
+                             _ -> error "Usage: LT yyyy mm dd channel"
                    
   {-- parameters --}
   let duration = 86400 -- seconds
@@ -36,8 +36,8 @@ main = do
       fcenter3 = 550    :: Double
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
       -- for Plot
-      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_amp_dailyLT.png"
-      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_freq_dailyLT.png"
+      oFile0 = ch++"-"++year++"-"++month++"-"++day++"_amp_LT.png"
+      oFile1 = ch++"-"++year++"-"++month++"-"++day++"_freq_LT.png"
       title = "LineTracker(RED=1st, BLUE=2nd): " ++ ch
       xlabel = "time [sec] at "++year++"/"++month++"/"++day
       

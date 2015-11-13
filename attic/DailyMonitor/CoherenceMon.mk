@@ -1,16 +1,21 @@
+#******************************************#
+#     File Name: dailyCoherenceMon.mk
+#        Author: Takahiro Yamamoto
+# Last Modified: 2015/11/13 15:08:07
+#******************************************#
+
 # compiler option
-HC = ghc -O2 -optc -std=c99
+HC = ghc -O2
 
 # use library
-USELIB= libframe kagali
+USELIB= libframe
 
 # program
-TAR1= dailyLT
+TAR1= CoherenceMon
 TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-CSRC = ./HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
 DEPs= ${DEP1}
 
 #########################################
@@ -24,7 +29,7 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ${DEPs} ${CSRC}
+${TAR1}: ${TAR1}.hs ${DEPs}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 

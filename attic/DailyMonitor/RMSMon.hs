@@ -24,7 +24,7 @@ main = do
      8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
      6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
      4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "10", "50", "200", "300", "1000")
-     _ ->  error "Usage: dailyRMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\ndailyRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000"
+     _ ->  error "Usage: RMSMon channel yyyy mm dd (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\nRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000"
 
 
  {-- parameters --}
@@ -63,7 +63,7 @@ main = do
 
  let color = [BLUE, GREEN, RED, PINK, CYAN]
      title = setTitle f1low f1high f2low f2high f3low f3high channel
-     fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_dailyRMSMon.png"
+     fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
 
  oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
 -- oPlotDateV Linear LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(0,rms_max*1.2)) gps rms

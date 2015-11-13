@@ -1,7 +1,7 @@
 #******************************************#
-#     File Name: dailyCoherenceMon.mk
+#     File Name: dailyBruco.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/10/01 13:52:28
+# Last Modified: 2015/11/13 15:07:59
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailyCoherenceMon
+TAR1= Bruco
 TARs= ${TAR1}
 
 # dependency

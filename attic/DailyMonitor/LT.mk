@@ -1,23 +1,19 @@
-#******************************************#
-#     File Name: DailySensMon.mk
-#        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/10 22:06:36
-#******************************************#
-
 # compiler option
-HC = ghc -O2
+HC = ghc -O2 -optc -std=c99
 
 # use library
-USELIB= libframe
+USELIB= libframe kagali
 
 # program
-TAR1= DailySensMon
+TAR1= LT
 TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
+CSRC = ./HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
 DEPs= ${DEP1}
 
+#########################################
 # link path
 ifneq (${USELIB},)
 CFLAGS=`pkg-config --cflags ${USELIB}`
@@ -28,12 +24,12 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ${DEPs}
+${TAR1}: ${TAR1}.hs ${DEPs} ${CSRC}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
-	rm -f ./*~ ./*.o ./*.hi
+	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
 
 cleanall: clean
 	rm -f ${TARs}

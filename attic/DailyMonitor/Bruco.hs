@@ -22,7 +22,7 @@ main = do
   args <- getArgs
   (year, month, day, chlst) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailyBruco yyyy mm dd ch.lst"
+                             _ -> error "Usage: Bruco yyyy mm dd ch.lst"
 
   {-- parameters --}
   let gps = read $ time2gps $ year+-+month+-+day++" 00:00:00 JST"
@@ -61,7 +61,8 @@ main = do
     startHTML
     ++ addStyle 
     ++ startBODY 
-    ++ addTitle (year+-+month+-+day) "Bruco"
+    ++ addTitle "Bruco"
+    ++ addDate (year+-+month+-+day)
     ++ body
     ++ endHTML
   
@@ -70,7 +71,7 @@ main = do
 hBrucoPng :: String -> Double -> (Double, Vector Double, String) -> [(Double, Vector Double, String)] -> IO [(Double, [(Double, String)])]
 hBrucoPng dateStr sec (fsx, xt, xch) yts = do
   let cohResults = map (\x -> coherenceMon sec fsx (fst' x) xt (snd' x) ) yts
-  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "coh(f)^2") 0.05 (xch++" vs "++x) (xch+-+x+-+dateStr++"_dailyBruco.png") ((0,0),(0,0)) y)
+  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "coh(f)^2") 0.05 (xch++" vs "++x) (xch+-+x+-+dateStr++"_Bruco.png") ((0,0),(0,0)) y)
     (map trd' yts) cohResults
   let cohList = toLists.fromColumns $ map snd cohResults
       fvec = [0, 1/sec..]
@@ -123,7 +124,7 @@ geneRankTableCore n (yyyy,mm,dd) ch1 (freq, res) = concat [
                   | val > 0.4 = "\"#ffeeee\""
                   | otherwise = "\"#ffffff\""
         n' = min n (length res)
-        url ch2 = "./"++ch1+-+ch2+-+yyyy+-+mm+-+dd++"_dailyBruco.png"
+        url ch2 = "./"++ch1+-+ch2+-+yyyy+-+mm+-+dd++"_Bruco.png"
 
 
 show0 :: Int -> String -> String
