@@ -76,7 +76,7 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
 
 layoutChannelBase ch titles tables ncol = do
   let titlesch = [x | x<-titles, isInfixOf (":"++ch) x]
-      tablesch= [x | x<-tables, isInfixOf (":"++ch) x]
+      tablesch= [x | x<-tables, isInfixOf ("_"++ch) x]
    in startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
