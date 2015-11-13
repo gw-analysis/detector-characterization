@@ -1,7 +1,7 @@
 #******************************************#
-#     File Name: dailySpectrum.mk
+#     File Name: DailySensMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/03 15:03:53
+# Last Modified: 2015/11/13 15:15:13
 #******************************************#
 
 # compiler option
@@ -11,14 +11,13 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailySpectrum
-TARs= ${TAR1} 
+TAR1= SensMon
+TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 DEPs= ${DEP1}
 
-#########################################
 # link path
 ifneq (${USELIB},)
 CFLAGS=`pkg-config --cflags ${USELIB}`
@@ -34,7 +33,7 @@ ${TAR1}: ${TAR1}.hs ${DEPs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
-	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
+	rm -f ./*~ ./*.o ./*.hi
 
 cleanall: clean
 	rm -f ${TARs}

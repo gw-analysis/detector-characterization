@@ -15,7 +15,7 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailySpectrum yyyy mm dd channel"
+                             _ -> error "Usage: Spectrum yyyy mm dd channel"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
@@ -23,7 +23,7 @@ main = do
       -- for Spectrum
       fftLength = 1    -- seconds
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailySpectrum.png"
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrum.png"
       title = "Spectrum " ++"(df="++(show $ 1 / fftLength)++"): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
 

@@ -34,7 +34,7 @@ import Numeric (showFFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTimetuple, gps2localTime)
 import HasKAL.WebUtils.CGI.Data as Exports (Message, ParamCGI(..), MultiSelect(..), MonitorType(..), updateGps, updateMsg)
-import HasKAL.WebUtils.Javascript.Function (expandFont)
+import HasKAL.WebUtils.Javascript.Function -- .(expandFont, getFrameURL)
 
 {--  Constants  --}
 chlistDir :: String
@@ -174,7 +174,8 @@ htmlFrame x = htmlHeader++x++htmlFooter
 
 cgiNavi :: ParamCGI -> String
 cgiNavi params = concat [
-  "[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
+  "<div>"++getFrameURL++mailtoURL++"</div>",
+  "<br>[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
   "&duration="++duration', uris, "\">&lt; Prev</a>] ",
   " [<a href=\"", path, "\">Back</a>] ",
   " [<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') + (read duration')),
@@ -260,10 +261,10 @@ channelForm params flags = concat [
 monitorForm :: MultiSelect -> [(Bool, MonitorType, String)] -> String
 monitorForm x mons = concat [
   --"<div><h3> Monitors: </h3>",
-  "<div><fieldset><legend style=\"font-size:16pt\"> Monitors: </legend>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Monitors: </legend><nobr>",
   concat $ map (\(c, s, l) -> do
-                   "<input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp") mons,
-  "</fieldset>",
+                   "<input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp<wbr>") mons,
+  "</nobr></fieldset>",
   "</div>"
   ]
   where chk True = "checked=\"checked\""
@@ -315,7 +316,7 @@ geneChMap params x = concat [
   "<table border=\"1\" cellpadding=\"6\"><tr bgcolor=\"dddddd\"><th></th>",
   concat $ map (\(_, y, _) -> "<th>"++y++"</th>") x,
   concat $ map (geneChMapCore params chs) x,
-  "</table>"]
+  "</table><Hr>"]
   where chs = map (\(_, b, _) -> b) x
 
 geneChMapCore :: ParamCGI -> [String] -> (Message, String, [String]) -> String
@@ -345,17 +346,21 @@ geneRankTable params xs = concat [
   "<h3>Channel: "++(head $ channel1 params)++"</h3>",
   expandFont 3 1 "resizable",
   "<table cellspacing=\"10\"><tr>",
-  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(num-1)],
+  concat $ map (\n -> "<th><nobr>"++(show.fst.head $ drop (len*n) xs)++"Hz~</nobr></th>") [0..(numRow-1)],
   "</tr><tr>",
   concat $ map (\n -> concat [
                    "<td><table class=\"resizable\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\" >",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
-                   concat $ map nthLabel [1..num],
-                   concat $ map (geneRankTableCore params num) $ take len $ drop (len*n) xs,
-                   "</table></td>"]) [0..(num-1)],
-  "</tr></table>"]
-  where len = length xs `div` num
-        num = 5
+                   concat $ map nthLabel [1..numNth],
+                   concat $ map (geneRankTableCore params numNth) $ take len $ drop (len*n) xs,
+                   "</table></td>"]) [0..(numRow-1)],
+  "</tr></table><Hr>"]
+  where len = length xs `div` numRow
+        numRow = 5
+        numNth = 5
+        nthLabel 1 = "<th>1st ch.</th>"
+        nthLabel 2 = "<th>2nd ch.</th>"
+        nthLabel 3 = "<th>3rd ch.</th>"
         nthLabel n = "<th>"++(show n)++"th ch.</th>"
 
 geneRankTableCore :: ParamCGI -> Int -> (Double, [(Double, String)]) -> String

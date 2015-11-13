@@ -6,8 +6,8 @@ import Data.Packed.Vector (subVector)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
-import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
+import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
+import HasKAL.SpectrumUtils.Function (mapSpectrogram)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 
 
@@ -15,20 +15,16 @@ main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailySRMon yyyy mm dd channel"
+                             _ -> error "Usage: Spectrogram yyyy mm dd channel"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
-      -- for SRMon
+      -- for Spectrogram
       fftLength = 1    -- seconds
-      srmLength = 3600 -- seconds
-      timeShift = 3600 -- seconds
-      freqResol = 16   -- Hz
-      quantile  = 0.99 -- 0 < quantile < 1
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailySRMon.png"
-      title = "StudentRayleighMon: " ++ ch
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrogram.png"
+      title = "Spectrogram: " ++ ch
       xlabel = "Date: "++year++"/"++month
 
   {-- read data --}
@@ -44,10 +40,8 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
-      hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-      nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
-  histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
+  let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
+  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
 
 
 {-- Internal Functions --}

@@ -1,8 +1,17 @@
-DailySensMon
-dailyRMSMon
-dailyRMon
-dailySRMon
-dailyTimeSeries
-dailySpectrum
-dailySpectrogram
-dailyLT
+######  '#' is prefix of comment
+#--> Sensitivity Monitor
+SensMon
+#--> RMS Monitor
+RMSMon
+#--> Rayleigh Monitor
+RMon
+#--> Student Rayleigh Monitor
+SRMon
+#--> Time Series Plot
+TimeSeries
+#--> Spectrum Plot
+Spectrum
+#--> Spectrogram Plot
+Spectrogram
+#--> Line Tracking
+LT

@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailyRMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/10/01 00:51:49
+# Last Modified: 2015/11/13 15:08:23
 #******************************************#
 
 # compiler option
@@ -11,7 +11,7 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailyRMon
+TAR1= RMon
 TARs= ${TAR1}
 
 # dependency

@@ -1,30 +1,26 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
+import Data.Packed.Vector (subVector, dim, fromList)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
-import HasKAL.SpectrumUtils.Function (mapSpectrogram)
-import HasKAL.PlotUtils.HROOT.PlotGraph3D
+import HasKAL.PlotUtils.HROOT.PlotGraph
 
 
 main = do
   args <- getArgs
   (year, month, day, ch) <- case length args of
                              4 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-                             _ -> error "Usage: dailySpectrogram yyyy mm dd channel"
+                             _ -> error "Usage: TimeSeries yyyy mm dd channel"
 
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
-      -- for Spectrogram
-      fftLength = 1    -- seconds
       -- for Plot
-      oFile = ch++"-"++year++"-"++month++"-"++day++"_dailySpectrogram.png"
-      title = "Spectrogram: " ++ ch
+      oFile = ch++"-"++year++"-"++month++"-"++day++"_TimeSeries.png"
+      title = "TimeSeries: " ++ ch
       xlabel = "Date: "++year++"/"++month
 
   {-- read data --}
@@ -40,8 +36,8 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  histgram2dDateM LogZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
+  let tvec = fromList [0, 1/fs..(fromIntegral $ dim dat - 1)/fs]
+  plotDateV Linear Line 1 RED (xlabel, "amplitude") 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat)
 
 
 {-- Internal Functions --}

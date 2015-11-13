@@ -1,93 +1,26 @@
--- test code of HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
--- read 1 frame data and for each channel data, calculate correlation value.
+import qualified Data.Vector.Generic as DVG
+import qualified Numeric.LinearAlgebra as NLA
+import Data.Maybe (fromMaybe, fromJust)
 
-
--- usage: Neew one argument (Frame File)
--- check_correlation /data/ligo/archive/frames/S6/L1/LLO/L-L1_RDS_R_L1-9592/L-L1_RDS_R_L1-959200000-64.gwf
-
--- First you must execute below command
--- setupChannelList.sh
-
-
-import Numeric.LinearAlgebra  --subVector
-import Numeric --showFFloat
-import Control.Monad -- forM
-import System.Environment -- getArgs
---import System.Cmd -- system
-import System.Process -- system
-import Data.List.Split -- splitOn
+import System.Environment (getArgs)
 
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
-import HasKAL.FrameUtils.FrameUtils -- read Frame file
---import HasKAL.PlotUtils.PlotUtilsHROOT
---import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
 
-
---main IO()
 main = do
 
+ let data1 = NLA.fromList [1..10] :: NLA.Vector Double
+     data2 = NLA.fromList [5,2,3,1,57,4,2,4,5,7] :: NLA.Vector Double
+     data3 = NLA.fromList [2,3,1,57,4,2,4,5,7,8] :: NLA.Vector Double
 
- -- now these channel list is written explicitly.
- -- but future work remove these channel list and in this source, channel list is calculated.
- -- /usr/bin/FrChannels
--- let channelList = ["L1:OMC-TT1_SUSYAW_IN1_DAQ", "L1:OMC-TT2_SUSYAW_IN1_DAQ", "L1:OMC-TT1_SUSPIT_IN1_DAQ","L1:OMC-TT2_SUSPIT_IN1_DAQ","L1:OMC-TT1_SUSPOS_IN1_DAQ","L1:OMC-TT2_SUSPOS_IN1_DAQ"]
+ let rValue1 = takeCorrelationV Peason data1 data2 2
+ print rValue1
 
+ let rValue2 = takeCorrelationV Peason data2 data1 2
+ print rValue2
 
- -- how size slide
- let fs = "128"::String
+ let rValue3 = takeCorrelationV Peason data2 data3 2
+ print rValue3
 
-
- [frameFileName] <- getArgs
- print $ frameFileName
- let getGpsTime = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" frameFileName :: Integer
- --print gpsTime
- 
-
- -- read Channel List
- channelList'' <- readFile "channelList.txt"
- let channelList' = map words $ lines channelList''
- let channelList  = map (!!0) channelList'
- --channelList <- getChannelList frameFileName 959200000
-
-
- -- calculate correlation value
- result <- forM channelList $ \channel1 -> do
-
-  readData1 <- readFrame channel1 (frameFileName)
-  let data1  = map realToFrac (eval readData1)
-      xdata1  = take (length data1) [1,2..]
-
-  {-
-  writeFile "tmp.txt" $ show (eval readData1)
-  let doCommand = "/bin/mv tmp.txt" ++ " " ++ channel1 ++ ".txt"
-  system doCommand
-  -}
-
-  result' <- forM channelList $ \channel2 -> do
-
-   readData2 <- readFrame channel2 (frameFileName)
-   let data2 = map realToFrac (eval readData2)
-       xdata2 = take (length data2) [1,2..]
-  
-
-   let rValue = maximum $ takeCorrelation Peason data1 data2 1
-   let rValue_10 = read (showFFloat (Just 10) rValue "")::Double
-
-   {-
-   let outputFile = "pic__" ++ (show getGpsTime) ++ "__" ++(show rValue_10) ++  "__" ++ channel1 ++ "___" ++ channel2 ++ ".png"
-   plotSaveAsPicture data1 data2 "" "" Linear Dot outputFile
-   -}
-   
-   --return $ maximum $ twoChannelData2Correlation data1 data2 1 :: IO Double
-   --return $ ( read (showFFloat (Just 10) rValue "") ::Double)
-
-   return $ (showFFloat (Just 10) rValue "" ) ++ " " ++ channel1 ++ " " ++ channel2
-  return result'
-
-
- print $ concat result
- 
- let resultFile = "result__" ++ (show getGpsTime) ++ ".txt"
- writeFile resultFile $ unlines $ map show $ concat result
-
+ let rValue4 = takeCorrelationV Peason data3 data2 2
+ print rValue4

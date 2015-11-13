@@ -8,7 +8,8 @@ import System.Directory (doesFileExist)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
+import HasKAL.SpectrumUtils.Function (mapSpectrum)
 import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMon)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV)
@@ -68,13 +69,13 @@ process params = do
    _ -> do
      fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
      let dat1 = fromJust datMaybe
-         snf1 = gwpsdV dat1 (truncate fs1) fs1
+         snf1 = gwOnesidedPSDV dat1 (truncate fs1) fs1
          refpng = pngDir++ch1++"_"++gps'++"_"++"REFSPE"++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
      refExist <- doesFileExist refpng
      case refExist of
       True -> return ()
-      False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/Hz") 0.05 ("Spectrum: "++ch1) refpng
-               ((read fmin',read fmax'),(0,0)) $ (\(x, y) -> (V.take (V.length x `div`2) x, V.take (V.length x `div`2) y)) snf1
+      False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch1) refpng
+               ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf1
      result <- forM chs $ \ch2 -> do
        datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
        case datMaybe2 of
@@ -82,13 +83,13 @@ process params = do
         _ -> do
           fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
           let dat2 = fromJust datMaybe2
-              snf2 = gwpsdV dat2 (truncate fs2) fs2
+              snf2 = gwOnesidedPSDV dat2 (truncate fs2) fs2
               refpng2 = pngDir++ch2++"_"++gps'++"_"++"REFSPE"++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
           refExist2 <- doesFileExist refpng2
           case refExist2 of
            True -> return () -- 既にPNGがあれば何もしない
-           False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/Hz") 0.05 ("Spectrum: "++ch2) refpng2
-                    ((read fmin',read fmax'),(0,0)) $ (\(x, y) -> (V.take (V.length x `div`2) x, V.take (V.length x `div`2) y)) snf2
+           False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch2) refpng2
+                    ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf2
           files <- forM monitors' $ \mon -> do
             let pngfile = pngDir++ch1++"-vs-"++ch2++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
             pngExist <- doesFileExist pngfile

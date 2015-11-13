@@ -133,7 +133,6 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   HAF.setGrid tCan
-  HRS.setLog' tCan log
   HAF.setPadMargin 0.15 1 1 1
 
   tGras <- CM.forM dats $ \(freqV, specV) -> do 
@@ -146,7 +145,15 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
   setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
   CM.zipWithM_ setXYLabel' tGras xyLables -- lable (X軸、Y軸)
+  case log of -- Y軸はsetRangeの前にLogにしないと上手くいかない
+   LogY -> HRS.setLog' tCan LogY
+   LogXY -> HRS.setLog' tCan LogY
+   _     -> return ()
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+  case log of -- X軸はsetRangeの後にLogにしないと上手くいかない
+   LogX -> HRS.setLog' tCan LogX
+   LogXY -> HRS.setLog' tCan LogX
+   _     -> return ()
   mapM (flip setLabelSize' labelSize) tGras -- font size
 
   case multi of -- :: IO ()
@@ -157,8 +164,8 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
       CM.forM_ [1..(min 4 $ length dats)] $ \lambda -> do
         HR.cd tCan (toEnum $ lambda)
         draws' [tGras !! (lambda-1)] mark
-
   HRS.runOrSave' tCan tApp fname
+
   CM.mapM HR.delete tGras
   HR.delete tCan
 

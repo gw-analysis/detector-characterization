@@ -1,7 +1,7 @@
 #******************************************#
-#     File Name: dailyBruco.mk
+#     File Name: dailySpectrogram.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/06 16:16:01
+# Last Modified: 2015/11/13 15:08:52
 #******************************************#
 
 # compiler option
@@ -11,8 +11,8 @@ HC = ghc -O2
 USELIB= libframe
 
 # program
-TAR1= dailyBruco
-TARs= ${TAR1}
+TAR1= Spectrogram
+TARs= ${TAR1} 
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
