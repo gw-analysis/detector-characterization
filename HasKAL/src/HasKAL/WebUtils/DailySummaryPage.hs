@@ -68,15 +68,25 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               ++ addDate date
               ++ addLayout relativepthCh relativepthMo
               ++ addSubs subsystem
-              ++ concat (for mons $ \mon -> layoutChannelBase mon titles tables ncol)
+              ++ concat (for mons $ \mon -> layoutMonitorBase mon titles tables ncol)
               ++ endHTML
   writeFile fnamehtmledCh contentsCh
   writeFile fnamehtmledMo contentsMo
 
 
+layoutMonitorBase mon titles tables ncol = do
+  let titlesch = [x | x<-titles, isInfixOf (":"++mon) x]
+      tablesch= [x | x<-tables, isInfixOf ("_"++mon) x]
+   in startTABLE
+       ++ startTBODY
+       ++ (layoutTitleTable titlesch tablesch ncol)
+       ++ endTBODY
+       ++ endTABLE
+
+
 layoutChannelBase ch titles tables ncol = do
-  let titlesch = [x | x<-titles, isInfixOf (":"++ch) x]
-      tablesch= [x | x<-tables, isInfixOf ("_"++ch) x]
+  let titlesch = [x | x<-titles, isInfixOf ch x]
+      tablesch= [x | x<-tables, isInfixOf ch x]
    in startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
