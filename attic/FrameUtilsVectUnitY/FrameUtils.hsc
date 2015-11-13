@@ -426,7 +426,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2dV' vcddat)
+                        return $ Just (ci2dV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -449,7 +449,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2dV vcddat)
+                        return $ Just (cs2dV vcddat)
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
@@ -561,11 +561,11 @@ cd2dV = V.map realToFrac
 cf2dV :: V.Vector CFloat -> V.Vector Double
 cf2dV = V.map realToFrac
 
-ci2dV' :: V.Vector CInt -> V.Vector Double
-ci2dV' = V.map fromIntegral
-
-ci2dV :: V.Vector CShort -> V.Vector Double
+ci2dV :: V.Vector CInt -> V.Vector Double
 ci2dV = V.map fromIntegral
+
+cs2dV :: V.Vector CShort -> V.Vector Double
+cs2dV = V.map fromIntegral
 
 cf2cdV :: V.Vector CFloat -> V.Vector CDouble
 cf2cdV = V.map realToFrac
