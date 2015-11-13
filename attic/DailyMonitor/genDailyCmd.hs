@@ -48,12 +48,12 @@ main = do
      _ -> error "Usage: genDailyCmd master.lst yyyy mm dd"
 
   {-- read master file --}
-  flist <- liftM (map words.commentFilt.lines) $ readFile masterFile
+  flist <- liftM (commentFilter 2.lines) $ readFile masterFile
 
   {-- read each file --}
   chmonlst <- liftM concat $ forM flist $ \[chfile, monfile] -> do
-    monlst <- liftM (commentFilt.lines) $ readFile monfile :: IO [MonName]
-    chlst <- liftM (commentFilt.lines) $ readFile chfile :: IO [ChName]
+    monlst <- liftM (concat.(commentFilter 1).lines) $ readFile monfile :: IO [MonName]
+    chlst <- liftM (concat.(commentFilter 1).lines) $ readFile chfile :: IO [ChName]
     return $ exactaBox monlst chlst :: IO [(MonName, ChName)]
 
   {--  filter  --}
@@ -64,8 +64,8 @@ main = do
     putStrLn $ mon ++++ yyyy ++++ mm ++++ dd ++++ ch
 
 {-- internal functions --}
-commentFilt :: [String] -> [String]
-commentFilt xs = filter (not.isPrefixOf "#") xs
+commentFilter :: Int -> [String] -> [[String]]
+commentFilter n xs = filter ((==n) . length) $ map (words . (takeWhile (/='#'))) xs
 
 limitMonitors :: ChName -> [MonName] -> [(MonName, ChName)] -> [(MonName, ChName)]
 limitMonitors ch mons orig = multiDelete del orig
