@@ -2,7 +2,7 @@
 
 import System.Environment (getArgs)
 import Control.Monad (liftM, forM)
-import Data.List ((\\), nub, foldl', delete)
+import Data.List ((\\), nub, foldl', delete, isPrefixOf)
 
 type ChName = String
 type MonName = String
@@ -48,12 +48,12 @@ main = do
      _ -> error "Usage: genDailyCmd master.lst yyyy mm dd"
 
   {-- read master file --}
-  flist <- liftM (map words.lines) $ readFile masterFile
+  flist <- liftM (map words.commentFilt.lines) $ readFile masterFile
 
   {-- read each file --}
   chmonlst <- liftM concat $ forM flist $ \[chfile, monfile] -> do
-    monlst <- liftM lines $ readFile monfile :: IO [MonName]
-    chlst <- liftM lines $ readFile chfile :: IO [ChName]
+    monlst <- liftM (commentFilt.lines) $ readFile monfile :: IO [MonName]
+    chlst <- liftM (commentFilt.lines) $ readFile chfile :: IO [ChName]
     return $ exactaBox monlst chlst :: IO [(MonName, ChName)]
 
   {--  filter  --}
@@ -64,6 +64,9 @@ main = do
     putStrLn $ mon ++++ yyyy ++++ mm ++++ dd ++++ ch
 
 {-- internal functions --}
+commentFilt :: [String] -> [String]
+commentFilt xs = filter (not.isPrefixOf "#") xs
+
 limitMonitors :: ChName -> [MonName] -> [(MonName, ChName)] -> [(MonName, ChName)]
 limitMonitors ch mons orig = multiDelete del orig
   where del = multiDelete (map (flip exacta ch) mons) $ filter ((==ch).snd) orig
