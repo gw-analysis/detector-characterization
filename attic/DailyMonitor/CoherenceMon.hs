@@ -44,7 +44,7 @@ main = do
 
   {-- main --}
   let coh = coherenceMon fftLength fs1 fs2 dat1 dat2
-  plotV Linear Line 1 BLUE (xlabel, "coh(f)") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
+  plotV Linear Line 1 BLUE (xlabel, "|coh(f)|^2") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
