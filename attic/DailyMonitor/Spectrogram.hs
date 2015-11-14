@@ -5,7 +5,7 @@ import Data.Packed.Vector (subVector)
 import Numeric (showGFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
 import HasKAL.SpectrumUtils.Function (mapSpectrogram)
@@ -39,10 +39,14 @@ main = do
                    (Just a, Just b) -> (a, b)
                    (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
+  mbUnit <- getUnitY file ch
+  let unit = case mbUnit of
+              Just x  -> "["++x++"/rHz]"
+              Nothing -> "[/rHz]"
 
   {-- main --}
   let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", "[x/rHz]") title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
+  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", unit) title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
 
 
 {-- Internal Functions --}

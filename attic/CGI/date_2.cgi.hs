@@ -1,13 +1,13 @@
 
 import Network.CGI
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, fromMaybe)
 import qualified Data.Vector.Storable as V (fromList, length, take)
 import Control.Monad (liftM, forM)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.SpectrumUtils.Function (mapSpectrum)
 import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMon)
@@ -67,29 +67,32 @@ process params = do
   case datMaybe of
    Nothing -> return [("Can't find file or channel1", ch1, [])] -- データが無ければメッセージを返す
    _ -> do
-     fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
+     fname1 <- liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1) -- データがあったのでファイルは必ずある
+     fs1 <- liftM fromJust $ getSamplingFrequency fname1 ch1
+     unit1 <- liftM (fromMaybe "") $ getUnitY fname1 ch1
      let dat1 = fromJust datMaybe
          snf1 = gwOnesidedPSDV dat1 (truncate fs1) fs1
          refpng = pngDir++ch1++"_"++gps'++"_"++"REFSPE"++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
      refExist <- doesFileExist refpng
      case refExist of
       True -> return ()
-      False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch1) refpng
-               ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf1
+      False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", unitBracket "ASD" (unit1++"/rHz")) 0.05 ("Spectrum: "++ch1) refpng ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf1
      result <- forM chs $ \ch2 -> do
        datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
        case datMaybe2 of
         Nothing -> return ("Can't find file or channel", ch2, []) -- データが無ければメッセージを返す
         _ -> do
-          fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
+          fname2 <- liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2) -- データがあったのでファイルは必ずある
+          fs2 <- liftM fromJust $ getSamplingFrequency fname2 ch2
+          unit2 <- liftM (fromMaybe "") $ getUnitY fname2 ch2
+          -- fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
           let dat2 = fromJust datMaybe2
               snf2 = gwOnesidedPSDV dat2 (truncate fs2) fs2
               refpng2 = pngDir++ch2++"_"++gps'++"_"++"REFSPE"++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
           refExist2 <- doesFileExist refpng2
           case refExist2 of
            True -> return () -- 既にPNGがあれば何もしない
-           False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch2) refpng2
-                    ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf2
+           False -> plotV LogY Line 1 BLACK ("frequency [Hz] (GPS="++gps'++")", unitBracket "ASD" (unit2++"/rHz")) 0.05 ("Spectrum: "++ch2) refpng2 ((read fmin',read fmax'),(0,0)) $ mapSpectrum sqrt snf2
           files <- forM monitors' $ \mon -> do
             let pngfile = pngDir++ch1++"-vs-"++ch2++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
             pngExist <- doesFileExist pngfile
@@ -115,6 +118,10 @@ process params = do
             return pngfile
           return (show fs2, ch2, refpng2:files)
      return $ (show fs1, "Reference: "++ch1, [refpng]):result
+
+unitBracket :: String -> String -> String
+unitBracket x "" = x
+unitBracket x y  = x++" ["++y++"]"
 
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
