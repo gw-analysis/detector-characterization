@@ -100,7 +100,7 @@ layoutChannelBase ch titles tables ncol = do
 for = flip map
 
 
-putName x = concat ["<h3>" ,x ,"</h3>"]
+putName = setH3 
 
 
 recurrentCreateDirectory _ [] = return ()
@@ -178,9 +178,9 @@ startBODY = "<body>"
 
 addTitle x = concat ["<h1 style=\"color: rgb(51, 51, 255);\">"++x++"</h1>"]
 
-addDate x = concat ["<h2>Local Date :"++x++"</h2>"]
+addDate x = setH2 ("Local Date :"++x)
 
-addSubs x = concat ["<h2>"++x++"</h2>"]
+addSubs  = setH2
 
 addLayout pathch pathmo = concat [
   "<h2>"
@@ -216,6 +216,9 @@ endBODY = "</body>"
 
 endHTML = "</html>"
 
+setH1 x =  concat ["<h1>"++x++"</h1>"]
+setH2 x =  concat ["<h2>"++x++"</h2>"]
+setH3 x =  concat ["<h3>"++x++"</h3>"]
 
 
 
