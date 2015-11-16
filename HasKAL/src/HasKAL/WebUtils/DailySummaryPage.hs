@@ -77,24 +77,30 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
 layoutMonitorBase mon titles tables ncol = do
   let titlesch = [x | x<-titles, isInfixOf (":"++mon) x]
       tablesch= [x | x<-tables, isInfixOf ("_"++mon) x]
-   in startTABLE
+   in putName mon
+       ++ startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
        ++ endTBODY
        ++ endTABLE
+       ++ addBR
 
 
 layoutChannelBase ch titles tables ncol = do
   let titlesch = [x | x<-titles, isInfixOf ch x]
       tablesch= [x | x<-tables, isInfixOf ch x]
-   in startTABLE
+   in putName ch
+       ++ startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
        ++ endTBODY
        ++ endTABLE
-
+       ++ addBR
 
 for = flip map
+
+
+putName x = concat ["<h3>" ,x ,"</h3>"]
 
 
 recurrentCreateDirectory _ [] = return ()
