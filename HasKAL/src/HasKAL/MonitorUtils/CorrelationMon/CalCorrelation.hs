@@ -8,12 +8,14 @@ module HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
        )
        where
 
-import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
-import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
+import Data.List (transpose)
 
 {-- Vector --}
 import qualified Data.Vector.Storable as S
 import qualified Data.Vector.Unboxed as U
+
+import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
+import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
 
 {-- Expose Functions --}
@@ -63,68 +65,87 @@ significance n r
   where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
 
 
--- takeCorrelationByChunk :: CorrelationMethod -- ^ Pearson / MIC
---                               -> [Double] -- ^ data x
---                               -> [Double] -- ^ data y
---                               -> Double -- ^ total duration to analyze [s]
---                               -> Double -- ^ chunk duration to analyze [s]
---                               -> Double -- ^ sampling rate [Hz]
---                               -> Int    -- ^ number of shift to take correlation
---                               -> [Double] -- ^ list of correlation coefficient maximized
--- takeCorrelationByChunk method x y ttotal tchunk fs nshift = U.toList $ takeCorrelationByChunkCore method (U.fromList x) (U.fromList y) ttotal tchunk fs nshift
-
--- takeCorrelationByChunkV :: CorrelationMethod -- ^ Pearson / MIC
---                               -> S.Vector Double -- ^ data x
---                               -> S.Vector Double -- ^ data y
---                               -> Double -- ^ total duration to analyze [s]
---                               -> Double -- ^ chunk duration to analyze [s]
---                               -> Double -- ^ sampling rate [Hz]
---                               -> Int    -- ^ number of shift to take correlation
---                               -> S.Vector Double -- ^ vector of correlation coefficient maximized
--- takeCorrelationByChunkV method x y ttotal tchunk fs nshift = U.toList $ takeCorrelationByChunkCore method (U.fromList x) (U.fromList y) ttotal tchunk fs nshift
-
-
-
-takeCorrelationByChunkCore :: CorrelationMethod -- ^ Pearson / MIC
-                           -> U.Vector Double -- ^ data x
-                           -> U.Vector Double -- ^ data y
-                           -> Double -- ^ total duration to analyze [s]
-                           -> Double -- ^ chunk duration to analyze [s]
-                           -> Double -- ^ sampling rate [Hz]
-                           -> Int    -- ^ number of shift to take correlation
-                           -> U.Vector Double -- ^ vector of correlation coefficient maximized
-takeCorrelationByChunkCore method x y ttotal tchunk fs nshift = case method of 
-  Peason -> takeCorrelationByChunkPearson x y ttotal tchunk fs nshift
-  MIC     -> takeCorrelationByChunkPearson x y ttotal tchunk fs nshift
-
-takeCorrelationByChunkPearson :: U.Vector Double -- ^ data x
-                              -> U.Vector Double -- ^ data y
+correlationChunk :: CorrelationMethod -- ^ Pearson / MIC
+                              -> [Double] -- ^ data x
+                              -> [Double] -- ^ data y
                               -> Double -- ^ total duration to analyze [s]
                               -> Double -- ^ chunk duration to analyze [s]
                               -> Double -- ^ sampling rate [Hz]
                               -> Int    -- ^ number of shift to take correlation
-                              -> U.Vector Double -- ^ vector of correlation coefficient maximized
-takeCorrelationByChunkPearson x y ttotal tchunk fs nshift
-  | U.length x == 0 = U.fromList []
-  | U.length y == 0 = U.fromList []
-  | fs < 0          = U.fromList []
-  | nshift < 0      = U.fromList []
-  | otherwise       = x
---U.map (timeshiftedData2CorrelationV x y) $ U.fromList [-nshift..nshift]
+                              -> ([Double], [Double], [Double]) -- ^ vector of correlation coefficient maximized
+correlationChunk method x y ttotal tchunk fs nshift = do
+  let result = correlationChunkCore method (U.fromList x) (U.fromList y) ttotal tchunk fs nshift :: (S.Vector Double, S.Vector Double, S.Vector Double)
+      tolist :: (S.Vector Double, S.Vector Double, S.Vector Double) -> ([Double], [Double], [Double])
+      tolist (ele0, ele1, ele2) = (S.toList ele0, S.toList ele1, S.toList ele2) 
+  tolist result
+
+correlationChunkV :: CorrelationMethod -- ^ Pearson / MIC
+                              -> S.Vector Double -- ^ data x
+                              -> S.Vector Double -- ^ data y
+                              -> Double -- ^ total duration to analyze [s]
+                              -> Double -- ^ chunk duration to analyze [s]
+                              -> Double -- ^ sampling rate [Hz]
+                              -> Int    -- ^ number of shift to take correlation
+                              -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkV method x y ttotal tchunk fs nshift = correlationChunkCore method (U.convert x) (U.convert y) ttotal tchunk fs nshift
+
+
+correlationChunkCore :: CorrelationMethod -- ^ Pearson / MIC
+                     -> U.Vector Double -- ^ data x
+                     -> U.Vector Double -- ^ data y
+                     -> Double -- ^ total duration to analyze [s]
+                     -> Double -- ^ chunk duration to analyze [s]
+                     -> Double -- ^ sampling rate [Hz]
+                     -> Int    -- ^ number of shift to take correlation
+                     -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkCore method x y ttotal tchunk fs nshift = case method of 
+  Peason -> correlationChunkPearson x y ttotal tchunk fs nshift
+  MIC    -> correlationChunkPearson x y ttotal tchunk fs nshift
+
+correlationChunkPearson :: U.Vector Double -- ^ data x
+                        -> U.Vector Double -- ^ data y
+                        -> Double -- ^ total duration to analyze [s]
+                        -> Double -- ^ chunk duration to analyze [s]
+                        -> Double -- ^ sampling rate [Hz]
+                        -> Int    -- ^ number of shift to take correlation
+                        -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkPearson x y ttotal tchunk fs nshift
+  | U.length x == 0 = emptyResult
+  | U.length y == 0 = emptyResult
+  | fs < 0          = emptyResult
+  | nshift < 0      = emptyResult
+  | otherwise       = execute x y nchunk fs nshift
+--  | otherwise       = (U.convert x, U.convert y, U.convert x)
    where nx     = U.length x :: Int
          ny     = U.length y :: Int
+         nxy_min = min nx ny
          ntotal = floor (ttotal / fs) :: Int
          nchunk = floor (tchunk / fs) :: Int 
-         nchunkset = ntotal `div` nchunk
-          
- -- where timeshiftedData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> Double
- --        timeshiftedData2CorrelationV x y n
- --          | n > dataLength = pearsonCorrelationV (dataHeadDropNV x dataLength) y
- --          | n < 0          = pearsonCorrelationV (dataHeadDropNV y (-n) ) x
- --          | otherwise      = pearsonCorrelationV (dataHeadDropNV x n    ) y
- --          where dataLength = max (U.length x) (U.length y)
+         nchunkset = (min ntotal nxy_min) `div` nchunk
+         nchunk_list = [0..(nchunkset-1)] :: [Int]
 
+         emptyResult ::(S.Vector Double, S.Vector Double, S.Vector Double)
+         emptyResult = (S.fromList [], S.fromList [], S.fromList [])
+        
+         correlationChunkPearsonCore :: U.Vector Double -> U.Vector Double -> Int -> Double -> Int -> Int-> [Double]
+         correlationChunkPearsonCore x y nchunk fs nshift index = do
+           let rhov   = twoChannelData2CorrelationV (U.slice (nchunk*index) nchunk x) (U.slice (nchunk*index) nchunk y) nshift :: U.Vector Double
+               output = formatoutput rhov index nchunk fs
+                  where rhomax = findIndexMaxCorrelationMaxValueIndexV (U.convert rhov) fs :: (Int, Double)                                     
+                        nchunkd = fromIntegral nchunk :: Double
+                        indexd  = fromIntegral index  :: Double
+                        formatoutput :: U.Vector Double -> Int -> Int -> Double -> [Double]
+                        formatoutput rhov index nchunk fs = [indexd / fs * nchunkd, (rhov U.! (fst rhomax)), snd rhomax]
+           output
 
+         execute :: U.Vector Double -> U.Vector Double -> Int -> Double -> Int -> (S.Vector Double, S.Vector Double, S.Vector Double)
+         execute x y nchunk fs nshift = do
+           let result   = transpose $ map (correlationChunkPearsonCore x y nchunk fs nshift ) nchunk_list :: [[Double]]
+               resultv  = map (U.convert . U.fromList) result :: [S.Vector Double]
+
+               resultv_tuple :: [S.Vector Double] -> (S.Vector Double, S.Vector Double, S.Vector Double)
+               resultv_tuple resultv = (resultv!!0, resultv!!1, resultv!!2)
+           resultv_tuple resultv
 
 {-- Internal Functions --}
 takeCorrelationCore :: CorrelationMethod -- ^ Pearson / MIC
