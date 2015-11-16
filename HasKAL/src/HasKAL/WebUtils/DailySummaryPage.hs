@@ -55,8 +55,14 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               ++ addStyle
               ++ startBODY
               ++ addTitle pageTitle 
-              ++ addDate date
+              ++ setDIVa
+              (  addDate date
+              ++ addBR
+              ++ addBR
               ++ addLayout relativepthCh relativepthMo
+              )
+              ++ addBR
+              ++ addBR
               ++ addSubs subsystem
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
@@ -64,9 +70,15 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               ++ addHEAD
               ++ addStyle
               ++ startBODY
-              ++ addTitle pageTitle 
-              ++ addDate date
+              ++ addTitle pageTitle
+              ++ setDIVa
+              (   addDate date
+              ++ addBR
+              ++ addBR
               ++ addLayout relativepthCh relativepthMo
+              )
+              ++ addBR
+              ++ addBR
               ++ addSubs subsystem
               ++ concat (for mons $ \mon -> layoutMonitorBase mon titles tables ncol)
               ++ endHTML
@@ -171,6 +183,16 @@ addStyle = concat [
   ,"color: #800000;"
   ,"background-color: #cccccc;"
   ,"padding: 0.25em; border: 1px solid black; }"
+  ,"div#a{"
+  ,"color: #800000;"
+  ,"background-color: #ffffff;"
+  ,"font-size:150%;"
+  ,"font-weight:bold; }"
+  ,"div#bw{"
+  ,"color: #000000;"
+  ,"background-color: #ffffff;"
+  ,"font-size:160%;"
+  ,"font-weight:bold; }"
   ,"</style>"
   ]
 
@@ -178,18 +200,16 @@ startBODY = "<body>"
 
 addTitle x = concat ["<h1 style=\"color: rgb(51, 51, 255);\">"++x++"</h1>"]
 
-addDate x = setH2 ("Local Date :"++x)
+addDate x = concat ["Local Date:<br>"++x]
 
-addSubs  = setH2
+addSubs  = setDIVbw
 
 addLayout pathch pathmo = concat [
-  "<h2>"
-  , "Layout"
+  "Layout:"
   , "<br>"
   , "<a href=\""++pathch++"\"><b>- Channel Order</b></a>"
   , "<br>"
   , "<a href=\""++pathmo++"\"><b>- Monitor Order</b></a>"
-  , "</h2>"
   ]
 
 addBR = "<br>"
@@ -220,5 +240,8 @@ setH1 x =  concat ["<h1>"++x++"</h1>"]
 setH2 x =  concat ["<h2>"++x++"</h2>"]
 setH3 x =  concat ["<h3>"++x++"</h3>"]
 
+startDIV = "<div>"
+endDIV = "</div>"
 
-
+setDIVa x = concat ["<div id=\"a\">"++x++"</div>"]
+setDIVbw x = concat ["<div id=\"bw\">"++x++"</div>"]
