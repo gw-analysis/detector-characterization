@@ -1,10 +1,9 @@
 
-import Data.Maybe (fromJust)
 import System.Environment (getArgs)
 import Data.Packed.Vector (subVector, dim, fromList)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 
@@ -27,17 +26,21 @@ main = do
   mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
   let file = case mbFiles of
               Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              _ -> head $ fromJust mbFiles
+              Just x -> head x
   mbDat <- kagraDataGet gps duration ch
   mbFs <- getSamplingFrequency file ch
   let (dat, fs) = case (mbDat, mbFs) of
                    (Just a, Just b) -> (a, b)
                    (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
+  mbUnit <- getUnitY file ch
+  let unit = case mbUnit of
+              Just x  -> "["++x++"]"
+              Nothing -> ""
 
   {-- main --}
   let tvec = fromList [0, 1/fs..(fromIntegral $ dim dat - 1)/fs]
-  plotDateV Linear Line 1 RED (xlabel, "amplitude") 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat)
+  plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat)
 
 
 {-- Internal Functions --}

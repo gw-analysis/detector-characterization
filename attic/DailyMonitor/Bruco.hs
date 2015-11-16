@@ -71,8 +71,8 @@ main = do
 hBrucoPng :: String -> Double -> (Double, Vector Double, String) -> [(Double, Vector Double, String)] -> IO [(Double, [(Double, String)])]
 hBrucoPng dateStr sec (fsx, xt, xch) yts = do
   let cohResults = map (\x -> coherenceMon sec fsx (fst' x) xt (snd' x) ) yts
-  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "coh(f)^2") 0.05 (xch++" vs "++x) (xch+-+x+-+dateStr++"_Bruco.png") ((0,0),(0,0)) y)
-    (map trd' yts) cohResults
+  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "|coh(f)|^2") 0.05 (xch++" vs "++x)
+                     (xch+-+x+-+dateStr++"_Bruco.png") ((0,0),(0,0)) y) (map trd' yts) cohResults
   let cohList = toLists.fromColumns $ map snd cohResults
       fvec = [0, 1/sec..]
       result = map (ranked.labeled) cohList

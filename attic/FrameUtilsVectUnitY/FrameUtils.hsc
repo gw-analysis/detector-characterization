@@ -22,7 +22,7 @@ module FrameUtils
 , getChannelList
 , getGPSTime
 , getSamplingFrequency
-, getFrVectUnitY
+, getUnitY
 )
 where
 
@@ -255,6 +255,11 @@ readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 --                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataI v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (map fromIntegral array_vdata)
              --       frvect_r4 -> do
                     3 -> do
                       array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
@@ -294,6 +299,12 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr CDouble
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -335,6 +346,12 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr Double
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -376,6 +393,13 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      vcddat <- newForeignPtr_ (frvect_dataI v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      vcddat `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ci2cdV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -398,7 +422,7 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2cdV vcddat)
+                        return $ Just (cs2cdV vcddat)
 
 
 readFrameV :: String -> String -> IO (Maybe (V.Vector Double))
@@ -426,7 +450,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2dV' vcddat)
+                        return $ Just (ci2dV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -449,7 +473,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2dV vcddat)
+                        return $ Just (cs2dV vcddat)
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
@@ -514,8 +538,8 @@ getSamplingFrequency frameFile channelName = runMaybeT $ MaybeT $ do
                     | rate<1.0  = rate
                     where rate = 1.0 / dt :: Double
 
-getFrVectUnitY :: String -> String -> IO (Maybe String)
-getFrVectUnitY frameFile channelName = runMaybeT $ MaybeT $ do
+getUnitY :: String -> String -> IO (Maybe String)
+getUnitY frameFile channelName = runMaybeT $ MaybeT $ do
     withCString channelName $ \channel ->
       withCString frameFile $ \framefileName -> do
         ifile <- c_FrFileINew framefileName
@@ -530,7 +554,7 @@ getFrVectUnitY frameFile channelName = runMaybeT $ MaybeT $ do
               then return Nothing
               else do
                 v <- peek ptr_v
-                unit' <- return (frvect_unitY v) :: IO (Ptr CChar) -- (= IO CString)
+                let unit' = (frvect_unitY v) :: (Ptr CChar) -- (= CString)
                 unit <- peekCString unit' :: IO String
                 c_FrVectFree ptr_v
                 c_FrFileIEnd ifile
@@ -561,17 +585,20 @@ cd2dV = V.map realToFrac
 cf2dV :: V.Vector CFloat -> V.Vector Double
 cf2dV = V.map realToFrac
 
-ci2dV' :: V.Vector CInt -> V.Vector Double
-ci2dV' = V.map fromIntegral
-
-ci2dV :: V.Vector CShort -> V.Vector Double
+ci2dV :: V.Vector CInt -> V.Vector Double
 ci2dV = V.map fromIntegral
+
+cs2dV :: V.Vector CShort -> V.Vector Double
+cs2dV = V.map fromIntegral
 
 cf2cdV :: V.Vector CFloat -> V.Vector CDouble
 cf2cdV = V.map realToFrac
 
-ci2cdV :: V.Vector CShort -> V.Vector CDouble
+ci2cdV :: V.Vector CInt -> V.Vector CDouble
 ci2cdV = V.map fromIntegral
+
+cs2cdV :: V.Vector CShort -> V.Vector CDouble
+cs2cdV = V.map fromIntegral
 
 
 
