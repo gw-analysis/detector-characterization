@@ -63,7 +63,7 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               )
               ++ addBR
               ++ addBR
-              ++ addSubs subsystem
+              ++ addSubs (setCenter subsystem)
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
       contentsMo = startHTML
@@ -79,7 +79,7 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               )
               ++ addBR
               ++ addBR
-              ++ addSubs subsystem
+              ++ addSubs (setCenter subsystem)
               ++ concat (for mons $ \mon -> layoutMonitorBase mon titles tables ncol)
               ++ endHTML
   writeFile fnamehtmledCh contentsCh
@@ -245,3 +245,8 @@ endDIV = "</div>"
 
 setDIVa x = concat ["<div id=\"a\">"++x++"</div>"]
 setDIVbw x = concat ["<div id=\"bw\">"++x++"</div>"]
+
+setCenter x = concat ["<center>"++x++"</center>"]
+
+
+
