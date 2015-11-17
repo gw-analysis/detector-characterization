@@ -50,7 +50,13 @@ main = do
      ylabel2 = "rho's time shift" :: String
      title = ch1 ++ " - " ++ ch2 :: String
  plotV Linear LinePoint 1 RED (xlabel, ylabel) 0.05 title "correlation_time-rho.png" ((0, 0),(0, 0)) (time, rho)
- plotV Linear LinePoint 1 RED (xlabel, ylabel2) 0.05 title "correlation_time-tshift.png.png" ((0, 0),(0, 0)) (time, tshift)
+ plotV Linear LinePoint 1 RED (xlabel, ylabel2) 0.05 title "correlation_time-tshift.png" ((0, 0),(0, 0)) (time, tshift)
+
+
+ let (timel, rhol, tshiftl) = correlationChunk Peason (S.toList ys1) (S.toList ys2) (fromIntegral totalduration) chunkduration fs1 10
+ plot Linear LinePoint 1 RED (xlabel, ylabel) 0.05 title "correlation_time-rho_list.png" ((0, 0),(0, 0)) $ zip timel rhol
+ plot Linear LinePoint 1 RED (xlabel, ylabel2) 0.05 title "correlation_time-tshift_list.png" ((0, 0),(0, 0)) $ zip timel tshiftl
+
 -- print rho
 
 
