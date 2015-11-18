@@ -12,7 +12,6 @@ import qualified Data.Packed.Matrix as M
 import qualified Data.Vector.Algorithms.Intro as I
 import qualified Data.Vector.Storable as VS
 import Numeric.LinearAlgebra
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.SpectrumUtils.SpectrumUtils
 import HasKAL.SpectrumUtils.Function (updateMatrixElement)
