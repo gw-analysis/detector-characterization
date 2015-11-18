@@ -7,13 +7,14 @@ import System.Directory (doesFileExist)
 
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Function (fromSpectrum, toSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
 import HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta (distInspiral, distRingdown)
 import HasKAL.MonitorUtils.RangeMon.IMBH (distImbh)
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 -- 主干渉信号が無いので、感度曲線で計算
 import qualified Data.Vector.Storable as V (fromList, map)
@@ -24,7 +25,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams defaultChs
   str <- liftIO $ fork params
   output $ str
 

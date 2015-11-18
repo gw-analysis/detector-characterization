@@ -4,14 +4,15 @@ import Data.List (isInfixOf, isSuffixOf, isPrefixOf, nub, foldl')
 import Data.Maybe (fromJust)
 
 import HasKAL.WebUtils.CGI.Function
--- import HasKAL.DataBaseUtils.Function (kagraChannelList)
+-- import HasKAL.DataBaseUtils.XEndEnv.Function (kagraChannelList)
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams defaultChs
   output $ listPage params 
 
 listPage :: ParamCGI -> String

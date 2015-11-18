@@ -6,7 +6,7 @@ import Control.Monad (liftM, forM)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.SpectrumUtils.Function (mapSpectrum)
@@ -14,13 +14,14 @@ import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMon)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV)
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams defaultChs
   str <- liftIO $ fork params
   output $ str
 

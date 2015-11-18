@@ -2,7 +2,7 @@
 import Network.CGI
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps, gps2localTimetuple)
-
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
@@ -57,7 +57,7 @@ html portal gps = concat [
                                                            ++"&monitor=INSP\" name=\"plotframe\">"
                             Nothing                        -> "date_1.cgi?Date=GPS&gps="++gps++"&channel1="++ch1 
                                                                 ++"&monitor=TS\" name=\"plotframe\">"            
-        ch1 = "K1:PEM-EX_ACC_NO2_X_FLOOR"
-        ch2 = "K1:PEM-EX_ACC_NO2_Y_FLOOR"
+        ch1 = defaultChs!!0
+        ch2 = defaultChs!!1
 
 

@@ -10,7 +10,7 @@ import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 
 {-- memo

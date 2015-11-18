@@ -7,18 +7,18 @@ import Control.Monad (forM, liftM)
 import Data.List (isInfixOf)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getChannelList)
 import HasKAL.MonitorUtils.CoherenceMon.Function (hBruco)
 import HasKAL.WebUtils.CGI.Function
-
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams defaultChs
   str <- liftIO $ fork params
   output $ str
 
