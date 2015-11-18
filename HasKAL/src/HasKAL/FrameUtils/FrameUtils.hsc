@@ -569,13 +569,16 @@ getGPSTime frameFile = do
         then return Nothing
         else do
           ptr_frameH <- c_FrameRead ifile
-          val_frameH <- peek ptr_frameH
-          let val_GTimeS = frameh_GTimeS val_frameH
-              val_GTimeN = frameh_GTimeN val_frameH
-              val_dt     = frameh_dt val_frameH
-          c_FrFileIEnd ifile
-          c_FrameFree ptr_frameH
-          return $ Just (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
+          if (ptr_frameH == nullPtr)
+           then return Nothing
+           else fo
+            val_frameH <- peek ptr_frameH
+            let val_GTimeS = frameh_GTimeS val_frameH
+                val_GTimeN = frameh_GTimeN val_frameH
+                val_dt     = frameh_dt val_frameH
+            c_FrFileIEnd ifile
+            c_FrameFree ptr_frameH
+            return $ Just (fromIntegral val_GTimeS, fromIntegral val_GTimeN, realToFrac val_dt)
 
 
 {-- helper function --}
