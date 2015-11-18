@@ -249,7 +249,7 @@ channelForm params flags = concat [
                  ++"<br><select name=\"channel"++(show i)++"\" size=\"5\""++multi j++" style=\"font-size:90%; \">"
                  ++(concat $ map (\x -> "<option value=\""++x++"\">"++x++"</option>") $ chlist params)
                  ++"</select><br>") $ zip [1..length flags] flags
-  ,"</fieldset>"
+  ,"</fieldset></div>"
   ]
   where select True = "selected"
         select False = ""
@@ -288,7 +288,7 @@ dateForm params = concat [
   "</select>"
   -- , "<p>test type date</p>"
   -- ,"<input type=\"date\" name=\"date\">"
-  ,"</fieldset>"
+  ,"</fieldset></div>"
   ]
   where (yr, mon, day, hrs, min, sec, _) = gps2localTimetuple (read $ fromJust $ gps params) "JST"
 
