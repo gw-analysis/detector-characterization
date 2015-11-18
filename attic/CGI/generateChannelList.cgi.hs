@@ -4,7 +4,7 @@ import Data.List (isInfixOf, isPrefixOf, nub, foldl')
 import Data.Maybe (fromJust)
 
 import HasKAL.WebUtils.CGI.Function
-import HasKAL.DataBaseUtils.Function (kagraChannelList)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraChannelList)
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain

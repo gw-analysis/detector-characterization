@@ -10,7 +10,7 @@
 
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector.Storable as VS
-import HasKAL.DataBaseUtils.Function(kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function(kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.SensMon.SensMon
 import HasKAL.MonitorUtils.SensMon.Signature

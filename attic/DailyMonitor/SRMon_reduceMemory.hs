@@ -8,7 +8,7 @@ import Data.Packed.Matrix (fromBlocks, cols, fromLists)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.SpectrumUtils.Function 
 import HasKAL.SpectrumUtils.Signature

@@ -6,7 +6,7 @@ import Control.Monad (liftM, forM)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.SpectrumUtils.Function (mapSpectrum)

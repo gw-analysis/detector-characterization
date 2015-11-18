@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/06 19:25:27
+# Last Modified: 2015/11/11 13:43:11
 #******************************************#
 
 # compiler option
@@ -12,18 +12,18 @@ HC = ghc -O2 -optc -std=c99
 USELIB=libframe kagali
 
 # program
-#TAR1=date_1.cgi
-#TAR2=date_2.cgi
-#TAR3=date_3.cgi
-#TAR4=date_4.cgi
-#TAR5=date_5.cgi
-TAR6=webMonFrame.cgi
-TAR7=webMonPortal.cgi
-#TAR8=calSubSys.cgi
-#TAR9=dailyFrame.cgi
-#TAR10=dailySubSys.cgi
-#TAR11=generateChannelList.cgi
-#TAR12=selectChannelList.cgi
+TAR1=date_1.cgi
+TAR2=date_2.cgi
+TAR3=date_3.cgi
+TAR4=date_4.cgi
+TAR5=date_5.cgi
+TAR6=webToolFrame.cgi
+TAR7=webToolPortal.cgi
+TAR8=calSubSys.cgi
+TAR9=dailyFrame.cgi
+TAR10=dailySubSys.cgi
+TAR11=generateChannelList.cgi
+TAR12=selectChannelList.cgi
 TARs= ${TAR11} ${TAR10} ${TAR9} ${TAR8} ${TAR7} ${TAR6} ${TAR5} ${TAR4} ${TAR3} ${TAR2} ${TAR1} ${TAR12}
 
 # HasKAL 関連
