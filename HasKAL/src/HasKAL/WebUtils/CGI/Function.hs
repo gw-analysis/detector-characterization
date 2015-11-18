@@ -253,10 +253,10 @@ channelForm params flags = concat [
 monitorForm :: MultiSelect -> [(Bool, MonitorType, String)] -> String
 monitorForm x mons = concat [
   --"<div><h3> Monitors: </h3>",
-  "<div><fieldset><legend style=\"font-size:16pt\"> Monitors: </legend><nobr>",
+  "<div><fieldset><legend style=\"font-size:16pt\"> Monitors: </legend>",
   concat $ map (\(c, s, l) -> do
-                   "<input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp<wbr>") mons,
-  "</nobr></fieldset>",
+                   "<nobr><input type=\""++multi x++"\" name=\"monitor\" value=\""++(show s)++"\" "++chk c++">"++l++"&nbsp</nobr>") mons,
+  "</fieldset>",
   "</div>"
   ]
   where chk True = "checked=\"checked\""
