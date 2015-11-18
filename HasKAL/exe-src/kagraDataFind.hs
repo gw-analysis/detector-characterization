@@ -1,6 +1,6 @@
 
 
-import HasKAL.DataBaseUtils.Function (kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataFind)
 import System.Environment (getArgs)
 import Data.Int (Int32)
 import System.IO (stdout,  hPutStrLn)
