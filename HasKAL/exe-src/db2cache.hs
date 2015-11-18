@@ -1,7 +1,7 @@
 
 
-import HasKAL.DataBaseUtils.Framedb (framedb)
-import HasKAL.DataBaseUtils.Function (db2framecache)
+import HasKAL.DataBaseUtils.XEndEnv.Table (xendenv)
+import HasKAL.DataBaseUtils.XEndEnv.Function (db2framecache)
 import System.Environment (getArgs)
 import System.IO (stdout, hPutStrLn)
 

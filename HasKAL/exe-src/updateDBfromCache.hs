@@ -1,7 +1,7 @@
 
 
 import System.Environment (getArgs)
-import HasKAL.DataBaseUtils.DataBaseAdmin (updateFrameDBfromcache)
+import HasKAL.DataBaseUtils.XEndEnv.DataBaseAdmin (updateFrameDBfromcache)
 
 main = do
   args <- getArgs 

@@ -3,7 +3,7 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, TemplateHaskell, MultiParamTypeClasses, FlexibleInstances, BangPatterns #-}
 
 
-module HasKAL.DataBaseUtils.DataBaseAdmin
+module HasKAL.DataBaseUtils.XEndEnv.DataBaseAdmin
 ( updateFrameDBfromcache
 , updateFrameDB
 ) where
@@ -33,8 +33,8 @@ import Database.Relational.Query ( relation
                                  )
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
 import qualified HasKAL.DataBaseUtils.KAGRADataSource as DD
-import HasKAL.DataBaseUtils.XEndEnv (Xendenv(..), insertXendenv)
-import qualified HasKAL.DataBaseUtils.XEndEnv as XEndEnv
+import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
+import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import HasKAL.FrameUtils.FrameUtils (getGPSTime, getChannelList, getSamplingFrequency)
 import System.Directory (doesFileExist)
 import qualified System.IO as IO

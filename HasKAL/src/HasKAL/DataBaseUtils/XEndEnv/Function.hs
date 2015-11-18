@@ -1,6 +1,6 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
 
-module HasKAL.DataBaseUtils.Function
+module HasKAL.DataBaseUtils.XEndEnv.Function
 ( db2framelist
 , db2framecache
 , kagraChannelList
@@ -51,8 +51,8 @@ import Database.Record
 import Database.Record.ToSql
 import Foreign.C.Types
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
-import HasKAL.DataBaseUtils.XEndEnv (Xendenv(..), insertXendenv)
-import qualified HasKAL.DataBaseUtils.XEndEnv as XEndEnv
+import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
+import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import HasKAL.FrameUtils.FrameUtils
 import System.IO.Unsafe (unsafePerformIO)
 
