@@ -166,7 +166,7 @@ htmlFrame x = htmlHeader++x++htmlFooter
 
 cgiNavi :: ParamCGI -> String
 cgiNavi params = concat [
-  "<div>"++getFrameURL++mailtoURL++"</div>",
+  "<div>"++getFrameURL++"</div>",
   "<br>[<a href=\"", path, "?Date=GPS&gps=", (show $ (read gps') - (read duration')),
   "&duration="++duration', uris, "\">&lt; Prev</a>] ",
   " [<a href=\"", path, "\">Back</a>] ",
