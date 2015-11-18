@@ -9,13 +9,14 @@ import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV) 
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams xEndEnvCh
   str <- liftIO $ fork params
   output $ str
 

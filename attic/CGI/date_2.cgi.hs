@@ -14,13 +14,14 @@ import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMon)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV)
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams xEndEnvCh
   str <- liftIO $ fork params
   output $ str
 

@@ -43,14 +43,6 @@ chlistDir = "../ch_list/"
 pngDir :: String
 pngDir = "../mon_images/"
 
-defChList = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
-            ,"K1:PEM-EX_ACC_NO2_Y_FLOOR"
-            ,"K1:PEM-EX_ACC_NO2_Z_FLOOR"
-            ,"K1:PEM-EX_MAG_X_FLOOR"
-            ,"K1:PEM-EX_MAG_Y_FLOOR"
-            ,"K1:PEM-EX_MAG_Z_FLOOR"
-            ,"K1:PEM-EX_MIC_FLOOR"
-            ]
 
 {-- CGI --}
 uploadFile :: CGI ()
@@ -62,13 +54,13 @@ uploadFile = do
     Just x -> writeFile (chlistDir++x) (fromJust content)
     Nothing -> return ()
 
-getInputParams :: (MonadIO m, MonadCGI m) => m ParamCGI
-getInputParams = do
+getInputParams :: (MonadIO m, MonadCGI m) => [String] -> m ParamCGI
+getInputParams def_channels = do
   script <- scriptName
   files <- liftIO $ getDirectoryContents chlistDir
   lstfile <- getInputDefVar "Default" "lstfile"
   chlst <- liftIO $ case lstfile of
-            "Default" -> return defChList
+            "Default" -> return def_channels
             otherwise -> liftM lines $ readFile (chlistDir++lstfile)
   (gps, locale) <- getInputGPS
   channel1 <- getMultiInput "channel1"

@@ -14,6 +14,7 @@ import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), Colo
 import HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta (distInspiral, distRingdown)
 import HasKAL.MonitorUtils.RangeMon.IMBH (distImbh)
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 -- 主干渉信号が無いので、感度曲線で計算
 import qualified Data.Vector.Storable as V (fromList, map)
@@ -24,7 +25,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams xEndEnvCh
   str <- liftIO $ fork params
   output $ str
 

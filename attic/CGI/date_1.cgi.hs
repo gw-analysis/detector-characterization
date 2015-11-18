@@ -25,13 +25,14 @@ import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
 import HasKAL.WebUtils.CGI.Function
+import SampleChannel
 
 main :: IO ()
 main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams
+  params <- getInputParams xEndEnvCh
   str <- liftIO $ fork params
   output $ str
 
