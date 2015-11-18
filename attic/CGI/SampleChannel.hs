@@ -8,14 +8,21 @@ Stability   : test
 Portability : POSIX
 
 -}{-
-  * Last Modified: 2015/11/18 20:33:27
+  * Last Modified: 2015/11/18 21:51:01
 -}
 
 
 module SampleChannel (
-   xEndEnvCh
+   defaultChs
+  ,xEndEnvCh
   ,sampleIOO
 ) where
+
+
+defaultChs = f 0
+  where f 0 = xEndEnvCh
+        f 1 = sampleIOO
+        f _ = sampleIOO
 
 xEndEnvCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
             ,"K1:PEM-EX_ACC_NO2_Y_FLOOR"

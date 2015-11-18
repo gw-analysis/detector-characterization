@@ -12,7 +12,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams xEndEnvCh
+  params <- getInputParams defaultChs
   output $ listPage params 
 
 listPage :: ParamCGI -> String

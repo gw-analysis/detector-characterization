@@ -12,7 +12,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams xEndEnvCh
+  params <- getInputParams defaultChs
   flag <- getInput "ch_flag"
   word <- getInput "keyword"
   oName <- getInput "outputname"

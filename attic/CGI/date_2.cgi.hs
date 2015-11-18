@@ -21,7 +21,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  params <- getInputParams xEndEnvCh
+  params <- getInputParams defaultChs
   str <- liftIO $ fork params
   output $ str
 
