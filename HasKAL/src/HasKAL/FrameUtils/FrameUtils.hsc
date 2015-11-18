@@ -571,7 +571,7 @@ getGPSTime frameFile = do
           ptr_frameH <- c_FrameRead ifile
           if (ptr_frameH == nullPtr)
            then return Nothing
-           else fo
+           else do
             val_frameH <- peek ptr_frameH
             let val_GTimeS = frameh_GTimeS val_frameH
                 val_GTimeN = frameh_GTimeN val_frameH
