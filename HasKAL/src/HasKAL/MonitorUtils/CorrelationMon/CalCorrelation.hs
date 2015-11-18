@@ -5,16 +5,22 @@ module HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
        , significance
        , findIndexMaxCorrelationMaxValueIndex
        , findIndexMaxCorrelationMaxValueIndexV
+       , correlationChunk
+       , correlationChunkV
        )
        where
+
+import Data.List (transpose)
+
+{-- Vector --}
+import qualified Data.Vector.Storable as S
+import qualified Data.Vector.Unboxed as U
 
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
--- for Vector
-import qualified Data.Vector.Storable as S
-import qualified Data.Vector.Unboxed as U
 
+{-- Expose Functions --}
 takeCorrelation :: CorrelationMethod -- ^ Pearson / MIC
                 -> [Double] -- ^ data list x
                 -> [Double] -- ^ data list y
@@ -29,6 +35,66 @@ takeCorrelationV :: CorrelationMethod -- ^ Pearson / MIC
                  -> S.Vector Double -- ^ Vector of correlation coefficient 
 takeCorrelationV method x y nshift = U.convert $ takeCorrelationCore method (U.convert x) (U.convert y) nshift
 
+findIndexMaxCorrelationMaxValueIndex :: [Double] -- ^ list of correlation coefficient
+                                     -> Double -- ^ sampling rate [Hz]
+                                     -> (Int, Double)
+findIndexMaxCorrelationMaxValueIndex result fs = (indexMax, (fromIntegral indexMax) / fs)
+  where indexMax = snd $ maximum $ zip result [0, 1..]
+
+findIndexMaxCorrelationMaxValueIndexV :: S.Vector Double -- ^ Vector of correlation coefficient
+                                      -> Double -- ^ sampling rate [Hz]
+                                      -> (Int, Double)
+findIndexMaxCorrelationMaxValueIndexV result fs = (indexMax, (fromIntegral indexMax) / fs)
+  where indexMax = S.maxIndex result
+      
+
+alpha2Pvalue :: Int -- ^
+             -> Double -- ^ 
+             -> Double -- ^
+alpha2Pvalue n alpha
+  | n < 3     = 0
+  | otherwise = t / sqrt (realToFrac n - 2.0 + t * t)
+  where t = gslCdfTdistPinv (1.0 - alpha/2.0) ( realToFrac (n-2) )
+
+significance :: Int -- ^
+             -> Double -- ^
+             -> Double -- ^ significance 
+significance n r
+  | n < 3     = 0
+    | abs r > 1 = 0
+  | t <  0    = 2.0 * gslCdfTdistP t (realToFrac (n-2))
+  | t >= 0    = 2.0 * gslCdfTdistQ t (realToFrac (n-2))
+  where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
+
+
+correlationChunk :: CorrelationMethod -- ^ Pearson / MIC
+                              -> [Double] -- ^ data x
+                              -> [Double] -- ^ data y
+                              -> Double -- ^ total duration to analyze [s]
+                              -> Double -- ^ chunk duration to analyze [s]
+                              -> Double -- ^ sampling rate [Hz]
+                              -> Int    -- ^ number of shift to take correlation
+                              -> ([Double], [Double], [Double]) -- ^ vector of correlation coefficient maximized
+correlationChunk method x y ttotal tchunk fs nshift = do
+  let result = correlationChunkCore method (U.fromList x) (U.fromList y) ttotal tchunk fs nshift :: (S.Vector Double, S.Vector Double, S.Vector Double)
+      tolist :: (S.Vector Double, S.Vector Double, S.Vector Double) -> ([Double], [Double], [Double])
+      tolist (ele0, ele1, ele2) = (S.toList ele0, S.toList ele1, S.toList ele2) 
+  tolist result
+
+correlationChunkV :: CorrelationMethod -- ^ Pearson / MIC
+                              -> S.Vector Double -- ^ data x
+                              -> S.Vector Double -- ^ data y
+                              -> Double -- ^ total duration to analyze [s]
+                              -> Double -- ^ chunk duration to analyze [s]
+                              -> Double -- ^ sampling rate [Hz]
+                              -> Int    -- ^ number of shift to take correlation
+                              -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkV method x y ttotal tchunk fs nshift = correlationChunkCore method (U.convert x) (U.convert y) ttotal tchunk fs nshift
+
+
+
+
+{-- Internal Functions --}
 takeCorrelationCore :: CorrelationMethod -- ^ Pearson / MIC
                     -> U.Vector Double -- ^ data Vector x
                     -> U.Vector Double -- ^ data Vector y 
@@ -45,7 +111,7 @@ twoChannelData2CorrelationV :: U.Vector Double -- ^ data Vector x
 twoChannelData2CorrelationV x y nshift
   | U.length x == 0 = U.fromList []
   | U.length y == 0 = U.fromList []
-  | nshift < 0        = U.fromList []
+  | nshift < 0      = U.fromList []
   | otherwise       = U.map (timeshiftedData2CorrelationV x y) $ U.fromList [-nshift..nshift]
   where timeshiftedData2CorrelationV :: U.Vector Double -> U.Vector Double -> Int -> Double
         timeshiftedData2CorrelationV x y n
@@ -62,19 +128,65 @@ dataHeadDropNV listData n = U.drop n listData
 --dataTailDropNV ::  U.Vector Double -> Int -> U.Vector Double
 --dataTailDropNV listData n = U.take ((U.length listData) - n) listData
 
+correlationChunkCore :: CorrelationMethod -- ^ Pearson / MIC
+                     -> U.Vector Double -- ^ data x
+                     -> U.Vector Double -- ^ data y
+                     -> Double -- ^ total duration to analyze [s]
+                     -> Double -- ^ chunk duration to analyze [s]
+                     -> Double -- ^ sampling rate [Hz]
+                     -> Int    -- ^ number of shift to take correlation
+                     -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkCore method x y ttotal tchunk fs nshift = case method of 
+  Peason -> correlationChunkPearson x y ttotal tchunk fs nshift
+  MIC    -> correlationChunkPearson x y ttotal tchunk fs nshift
 
-findIndexMaxCorrelationMaxValueIndex :: [Double] -- ^ list of correlation coefficient
-                                     -> Double -- ^ sampling rate [Hz]
-                                     -> (Int, Double)
-findIndexMaxCorrelationMaxValueIndex result fs = (indexMax, (fromIntegral indexMax) / fs)
-  where indexMax = snd $ maximum $ zip result [0, 1..]
+correlationChunkPearson :: U.Vector Double -- ^ data x
+                        -> U.Vector Double -- ^ data y
+                        -> Double -- ^ total duration to analyze [s]
+                        -> Double -- ^ chunk duration to analyze [s]
+                        -> Double -- ^ sampling rate [Hz]
+                        -> Int    -- ^ number of shift to take correlation
+                        -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+correlationChunkPearson x y ttotal tchunk fs nshift
+  | U.length x == 0 = emptyResult
+  | U.length y == 0 = emptyResult
+  | fs < 0          = emptyResult
+  | nshift < 0      = emptyResult
+  | otherwise       = execute x y nchunk fs nshift
+--  | otherwise       = (U.convert x, U.convert y, U.convert x)
+   where nx     = U.length x :: Int
+         ny     = U.length y :: Int
+         nxy_min = min nx ny
+         ntotal = floor (ttotal * fs) :: Int
+         nchunk = floor (tchunk * fs) :: Int 
+         nchunkset = (min ntotal nxy_min) `div` nchunk
+         nchunk_list = [0..(nchunkset-1)] :: [Int]
 
-findIndexMaxCorrelationMaxValueIndexV :: S.Vector Double -- ^ Vector of correlation coefficient
-                                      -> Double -- ^ sampling rate [Hz]
-                                      -> (Int, Double)
-findIndexMaxCorrelationMaxValueIndexV result fs = (indexMax, (fromIntegral indexMax) / fs)
-  where indexMax = S.maxIndex result
-      
+         emptyResult ::(S.Vector Double, S.Vector Double, S.Vector Double)
+         emptyResult = (S.fromList [], S.fromList [], S.fromList [])
+        
+         correlationChunkPearsonCore :: U.Vector Double -> U.Vector Double -> Int -> Double -> Int -> Int-> [Double]
+         correlationChunkPearsonCore x y nchunk fs nshift index = do
+           let rhov   = twoChannelData2CorrelationV (U.slice (nchunk*index) nchunk x) (U.slice (nchunk*index) nchunk y) nshift :: U.Vector Double
+               output = formatoutput rhov index nchunk fs
+                  where rhomax = findIndexMaxCorrelationMaxValueIndexV (U.convert rhov) fs :: (Int, Double)                                     
+                        nchunkd = fromIntegral nchunk :: Double
+                        indexd  = fromIntegral index  :: Double
+                        formatoutput :: U.Vector Double -> Int -> Int -> Double -> [Double]
+                        formatoutput rhov index nchunk fs = [indexd / fs * nchunkd, (rhov U.! (fst rhomax)), snd rhomax]
+           output
+
+         execute :: U.Vector Double -> U.Vector Double -> Int -> Double -> Int -> (S.Vector Double, S.Vector Double, S.Vector Double)
+         execute x y nchunk fs nshift = do
+           let result   = transpose $ map (correlationChunkPearsonCore x y nchunk fs nshift ) nchunk_list :: [[Double]]
+               resultv  = map (U.convert . U.fromList) result :: [S.Vector Double]
+
+               resultv_tuple :: [S.Vector Double] -> (S.Vector Double, S.Vector Double, S.Vector Double)
+               resultv_tuple resultv = (resultv!!0, resultv!!1, resultv!!2)
+           resultv_tuple resultv
+
+
+
 
 pearsonCorrelationV :: U.Vector Double -- ^ Vector of data x
                     -> U.Vector Double -- ^ Vector of data y
@@ -89,26 +201,3 @@ pearsonCorrelationV x y = sxy / (sqrt sxx) / (sqrt syy)
         sxy = U.sum $ U.zipWith (*) xdiff ydiff
         sxx = U.sum $ U.map (**2) xdiff
         syy = U.sum $ U.map (**2) ydiff
-
-
-alpha2Pvalue :: Int -- ^
-             -> Double -- ^ 
-             -> Double -- ^
-alpha2Pvalue n alpha
-  | n < 3     = 0
-  | otherwise = t / sqrt (realToFrac n - 2.0 + t * t)
-  where t = gslCdfTdistPinv (1.0 - alpha/2.0) ( realToFrac (n-2) )
-
-
-significance :: Int -- ^
-             -> Double -- ^
-             -> Double -- ^ significance 
-significance n r
-  | n < 3     = 0
-  | abs r > 1 = 0
-  | t <  0    = 2.0 * gslCdfTdistP t (realToFrac (n-2))
-  | t >= 0    = 2.0 * gslCdfTdistQ t (realToFrac (n-2))
-  where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
-
-
-

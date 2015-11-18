@@ -22,7 +22,7 @@ module FrameUtils
 , getChannelList
 , getGPSTime
 , getSamplingFrequency
-, getFrVectUnitY
+, getUnitY
 )
 where
 
@@ -538,8 +538,8 @@ getSamplingFrequency frameFile channelName = runMaybeT $ MaybeT $ do
                     | rate<1.0  = rate
                     where rate = 1.0 / dt :: Double
 
-getFrVectUnitY :: String -> String -> IO (Maybe String)
-getFrVectUnitY frameFile channelName = runMaybeT $ MaybeT $ do
+getUnitY :: String -> String -> IO (Maybe String)
+getUnitY frameFile channelName = runMaybeT $ MaybeT $ do
     withCString channelName $ \channel ->
       withCString frameFile $ \framefileName -> do
         ifile <- c_FrFileINew framefileName

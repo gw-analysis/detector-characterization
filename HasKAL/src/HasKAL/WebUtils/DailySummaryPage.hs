@@ -55,19 +55,31 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               ++ addStyle
               ++ startBODY
               ++ addTitle pageTitle 
-              ++ addDate date
+              ++ setDIVa
+              (  addDate date
+              ++ addBR
+              ++ addBR
               ++ addLayout relativepthCh relativepthMo
-              ++ addSubs subsystem
+              )
+              ++ addBR
+              ++ addBR
+              ++ addSubs (setCenter subsystem)
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
       contentsMo = startHTML
               ++ addHEAD
               ++ addStyle
               ++ startBODY
-              ++ addTitle pageTitle 
-              ++ addDate date
+              ++ addTitle pageTitle
+              ++ setDIVa
+              (   addDate date
+              ++ addBR
+              ++ addBR
               ++ addLayout relativepthCh relativepthMo
-              ++ addSubs subsystem
+              )
+              ++ addBR
+              ++ addBR
+              ++ addSubs (setCenter subsystem)
               ++ concat (for mons $ \mon -> layoutMonitorBase mon titles tables ncol)
               ++ endHTML
   writeFile fnamehtmledCh contentsCh
@@ -77,24 +89,30 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
 layoutMonitorBase mon titles tables ncol = do
   let titlesch = [x | x<-titles, isInfixOf (":"++mon) x]
       tablesch= [x | x<-tables, isInfixOf ("_"++mon) x]
-   in startTABLE
+   in putName mon
+       ++ startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
        ++ endTBODY
        ++ endTABLE
+       ++ addBR
 
 
 layoutChannelBase ch titles tables ncol = do
   let titlesch = [x | x<-titles, isInfixOf ch x]
       tablesch= [x | x<-tables, isInfixOf ch x]
-   in startTABLE
+   in putName ch
+       ++ startTABLE
        ++ startTBODY
        ++ (layoutTitleTable titlesch tablesch ncol)
        ++ endTBODY
        ++ endTABLE
-
+       ++ addBR
 
 for = flip map
+
+
+putName = setH3 
 
 
 recurrentCreateDirectory _ [] = return ()
@@ -165,6 +183,16 @@ addStyle = concat [
   ,"color: #800000;"
   ,"background-color: #cccccc;"
   ,"padding: 0.25em; border: 1px solid black; }"
+  ,"div#a{"
+  ,"color: #800000;"
+  ,"background-color: #ffffff;"
+  ,"font-size:150%;"
+  ,"font-weight:bold; }"
+  ,"div#bw{"
+  ,"color: #000000;"
+  ,"background-color: #ffffff;"
+  ,"font-size:160%;"
+  ,"font-weight:bold; }"
   ,"</style>"
   ]
 
@@ -172,18 +200,16 @@ startBODY = "<body>"
 
 addTitle x = concat ["<h1 style=\"color: rgb(51, 51, 255);\">"++x++"</h1>"]
 
-addDate x = concat ["<h2>Local Date :"++x++"</h2>"]
+addDate x = concat ["Local Date:<br>"++x]
 
-addSubs x = concat ["<h2>"++x++"</h2>"]
+addSubs  = setDIVbw
 
 addLayout pathch pathmo = concat [
-  "<h2>"
-  , "Layout"
+  "Layout:"
   , "<br>"
   , "<a href=\""++pathch++"\"><b>- Channel Order</b></a>"
   , "<br>"
   , "<a href=\""++pathmo++"\"><b>- Monitor Order</b></a>"
-  , "</h2>"
   ]
 
 addBR = "<br>"
@@ -210,6 +236,17 @@ endBODY = "</body>"
 
 endHTML = "</html>"
 
+setH1 x =  concat ["<h1>"++x++"</h1>"]
+setH2 x =  concat ["<h2>"++x++"</h2>"]
+setH3 x =  concat ["<h3>"++x++"</h3>"]
+
+startDIV = "<div>"
+endDIV = "</div>"
+
+setDIVa x = concat ["<div id=\"a\">"++x++"</div>"]
+setDIVbw x = concat ["<div id=\"bw\">"++x++"</div>"]
+
+setCenter x = concat ["<center>"++x++"</center>"]
 
 
 

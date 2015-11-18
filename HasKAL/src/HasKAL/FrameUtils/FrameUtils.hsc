@@ -22,6 +22,7 @@ module HasKAL.FrameUtils.FrameUtils
 , getChannelList
 , getGPSTime
 , getSamplingFrequency
+, getUnitY
 )
 where
 
@@ -91,9 +92,11 @@ data FrVect_partial = FrVect_partial { frvect_type    :: CFRVECTTYPES
                                      , frvect_dx      :: Ptr CDouble
                                      , frvect_nDim    :: CUInt
                                      , frvect_nx      :: Ptr CFRULONG
+                                     , frvect_unitY   :: Ptr CChar
                                      , frvect_startX  :: CDouble
                                      , frvect_GTime   :: CDouble
                                      , frvect_dataS   :: Ptr CShort
+                                     , frvect_dataI   :: Ptr CInt
                                      , frvect_dataF   :: Ptr CFloat
                                      , frvect_dataD   :: Ptr CDouble
                                      }
@@ -252,6 +255,11 @@ readFrame channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 --                v `deepseq` return()
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataI v)
+                      c_FrVectFree ptr_v
+                      c_FrFileIEnd ifile
+                      return $ Just (map fromIntegral array_vdata)
              --       frvect_r4 -> do
                     3 -> do
                       array_vdata <- peekArray (read (show (frvect_nData v)) :: Int) (frvect_dataF v)
@@ -291,6 +299,12 @@ readFramePtr' channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr CDouble
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -332,6 +346,12 @@ readFramePtr channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      let ptrdatD = castPtr (frvect_dataI v) :: Ptr Double
+                      ptrdatD `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ptrdatD,read (show (frvect_nData v)) :: Int)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -373,6 +393,13 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      vcddat <- newForeignPtr_ (frvect_dataI v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      vcddat `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ci2cdV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -395,7 +422,7 @@ readFrameVCD channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2cdV vcddat)
+                        return $ Just (cs2cdV vcddat)
 
 
 readFrameV :: String -> String -> IO (Maybe (V.Vector Double))
@@ -417,6 +444,13 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                 v <- peek ptr_v
                 let datatype = frvect_type v
                 case datatype of
+                    4 -> do
+                      free ptr_v
+                      vcddat <- newForeignPtr_ (frvect_dataI v) >>= \foreignptrOutput ->
+                        return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
+                      vcddat `deepseq` do
+                        c_FrFileIEnd ifile
+                        return $ Just (ci2dV vcddat)
              --       frvect_r4 -> do
                     3 -> do
                       free ptr_v
@@ -439,7 +473,7 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
                         return $ V.unsafeFromForeignPtr0 foreignptrOutput (read (show (frvect_nData v)) :: Int)
                       vcddat `deepseq` do
                         c_FrFileIEnd ifile
-                        return $ Just (ci2dV vcddat)
+                        return $ Just (cs2dV vcddat)
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
@@ -504,6 +538,28 @@ getSamplingFrequency frameFile channelName = runMaybeT $ MaybeT $ do
                     | rate<1.0  = rate
                     where rate = 1.0 / dt :: Double
 
+getUnitY :: String -> String -> IO (Maybe String)
+getUnitY frameFile channelName = runMaybeT $ MaybeT $ do
+    withCString channelName $ \channel ->
+      withCString frameFile $ \framefileName -> do
+        ifile <- c_FrFileINew framefileName
+        if (ifile == nullPtr)
+          then return Nothing
+          else do
+            fstart <- c_FrFileITStart ifile
+            fend   <- c_FrFileITEnd ifile
+            let frlen = fend - fstart
+            ptr_v <- c_FrFileIGetV ifile channel fstart frlen
+            if (ptr_v == nullPtr)
+              then return Nothing
+              else do
+                v <- peek ptr_v
+                let unit' = (frvect_unitY v) :: (Ptr CChar) -- (= CString)
+                unit <- peekCString unit' :: IO String
+                c_FrVectFree ptr_v
+                c_FrFileIEnd ifile
+                return $ Just unit
+
 
 getGPSTime :: String -> IO (Maybe (Int, Int, Double))
 getGPSTime frameFile = do
@@ -529,14 +585,20 @@ cd2dV = V.map realToFrac
 cf2dV :: V.Vector CFloat -> V.Vector Double
 cf2dV = V.map realToFrac
 
-ci2dV :: V.Vector CShort -> V.Vector Double
+ci2dV :: V.Vector CInt -> V.Vector Double
 ci2dV = V.map fromIntegral
+
+cs2dV :: V.Vector CShort -> V.Vector Double
+cs2dV = V.map fromIntegral
 
 cf2cdV :: V.Vector CFloat -> V.Vector CDouble
 cf2cdV = V.map realToFrac
 
-ci2cdV :: V.Vector CShort -> V.Vector CDouble
+ci2cdV :: V.Vector CInt -> V.Vector CDouble
 ci2cdV = V.map fromIntegral
+
+cs2cdV :: V.Vector CShort -> V.Vector CDouble
+cs2cdV = V.map fromIntegral
 
 
 
@@ -579,8 +641,10 @@ instance Storable FrVect_partial where
                                   val_nDim
                                   ptr_nx
                                   val_startX
+                                  ptr_unitY
                                   val_GTime
                                   ptr_dataS
+                                  ptr_dataI
                                   ptr_dataF
                                   ptr_dataD) = do
       (#poke struct FrVect, type)    ptr_frvect val_type
@@ -589,8 +653,10 @@ instance Storable FrVect_partial where
       (#poke struct FrVect, nDim)    ptr_frvect val_nDim
       (#poke struct FrVect, nx)      ptr_frvect ptr_nx
       (#poke struct FrVect, startX)  ptr_frvect val_startX
+      (#poke struct FrVect, unitY)   ptr_frvect ptr_unitY
       (#poke struct FrVect, GTime)   ptr_frvect val_GTime
       (#poke struct FrVect, dataS)   ptr_frvect ptr_dataS
+      (#poke struct FrVect, dataI)   ptr_frvect ptr_dataI
       (#poke struct FrVect, dataF)   ptr_frvect ptr_dataF
       (#poke struct FrVect, dataD)   ptr_frvect ptr_dataD
   peek ptr_frvect = do
@@ -600,8 +666,10 @@ instance Storable FrVect_partial where
       val_nDim    <- (#peek struct FrVect, nDim)      ptr_frvect
       ptr_nx      <- (#peek struct FrVect, nx)        ptr_frvect
       val_startX  <- (#peek struct FrVect, startX)    ptr_frvect
+      ptr_unitY   <- (#peek struct FrVect, unitY)     ptr_frvect
       val_GTime   <- (#peek struct FrVect, GTime)     ptr_frvect
       ptr_dataS   <- (#peek struct FrVect, dataS)     ptr_frvect
+      ptr_dataI   <- (#peek struct FrVect, dataI)     ptr_frvect
       ptr_dataF   <- (#peek struct FrVect, dataF)     ptr_frvect
       ptr_dataD   <- (#peek struct FrVect, dataD)     ptr_frvect
       return $ FrVect_partial { frvect_type     = val_type
@@ -610,8 +678,10 @@ instance Storable FrVect_partial where
                               , frvect_nDim     = val_nDim
                               , frvect_nx       = ptr_nx
                               , frvect_startX   = val_startX
+                              , frvect_unitY    = ptr_unitY
                               , frvect_GTime    = val_GTime
                               , frvect_dataS    = ptr_dataS
+                              , frvect_dataI    = ptr_dataI
                               , frvect_dataF    = ptr_dataF
                               , frvect_dataD    = ptr_dataD }
 

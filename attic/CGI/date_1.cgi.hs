@@ -6,12 +6,12 @@ import HasKAL.SpectrumUtils.Function (writeSpectrum, writeSpectrogram)
 
 import Network.CGI
 import Control.Monad (liftM, forM)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, fromMaybe)
 import qualified Data.Vector.Storable as V (fromList, length, toList, map)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum, mapSpectrum, mapSpectrogram)
@@ -73,7 +73,9 @@ process params = do
     case datMaybe of
      Nothing -> return ("ERROR: Can't find file or channel", ch, []) -- データが無ければメッセージを返す
      _ -> do
-       fs <- liftM fromJust $ (`getSamplingFrequency` ch) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch)
+       fname <- liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch) -- データがあったのでファイルは必ずある
+       fs <- liftM fromJust $ getSamplingFrequency fname ch
+       unit <- liftM (fromMaybe "") $ getUnitY fname ch
        let fmin' = show $ max 0.0 $ read $ fmin params -- 負の周波数なら0Hzを返す
            fmax' = show $ min (fs/2) $ read $ fmax params -- ナイキスト周波数を超えたらナイキスト周波数を返す
        let dat = fromJust datMaybe
@@ -100,7 +102,7 @@ process params = do
                 Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
                 Right dat' -> do
                   let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat') 0.0
-                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "Amplitude") 0.05
+                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05
                     ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
                   oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
                     ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
@@ -113,14 +115,14 @@ process params = do
              (True, _) -> return () -- 既にPNGがあれば何もしない
              {-- Time Series Plot --}
              (_, "TS") -> do
-               plotV Linear Line 1 BLUE ("time [s] since GPS="++gps', "") 0.05 ("Time Series: "++ch) pngfile ((0,0),(0,0)) (tvec, dat)
+               plotV Linear Line 1 BLUE ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05 ("Time Series: "++ch) pngfile ((0,0),(0,0)) (tvec, dat)
              {-- Spectrum Plot --}
              (_, "PSD") -> do
-               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "/rHz") 0.05 ("Spectrum: "++ch)
+               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", unitBracket "" ("ASD"++unit++"/rHz")) 0.05 ("Spectrum: "++ch)
                  pngfile (fRange,(0,0)) $ mapSpectrum sqrt snf
              {-- Spectrogram Plot --}
              (_, "SPE") -> do
-               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", "/rHz") ("Spectrogram: "++ch)
+               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", unitBracket "" ("ASD"++unit++"/rHz")) ("Spectrogram: "++ch)
                  pngfile ((0,0),fRange) $ mapSpectrogram sqrt hfs
              {-- Rayleigh Monitor --}
              (_, "RM") -> do
@@ -146,11 +148,11 @@ process params = do
                      where fmaxfs 0 = fs/2
                            fmaxfs x = min x (fs/2)
                            n = 32
-               oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', "RMS") 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
+               oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', unitBracket "RMS" unit) 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
                let (sens, _) = runSensMon dat fs (truncate fs)
-               histgram2dM LogXZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,"Log /rHz","yield") ("SensMon: "++ch) pngfile ((0,0),fRange) sens
+               histgram2dM LogXZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,unitBracket "ASD" ("log("++unit++"/rHz)"),"yield") ("SensMon: "++ch) pngfile ((0,0),fRange) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
                return ()
@@ -175,6 +177,10 @@ process params = do
 --            return ()
             return [pngfile]
        return (show fs, ch, concat filesL)
+
+unitBracket :: String -> String -> String
+unitBracket x "" = x
+unitBracket x y  = x++" ["++y++"]"
 
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody
