@@ -10,6 +10,7 @@ import Data.Conduit (Sink, Source, await, yield, ($$))
 import Data.Text (pack)
 import Filesystem.Path (extension)
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
+import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB)
 import System.Environment (getArgs)
 import System.FSNotify (withManager, watchTree, Event(..), eventPath)
 
@@ -19,7 +20,7 @@ import System.FSNotify (withManager, watchTree, Event(..), eventPath)
 main = do
   dirname <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
-   _ -> error "Usage : runRegistDB dir"
+   _ -> error "Usage : RunRegistFrame2FrameFullDB dir"
   source dirname $$ sink
 
 source :: FilePath
@@ -52,7 +53,7 @@ sink = do
   case c of 
     Nothing -> do liftIO $ print "Nothing" 
                   sink
-    Just fname -> do liftIO $ print fname 
+    Just fname -> do liftIO $ updateFrameDB fname 
                      sink
 
 
