@@ -57,13 +57,16 @@ import HasKAL.FrameUtils.FrameUtils
 import System.IO.Unsafe (unsafePerformIO)
 
 
-
 kagraChannelList :: Int32 -> IO (Maybe [String])
 kagraChannelList gpstime = runMaybeT $ MaybeT $ do
   file <- kagraDataGPS gpstime >>= \maybel ->
-    return $ head $ fromMaybe (error "no file in this gps") maybel
-  getChannelList file >>= \maybech ->
-    return $ Just $ fst . unzip $ fromMaybe (error "no channel in this gps") maybech
+    case maybel of 
+      Nothing -> print "no file in this GPS time." >> return Nothing
+      Just xs  -> return $ Just (head xs)
+  getChannelList (fromJust file) >>= \maybech ->
+     case maybech of
+       Nothing -> print "no channel in this GPS time." >> return Nothing
+       Just xs -> return $ Just (fst . unzip $ xs)
 
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO (Maybe [String])
