@@ -6,6 +6,7 @@
 module HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin
 ( updateFrameDBfromcache
 , updateFrameDB
+, updateFrameDB'
 ) where
 
 import Control.Monad
@@ -40,6 +41,21 @@ import System.Directory (doesFileExist)
 import qualified System.IO as IO
 import System.Process (rawSystem)
 
+
+
+updateFrameDB' fname = doesFileExist fname >>= \b ->
+ case b of
+  True -> withConnectionIO' DD.connect $ \conn -> do 
+            maybegps <- getGPSTime fname
+            case maybegps of
+              Nothing -> return ()
+              Just (gpsstrt', gpsstrtnano', duration') -> do
+                let gpsstrt = fromIntegral gpsstrt' :: Int32
+                    duration = fromIntegral (truncate duration') :: Int32
+                    gpsend = gpsstrt + duration
+                runInsert conn insertFramefull $ Framefull 0 (Just fname) (Just gpsstrt) (Just gpsend)
+                commit conn  
+  False -> return ()             
 
 
 updateFrameDB fname = doesFileExist fname >>= \b ->
