@@ -20,6 +20,15 @@ import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 
 
+{-- ToDo :
+    ・CGIだけのためにデータのサンプリングレートを揃えるLPFをかける関数を用意する
+    ・CGI用のmodule
+    ・異なるサンプリングレートでも動くようにする
+    ・引数にfs_xとfs_yを追加する
+--}
+
+
+
 {-- Expose Functions --}
 takeCorrelation :: CorrelationMethod -- ^ Pearson / MIC
                 -> [Double] -- ^ data list x
@@ -74,7 +83,7 @@ correlationChunk :: CorrelationMethod -- ^ Pearson / MIC
                               -> Double -- ^ chunk duration to analyze [s]
                               -> Double -- ^ sampling rate [Hz]
                               -> Int    -- ^ number of shift to take correlation
-                              -> ([Double], [Double], [Double]) -- ^ vector of correlation coefficient maximized
+                              -> ([Double], [Double], [Double]) -- ^ ([time], [rho_max], [timeshift])
 correlationChunk method x y ttotal tchunk fs nshift = do
   let result = correlationChunkCore method (U.fromList x) (U.fromList y) ttotal tchunk fs nshift :: (S.Vector Double, S.Vector Double, S.Vector Double)
       tolist :: (S.Vector Double, S.Vector Double, S.Vector Double) -> ([Double], [Double], [Double])
@@ -88,7 +97,7 @@ correlationChunkV :: CorrelationMethod -- ^ Pearson / MIC
                               -> Double -- ^ chunk duration to analyze [s]
                               -> Double -- ^ sampling rate [Hz]
                               -> Int    -- ^ number of shift to take correlation
-                              -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+                              -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized ([time], [rho_max], [timeshift])
 correlationChunkV method x y ttotal tchunk fs nshift = correlationChunkCore method (U.convert x) (U.convert y) ttotal tchunk fs nshift
 
 
@@ -135,7 +144,7 @@ correlationChunkCore :: CorrelationMethod -- ^ Pearson / MIC
                      -> Double -- ^ chunk duration to analyze [s]
                      -> Double -- ^ sampling rate [Hz]
                      -> Int    -- ^ number of shift to take correlation
-                     -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+                     -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized ([time], [rho_max], [timeshift])
 correlationChunkCore method x y ttotal tchunk fs nshift = case method of 
   Peason -> correlationChunkPearson x y ttotal tchunk fs nshift
   MIC    -> correlationChunkPearson x y ttotal tchunk fs nshift
@@ -146,14 +155,13 @@ correlationChunkPearson :: U.Vector Double -- ^ data x
                         -> Double -- ^ chunk duration to analyze [s]
                         -> Double -- ^ sampling rate [Hz]
                         -> Int    -- ^ number of shift to take correlation
-                        -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized
+                        -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized ([time], [rho_max], [timeshift])
 correlationChunkPearson x y ttotal tchunk fs nshift
   | U.length x == 0 = emptyResult
   | U.length y == 0 = emptyResult
   | fs < 0          = emptyResult
   | nshift < 0      = emptyResult
   | otherwise       = execute x y nchunk fs nshift
---  | otherwise       = (U.convert x, U.convert y, U.convert x)
    where nx     = U.length x :: Int
          ny     = U.length y :: Int
          nxy_min = min nx ny

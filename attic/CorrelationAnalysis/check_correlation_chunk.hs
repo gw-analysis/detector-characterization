@@ -5,7 +5,7 @@ import qualified Data.Vector.Storable as S
 import System.Environment (getArgs)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
-import HasKAL.DataBaseUtils.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
