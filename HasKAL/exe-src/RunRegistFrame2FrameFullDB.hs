@@ -8,12 +8,13 @@ import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.DeepSeq (deepseq)
 import Control.Monad.State (liftIO)
 import Data.Conduit (Sink, Source, await, yield, ($$))
+import Data.List (elemIndices)
 import Data.Text (pack)
 import Filesystem.Path (extension)
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB')
 import System.Environment (getArgs)
-import System.FSNotify (withManager, watchTree, Event(..), eventPath)
+import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchTree, eventPath)
 import System.IO (hFlush, stdout)
 
 
@@ -28,7 +29,12 @@ main = do
 source :: FilePath
        -> Source IO FilePath
 source watchdir = do
-  x <- liftIO $ withManager $ \manager -> do
+  let config = WatchConfig
+                 { confDebounce = DebounceDefault
+                 , confPollInterval = 20000000 -- 20seconds
+                 , confUsePolling = True
+                 }
+  x <- liftIO $ withManagerConf config $ \manager -> do
     fname <- liftIO newEmptyMVar
     _ <- watchTree manager watchdir (const True)
       $ \event -> case event of
@@ -40,7 +46,9 @@ source watchdir = do
                            else if (ext==gwf)
                              then do
                                let gwfname = eventPath event
-                               putMVar fname gwfname
+                               case length (elemIndices '.' gwfname) of
+                                 1 -> putMVar fname gwfname
+                                 _ -> putStrLn "file saving" >> hFlush stdout
                              else
                                putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
     takeMVar fname
