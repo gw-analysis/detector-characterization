@@ -9,6 +9,7 @@ main = do
   {-- parameters --}
   args <- getArgs
   let strings = case length args' of
+                 6 -> args'++["UTC"]
                  7 -> args'
                  _ -> error message
                 where args' = concat $ map (splitRegex (mkRegex ":")) $ concat $ map (splitRegex (mkRegex "-")) args
@@ -44,7 +45,7 @@ fillspc n str = replicate m ' ' ++ str
 
 message :: String
 message = concat [
-  "Usage: localtime2gps DATE ST\n",
+  "Usage: localtime2gps DATE [ST]\n",
   "   DATE:: yyyy-mm-dd HH:MM:SS\n",
   "          yyyy mm dd HH MM SS\n",
   "     ST:: JST, UTC ..."

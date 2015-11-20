@@ -8,8 +8,9 @@ main = do
   {-- parameters --}
   args <- getArgs
   (gps, locate) <- case (length args) of
+                    1 -> return $ (args!!0, "UTC")
                     2 -> return $ (args!!0, args!!1)
-                    _ -> error "Usage: gps2localtime gps [JST | UTC]"
+                    _ -> error message
 
   {-- main --}
   let localT = gps2localTime (read gps) locate
@@ -20,3 +21,9 @@ fillspc :: Int -> String -> String
 fillspc n str = replicate m ' ' ++ str
   where m = n - length str
 
+
+message :: String
+message = concat [
+  "Usage: gps2localtime GPS [ST]\n",
+  "     ST:: JST, UTC ..."
+  ]
