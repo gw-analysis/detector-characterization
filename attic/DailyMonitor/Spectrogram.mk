@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailySpectrogram.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/13 15:08:52
+# Last Modified: 2015/11/20 15:09:55
 #******************************************#
 
 # compiler option
@@ -16,7 +16,8 @@ TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-DEPs= ${DEP1}
+DEP2= ./HasKAL/SignalProcessingUtils/filterFunctions.c
+DEPs= ${DEP1} ${DEP2}
 
 #########################################
 # link path

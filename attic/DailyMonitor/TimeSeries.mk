@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: dailyTimeSeries.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/13 15:09:10
+# Last Modified: 2015/11/20 14:52:04
 #******************************************#
 
 # compiler option
@@ -16,7 +16,8 @@ TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-DEPs= ${DEP1}
+DEP2= ./HasKAL/SignalProcessingUtils/filterFunctions.c
+DEPs= ${DEP1} ${DEP2}
 
 #########################################
 # link path
@@ -30,6 +31,10 @@ endif
 all: ${TARs}
 
 ${TAR1}: ${TAR1}.hs ${DEPs}
+	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR2}: ${TAR2}.hs ${DEPs}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 

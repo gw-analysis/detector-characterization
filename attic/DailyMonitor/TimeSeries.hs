@@ -6,7 +6,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+import HasKAL.SignalProcessingUtils.Resampling (downsampleV)
 
 main = do
   args <- getArgs
@@ -17,6 +17,7 @@ main = do
   {-- parameters --}
   let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       duration = 86400 -- seconds
+      dsfs = 1024
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_TimeSeries.png"
       title = "TimeSeries: " ++ ch
@@ -39,9 +40,13 @@ main = do
               Nothing -> ""
 
   {-- main --}
-  let tvec = fromList [0, 1/fs..(fromIntegral $ dim dat - 1)/fs]
-  plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat)
-
+  -- let tvec = fromList [0, 1/fs..(fromIntegral $ dim dat - 1)/fs]
+  -- plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat)
+  let (minfs, dat') = case (fs > dsfs) of
+                       True -> (dsfs, downsampleV fs dsfs dat)
+                       False -> (fs, dat)
+  let tvec = fromList [0, 1/dsfs..(fromIntegral $ dim dat' - 1)/minfs]
+  plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat')
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
