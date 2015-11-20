@@ -1,7 +1,7 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
+import Data.Packed.Vector (Vector, subVector, fromList, dim)
 import Numeric (showGFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
@@ -46,10 +46,8 @@ main = do
               Nothing -> "[/rHz]"
 
   {-- main --}
-  -- let hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-  -- histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", unit) title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
   let (minfs, dat') = case (fs > dsfs) of
-                       True -> (dsfs, downsampleV fs dsfs dat)
+                       True -> (dsfs, dropBothSide 8 $ downsampleV fs dsfs dat)
                        False -> (fs, dat)
   let hf  = gwspectrogramV 0 (truncate $ fftLength * minfs) minfs dat'
   histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", unit) title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
@@ -63,3 +61,8 @@ show0 digit number
   | otherwise   = number
   where len = length number
 
+dropBothSide :: Int -> Vector Double -> Vector Double
+dropBothSide n xv 
+  | len <= 2*n = fromList []
+  | otherwise  = subVector n (len-2*n) xv
+  where len = dim xv
