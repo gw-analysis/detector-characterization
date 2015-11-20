@@ -57,7 +57,6 @@ import HasKAL.FrameUtils.FrameUtils
 import System.IO.Unsafe (unsafePerformIO)
 
 
-
 kagraChannelList :: Int32 -> IO (Maybe [String])
 kagraChannelList gpstime = runMaybeT $ MaybeT $ do
   file <- kagraDataGPS gpstime >>= \maybel ->

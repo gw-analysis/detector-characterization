@@ -5,7 +5,7 @@
 module GlitchMon.Glitchdb where
 
 import Prelude hiding (id)
-import HasKAL.DataBaseUtils.DataSource (defineTable)
+import HasKAL.DataBaseUtils.KAGRADataSource (defineTable)
 import Data.Int (Int32, Int64)
 
 

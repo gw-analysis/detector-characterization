@@ -19,9 +19,9 @@ import Data.List (isInfixOf, (!!))
 --import Data.Int (Int32)
 
 import Control.Monad (forM)
-import HasKAL.DataBaseUtils.DataSource (connect)
+import HasKAL.DataBaseUtils.KAGRADataSource (connect)
 --import HasKAL.DataBaseUtils.Framedb (Framedb, framedb, tableOfFramedb)
-import qualified HasKAL.DataBaseUtils.Framedb as Framedb
+import qualified HasKAL.DataBaseUtils.XEndEnv.Table as Framedb
 import System.Process (rawSystem)
 import System.Environment (getArgs)
 import Data.Int (Int32)
