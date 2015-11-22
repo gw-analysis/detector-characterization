@@ -34,7 +34,8 @@ import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra as NL
-import System.FSNotify (startManager, stopManager, withManager, watchTree, Event(..), eventPath)
+import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchTree, eventPath)
+import System.IO (hFlush, stdout)
 
 import qualified GlitchMon.GlitchParam as GP
 import GlitchMon.PipelineFunction
@@ -51,18 +52,29 @@ runGlitchMon watchdir param chname =
 source :: FilePath
        -> Source IO FilePath
 source watchdir = do
-  x <- liftIO $ withManager $ \manager -> do
-    goC <- liftIO newEmptyMVar
+  let config = WatchConfig
+                 { confDebounce = DebounceDefault
+                 , confPollInterval = 20000000 -- 20seconds
+                 , confUsePolling = True
+                 }
+  x <- liftIO $ withManagerConf config $ \manager -> do
+    fname <- liftIO newEmptyMVar
     _ <- watchTree manager watchdir (const True)
-     $ \event -> case event of
-      Removed _ _ -> print "file removed"
-      _ -> case extension (decodeString $ eventPath event) of
-             Just filepart -> print "file downloading"
-             Just gwf -> do
-               let gwfname = eventPath event
-               putMVar goC gwfname
-             Nothing -> print "file extension should be .filepart or .gwf"
-    takeMVar goC
+      $ \event -> case event of
+        Removed _ _ -> putStrLn "file removed" >> hFlush stdout
+        _           -> case extension (decodeString $ eventPath event) of
+                         Just ext -> if (ext==filepart)
+                           then
+                             putStrLn "file downloading" >> hFlush stdout
+                           else if (ext==gwf)
+                             then do
+                               let gwfname = eventPath event
+                               case length (elemIndices '.' gwfname) of
+                                 1 -> putMVar fname gwfname
+                                 _ -> putStrLn "file saving" >> hFlush stdout
+                             else
+                               putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
+    takeMVar fname
   yield x >> source watchdir
   where filepart = pack "filepart"
         gwf = pack "gwf"
@@ -74,17 +86,17 @@ sink :: GP.GlitchParam
 sink param chname = do
   c <- await
   case c of
-    Nothing -> return ()
+    Nothing -> sink s chname
     Just fname -> do
       maybegps <- liftIO $ getGPSTime fname
       case maybegps of
-        Nothing -> return ()
+        Nothing -> sink s chname
         Just (s, n, dt') -> do
           let gps = floor $ deformatGPS (s, n)
               dt = floor dt'
           maybewave <- liftIO $ readFrameWaveData General gps dt chname fname
           case maybewave of
-            Nothing -> return ()
+            Nothing -> sink s chname
             Just wave -> do s <- liftIO $ glitchMon param wave
                             sink s chname
 
