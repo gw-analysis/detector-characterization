@@ -37,9 +37,9 @@ import Data.Maybe                 (fromJust, fromMaybe)
 import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 
-import HasKAL.DataBaseUtils.DataSource (connect)
-import GlitchMon.Glitchdb (Glitchdb)
-import qualified GlitchMon.Glitchdb as Glitch
+import HasKAL.DataBaseUtils.KAGRADataSource (connect)
+import GlitchMon.Table (Glitchtbl(..), insertGlitchtbl)
+import qualified GlitchMon.Table as Glitch
 
 
 
@@ -64,7 +64,7 @@ extractTrigInfoTFSNRCore gpsstart gpsstop snrlow snrhigh =
     outputResults c q = runQuery' c (relationalQuery q) ()
     core :: Relation () ((Maybe Int32, Maybe Double, Maybe Double))
     core = relation $ do
-      db <- query Glitch.glitchdb
+      db <- query Glitch.glitchtbl
       wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
         `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
         `and'` db ! Glitch.snr' .>=. value (Just snrlow)
