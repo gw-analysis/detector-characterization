@@ -24,7 +24,7 @@ import Filesystem.Path (extension)
 import Filesystem.Path.CurrentOS (decodeString,  encodeString)
 import HasKAL.DetectorUtils.Detector(Detector(..))
 import HasKAL.FrameUtils.FrameUtils (getGPSTime)
-import HasKAL.FrameUtils.Function (readFrameWaveData)
+import HasKAL.FrameUtils.Function (readFrameWaveData')
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
 import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec)
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
@@ -92,9 +92,7 @@ sink param chname = do
       case maybegps of
         Nothing -> sink param chname
         Just (s, n, dt') -> do
-          let gps = floor $ deformatGPS (s, n)
-              dt = floor dt'
-          maybewave <- liftIO $ readFrameWaveData General gps dt chname fname
+          maybewave <- liftIO $ readFrameWaveData' General chname fname
           case maybewave of
             Nothing -> sink param chname
             Just wave -> do s <- liftIO $ glitchMon param wave
@@ -132,9 +130,7 @@ eventDisplayF param fname chname = do
   case maybegps of
     Nothing -> error "file broken"
     Just (s, n, dt') -> do
-      let gps = floor $ deformatGPS (s, n)
-          dt = floor dt'
-      maybewave <- readFrameWaveData General gps dt chname fname
+      maybewave <- readFrameWaveData' General chname fname
       case maybewave of
         Nothing -> error "file broken"
         Just w -> runStateT (part'DataConditioning w) param >>= \(a, s) ->
