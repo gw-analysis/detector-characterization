@@ -9,6 +9,7 @@ module HasKAL.FrameUtils.Function
 , readFrameFromGPS'V
 --  ,readFrameUntilGPS
 , readFrameWaveData
+, readFrameWaveData'
 ) where
 
 import qualified Control.Monad as CM
@@ -104,6 +105,23 @@ readFrameWaveData detector gpsTime obsTime channel cache = runMaybeT $ MaybeT $ 
               Nothing -> return Nothing
               Just y -> return $ Just $ HWD.mkWaveData detector "test dayo" fs (HTF.formatGPS startGPS) (HTF.formatGPS endGPS) $ DPV.fromList y
 
+
+readFrameWaveData' :: HDD.Detector
+                  -> String
+                  -> String
+                  -> IO (Maybe HWD.WaveData)
+readFrameWaveData' detector channel fname = runMaybeT $ MaybeT $ do
+  maybefs <- HFF.getSamplingFrequency fname channel
+  case maybefs of
+    Nothing -> return Nothing
+    Just fs -> do
+      maybegps <- HFF.getGPSTime fname
+      case maybegps of
+        Nothing -> return Nothing
+        Just (gpsS,  gpsN,  dt) -> do
+          HFF.readFrameV channel fname >>= \maybev -> case maybev of
+            Nothing -> return Nothing
+            Just v -> return $ Just $ HWD.mkWaveData detector channel fs (gpsS, gpsN) (gpsS+floor dt, gpsN+floor (1E9*(dt-fromIntegral (floor dt)))) v
 
 
 
