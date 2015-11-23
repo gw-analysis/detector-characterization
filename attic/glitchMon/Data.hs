@@ -10,6 +10,8 @@ data TrigParam = TrigParam { detector :: Maybe String
                            , event_gpsstartn :: Maybe Int32
                            , event_gpsstops :: Maybe Int32
                            , event_gpsstopn :: Maybe Int32
+                           , event_cgpss :: Maybe Int32
+                           , event_cgpsn :: Maybe Int32
                            , duration :: Maybe Double
                            , energy :: Maybe Double
                            , central_frequency :: Maybe Double

@@ -11,7 +11,6 @@ import Control.Monad ((>>=))
 import Data.List (intersect)
 import qualified Data.Set as Set
 import HasKAL.FrameUtils.FrameUtils
-import HasKAL.FrameUtils.Function (readFrameV)
 
 import Numeric.LinearAlgebra
 import HasKAL.TimeUtils.Signature(GPSTIME)

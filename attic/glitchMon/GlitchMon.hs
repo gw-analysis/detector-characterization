@@ -17,7 +17,7 @@ import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
 import qualified Data.Conduit.List as CL
 import Data.Int (Int32)
-import Data.List (nub, foldl')
+import Data.List (nub, foldl', elemIndices)
 import qualified Data.Set as Set
 import Data.Text ( pack )
 import Filesystem.Path (extension)
@@ -86,17 +86,17 @@ sink :: GP.GlitchParam
 sink param chname = do
   c <- await
   case c of
-    Nothing -> sink s chname
+    Nothing -> sink param chname
     Just fname -> do
       maybegps <- liftIO $ getGPSTime fname
       case maybegps of
-        Nothing -> sink s chname
+        Nothing -> sink param chname
         Just (s, n, dt') -> do
           let gps = floor $ deformatGPS (s, n)
               dt = floor dt'
           maybewave <- liftIO $ readFrameWaveData General gps dt chname fname
           case maybewave of
-            Nothing -> sink s chname
+            Nothing -> sink param chname
             Just wave -> do s <- liftIO $ glitchMon param wave
                             sink s chname
 
@@ -264,7 +264,7 @@ part'ParameterEstimation m = do
       mcol = NL.cols trigM
       zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
   case (trigM == zerom) of
-    True -> do
+    False -> do
       let indxBlack = maxIndex trigM
           tsnr = trigM @@> indxBlack
           gps = formatGPS $ trigT @> fst indxBlack
@@ -272,11 +272,13 @@ part'ParameterEstimation m = do
           gpsn = fromIntegral $ snd gps :: Int32
           fc = trigF @> snd indxBlack
           tfs = fromIntegral $ truncate fs :: Int32
-      return $ Just TrigParam { detector = Just "XE"
-                              , event_gpsstarts = Just gpss
-                              , event_gpsstartn = Just gpsn
+      return $ Just TrigParam { detector = Just "General"
+                              , event_gpsstarts = Nothing
+                              , event_gpsstartn = Nothing
                               , event_gpsstops  = Nothing
                               , event_gpsstopn  = Nothing
+                              , event_cgpss = Just gpss
+                              , event_cgpsn = Just gpsn
                               , duration = Nothing
                               , energy = Nothing
                               , central_frequency = Just fc
@@ -291,9 +293,9 @@ part'ParameterEstimation m = do
                               , segment_gpsstops = Nothing
                               , segment_gpsstopn = Nothing
                               , dq_flag = Nothing
-                              , pipeline = Just "iKAGRA Burst pipeline"
+                              , pipeline = Just "iKAGRA Glitch pipeline"
                               }
-    False -> return Nothing
+    True -> return Nothing
 
 part'RegisterEventtoDB =
   registGlitchEvent2DB
