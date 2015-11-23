@@ -13,6 +13,7 @@ module HasKAL.DataBaseUtils.XEndEnv.Function
 , kagraDataFindCore
 , kagraDataPointCore
 , kagraTimeDataGet
+, kagraWaveDataGet
 )
 where
 
@@ -53,7 +54,9 @@ import Foreign.C.Types
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
 import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
 import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
+import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
+import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData)
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -99,9 +102,9 @@ kagraDataPoint gpstime chname = runMaybeT $ MaybeT $ do
 
 
 existChannel chname fname = unsafePerformIO $ do
-  getChannelList fname >>= \maybech -> case maybech of 
+  getChannelList fname >>= \maybech -> case maybech of
     Nothing -> return []
-    Just x -> let judge = filter (\ch -> ch == chname) $ (fst . unzip) x 
+    Just x -> let judge = filter (\ch -> ch == chname) $ (fst . unzip) x
                in case null judge of
                     True -> return []
                     False-> return fname
@@ -141,6 +144,33 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                     $ forM x (\y -> do
                         maybex <- readFrameV chname y
                         return $ fromJust maybex)
+
+
+kagraWaveDataGet :: Int -> Int -> String -> D.Detector -> IO (Maybe WaveData)
+kagraWaveDataGet gpsstrt duration chname detector = runMaybeT $ MaybeT $ do
+  flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case flist of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = head x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                  DT.sequence $ Just $ liftM
+                    (mkWaveData detector chname fs (gpsstrt, 0) (gpsstrt+duration, 0)
+                      . V.force . (V.slice headNum nduration) . V.concat)
+                        $ forM x (\y -> do
+                            maybex <- readFrameV chname y
+                            return $ fromJust maybex)
 
 
 kagraDataGet' :: Int -> Int -> String -> IO (Maybe (V.Vector CDouble))
