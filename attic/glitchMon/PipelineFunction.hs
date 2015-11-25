@@ -8,7 +8,8 @@ module GlitchMon.PipelineFunction
 where
 
 import Control.Monad ((>>=))
-import Data.List (intersect)
+import Control.Monad.State (runState, get, put)
+import Data.List (nub, intersect)
 import qualified Data.Set as Set
 import HasKAL.FrameUtils.FrameUtils
 
@@ -30,20 +31,40 @@ addID z = runState (go z z) 0
   where 
     go y (x:xs) = do 
       ind <- get
-      let a = intersect y (basePixel25 x))
+      let a = intersect y (basePixel25 x)
       case (length a > 2) of
         True -> do put (succ ind)
-                   [(p,q,ind)|(p,q)<- a]:go y xs
+                   let c = [(p,q,ind)|(p,q)<- a]
+                   b <- go y xs
+                   return (c++b)
         False-> go y xs
 
 
-regroup :: Int [(Int, Int, Int)] -> [[(Int, Int, Int)]]
+regroup :: Int -> [(Int, Int, Int)] -> [[(Int, Int, Int)]]
 regroup n y@((a,b,c):xs)  = do
-  let tagertID = [y3|(y1,y2,y3) <- y, y1==a,y2==b] 
+  let targetID = [y3|(y1,y2,y3) <- y, y1==a,y2==b] 
       grouped = concatMap (\x->filter (\(_,_,r)->r==x) y) targetID
-      grouped' = [(a,b,n)| (a,b,_)<-gouped]
-      newlist =  Set.difference (Set.fromList gouped) (Set.fromList y)
-   in grouped' ++ regroup (succ n) newlist
+      grouped' = [(a,b,n)|(a,b,_)<-grouped]
+      newlist =  Set.toList $ Set.difference (Set.fromList grouped) (Set.fromList y)
+   in [grouped'] ++ regroup (succ n) newlist
+
+
+friend :: [(Int,Int,Int)] -> [[Int]]
+friend x = nub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b]
+
+
+findMerge :: [[Int]] -> [[Int]]
+findMerge [] = []
+findMerge y@(x:xs) = 
+  let z = (flip map) [0..length y] $ \i->
+            case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of 
+              False -> (xs!!i, i)
+              True  -> ([],0)
+      a = nub $ Set.toList . Set.unions . map Set.fromList . fst . unzip $ z
+      e' = snd . unzip $ z
+      e = [x|x<-e',x/=0]
+      newxs = [ xs!!i | i <- [0..length y], not (Set.member i (Set.fromList e))]
+   in a : findMerge newxs
 
 
 basePixel9 :: (Int, Int) -> [(Int, Int)]
