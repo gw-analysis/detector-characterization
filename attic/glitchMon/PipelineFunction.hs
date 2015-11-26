@@ -1,33 +1,44 @@
 
 
 module GlitchMon.PipelineFunction
-( dataInfo
-, frameInfo
+( basePixel5
+, basePixel9
+, basePixel25
 , excludeOnePixelIsland
-)
-where
+, taggingIsland
+) where
+
 
 import Control.Monad ((>>=))
 import Control.Monad.State (runState, get, put)
+import Data.Int (Int32)
 import Data.List (nub, intersect)
 import qualified Data.Set as Set
 import HasKAL.FrameUtils.FrameUtils
-
-import Numeric.LinearAlgebra
 import HasKAL.TimeUtils.Signature(GPSTIME)
-import Data.Int (Int32)
-import qualified Data.Set as Set
-
-excludeOnePixelIsland :: [(Int, Int)] -> [(Int, Int)]
-excludeOnePixelIsland [] = []
-excludeOnePixelIsland y@(x:xs) = case (length (intersect y (basePixel25 x)) > 2) of
-  True -> intersect y (basePixel5 x) ++ excludeOnePixelIsland xs
-  False-> excludeOnePixelIsland xs
+import Numeric.LinearAlgebra
 
 
-addID :: [(Int, Int)] -> ([(Int, Int, Int)],Int)
-addID [] = ([],0)
-addID z = runState (go z z) 0
+excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> [(Int, Int)] -> [(Int, Int)]
+excludeOnePixelIsland f [] = []
+excludeOnePixelIsland f y@(x:xs) = case (length (intersect y (f x)) > 2) of
+  True -> intersect y (f x) ++ excludeOnePixelIsland f xs
+  False-> excludeOnePixelIsland f xs
+
+
+taggingIsland :: [(Int,Int)] -> [[(Int, Int, Int)]]
+taggingIsland x = let ids = secondIDing 1 . fst . firstIDing $ x
+                      groupIDs = groupingID ids
+                   in (flip map) [1..length groupIDs] $ 
+                        \i -> [ (a,b,i)
+                              | (a,b,c) <- ids
+                              , elem c (groupIDs!!(i-1))
+                              ]
+
+
+firstIDing :: [(Int, Int)] -> ([(Int, Int, Int)],Int)
+firstIDing [] = ([],0)
+firstIDing z = runState (go z z) 0
   where 
     go y (x:xs) = do 
       ind <- get
@@ -40,22 +51,26 @@ addID z = runState (go z z) 0
         False-> go y xs
 
 
-regroup :: Int -> [(Int, Int, Int)] -> [[(Int, Int, Int)]]
-regroup n y@((a,b,c):xs)  = do
+secondIDing :: Int -> [(Int, Int, Int)] -> [(Int, Int, Int)]
+secondIDing n y@((a,b,c):xs)  = do
   let targetID = [y3|(y1,y2,y3) <- y, y1==a,y2==b] 
       grouped = concatMap (\x->filter (\(_,_,r)->r==x) y) targetID
       grouped' = [(a,b,n)|(a,b,_)<-grouped]
       newlist =  Set.toList $ Set.difference (Set.fromList grouped) (Set.fromList y)
-   in [grouped'] ++ regroup (succ n) newlist
+   in grouped' ++ secondIDing (succ n) newlist
 
 
-friend :: [(Int,Int,Int)] -> [[Int]]
-friend x = nub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b]
+groupingID :: [(Int,Int,Int)] -> [[Int]]
+groupingID = secondStep . firstStep 
 
 
-findMerge :: [[Int]] -> [[Int]]
-findMerge [] = []
-findMerge y@(x:xs) = 
+firstStep :: [(Int,Int,Int)] -> [[Int]]
+firstStep x = nub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b]
+
+
+secondStep :: [[Int]] -> [[Int]]
+secondStep [] = []
+secondStep y@(x:xs) = 
   let z = (flip map) [0..length y] $ \i->
             case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of 
               False -> (xs!!i, i)
@@ -64,7 +79,7 @@ findMerge y@(x:xs) =
       e' = snd . unzip $ z
       e = [x|x<-e',x/=0]
       newxs = [ xs!!i | i <- [0..length y], not (Set.member i (Set.fromList e))]
-   in a : findMerge newxs
+   in a : secondStep newxs
 
 
 basePixel9 :: (Int, Int) -> [(Int, Int)]
@@ -81,66 +96,5 @@ basePixel25 (a, b) = [(a-2, b-2), (a-1, b-2), (a, b-2), (a+1, b-2), (a+2, b-2), 
 
 basePixel25' :: (Int, Int, Int) -> [(Int, Int, Int)]
 basePixel25' (a, b, c) = [(a-2, b-2, c), (a-1, b-2, c), (a, b-2, c), (a+1, b-2, c), (a+2, b-2, c), (a-2, b-1, c), (a-1, b-1, c), (a, b-1, c), (a+1, b-1, c), (a+2, b-1, c), (a-2, b, c), (a-1, b, c), (a, b, c), (a+1, b, c), (a+2, b, c), (a-2, b+1, c), (a-1, b+1, c), (a, b+1, c), (a+1, b+1, c), (a+2, b+1, c), (a-2, b+2, c), (a-1, b+2, c), (a, b+2, c), (a+1, b+2, c), (a+2, b+2, c)]
-
-
-dataInfo :: String -> String -> IO (Maybe (Vector Double, Double, GPSTIME, Double))
-dataInfo cachefile chname = do
-  flist <- readFile cachefile
-  let fname = head.lines $ flist
-  getChannelList fname >>= \x -> case x of
-    Nothing -> do
-      print "no valid channel in the input frame file"
-      return Nothing
-    Just y -> do
-      let chname' = (fst . head)  y
-      case (chname'==chname) of
-        False -> return Nothing
-        True  -> do
-          readFrameV chname fname >>= \x -> case x of
-            Nothing -> do
-              print "cannot read the file"
-              return Nothing
-            Just fdata -> do
-              getSamplingFrequency fname chname >>= \x -> case x of
-                Nothing -> do
-                  print "cannot read sampling frequency"
-                  return Nothing
-                Just fs -> do
-                  getGPSTime fname >>= \x -> case x of
-                    Nothing -> do
-                      print "cannot read GPS time"
-                      return Nothing
-                    Just (gpsS, gpsN, dt) -> do
-                      return $ Just $ (fdata, fs, (gpsS, gpsN), dt)
-
-
-frameInfo :: String -> String -> IO (Maybe (Vector Double, Double, GPSTIME, Double))
-frameInfo fname chname = do
-  getChannelList fname >>= \x -> case x of
-    Nothing -> do
-      print "no valid channel in the input frame file"
-      return Nothing
-    Just y -> do
-      let chname' = (fst . head)  y
-      case (chname'==chname) of
-        False -> return Nothing
-        True  -> do
-          readFrameV chname fname >>= \x -> case x of
-            Nothing -> do
-              print "cannot read the file"
-              return Nothing
-            Just fdata -> do
-              getSamplingFrequency fname chname >>= \x -> case x of
-                Nothing -> do
-                  print "cannot read sampling frequency"
-                  return Nothing
-                Just fs -> do
-                  getGPSTime fname >>= \x -> case x of
-                    Nothing -> do
-                      print "cannot read GPS time"
-                      return Nothing
-                    Just (gpsS, gpsN, dt) -> do
-                      return $ Just $ (fdata, fs, (gpsS, gpsN), dt)
-
 
 
