@@ -10,9 +10,9 @@ where
 
 
 import Control.Concurrent (forkIO)
-import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar,takeMVar)
+import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Monad.Trans.Resource (runResourceT)
-import Control.Monad ((>>=))
+import Control.Monad ((>>=), mapM_)
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
 import qualified Data.Conduit.List as CL
@@ -43,6 +43,9 @@ import GlitchMon.Data (TrigParam (..))
 import GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
 
 
+{-------------------- 
+- Main Functions    -
+--------------------}
 
 
 runGlitchMon watchdir param chname =
@@ -139,6 +142,11 @@ eventDisplayF param fname chname = do
                           return (trigparam, param',a')
 
 
+{-------------------- 
+- Part Functions    -
+--------------------}
+
+
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
 part'DataConditioning wave = do
@@ -148,111 +156,28 @@ part'DataConditioning wave = do
     False -> do (whtCoeffList, rfwave) <- section'Whitening wave
                 put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
                 put $ GP.updateGlitchParam'refpsd param
-                  (gwpsdV (gwdata rfwave) (GP.chunklen param) (GP.samplingFrequency param))
+                  (gwpsdV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
                 return $ applyWhitening whtCoeffList wave
     True  -> return $ applyWhitening whtcoeff wave
 
 
 part'EventTriggerGeneration :: WaveData
-                            -> StateT GP.GlitchParam IO Spectrogram
+                            -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
 part'EventTriggerGeneration wave = do
   param <- get
   (a, s) <- liftIO $ runStateT (section'TimeFrequencyExpression wave) param
   section'Clustering a
 
 
-section'LineRemoval = id
-
-
-section'Whitening :: WaveData -> StateT GP.GlitchParam IO ([([Double],  Double)],  WaveData)
-section'Whitening wave = do
-  param <- get
-  liftIO $ calcWhiteningCoeff param
-
-
-calcWhiteningCoeff :: GP.GlitchParam
-              -> IO ([([Double], Double)], WaveData)
-calcWhiteningCoeff param = do
-  let refwave = GP.refwave param
-  calcWhiteningCoeffCore param ([], refwave) >>=
-    \(whtCoeffList, whtref) ->
-    case checkingWhitening whtref of
-      False -> calcWhiteningCoeffCore param (whtCoeffList, whtref)
-      True -> return (whtCoeffList, whtref)
-
-
-calcWhiteningCoeffCore :: GP.GlitchParam
-              -> ([([Double], Double)], WaveData)
-              -> IO ([([Double], Double)], WaveData)
-calcWhiteningCoeffCore param (whtCoeffList, train) =
-  let nC = GP.whtfiltordr param
-      nfft = GP.chunklen param
-      fs = GP.samplingFrequency param
-      refpsd = gwpsdV (gwdata train) nfft fs
-      whtCoeff' = lpefCoeffV nC refpsd
-   in return ( whtCoeff':whtCoeffList
-      , dropWaveData (2*nC) $ whiteningWaveData whtCoeff' train
-      )
-
-
-checkingWhitening wave = std (NL.toList (gwdata wave))  < 2.0
-
-
-applyWhitening :: [([Double],  Double)]
-               -> WaveData
-               -> WaveData
-applyWhitening [] wave = wave
-applyWhitening (x:xs) wave =
-  applyWhitening xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
+                         -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID])
+part'ParameterEstimation = undefined
 
 
 
-section'TimeFrequencyExpression :: WaveData
-                                -> StateT GP.GlitchParam IO Spectrogram
-section'TimeFrequencyExpression whnWaveData = do
-  param <- get
-  let refpsd = GP.refpsd param
-      fs = GP.samplingFrequency param
-      nfreq2 = GP.nfrequency param`div`2
-      nfreq = GP.nfrequency param
-      ntime = GP.ntimeSlide param
-      snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
-      snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
-      snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
-        (
-        snd $ gwOnesidedPSDV (subVector (nfreq*i) nfreq (gwdata whnWaveData)) nfreq fs)
-        (snd refpsd)
-        )) [0..ntime-1]) [0..nfreq2] :: Matrix Double
-  return (snrMatT', snrMatF, snrMatP)
-
-
-section'Clustering :: Spectrogram
-                   -> StateT GP.GlitchParam IO Spectrogram
-section'Clustering (snrMatT, snrMatF, snrMatP') = do
-  param <- get
-  let dcted' = dct2d snrMatP'
-      ncol = cols dcted'
-      nrow = rows dcted'
-      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-GP.resolvTime param..ncol-1]]
-      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-GP.resolvFreq param..nrow-1]]
-      zeroElement = zeroElementr ++ zeroElementc
-      dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
-      snrMatP = idct2d dcted
-      thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
-      snrMat = (snrMatT, subVector thresIndex (nrow-thresIndex) snrMatF, dropRows thresIndex snrMatP)
-      (_, _, mg) = snrMat
-      thrsed = NL.find (>=GP.clusterThres param) mg
-      survivor = nub $ excludeOnePixelIsland thrsed
-      excludedIndx = Set.toList $ Set.difference (Set.fromList thrsed) (Set.fromList survivor)
-      newM = updateSpectrogramSpec snrMat
-       $ updateMatrixElement mg excludedIndx (replicate (length excludedIndx) 0.0)
-  return newM
-
-
-part'ParameterEstimation :: Spectrogram
-                         -> StateT GP.GlitchParam IO (Maybe TrigParam)
-part'ParameterEstimation m = do
+part'ParameterEstimation' :: Spectrogram
+                          -> StateT GP.GlitchParam IO (Maybe TrigParam)
+part'ParameterEstimation' m = do
   param <- get
   let fs = GP.samplingFrequency param
   let (trigT, trigF, trigM) = m
@@ -293,10 +218,113 @@ part'ParameterEstimation m = do
                               }
     True -> return Nothing
 
-part'RegisterEventtoDB =
-  registGlitchEvent2DB
+
+part'RegisterEventtoDB :: [(TrigParam,ID)] -> IO()
+part'RegisterEventtoDB x = mapM_ registGlitchEvent2DB (fst . unzip $ x)
 
 
+{-------------------- 
+- Section Functions -
+--------------------}
+
+
+section'LineRemoval = id
+
+
+section'Whitening :: WaveData -> StateT GP.GlitchParam IO ([([Double],  Double)],  WaveData)
+section'Whitening wave = do
+  param <- get
+  liftIO $ calcWhiteningCoeff param
+
+
+section'TimeFrequencyExpression :: WaveData
+                                -> StateT GP.GlitchParam IO Spectrogram
+section'TimeFrequencyExpression whnWaveData = do
+  param <- get
+  let refpsd = GP.refpsd param
+      fs = GP.samplingFrequency param
+      nfreq2 = GP.nfrequency param`div`2
+      nfreq = GP.nfrequency param
+      ntime = GP.ntimeSlide param
+      snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
+      snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
+      snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
+      snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
+        (
+        snd $ gwOnesidedPSDV (subVector (nfreq*i) nfreq (gwdata whnWaveData)) nfreq fs)
+        (snd refpsd)
+        )) [0..ntime-1]) [0..nfreq2] :: Matrix Double
+  return (snrMatT', snrMatF, snrMatP)
+
+
+section'Clustering :: Spectrogram
+                   -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
+section'Clustering (snrMatT, snrMatF, snrMatP') = do
+  param <- get
+  let dcted' = dct2d snrMatP'
+      ncol = cols dcted'
+      nrow = rows dcted'
+      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-GP.resolvTime param..ncol-1]]
+      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-GP.resolvFreq param..nrow-1]]
+      zeroElement = zeroElementr ++ zeroElementc
+      dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
+      snrMatP = idct2d dcted
+      thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
+      snrMat = (snrMatT, subVector thresIndex (nrow-thresIndex) snrMatF, dropRows thresIndex snrMatP)
+      (_, _, mg) = snrMat
+      thrsed = NL.find (>=GP.clusterThres param) mg
+      survivor = nub $ excludeOnePixelIsland basePixel25 thrsed
+      survivorwID = taggingIsland survivor
+      excludedIndx = Set.toList $ Set.difference (Set.fromList thrsed) (Set.fromList survivor)
+      newM = updateSpectrogramSpec snrMat
+       $ updateMatrixElement mg excludedIndx (replicate (length excludedIndx) 0.0)
+  return (newM, survivorwID)
+
+
+{-------------------- 
+- Functions         -
+--------------------}
+
+
+calcWhiteningCoeff :: GP.GlitchParam
+              -> IO ([([Double], Double)], WaveData)
+calcWhiteningCoeff param = do
+  let refwave = GP.refwave param
+  calcWhiteningCoeffCore param ([], refwave) >>=
+    \(whtCoeffList, whtref) ->
+    case checkingWhitening whtref of
+      False -> calcWhiteningCoeffCore param (whtCoeffList, whtref)
+      True -> return (whtCoeffList, whtref)
+
+
+calcWhiteningCoeffCore :: GP.GlitchParam
+              -> ([([Double], Double)], WaveData)
+              -> IO ([([Double], Double)], WaveData)
+calcWhiteningCoeffCore param (whtCoeffList, train) =
+  let nC = GP.whtfiltordr param
+      nfft = GP.refpsdlen param
+      fs = GP.samplingFrequency param
+      refpsd = gwpsdV (gwdata train) nfft fs
+      whtCoeff' = lpefCoeffV nC refpsd
+   in return ( whtCoeff':whtCoeffList
+      , dropWaveData (2*nC) $ whiteningWaveData whtCoeff' train
+      )
+
+
+checkingWhitening wave = std (NL.toList (gwdata wave))  < 2.0
+
+
+applyWhitening :: [([Double],  Double)]
+               -> WaveData
+               -> WaveData
+applyWhitening [] wave = wave
+applyWhitening (x:xs) wave =
+  applyWhitening xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+
+
+{-------------------- 
+- Helper Functions  -
+--------------------}
 
 
 mean :: Floating a => [a] -> a
@@ -310,4 +338,6 @@ var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
 
 std :: (RealFloat a) => [a] -> a
 std x = sqrt $ var x
+
+
 

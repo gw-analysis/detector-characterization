@@ -9,9 +9,10 @@ import HasKAL.WaveUtils.Data(WaveData)
 
 
 data GlitchParam = GlitchParam
-  { chunklen       :: Int
+  { chunklen :: Int 
   , samplingFrequency :: Double
 -- * whitening
+  , refpsdlen       :: Int
   , whtfiltordr  :: Int
   , whtCoeff :: [([Double],  Double)]
 -- * t-f expression
@@ -33,6 +34,9 @@ updateGlitchParam'chunklen x n = x {chunklen = n}
 
 updateGlitchParam'samplingFrequency :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'samplingFrequency x fs = x {samplingFrequency = fs}
+
+updateGlitchParam'refpsdlen :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'refpsdlen x n = x {refpsdlen = n}
 
 updateGlitchParam'whtfiltordr :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'whtfiltordr x n = x {whtfiltordr = n}
