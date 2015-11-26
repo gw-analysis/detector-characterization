@@ -72,7 +72,7 @@ secondStep :: [[Int]] -> [[Int]]
 secondStep [] = []
 secondStep y@(x:xs) = 
   let z = (flip map) [0..length y] $ \i->
-            case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of 
+            case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of
               False -> (xs!!i, i)
               True  -> ([],0)
       a = nub $ Set.toList . Set.unions . map Set.fromList . fst . unzip $ z
