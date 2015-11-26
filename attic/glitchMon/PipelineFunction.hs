@@ -28,8 +28,8 @@ excludeOnePixelIsland y@(x:xs) = case (length (intersect y (basePixel25 x)) > 2)
 addID :: [(Int, Int)] -> ([(Int, Int, Int)],Int)
 addID [] = ([],0)
 addID z = runState (go z z) 0
-  where 
-    go y (x:xs) = do 
+  where
+    go y (x:xs) = do
       ind <- get
       let a = intersect y (basePixel25 x)
       case (length a > 2) of
@@ -40,31 +40,31 @@ addID z = runState (go z z) 0
         False-> go y xs
 
 
-regroup :: Int -> [(Int, Int, Int)] -> [[(Int, Int, Int)]]
+regroup :: Int -> [(Int, Int, Int)] -> [(Int, Int, Int)]
 regroup n y@((a,b,c):xs)  = do
-  let targetID = [y3|(y1,y2,y3) <- y, y1==a,y2==b] 
+  let targetID = [y3|(y1,y2,y3) <- y, y1==a,y2==b]
       grouped = concatMap (\x->filter (\(_,_,r)->r==x) y) targetID
       grouped' = [(a,b,n)|(a,b,_)<-grouped]
       newlist =  Set.toList $ Set.difference (Set.fromList grouped) (Set.fromList y)
-   in [grouped'] ++ regroup (succ n) newlist
+   in grouped' ++ regroup (succ n) newlist
 
 
-friend :: [(Int,Int,Int)] -> [[Int]]
-friend x = nub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b]
+findOverlap :: [(Int,Int,Int)] -> [[Int]]
+findOverlap x = nub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b]
 
 
-findMerge :: [[Int]] -> [[Int]]
-findMerge [] = []
-findMerge y@(x:xs) = 
+merging :: [[Int]] -> [[Int]]
+merging [] = []
+merging y@(x:xs) =
   let z = (flip map) [0..length y] $ \i->
-            case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of 
+            case (Set.null $ Set.intersection (Set.fromList x) (Set.fromList (xs!!i))) of
               False -> (xs!!i, i)
               True  -> ([],0)
       a = nub $ Set.toList . Set.unions . map Set.fromList . fst . unzip $ z
       e' = snd . unzip $ z
       e = [x|x<-e',x/=0]
       newxs = [ xs!!i | i <- [0..length y], not (Set.member i (Set.fromList e))]
-   in a : findMerge newxs
+   in a : merging newxs
 
 
 basePixel9 :: (Int, Int) -> [(Int, Int)]
