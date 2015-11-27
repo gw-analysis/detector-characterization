@@ -18,6 +18,7 @@ import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
 import qualified Data.Conduit.List as CL
 import Data.Int (Int32)
 import Data.List (nub, foldl', elemIndices, maximum, minimum, lookup)
+import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Text ( pack )
 import Filesystem.Path (extension)
@@ -99,7 +100,7 @@ sink param chname = do
           maybewave <- liftIO $ readFrameWaveData' General chname fname
           case maybewave of
             Nothing -> sink param chname
-            Just wave -> do let param' = updateGlitchParam'channel param chname
+            Just wave -> do let param' = GP.updateGlitchParam'channel param chname
                             s <- liftIO $ glitchMon param' wave
                             sink s chname
 
@@ -118,7 +119,7 @@ glitchMon param w =
 
 eventDisplay :: GP.GlitchParam
              -> WaveData
-             -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, Spectrogram)
+             -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, (Spectrogram, [[(Tile,ID)]]))
 eventDisplay param w =
   runStateT (part'DataConditioning w) param >>= \(a, s) ->
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
@@ -129,7 +130,7 @@ eventDisplay param w =
 eventDisplayF :: GP.GlitchParam
               -> FilePath
               -> String
-              -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, Spectrogram)
+              -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, (Spectrogram, [[(Tile,ID)]]))
 eventDisplayF param fname chname = do
   maybegps <- getGPSTime fname
   case maybegps of
@@ -176,39 +177,42 @@ part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
 part'ParameterEstimation (m,ids) = do
   param <- get
   let fs = GP.samplingFrequency param
-   in getParam (m,ids)
+   in getParam param (m,ids)
   where
-    getParam (m,ids) = do
+    getParam param (m,ids) = do
       let (trigT, trigF, trigM) = m
           mrow = NL.rows trigM
           mcol = NL.cols trigM
           zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
           nfreq = GP.nfrequency param
-          ntime = GP.timeSlide param
+          ntime = GP.ntimeSlide param
+          fs = GP.samplingFrequency param
       case (trigM == zerom) of
         True -> return Nothing
-        False-> (flip map) ids $
-          \(tile,i)-> do
-            let tmin = formatGPS $ minimum . fst . unzip $ tile
-                tmax' = maximum . fst . unzip $ tile
+        False-> return $ Just $ (flip map) ids $
+          \island-> do
+            let (tile,tag) = unzip island
+                tmin = formatGPS $ trigT @> (minimum . fst . unzip $ tile)
+                tmax' = trigT @> (maximum . fst . unzip $ tile)
                 tmax = formatGPS $ tmax' + fromIntegral nfreq/fs
-                fmin = minimum . snd . unzip $ tile
-                fmax' = maximum . snd . unzip $ tile
+                fmin = trigF @> (minimum . snd . unzip $ tile)
+                fmax' = trigF @> (maximum . snd . unzip $ tile)
                 fmax = fmax' + fs/fromIntegral nfreq
-                (blackpower,maxid) = maximum' $ map (\i->trigM @@> i) tile
-                blackt = formatGPS $ trigT @> fst maxid
-                blackf = trigF @> snd maxid
-                tfs = fromIntegral $ truncate fs :: Int32
-            return $ Just TrigParam { detector = Just "General"
-                                    , event_gpsstarts = Just (fst tmin)
-                                    , event_gpsstartn = Just (snd tmin)
-                                    , event_gpsstops  = Just (fst tmax)
-                                    , event_gpsstopn  = Just (snd tmax)
-                                    , event_cgpss = Just (fst blackt)
-                                    , event_cgpsn = Just (snd blackt)
-                                    , duration = deformatGPS tmax - deformatGPS tmin
+                xx = map (\i->trigM @@> i) tile :: [Double]
+                (blackpower,maxid) = maximum' xx :: (Double,Int)
+                blackt = formatGPS $ trigT @> (fst $ tile!!maxid)
+                blackf = trigF @> (snd $ tile!!maxid) 
+                tfs = fromIntegral $ (floor fs::Int) :: Int32
+             in (TrigParam { detector = Just "General"
+                                    , event_gpsstarts = Just (fromIntegral . fst $ tmin)
+                                    , event_gpsstartn = Just (fromIntegral . snd $ tmin)
+                                    , event_gpsstops  = Just (fromIntegral . fst $ tmax)
+                                    , event_gpsstopn  = Just (fromIntegral . snd $ tmax)
+                                    , event_cgpss = Just (fromIntegral . fst $ blackt)
+                                    , event_cgpsn = Just (fromIntegral . snd $ blackt)
+                                    , duration = Just $ deformatGPS tmax - deformatGPS tmin
                                     , energy = Nothing
-                                    , central_frequency = Just fc
+                                    , central_frequency = Just fs
                                     , snr = Just blackpower
                                     , significance = Nothing
                                     , latitude = Nothing
@@ -222,9 +226,10 @@ part'ParameterEstimation (m,ids) = do
                                     , dq_flag = Nothing
                                     , pipeline = Just "iKAGRA Glitch pipeline"
                                     }
+                , head tag)
             where
-              maximum' x = (maxx, fromJust $ lookup (maxx (zip power [1..])))
-              where maxx = maximum x
+              maximum' x = let maxx = maximum x :: Double
+                            in (maxx, fromJust $ lookup maxx (zip x [1..]))
 
 
 part'ParameterEstimation' :: Spectrogram
@@ -259,7 +264,7 @@ part'ParameterEstimation' m = do
                               , significance = Nothing
                               , latitude = Nothing
                               , longitude = Nothing
-                              , chname = Nothing
+                              , channel = Nothing
                               , sampling_rate = Just tfs
                               , segment_gpsstarts = Nothing
                               , segment_gpsstartn = Nothing
