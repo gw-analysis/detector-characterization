@@ -57,7 +57,7 @@ registGlitchEvent2DB p = handleSqlError' $ withConnectionIO connect $ \conn -> d
       (D.significance p)
       (D.latitude p)
       (D.longitude p)
-      (D.chname p)
+      (D.channel p)
       (D.sampling_rate p)
       (D.segment_gpsstarts p)
       (D.segment_gpsstartn p)

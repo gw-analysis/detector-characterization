@@ -9,7 +9,8 @@ import HasKAL.WaveUtils.Data(WaveData)
 
 
 data GlitchParam = GlitchParam
-  { chunklen :: Int 
+  { channel :: String
+  , chunklen :: Int 
   , samplingFrequency :: Double
 -- * whitening
   , refpsdlen       :: Int
@@ -28,6 +29,10 @@ data GlitchParam = GlitchParam
   , refwave :: WaveData
   , reftime :: Double
   }
+
+
+updateGlitchParam'channel :: GlitchParam -> String -> GlitchParam
+updateGlitchParam'channel x n = x {channel = n}
 
 updateGlitchParam'chunklen :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'chunklen x n = x {chunklen = n}

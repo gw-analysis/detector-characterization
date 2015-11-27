@@ -18,6 +18,8 @@ import HasKAL.FrameUtils.FrameUtils
 import HasKAL.TimeUtils.Signature(GPSTIME)
 import Numeric.LinearAlgebra
 
+import GlitchMon.Signature
+
 
 excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> [(Int, Int)] -> [(Int, Int)]
 excludeOnePixelIsland f [] = []
@@ -26,11 +28,11 @@ excludeOnePixelIsland f y@(x:xs) = case (length (intersect y (f x)) > 2) of
   False-> excludeOnePixelIsland f xs
 
 
-taggingIsland :: [(Int,Int)] -> [[(Int, Int, Int)]]
+taggingIsland :: [(Int,Int)] -> [[(Tile,ID)]]
 taggingIsland x = let ids = secondIDing 1 . fst . firstIDing $ x
                       groupIDs = groupingID ids
                    in (flip map) [1..length groupIDs] $ 
-                        \i -> [ (a,b,i)
+                        \i -> [ ((a,b),i)
                               | (a,b,c) <- ids
                               , elem c (groupIDs!!(i-1))
                               ]

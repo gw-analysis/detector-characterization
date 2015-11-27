@@ -17,7 +17,7 @@ import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
 import qualified Data.Conduit.List as CL
 import Data.Int (Int32)
-import Data.List (nub, foldl', elemIndices)
+import Data.List (nub, foldl', elemIndices, maximum, minimum, lookup)
 import qualified Data.Set as Set
 import Data.Text ( pack )
 import Filesystem.Path (extension)
@@ -41,6 +41,7 @@ import qualified GlitchMon.GlitchParam as GP
 import GlitchMon.PipelineFunction
 import GlitchMon.Data (TrigParam (..))
 import GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
+import GlitchMon.Signature
 
 
 {-------------------- 
@@ -98,7 +99,8 @@ sink param chname = do
           maybewave <- liftIO $ readFrameWaveData' General chname fname
           case maybewave of
             Nothing -> sink param chname
-            Just wave -> do s <- liftIO $ glitchMon param wave
+            Just wave -> do let param' = updateGlitchParam'channel param chname
+                            s <- liftIO $ glitchMon param' wave
                             sink s chname
 
 
@@ -171,8 +173,58 @@ part'EventTriggerGeneration wave = do
 
 part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
                          -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID])
-part'ParameterEstimation = undefined
-
+part'ParameterEstimation (m,ids) = do
+  param <- get
+  let fs = GP.samplingFrequency param
+   in getParam (m,ids)
+  where 
+    getParam (m,ids) = do
+      let (trigT, trigF, trigM) = m
+          mrow = NL.rows trigM
+          mcol = NL.cols trigM
+          zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
+          nfreq = GP.nfrequency param
+          ntime = GP.timeSlide param
+      case (trigM == zerom) of
+        True -> return Nothing
+        False-> (flip map) ids $ 
+          \(tile,i)-> do 
+            let tmin = formatGPS $ minimum $ fst . unzip $ tile
+                tmax' = maximum $ fst . unzip $ tile
+                tmax = formatGPS $ tmax' + fromIntegral nfreq/fs
+                fmin = minimum $ snd . unzip $ tile
+                fmax' = maximum $ snd . unzip $ tile
+                fmax = fmax' + fs/fromIntegral nfreq
+                (blackpower,maxid) = maximum' $ map (\i->trigM @@> i) tile
+                blackt = formatGPS $ trigT @> fst maxid
+                blackf = trigF @> snd maxid
+                tfs = fromIntegral $ truncate fs :: Int32
+            return $ Just TrigParam { detector = Just "General"
+                                    , event_gpsstarts = Just (fst tmin)
+                                    , event_gpsstartn = Just (snd tmin)
+                                    , event_gpsstops  = Just (fst tmax)
+                                    , event_gpsstopn  = Just (snd tmax)
+                                    , event_cgpss = Just (fst blackt)
+                                    , event_cgpsn = Just (snd blackt)
+                                    , duration = deformatGPS tmax - deformatGPS tmin
+                                    , energy = Nothing
+                                    , central_frequency = Just fc
+                                    , snr = Just blackpower
+                                    , significance = Nothing
+                                    , latitude = Nothing
+                                    , longitude = Nothing
+                                    , channel = Just (GP.channel param)
+                                    , sampling_rate = Just tfs
+                                    , segment_gpsstarts = Nothing
+                                    , segment_gpsstartn = Nothing
+                                    , segment_gpsstops = Nothing
+                                    , segment_gpsstopn = Nothing
+                                    , dq_flag = Nothing
+                                    , pipeline = Just "iKAGRA Glitch pipeline"
+                                    }
+            where
+              maximum' x = (maxx, fromJust $ lookup (maxx (zip power [1..]))
+                where maxx = maximum x
 
 
 part'ParameterEstimation' :: Spectrogram

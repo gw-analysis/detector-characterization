@@ -19,7 +19,7 @@ data TrigParam = TrigParam { detector :: Maybe String
                            , significance :: Maybe Double
                            , latitude :: Maybe Double
                            , longitude :: Maybe Double
-                           , chname :: Maybe String
+                           , channel :: Maybe String
                            , sampling_rate :: Maybe Int32
                            , segment_gpsstarts :: Maybe Int32
                            , segment_gpsstartn :: Maybe Int32
