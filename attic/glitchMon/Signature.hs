@@ -1,4 +1,4 @@
-module Signature
+module GlitchMon.Signature
 where
 
 type Tile = (Int,Int)

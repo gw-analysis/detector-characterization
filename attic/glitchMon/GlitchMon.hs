@@ -44,7 +44,7 @@ import GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
 import GlitchMon.Signature
 
 
-{-------------------- 
+{--------------------
 - Main Functions    -
 --------------------}
 
@@ -118,7 +118,7 @@ glitchMon param w =
 
 eventDisplay :: GP.GlitchParam
              -> WaveData
-             -> IO (Maybe TrigParam, GP.GlitchParam, Spectrogram)
+             -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, Spectrogram)
 eventDisplay param w =
   runStateT (part'DataConditioning w) param >>= \(a, s) ->
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
@@ -129,7 +129,7 @@ eventDisplay param w =
 eventDisplayF :: GP.GlitchParam
               -> FilePath
               -> String
-              -> IO (Maybe TrigParam, GP.GlitchParam, Spectrogram)
+              -> IO (Maybe [(TrigParam,ID)], GP.GlitchParam, Spectrogram)
 eventDisplayF param fname chname = do
   maybegps <- getGPSTime fname
   case maybegps of
@@ -144,7 +144,7 @@ eventDisplayF param fname chname = do
                           return (trigparam, param',a')
 
 
-{-------------------- 
+{--------------------
 - Part Functions    -
 --------------------}
 
@@ -172,12 +172,12 @@ part'EventTriggerGeneration wave = do
 
 
 part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
-                         -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID])
+                         -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID)])
 part'ParameterEstimation (m,ids) = do
   param <- get
   let fs = GP.samplingFrequency param
    in getParam (m,ids)
-  where 
+  where
     getParam (m,ids) = do
       let (trigT, trigF, trigM) = m
           mrow = NL.rows trigM
@@ -187,13 +187,13 @@ part'ParameterEstimation (m,ids) = do
           ntime = GP.timeSlide param
       case (trigM == zerom) of
         True -> return Nothing
-        False-> (flip map) ids $ 
-          \(tile,i)-> do 
-            let tmin = formatGPS $ minimum $ fst . unzip $ tile
-                tmax' = maximum $ fst . unzip $ tile
+        False-> (flip map) ids $
+          \(tile,i)-> do
+            let tmin = formatGPS $ minimum . fst . unzip $ tile
+                tmax' = maximum . fst . unzip $ tile
                 tmax = formatGPS $ tmax' + fromIntegral nfreq/fs
-                fmin = minimum $ snd . unzip $ tile
-                fmax' = maximum $ snd . unzip $ tile
+                fmin = minimum . snd . unzip $ tile
+                fmax' = maximum . snd . unzip $ tile
                 fmax = fmax' + fs/fromIntegral nfreq
                 (blackpower,maxid) = maximum' $ map (\i->trigM @@> i) tile
                 blackt = formatGPS $ trigT @> fst maxid
@@ -223,8 +223,8 @@ part'ParameterEstimation (m,ids) = do
                                     , pipeline = Just "iKAGRA Glitch pipeline"
                                     }
             where
-              maximum' x = (maxx, fromJust $ lookup (maxx (zip power [1..]))
-                where maxx = maximum x
+              maximum' x = (maxx, fromJust $ lookup (maxx (zip power [1..])))
+              where maxx = maximum x
 
 
 part'ParameterEstimation' :: Spectrogram
@@ -275,7 +275,7 @@ part'RegisterEventtoDB :: [(TrigParam,ID)] -> IO()
 part'RegisterEventtoDB x = mapM_ registGlitchEvent2DB (fst . unzip $ x)
 
 
-{-------------------- 
+{--------------------
 - Section Functions -
 --------------------}
 
@@ -333,7 +333,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   return (newM, survivorwID)
 
 
-{-------------------- 
+{--------------------
 - Functions         -
 --------------------}
 
@@ -374,7 +374,7 @@ applyWhitening (x:xs) wave =
   applyWhitening xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
 
 
-{-------------------- 
+{--------------------
 - Helper Functions  -
 --------------------}
 
