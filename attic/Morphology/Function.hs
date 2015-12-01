@@ -39,9 +39,7 @@ erosionGrey s x = let z = unzip $ intersected s x
 
 
 dilationGrey:: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
-dilationGrey s x = let z =  unzip $ intersected s x
-                       valz = snd z
-                       ind = fst z
+dilationGrey s x = let (ind, valz) =  unzip $ intersected s x
                     in zip ind $ replicate (length valz) (maximum valz)
 
 
