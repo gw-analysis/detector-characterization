@@ -3,11 +3,19 @@
 
 
 module Function
-( complement
+(
+-- * common
+  complement
+-- * binary image
 , dilationBinary
 , erosionBinary
+, closingBinary
+, openingBinary
+-- * grey-scale image
 , dilationGrey
 , erosionGrey
+, closingGrey
+, openingGrey
 ) where
 
 
@@ -47,12 +55,28 @@ erosionBinary z b x = toList $ intersection
         b2U = maximum . snd . unzip $ z
 
 
+closingBinary :: [(Int,Int)] -> [(Int, Int)] -> [(Int,Int)] -> [(Int,Int)]
+closingBinary z b x = erosionBinary z b (dilationBinary z b x)
+
+
+openingBinary :: [(Int,Int)] -> [(Int, Int)] -> [(Int,Int)] -> [(Int,Int)]
+openingBinary z b x = dilationBinary z b (erosionBinary z b x)
+
+
 erosionGrey :: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
 erosionGrey s x = (flip map) x $ \a->updateIntersection minimum s x a
 
 
 dilationGrey:: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
 dilationGrey s x = (flip map) x $ \a->updateIntersection maximum s x a
+
+
+closingGrey :: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
+closingGrey s x = erosionGrey s (dilationGrey s x)
+
+
+openingGrey :: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
+openingGrey s x = dilationGrey s (erosionGrey s x)
 
 
 updateIntersection :: (Show a, Eq a, Num a, Ord a)
