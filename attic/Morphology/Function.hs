@@ -16,7 +16,8 @@ module Function
 , erosionGrey
 , closingGrey
 , openingGrey
-) where
+) 
+where
 
 
 
@@ -25,6 +26,7 @@ import Data.Maybe (fromJust)
 import Data.Set (empty, member, insert, intersection,isSubsetOf, fromList, toList)
 
 
+{- exposed functions -}
 
 complement :: (Eq a, Show a, Num a, Ord a)=> [(Int, Int, a)] -> [(Int, Int, a)]
 complement x = let maxx = maximum [y|(_, _, y)<-x]
@@ -79,6 +81,8 @@ openingGrey :: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)
 openingGrey s x = dilationGrey s (erosionGrey s x)
 
 
+{- internal functions -}
+
 updateIntersection :: (Show a, Eq a, Num a, Ord a)
                    => ([a] -> a)
                    -> [((Int,Int),a)]
@@ -103,7 +107,8 @@ updateIntersection f s x a = let axs = [ (a1+s1,a2+s2)
   x2U = maximum . snd . unzip . fst . unzip $ x
 
 
-
+-- | O (nlog n) nub 
+-- | lent from http://d.hatena.ne.jp/jeneshicc/20090908/1252413541
 nub' :: (Ord a) => [a] -> [a]
 nub' l = nub'' l empty
     where nub'' [] _         = []
