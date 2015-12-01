@@ -3,6 +3,8 @@
 module HasKAL.SignalProcessingUtils.Resampling
 ( downsample
 , downsampleV
+, downsampleUV
+, downsampleSV
 , upsample
 , resample
 , downsampleWaveData
@@ -14,6 +16,13 @@ import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.TimeUtils.Function
 import HasKAL.WaveUtils.Data
 import Numeric.LinearAlgebra
+import qualified Data.Vector.Unboxed as UV
+import qualified Data.Vector.Storable as SV
+import Control.Monad (when)
+import Control.Monad.ST (ST)
+import Data.Vector.Generic.Mutable(unsafeWrite,new)
+
+
 
 downsample :: Double -> Double -> [Double] -> [Double]
 downsample fs newfs x = y
@@ -35,10 +44,11 @@ downsampleWaveData :: Double -> WaveData -> WaveData
 downsampleWaveData newfs x = y
   where y = x
         samplingFrequency y = newfs
-        gwdata y = fromList $ snd.unzip $ filter (\(n, _) -> n `mod` p==1) $ zip [1..] (toList gwx')
-        p = truncate (samplingFrequency x/newfs)
+        gwdata y = downsampleSV fs newfs gwx'
+        fs = samplingFrequency x
         gwx' = iir lpf (gwdata x)
-        lpf = butter 2 newfs (newfs/2) Low
+        lpf = butter 2 fs (newfs'/2) Low
+        newfs' = 2*fs*tan (pi*newfs/fs)
         stopGPSTime y = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
@@ -47,10 +57,40 @@ downsampleV fs newfs x = y
   where y = fromList $ snd.unzip $ filter (\(n, _) -> n `mod` p == 1) $ zip [1..] $ toList x'
         p = truncate (fs/newfs)
         x' = iir lpf x
-        lpf = butter 2 fs (newfs/2) Low
+        lpf = butter 2 fs (newfs'/2) Low
+        newfs' = 2*fs*tan (pi*newfs/fs)
 
 
+downsampleUV :: Double -> Double -> UV.Vector Double -> UV.Vector Double
+downsampleUV fs newfs v = UV.create $ do 
+  vs <- new nvs
+  let v' =  UV.convert $ iir lpf $ UV.convert v
+      lpf = butter 2 fs (newfs'/2) Low
+      newfs' = 2*fs*tan (pi*newfs/fs)
+  loop v' vs 0 nvs
+  return vs
+  where 
+    n = UV.length v
+    p = truncate $ fs/newfs
+    nvs = n `div` p
+    loop v vs i j = when (i < j) $ do
+      unsafeWrite vs i (v UV.!(i*p))
+      loop v vs (i+1) j
+  
 
-
-
-
+downsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
+downsampleSV fs newfs v = SV.create $ do 
+  vs <- new nvs
+  let v' = iir lpf v
+      lpf = butter 2 fs (newfs'/2) Low
+      newfs' = 2*fs*tan (pi*newfs/fs)
+  loop v' vs 0 nvs
+  return vs
+  where 
+    n = SV.length v
+    p = truncate $ fs/newfs
+    nvs = n `div` p
+    loop v vs i j = when (i < j) $ do
+      unsafeWrite vs i (v SV.!(i*p))
+      loop v vs (i+1) j
+ 
