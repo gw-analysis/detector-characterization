@@ -32,9 +32,7 @@ erosionBinary b x =  filter (\y-> isSubsetOf (fromList [(x1+b1,x2+b2)|(b1,b2)<-b
 
 
 erosionGrey :: (Show a, Eq a, Num a, Ord a) => [((Int,Int),a)] -> [((Int,Int),a)] -> [((Int,Int),a)]
-erosionGrey s x = let z = unzip $ intersected s x
-                      valz = snd z
-                      ind = fst z
+erosionGrey s x = let (ind, valz) = unzip $ intersected s x
                    in zip ind $ replicate (length valz) (minimum valz)
 
 
