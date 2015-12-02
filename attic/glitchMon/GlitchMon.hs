@@ -29,7 +29,6 @@ import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
-import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
@@ -70,18 +69,11 @@ source watchdir = do
     _ <- watchTree manager watchdir (const True)
       $ \event -> case event of
         Removed _ _ -> putStrLn "file removed" >> hFlush stdout
-        _           -> case extension (decodeString $ eventPath event) of
-                         Just ext -> if (ext==filepart)
-                           then
-                             putStrLn "file downloading" >> hFlush stdout
-                           else if (ext==gwf)
-                             then do
-                               let gwfname = eventPath event
-                               case length (elemIndices '.' gwfname) of
-                                 1 -> putMVar fname gwfname
-                                 _ -> putStrLn "file saving" >> hFlush stdout
-                             else
-                               putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
+        _           -> do let gwfname = eventPath event
+                          case (length (elemIndices '.' gwfname)) of
+                            1 -> putMVar fname gwfname
+                            2 -> putStrLn "file saving" >> hFlush stdout
+                            _ -> putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
     takeMVar fname
   yield x >> source watchdir
   where filepart = pack "filepart"
@@ -104,15 +96,9 @@ sink param chname = do
           case maybewave of
             Nothing -> sink param chname
             Just wave -> do let param' = GP.updateGlitchParam'channel param chname
-                                fs = GP.samplingFrequency param'
-                                fsorig = samplingFrequency wave
-                            if (fs /= fsorig)
-                              then do let wave' = downsampleWaveData fs wave
-                                      s <- liftIO $ glitchMon param' wave'
-                                      sink s chname
-                              else do s <- liftIO $ glitchMon param' wave
-                                      sink s chname
- 
+                            s <- liftIO $ glitchMon param' wave
+                            sink s chname
+
 
 glitchMon :: GP.GlitchParam
           -> WaveData

@@ -39,33 +39,26 @@ source watchdir = do
     _ <- watchTree manager watchdir (const True)
       $ \event -> case event of
         Removed _ _ -> putStrLn "file removed" >> hFlush stdout
-        _           -> case extension (decodeString $ eventPath event) of
-                         Just ext -> if (ext==filepart) 
-                           then 
-                             putStrLn "file downloading" >> hFlush stdout
-                           else if (ext==gwf)
-                             then do
-                               let gwfname = eventPath event
-                               case length (elemIndices '.' gwfname) of
-                                 1 -> putMVar fname gwfname
-                                 _ -> putStrLn "file saving" >> hFlush stdout
-                             else
-                               putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
+        _           -> do let gwfname = eventPath event
+                          case (length (elemIndices '.' gwfname)) of
+                            1 -> putMVar fname gwfname
+                            2 -> putStrLn "file saving" >> hFlush stdout
+                            _ -> putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
     takeMVar fname
   yield x >> source watchdir
   where filepart = pack "filepart"
         gwf = pack "gwf"
-  
+
 
 sink :: Sink String IO ()
 sink = do
   c <- await
-  case c of 
+  case c of
     Nothing -> do liftIO $ putStrLn "Nothing" >> hFlush stdout
                   sink
     Just fname -> do liftIO $ putStrLn fname >> hFlush stdout
-                     x <- liftIO $ updateFrameDB' fname 
-                     liftIO $ x `deepseq` return () 
+                     x <- liftIO $ updateFrameDB' fname
+                     liftIO $ x `deepseq` return ()
                      sink
 
 
