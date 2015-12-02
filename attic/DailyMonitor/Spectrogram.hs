@@ -10,7 +10,7 @@ import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
 import HasKAL.SpectrumUtils.Function (mapSpectrogram)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
-import HasKAL.SignalProcessingUtils.Resampling (downsampleV)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 
 main = do
   args <- getArgs
@@ -47,7 +47,7 @@ main = do
 
   {-- main --}
   let (minfs, dat') = case (fs > dsfs) of
-                       True -> (dsfs, dropBothSide 8 $ downsampleV fs dsfs dat)
+                       True -> (dsfs, dropBothSide 8 $ downsampleSV fs dsfs dat)
                        False -> (fs, dat)
   let hf  = gwspectrogramV 0 (truncate $ fftLength * minfs) minfs dat'
   histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", unit) title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf

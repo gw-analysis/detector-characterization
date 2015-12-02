@@ -6,7 +6,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import HasKAL.SignalProcessingUtils.Resampling (downsampleV)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 
 main = do
   args <- getArgs
@@ -41,9 +41,10 @@ main = do
 
   {-- main --}
   let (minfs, dat') = case (fs > dsfs) of
-                       True -> (dsfs, dropBothSide 8 $ downsampleV fs dsfs dat)
+                       True -> (dsfs, dropBothSide 8 $ downsampleSV fs dsfs dat)
                        False -> (fs, dat)
   let tvec = fromList [0, 1/dsfs..(fromIntegral $ dim dat' - 1)/minfs]
+  print $ dim dat'
   plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat')
 
 {-- Internal Functions --}
