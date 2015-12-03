@@ -29,7 +29,7 @@ downsample fs newfs x = y
   where y = snd.unzip $ filter (\(n, _) -> n `mod` p==1) $ zip [1..] x'
         p = truncate (fs/newfs)
         x' = toList $ iir lpf $ fromList x
-        lpf = butter 2 fs (newfs/2) Low
+        lpf = butter 4 fs (newfs/2) Low
 
 
 upsample :: Double -> Double -> [Double] -> [Double]
@@ -45,10 +45,7 @@ downsampleWaveData newfs x = y
   where y = x
         samplingFrequency y = newfs
         fs = samplingFrequency x
-        gwdata y = downsampleSV fs newfs gwx'
-        gwx' = iir lpf (gwdata x)
-        lpf = butter 2 fs (newfs'/2) Low
-        newfs' = 2*fs*tan (pi*newfs/fs)
+        gwdata y = downsampleSV fs newfs gwx
         stopGPSTime y = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
@@ -58,9 +55,9 @@ downsampleV fs newfs x = y
              then fromList $ snd.unzip $ filter (\(n, _) -> n `mod` p == 1) $ zip [1..] $ toList x'
              else error "new sample rate should be <= original sample rate."
         p = truncate (fs/newfs)
-        x' = iir lpf x
-        lpf = butter 2 fs (newfs'/2) Low
-        newfs' = 2*fs*tan (pi*newfs/fs)
+        x' = filtfilt lpf x
+        lpf = butter 4 fs newfs2 Low
+        newfs2 = 2*fs*tan (pi*newfs/2/fs)
 
 
 downsampleUV :: Double -> Double -> UV.Vector Double -> UV.Vector Double
@@ -70,9 +67,9 @@ downsampleUV fs newfs v =
     else
       UV.create $ do 
         vs <- new nvs
-        let v' =  UV.convert $ iir lpf $ UV.convert v
-            lpf = butter 2 fs (newfs'/2) Low
-            newfs' = 2*fs*tan (pi*newfs/fs)
+        let v' =  UV.convert $ filtfilt lpf $ UV.convert v
+            lpf = butter 4 fs newfs2 Low
+            newfs2 = 2*fs*tan (pi*newfs/2/fs)
         loop v' vs 0 nvs
         return vs
         where 
@@ -91,9 +88,9 @@ downsampleSV fs newfs v =
     else
       SV.create $ do 
         vs <- new nvs
-        let v' = iir lpf v
-            lpf = butter 2 fs (newfs'/2) Low
-            newfs' = 2*fs*tan (pi*newfs/fs)
+        let v' = filtfilt lpf v
+            lpf = butter 4 fs newfs2 Low
+            newfs2 = 2*fs*tan (pi*newfs/2/fs)
         loop v' vs 0 nvs
         return vs
         where 
