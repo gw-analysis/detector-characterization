@@ -45,7 +45,7 @@ downsampleWaveData newfs x = y
   where y = x
         samplingFrequency y = newfs
         fs = samplingFrequency x
-        gwdata y = downsampleSV fs newfs gwx
+        gwdata y = downsampleSV fs newfs (gwdata x)
         stopGPSTime y = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
