@@ -1,6 +1,18 @@
 
 module HasKAL.SignalProcessingUtils.Kaiser
-( genFIRcoeffCore
+( genFIRcoeff
+, FIRparam(..)
+, mkFIRparam
+, update'ripplePassband
+, update'freqPassband
+, update'rippleStopband
+, update'freqStopband
+, update'sampleRate
+, update'freqCutoff1
+, update'freqCutoff2
+, genFIRcoeffLowCore
+, genFIRcoeffHighCore
+, genFIRcoeffBandPassCore
 ) 
 where
 
@@ -10,8 +22,51 @@ import HasKAL.SignalProcessingUtils.FilterType (FilterType(..))
 import qualified Numeric.LinearAlgebra as NL
 
 
-genFIRcoeffCore (deltas, fres) (deltap, frep) fs fc = 
-  let as = -20 * logBase 10 deltas
+data FIRparam = FIRparam { ripplePassband :: Double
+                         , freqPassband   :: Double
+                         , rippleStopband :: Double
+                         , freqStopband   :: Double
+                         , sampleRate     :: Double
+                         , freqCutoff1    :: Double
+                         , freqCutoff2    :: Double
+                         } deriving (Show)
+
+
+mkFIRparam a1 a2 a3 a4 a5 a6 a7 = 
+  FIRparam { ripplePassband = a1 
+           , freqPassband   = a2
+           , rippleStopband = a3
+           , freqStopband   = a4
+           , sampleRate     = a5
+           , freqCutoff1    = a6
+           , freqCutoff2    = a7
+           }
+
+
+update'ripplePassband p x = p {ripplePassband = x}
+update'freqPassband p x = p {freqPassband = x}
+update'rippleStopband p x = p {rippleStopband = x}
+update'freqStopband p x = p {freqStopband = x}
+update'sampleRate p x = p {sampleRate = x}
+update'freqCutoff1 p x = p {freqCutoff1 = x}
+update'freqCutoff2 p x = p {freqCutoff2 = x}
+
+
+genFIRcoeff param filttype
+  | filttype == Low      = genFIRcoeffLowCore param
+  | filttype == High     = genFIRcoeffHighCore param
+  | filttype == BandPass = genFIRcoeffBandPassCore param
+
+
+genFIRcoeffLowCore param = 
+  let deltas = rippleStopband param
+      fres   = freqStopband param
+      deltap = ripplePassband param
+      frep   = freqPassband param
+      fs     = sampleRate param
+      fc     = freqCutoff1 param
+
+      as = -20 * logBase 10 deltas
       ap = -20 * logBase 10 deltap
       b | as > 50              = 0.1102*(as-8.7)
         | as >= 21 && as <= 50 = 0.5842*(as-21)**0.4+0.07886*(as-21)
@@ -40,4 +95,26 @@ genFIRcoeffCore (deltas, fres) (deltap, frep) fs fc =
       sinc fs fc m = 
         (flip map) [0..m-1] $ \l->2*sin (2*pi*fc*fromIntegral l)/(2*pi*fs* fromIntegral l)
    in zipWith (*) (NL.toList $ kaiser b n) (sinc fs fc n)
+
+
+genFIRcoeffHighCore param = 
+  let fs  = sampleRate param
+      fc  = freqCutoff1 param
+      fc' = fs/2 - fc
+      param' = update'freqCutoff1 param fc'
+   in zipWith (*) (cycle [1,-1]) $ genFIRcoeffLowCore param'
+
+
+genFIRcoeffBandPassCore param =
+  let fs     = sampleRate param
+      fc1    = freqCutoff1 param
+      fc2    = freqCutoff2 param
+      omega0 = 2*pi*(fc1+fc2)/2
+      fc'    = (fc2-fc1)/2
+      param' = update'freqCutoff1 param fc'
+   in zipWith (*) [2*2*cos (omega0/fs*fromIntegral m)|m<-[0..]]
+         $ genFIRcoeffLowCore param'
+
+
+ 
 
