@@ -206,3 +206,18 @@ double sosform1(int k, double x, double *num_coeff0, double *num_coeff1, double 
  return(y);
 }
 
+
+void sosstatespace (double *x, unsigned inputlen, double *A, double *B, double *C, double D, double x01, double x02, double *output)
+{
+ int k;
+ double x11, x12;
+ for (k=0;k<inputlen;k++)
+  {
+   if (k==0) x11=x01; x12=x02;
+   output[k] = C[0]*x11+C[1]*x12 + D*x[k];
+   x11 = A[0]*x11+A[1]*x12 + B[0]*x[k];
+   x12 = A[2]*x11+A[3]*x12 + D*x[k];
+  }
+}
+
+
