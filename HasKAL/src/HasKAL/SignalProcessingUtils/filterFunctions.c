@@ -28,6 +28,23 @@ int iir_filter (double *input, unsigned inputlen, double num_coeff[], double den
 }
 
 
+int iir_filter_init (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], double init[], unsigned filterlen, double *output){
+
+    unsigned inputidx, k;
+    double y, init_coeff[filterlen];
+
+    //-- initialize the delay registers
+    for (k=0;k<filterlen;k++){
+        init_coeff[k] = init[k];
+    }
+
+    //-- main part
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+
+    return 1;
+}
+
+
 int iir_filter_core (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double init_coeff[], double *output){
 
     unsigned inputidx, k;
@@ -70,6 +87,32 @@ int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned f
     //-- initialize ring buffer
     for (temp=0;temp<filterlen;temp++){
         fir_buffer[temp]=0.0;
+        fir_buffer[temp+filterlen]=0.0;
+    }
+    //-- initialize output
+    for (temp=0;temp<inputlen;temp++){
+        output[temp]=0.0;
+    }
+    //-- set input index
+    fir_ix = 0;
+
+    //-- main part
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
+
+
+    return 1;
+}
+
+
+int fir_filter_init (double *input, unsigned inputlen, double fir_coeff[], double init[], unsigned filterlen, double *output){
+
+    double fir_buffer[2*filterlen];
+    unsigned temp;
+    unsigned fir_ix;
+
+    //-- initialize ring buffer
+    for (temp=0;temp<filterlen;temp++){
+        fir_buffer[temp]=init[temp];
         fir_buffer[temp+filterlen]=0.0;
     }
     //-- initialize output
@@ -165,6 +208,39 @@ int filtfilt (double *input, unsigned inputlen, double num_coeff[], double denom
 }
 
 
+int filtfilt_init (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], double init[], unsigned filterlen, double *output){
+
+    unsigned inputidx, k, i;
+    double y, init_coeff[filterlen];
+
+    //-- initialize the delay registers
+    for (k=0;k<filterlen;k++){
+        init_coeff[k] = init[k];
+    }
+
+    //-- forward filtering
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+
+    //-- reverse filtering
+    //-- input : reversed output
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+    //--filtering again
+    iir_filter_core (input, inputlen, num_coeff, denom_coeff, filterlen, init_coeff, output);
+    //-reverse output
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+    for (i=0;i<inputlen;i++){
+        output[i] = input[inputlen-i-1];
+    }
+
+
+    return 1;
+}
+
+
 void sosfilter (double *input, unsigned inputlen, double *num_coeff0, double *num_coeff1,double *num_coeff2, double *denom_coeff0, double *denom_coeff1, double *denom_coeff2, unsigned nsect, double *output)
 {
  double y;
@@ -177,6 +253,32 @@ void sosfilter (double *input, unsigned inputlen, double *num_coeff0, double *nu
    RegX2[j] = 0.0;
    RegY1[j] = 0.0;
    RegY2[j] = 0.0;
+  }
+
+ for(j=0; j<inputlen; j++)
+  {
+   y = sosform1(0, input[j], num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+   for(k=1; k<nsect; k++)
+  {
+   y = sosform1(k, y, num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+  }
+   output[j] = y;
+  }
+}
+
+
+void sosfilter_init (double *input, unsigned inputlen, double *num_coeff0, double *num_coeff1,double *num_coeff2, double *denom_coeff0, double *denom_coeff1, double *denom_coeff2, unsigned nsect, double *init1, double *init2, double *output)
+{
+ double y;
+ int j, k;
+ double RegX1[nsect], RegX2[nsect], RegY1[nsect], RegY2[nsect];
+
+ for(j=0; j<nsect; j++)
+  {
+   RegX1[j] = init1[j];
+   RegX2[j] = init2[j];
+   RegY1[j] = init1[j];
+   RegY2[j] = init2[j];
   }
 
  for(j=0; j<inputlen; j++)
