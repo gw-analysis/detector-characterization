@@ -3,11 +3,21 @@
 module HasKAL.SignalPocessingUtils.StateSpace
 ( tf2NthStateSpace
 , barnes
+, sosstatespace
 ) where
 
 
-import Numeric.LinearAlgebra
+import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
+import Data.List (unzip4)
+import Data.Word
+import Foreign.C.Types
+-- import Foreign.C.String
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
+import Foreign.Marshal.Array
+import Foreign.Ptr
 import HasKAL.SignalProcessingUtils.Parallel
+import Numeric.LinearAlgebra
+import System.IO.Unsafe
 
 
 tf2NthStateSpace :: ([Double], [Double])
@@ -30,12 +40,55 @@ tf2NthStateSpace (num, denom) =
    in (aa, bb, cc, dd)
 
 
-
 barnes :: ([Double], [Double])
-       -> ([(Matrix Double,  Matrix Double,  Matrix Double)], Double)
+       -> [(Matrix Double, Matrix Double, Matrix Double, Double)]
 barnes (num, denom) =
   let (x, y, z) = tf2cparallel (num, denom)
-   in (map calcSS [(b, ar:+ai) | (b, ar:+ai) <- (zip y z), ai>0], head x)
+      (a, b) = tf2rparallel (num, denom) 
+      d = map head $ fst $ unzip b
+      e = map calcSS [(b, ar:+ai) | (b, ar:+ai) <- (zip y z), ai>0]
+   in [(e1,e2,e3,d1)| (e1,e2,e3)<-e,d1<-d]
+
+
+sosstatespace :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
+sosstatespace coeff inputV = 
+ let ss = barnes coeff
+     ilen = VS.length inputV
+     inputV' = d2cdV inputV :: VS.Vector CDouble
+     (a',b',c',d) = unzip4 ss
+     a = map (\i->contat . toList $ (a'!!i)) [0..length a']
+     b = map (\i->concat . toList $ (b'!!i)) [0..length b']
+     c = map (\i->concat . toList $ (c'!!i)) [0..length c']
+     soscoeffs = tf2rparallel coeff
+     initcond = map (\i -> calcInitcond soscoeffs) [0..length soscoeffs-1]
+     x01 = map (\x-> head x) initcond
+     x02 = map (\x -> head . drop 1 $ x) initcond
+  in go inputV (length num)
+     where 
+       go iV 0  = iV  
+       go iV k  = let newiV = sosstatespace iV ilen (a!k) (b!!k) (c!!k) (d!!k) (x01!!k) (x02!!k)
+                   in go newiV (k-1)
+
+
+calcInitcond :: ([Double],[Double]) -> [Double]
+calcInitcond (num,denom) = 
+  head $ toLists $ (ident (length num) - fromColumns [-1*fromList (tail denom), fromList [1.0, 0]]) 
+    <\> rhs num denom 
+  where
+    rhs num' denom' = fromColums $ fromList $ map (\i->(num'!!i)-(denom'!!0)*(num'!!i)) [1,2]
+
+
+sosstatespaceCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> CDouble -> CDouble -> CDouble -> VS.Vector CDouble
+sosstatespaceCore input ilen a b c d x01 x02 
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray a $ \ptrA ->
+   withArray b $ \ptrB ->
+   withArray c $ \ptrC ->
+   allocaArray ilen $ \ptrOutput ->
+   do c'sosstatespace ptrInput wilen ptrA ptrB ptrC d x01 x02 ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
 
 
 calcSS :: (Complex Double, Complex Double)
@@ -52,9 +105,33 @@ calcSS (num, denom) =
       co = (1 >< 2) [alphar/bo @@>(0, 0), alphar/bo @@>(1, 0)]
    in (ao, bo, co)
 
+
 sign x
   | x < 0 = -1
   | x >= 0 = 1
   | otherwise = error "x should be minus or plus"
+
+
+itow32 :: Int -> CUInt
+itow32 = fromIntegral
+
+d2cd :: [Double] -> [CDouble]
+d2cd = map realToFrac
+
+cd2d :: [CDouble] -> [Double]
+cd2d = map realToFrac
+
+d2cdV :: VS.Vector Double -> VS.Vector CDouble
+d2cdV = VS.map realToFrac
+
+cd2dV :: VS.Vector CDouble -> VS.Vector Double
+cd2dV = VS.map realToFrac
+
+fst' (a, _, _, _) = a
+snd' (_, b, _, _) = b
+thd' (_, _, c, _) = c
+frh' (_, _, _, d) = d
+
+foreign import ccall "filterFunction.h sosstatespace" c'sosstatespace :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CDouble -> CDouble -> CDouble -> Ptr CDouble -> IO ()
 
 

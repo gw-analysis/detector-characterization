@@ -10,10 +10,10 @@ module HasKAL.SignalProcessingUtils.Filter
   , filtfilt
   , sosfilter
   , sos1filter
-  , sosstatespace
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
+import Data.Word
 import Foreign.C.Types
 -- import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
@@ -21,7 +21,6 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
 import Unsafe.Coerce (unsafeCoerce)
-import Data.Word
 
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
@@ -213,19 +212,6 @@ sosfilterCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec
             wnsec = itow32 nsec
 
 
-sosstatespace :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> CDouble -> CDouble -> CDouble -> VS.Vector CDouble
-sosstatespace input ilen a b c d x01 x02 
-  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
-   withArray a $ \ptrA ->
-   withArray b $ \ptrB ->
-   withArray c $ \ptrC ->
-   allocaArray ilen $ \ptrOutput ->
-   do c'sosstatespace ptrInput wilen ptrA ptrB ptrC d x01 x02 ptrOutput
-      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
-        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
-      where wilen = itow32 ilen
-
-
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
 
@@ -251,4 +237,3 @@ foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> C
 
 foreign import ccall "filterFunctions.h sosfilter" c'sosfilter :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
-foreign import ccall "filterFunction.h sosstatespace" c'sosstatespace :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CDouble -> CDouble -> CDouble -> Ptr CDouble -> IO ()

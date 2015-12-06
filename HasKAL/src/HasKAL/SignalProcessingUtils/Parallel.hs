@@ -80,7 +80,7 @@ iirp (firpart, iirpart) v = case null firpart of
 applyIIR :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
 applyIIR coeffs v = Par.runPar $ do
   jobs <- Par.parMap (`sos1filter` v) coeffs
-  return $ sum outs
+  return $ sum jobs
 
 
 applyFIRIIR :: [Double] -> [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
