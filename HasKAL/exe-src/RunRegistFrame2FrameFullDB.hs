@@ -55,7 +55,7 @@ source topDir watchdir = do
     takeMVar fname
   liftIO $ putStrLn x >> hFlush stdout
   yield x >> do watchdir' <- liftIO $ getCurrentGps >>= \x -> return $ take 5 (show ((read x ::Int)-30))
-                let dir' = encodeString $ decodeString topDir </> decodeString watchdir
+                let dir' = encodeString $ decodeString topDir </> decodeString watchdir'
                 gowatch dir' (source topDir watchdir')
 
                 
@@ -63,12 +63,13 @@ gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
                       case b of
                        False -> do liftIO $ threadDelay 1000000
                                    gowatch dname f
-                       True  -> do flist <- liftIO $ getDirectoryContents dname >>= \x-> 
-                                     return $ filter (\y-> not (y `elem` [".",".."]) && head y /='.') x
-                                   case null flist of
-                                     True -> f
-                                     False -> do mapM_ yield flist
-                                                 f
+                       True  -> f
+--                        True  -> do flist <- liftIO $ getDirectoryContents dname >>= \x-> 
+--                                      return $ filter (\y-> not (y `elem` [".",".."]) && head y /='.') x
+--                                    case null flist of
+--                                      True -> f
+--                                      False -> do mapM_ yield flist
+--                                                  f
 
 
 source' :: FilePath
