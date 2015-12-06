@@ -1,37 +1,3 @@
-{-
-- - test code to check iirFilter and butter in SignalProcessingUtils
-- - to compile the code,  run
-- - ghc -o testFilter testFilter.hs
-- HasKAL/SignalProcessingUtils/filterFunctions.c
-- - -}
---
--- import HasKAL.SignalProcessingUtils.Filter
--- import HasKAL.SignalProcessingUtils.ButterWorth
--- import HasKAL.SignalProcessingUtils.FilterType
--- import HasKAL.SpectrumUtils.GwPsdMethod
--- import HasKAL.SpectrumUtils.SpectrumUtils
--- import System.Random
---
--- import HasKAL.PlotUtils.PlotOption.PlotOptionHROOT
--- import HasKAL.PlotUtils.PlotUtilsHROOT
---
--- main :: IO ()
--- main = do
---   let x = take 1000 $ randomRs (-1, 1) $ mkStdGen 1 :: [Double]
---       (numCoeffLow,denomCoeffLow) = butter 2 100 20 Low
---       (numCoeffHigh,denomCoeffHigh) = butter 2 100 20 High
---       y = iirFilter x (length x) numCoeffLow denomCoeffLow (length numCoeffLow)
---       z = iirFilter x (length x) numCoeffHigh denomCoeffHigh (length numCoeffHigh)
---
---   let out1 = gwpsd x 100 100
---       out2 = gwpsd y 100 100
---       out3 = gwpsd z 100 100
---
---   logLogPlot (map fst out1) (map snd out1) "frequency[Hz]" "asd[1/rHz]" Line "beforeFiltered.pdf"
---   logLogPlot (map fst out2) (map snd out2) "frequency[Hz]" "asd[1/rHz]" Line "afterLowPassFiltered.pdf"
---   logLogPlot (map fst out3) (map snd out3) "frequency[Hz]" "asd[1/rHz]" Line "afterHighPassFiltered.pdf"
-
-
 
 {-# LANGUAGE ForeignFunctionInterface #-}
 
@@ -47,6 +13,7 @@ module HasKAL.SignalProcessingUtils.Filter
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
+import Data.Word
 import Foreign.C.Types
 -- import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
@@ -54,7 +21,7 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
 import Unsafe.Coerce (unsafeCoerce)
-import Data.Word
+
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
@@ -83,7 +50,6 @@ fir firCoeff inputV = do
       inputV' = d2cdV inputV :: VS.Vector CDouble
       firCoeff' = d2cd firCoeff
   cd2dV $ firCore inputV' ilen firCoeff' flen
-
 
 
 fir' :: [Double] -> VS.Vector Double -> VS.Vector Double
@@ -124,7 +90,6 @@ sosfilter coeffs inputV =
       nsec = length coeffs
       inputV' = d2cdV inputV :: VS.Vector CDouble
    in cd2dV $ sosfilterCore inputV' ilen (nums!!0) (nums!!1) (nums!!2) (denoms!!0) (denoms!!1) (denoms!!2) nsec
-
 
 
 sos1filter :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
@@ -271,3 +236,4 @@ foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble 
 foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h sosfilter" c'sosfilter :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
