@@ -6,7 +6,7 @@
 
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
 import Control.DeepSeq (deepseq)
-import Control.Monad (forever)
+import Control.Monad (forever, mapM_)
 import Control.Monad.State (liftIO)
 import Data.Conduit (Sink, Source, await, yield, ($$))
 import Data.List (elemIndices)
@@ -15,24 +15,28 @@ import Filesystem.Path (extension, (</>))
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB')
 import System.Environment (getArgs)
-import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchTree, watchTreeChan, eventPath)
+import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchTree, watchTreeChan, watchDirChan, eventPath)
 import System.IO (hFlush, stdout)
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.Chan
 import System.FilePath.Posix (takeExtension, takeFileName)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
+import System.Directory (doesDirectoryExist, getDirectoryContents)
+
 --runRegistDB watchdir = source watchdir $$ sink
 
 main = do
-  dirname <- getArgs >>= \args -> case (length args) of
-   1 -> return (head args)
-   _ -> error "Usage : RunRegistFrame2FrameFullDB dir"
-  source dirname $$ sink
-
+  (topDir,watchdir) <- getArgs >>= \args -> case (length args) of
+   2 -> return (args!!0, args!!1)
+--   1 -> return (head args)
+   _ -> error "Usage : RunRegistFrame2FrameFullDB topdir watchdir"
+  source topDir watchdir $$ sink
+--  source watchTopdir $$ sink
 
 source :: FilePath
+       -> FilePath
        -> Source IO FilePath
-source watchTopdir = do
+source topDir watchdir = do
   let predicate event' = case event' of
         Added path _ -> head (takeFileName path) /= '.'
         _            -> False
@@ -43,21 +47,37 @@ source watchTopdir = do
                  }
   x <- liftIO $ withManagerConf config $ \manager -> do
     fname <- liftIO newEmptyMVar
-    dirname <- getCurrentGps >>= \x -> return $ take 5 (show ((read x ::Int)-10))
-    _ <- watchTree manager (encodeString $ decodeString watchTopdir </> decodeString dirname) predicate
+    _ <- watchTree manager (encodeString $ decodeString topDir </> decodeString watchdir) predicate
       $ \event -> case event of
         Added path _ -> case (takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.') of
                           True  -> putMVar fname path
                           False -> putStrLn "something strange happens." >> hFlush stdout
     takeMVar fname
   liftIO $ putStrLn x >> hFlush stdout
-  yield x >> source watchTopdir
+  yield x >> do watchdir' <- liftIO $ getCurrentGps >>= \x -> return $ take 5 (show ((read x ::Int)-30))
+                let dir' = encodeString $ decodeString topDir </> decodeString watchdir'
+                gowatch dir' (source topDir watchdir')
+
+                
+gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
+                      case b of
+                       False -> do liftIO $ threadDelay 1000000
+                                   gowatch dname f
+                       True  -> f
+--                        True  -> do flist <- liftIO $ getDirectoryContents dname >>= \x-> 
+--                                      return $ filter (\y-> not (y `elem` [".",".."]) && head y /='.') x
+--                                    case null flist of
+--                                      True -> f
+--                                      False -> do mapM_ yield flist
+--                                                  f
 
 
 source' :: FilePath
-       -> Source IO FilePath
-source' watchdir = do
-  let predicate event' = case event' of
+        -> FilePath
+        -> Source IO FilePath
+source' topDir dirname = do
+  let watchdir = encodeString $ decodeString topDir </> decodeString dirname
+      predicate event' = case event' of
         Added path _ -> takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
         _            -> False
   eventChan <- liftIO newChan
@@ -67,7 +87,7 @@ source' watchdir = do
                  , confUsePolling = True
                  }
   _ <- liftIO $ forkIO $ withManagerConf config $ \manager -> do
-    _<-watchTreeChan 
+    _<-watchDirChan 
        manager 
        watchdir 
        predicate
@@ -77,8 +97,9 @@ source' watchdir = do
   event <- liftIO $  readChan eventChan 
   let gwfname = eventPath event
   _<- liftIO $ putStrLn gwfname >> hFlush stdout 
-  source watchdir
---  yield x >> source watchdir
+--  source watchdir
+  dirname' <- liftIO $ getCurrentGps >>= \x -> return $ take 5 (show ((read x ::Int)-10))
+  yield gwfname >> source' topDir dirname'
 
 
 sink :: Sink String IO ()
