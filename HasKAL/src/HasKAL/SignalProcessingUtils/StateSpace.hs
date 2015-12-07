@@ -4,6 +4,7 @@ module HasKAL.SignalPocessingUtils.StateSpace
 ( tf2NthStateSpace
 , barnes
 , sosstatespace
+, sos1statespaceInit 
 ) where
 
 
@@ -16,9 +17,12 @@ import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import HasKAL.SignalProcessingUtils.Parallel
+import HasKAL.SignalProcessingUtils.Filter (calcInitCond)
 import Numeric.LinearAlgebra
 import System.IO.Unsafe
 
+
+{- exposed functions -}
 
 tf2NthStateSpace :: ([Double], [Double])
                  -> (Matrix Double, Matrix Double, Matrix Double, Matrix Double)
@@ -55,28 +59,41 @@ sosstatespace coeff inputV =
  let ss = barnes coeff
      ilen = VS.length inputV
      inputV' = d2cdV inputV :: VS.Vector CDouble
-     (a',b',c',d) = unzip4 ss
-     a = map (\i->contat . toList $ (a'!!i)) [0..length a']
-     b = map (\i->concat . toList $ (b'!!i)) [0..length b']
-     c = map (\i->concat . toList $ (c'!!i)) [0..length c']
-     soscoeffs = tf2rparallel coeff
-     initcond = map (\i -> calcInitcond soscoeffs) [0..length soscoeffs-1]
-     x01 = map (\x-> head x) initcond
-     x02 = map (\x -> head . drop 1 $ x) initcond
-  in go inputV (length num)
-     where 
-       go iV 0  = iV  
-       go iV k  = let newiV = sosstatespace iV ilen (a!k) (b!!k) (c!!k) (d!!k) (x01!!k) (x02!!k)
-                   in go newiV (k-1)
+     (a',b',c',d') = unzip4 ss
+     a = map (\i->d2cd . concat . toLists $ (a'!!i)) [0..length a']
+     b = map (\i->d2cd . concat . toLists $ (b'!!i)) [0..length b']
+     c = map (\i->d2cd . concat . toLists $ (c'!!i)) [0..length c']
+     d = d2cd d'
+     (_, soscoeffs) = tf2rparallel coeff
+     initcoeff = map (\i -> calcInitCond (soscoeffs!!i)) [0..length soscoeffs-1]
+     x01 = d2cd $ map (\x-> head x) initcoeff
+     x02 = d2cd $ map (\x -> head . drop 1 $ x) initcoeff
+     go iV 0  = iV  
+     go iV k  = let newiV = sosstatespaceCore iV ilen (a!!k) (b!!k) (c!!k) (d!!k) (x01!!k) (x02!!k)
+                 in go newiV (k-1)
+  in cd2dV $ go inputV' (length a -1)
 
 
-calcInitcond :: ([Double],[Double]) -> [Double]
-calcInitcond (num,denom) = 
-  head $ toLists $ (ident (length num) - fromColumns [-1*fromList (tail denom), fromList [1.0, 0]]) 
-    <\> rhs num denom 
-  where
-    rhs num' denom' = fromColums $ fromList $ map (\i->(num'!!i)-(denom'!!0)*(num'!!i)) [1,2]
+sos1statespaceInit :: ([Double], [Double]) -> (Double, Double) -> VS.Vector Double -> VS.Vector Double
+sos1statespaceInit coeff initcoeff inputV = 
+ let ss = barnes coeff
+     ilen = VS.length inputV
+     inputV' = d2cdV inputV :: VS.Vector CDouble
+     (a',b',c',d') = unzip4 ss
+     a = map (\i->d2cd . concat . toLists $ (a'!!i)) [0..length a']
+     b = map (\i->d2cd . concat . toLists $ (b'!!i)) [0..length b']
+     c = map (\i->d2cd . concat . toLists $ (c'!!i)) [0..length c']
+     d = d2cd d'
+     (_, soscoeffs) = tf2rparallel coeff
+     x01 = [realToFrac . fst $ initcoeff]
+     x02 = [realToFrac . snd $ initcoeff]
+     go iV 0  = iV  
+     go iV k  = let newiV = sosstatespaceCore iV ilen (a!!k) (b!!k) (c!!k) (d!!k) (x01!!k) (x02!!k)
+                 in go newiV (k-1)
+  in cd2dV $ go inputV' (length a -1)
 
+
+{- internal functions -}
 
 sosstatespaceCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> CDouble -> CDouble -> CDouble -> VS.Vector CDouble
 sosstatespaceCore input ilen a b c d x01 x02 

@@ -10,6 +10,14 @@ module HasKAL.SignalProcessingUtils.Filter
   , filtfilt
   , sosfilter
   , sos1filter
+  , firInit
+  , iirInit
+  , firFilterInit
+  , iirFilterInit
+  , filtfiltInit
+  , sosfilterInit
+  , sos1filterInit
+  , calcInitCond
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
@@ -34,6 +42,17 @@ iir (numCoeff, denomCoeff) inputV = do
   cd2dV $ iirCore inputV' ilen numCoeff' denomCoeff' flen
 
 
+iirInit :: ([Double],[Double]) -> [Double] -> VS.Vector Double -> VS.Vector Double
+iirInit (numCoeff, denomCoeff) initCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length numCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      numCoeff' = d2cd numCoeff
+      denomCoeff' = d2cd denomCoeff
+      initCoeff' = d2cd initCoeff
+  cd2dV $ iir_initCore inputV' ilen numCoeff' denomCoeff' initCoeff' flen
+
+
 iirFilter :: [Double] -> [Double] -> [Double] -> [Double]
 iirFilter input numCoeff denomCoeff = do
   let ilen = length input :: Int
@@ -44,6 +63,17 @@ iirFilter input numCoeff denomCoeff = do
   cd2d $ iirFilterCore input' ilen numCoeff' denomCoeff' flen
 
 
+iirFilterInit :: [Double] -> [Double] -> [Double] -> [Double] -> [Double]
+iirFilterInit input numCoeff denomCoeff initCoeff = do
+  let ilen = length input :: Int
+      flen = length numCoeff
+      input' = d2cd input
+      numCoeff' = d2cd numCoeff
+      denomCoeff' = d2cd denomCoeff
+      initCoeff' = d2cd initCoeff
+  cd2d $ iirFilterInitCore input' ilen numCoeff' denomCoeff' flen initCoeff'
+
+
 fir :: [Double] -> VS.Vector Double -> VS.Vector Double
 fir firCoeff inputV = do
   let ilen = VS.length inputV
@@ -51,6 +81,16 @@ fir firCoeff inputV = do
       inputV' = d2cdV inputV :: VS.Vector CDouble
       firCoeff' = d2cd firCoeff
   cd2dV $ firCore inputV' ilen firCoeff' flen
+
+
+firInit :: [Double] -> [Double] -> VS.Vector Double -> VS.Vector Double
+firInit firCoeff initCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length firCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      firCoeff' = d2cd firCoeff
+      initCoeff'= d2cd initCoeff
+  cd2dV $ fir_initCore inputV' ilen firCoeff' initCoeff' flen
 
 
 fir' :: [Double] -> VS.Vector Double -> VS.Vector Double
@@ -72,6 +112,16 @@ firFilter input firCoeff = do
   cd2d $ firFilterCore input' ilen firCoeff' flen
 
 
+firFilterInit :: [Double] -> [Double] -> [Double]-> [Double]
+firFilterInit input firCoeff initCoeff = do
+  let ilen = length input :: Int
+      flen = length firCoeff
+      input' = d2cd input
+      firCoeff' = d2cd firCoeff
+      initCoeff' = d2cd initCoeff
+  cd2d $ firFilterInitCore input' ilen firCoeff' initCoeff' flen
+
+
 filtfilt :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 filtfilt (numCoeff, denomCoeff) inputV = do
   let ilen = VS.length inputV
@@ -80,6 +130,17 @@ filtfilt (numCoeff, denomCoeff) inputV = do
       numCoeff' = d2cd numCoeff
       denomCoeff' = d2cd denomCoeff
   cd2dV $ filtfiltCore inputV' ilen numCoeff' denomCoeff' flen
+
+
+filtfiltInit :: ([Double],[Double]) -> [Double] -> VS.Vector Double -> VS.Vector Double
+filtfiltInit (numCoeff, denomCoeff) initCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length numCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      numCoeff' = d2cd numCoeff
+      denomCoeff' = d2cd denomCoeff
+      initCoeff' = d2cd initCoeff
+  cd2dV $ filtfilt_initCore inputV' ilen numCoeff' denomCoeff' initCoeff' flen
 
 
 sosfilter :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
@@ -93,6 +154,26 @@ sosfilter coeffs inputV =
    in cd2dV $ sosfilterCore inputV' ilen (nums!!0) (nums!!1) (nums!!2) (denoms!!0) (denoms!!1) (denoms!!2) nsec
 
 
+sosfilterInit :: [([Double], [Double])] -> [[Double]] -> VS.Vector Double -> VS.Vector Double
+sosfilterInit coeffs initCoeff inputV =
+  let (num, denom) = unzip coeffs
+      nums = map (\i->d2cd $ map (!!i) num) [0..length (head num)-1]
+      nums0 = map head nums
+      nums1 = map (!!1) nums
+      nums2 = map (!!2) nums
+      denoms = map (\i->d2cd $ map (!!i) denom) [0..length (head denom)-1]
+      denoms0 = map head denoms
+      denoms1 = map (!!1) denoms
+      denoms2 = map (!!2) denoms
+      initCoeffs = map (\i->d2cd $ map (!!i) initCoeff) [0..length (head initCoeff)-1]
+      initCoeffs1 = map head initCoeffs
+      initCoeffs2 = map (!!1) initCoeffs
+      ilen = VS.length inputV
+      nsec = length coeffs
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+   in cd2dV $ sosfilter_initCore inputV' ilen nums0 nums1 nums2 denoms0 denoms1 denoms2 nsec initCoeffs1 initCoeffs2
+
+
 sos1filter :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
 sos1filter (num, denom) inputV =
   let inputV' = d2cdV inputV :: VS.Vector CDouble
@@ -101,6 +182,18 @@ sos1filter (num, denom) inputV =
       denom' = d2cd denom
       nsec = 1
    in cd2dV $ sosfilterCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec
+
+
+sos1filterInit :: ([Double], [Double]) -> (Double, Double) -> VS.Vector Double -> VS.Vector Double
+sos1filterInit (num, denom) (init1, init2) inputV =
+  let inputV' = d2cdV inputV :: VS.Vector CDouble
+      ilen = VS.length inputV
+      num' = d2cd num
+      denom' = d2cd denom
+      init1' = realToFrac init1
+      init2' = realToFrac init2
+      nsec = 1
+   in cd2dV $ sosfilter_initCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec [init1'] [init2']
 
 
 -------------  Internal Functions  -----------------------------
