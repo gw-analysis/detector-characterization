@@ -19,6 +19,7 @@ import Foreign.C.Types
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
+import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLists, toRows, (><), (<\>))
 import System.IO.Unsafe
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -121,6 +122,33 @@ iirCore input ilen numCoeff denomCoeff flen
             wflen = itow32 flen
 
 
+iir_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+iir_initCore input ilen numCoeff denomCoeff initCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray numCoeff $ \ptrNumCoeff ->
+   withArray denomCoeff $ \ptrDenomCoeff ->
+   withArray initCoeff $ \ptrInitCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_iir_filter_init ptrInput wilen ptrNumCoeff ptrDenomCoeff ptrInitCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+fir_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+fir_initCore input ilen firCoeff initCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   withArray initCoeff $ \ptrInitCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filter_init ptrInput wilen ptrFirCoeff ptrInitCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
 firCore :: VS.Vector CDouble -> Int -> [CDouble] -> Int -> VS.Vector CDouble
 firCore input ilen firCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
@@ -157,14 +185,26 @@ iirFilterCore input ilen numCoeff denomCoeff flen
             wflen = itow32 flen
 
 
-iirFilterCoreInit :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble]
-iirFilterCoreInit input ilen numCoeff denomCoeff flen initCoeff
+iirFilterInitCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble]
+iirFilterInitCore input ilen numCoeff denomCoeff flen initCoeff
   = unsafePerformIO $ withArray input $ \ptrInput ->
    withArray numCoeff $ \ptrNumCoeff ->
    withArray denomCoeff $ \ptrDenomCoeff ->
    withArray initCoeff $ \ptrInitCoeff ->
    allocaArray ilen $ \ptrOutput ->
    do c_iir_filter_core ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrInitCoeff ptrOutput
+      peekArray ilen ptrOutput
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+firFilterInitCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble]
+firFilterInitCore input ilen firCoeff initCoeff flen
+  = unsafePerformIO $ withArray input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   withArray initCoeff $ \ptrInitCoeff -> 
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filter_init ptrInput wilen ptrFirCoeff ptrInitCoeff wflen ptrOutput
       peekArray ilen ptrOutput
       where wilen = itow32 ilen
             wflen = itow32 flen
@@ -181,7 +221,6 @@ firFilterCore input ilen firCoeff flen
             wflen = itow32 flen
 
 
-
 filtfiltCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
 filtfiltCore input ilen numCoeff denomCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
@@ -189,6 +228,20 @@ filtfiltCore input ilen numCoeff denomCoeff flen
    withArray denomCoeff $ \ptrDenomCoeff ->
    allocaArray ilen $ \ptrOutput ->
    do c_filtfilt ptrInput wilen ptrNumCoeff ptrDenomCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+filtfilt_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+filtfilt_initCore input ilen numCoeff denomCoeff initCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray numCoeff $ \ptrNumCoeff ->
+   withArray denomCoeff $ \ptrDenomCoeff ->
+   withArray initCoeff $ \ptrInitCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_filtfilt_init ptrInput wilen ptrNumCoeff ptrDenomCoeff ptrInitCoeff wflen ptrOutput
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
@@ -212,6 +265,33 @@ sosfilterCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec
             wnsec = itow32 nsec
 
 
+sosfilter_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble] -> VS.Vector CDouble
+sosfilter_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 init2
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray num0 $ \ptrNum0 ->
+   withArray num1 $ \ptrNum1 ->
+   withArray num2 $ \ptrNum2 ->
+   withArray denom0 $ \ptrDenom0 ->
+   withArray denom1 $ \ptrDenom1 ->
+   withArray denom2 $ \ptrDenom2 ->
+   withArray init1 $ \ptrInit1 ->
+   withArray init2 $ \ptrInit2 ->
+   allocaArray ilen $ \ptrOutput ->
+   do c'sosfilter_init ptrInput wilen ptrNum0 ptrNum1 ptrNum2 ptrDenom0 ptrDenom1 ptrDenom2 wnsec ptrInit1 ptrInit2 ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wnsec = itow32 nsec
+
+
+calcInitCond :: ([Double],[Double]) -> [Double]
+calcInitCond (num,denom) =
+  let n = length num
+   in head $ toLists $
+       (ident (n-1) - fromBlocks [[-(1><(n-1)) (tail denom)], [fromBlocks [[ident (n-2), (1><(n-2)) $ replicate (n-2) 0]]]])
+        <\> ((((n-1)><1) (tail num)) - scale (head num) (((n-1)><1) (tail denom)))
+
+
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
 
@@ -229,11 +309,18 @@ cd2dV = VS.map realToFrac
 
 foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
+foreign import ccall "filterFunctions.h iir_filter_init" c_iir_filter_init :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
 foreign import ccall "filterFunctions.h iir_filter_core" c_iir_filter_core :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
+foreign import ccall "filterFunctions.h fir_filter_init" c_fir_filter_init :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
 foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
+foreign import ccall "filterFunctions.h filtfilt_init" c_filtfilt_init :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h sosfilter" c'sosfilter :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
+foreign import ccall "filterFunctions.h sosfilter_init" c'sosfilter_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
