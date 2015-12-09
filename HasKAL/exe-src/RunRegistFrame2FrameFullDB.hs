@@ -23,75 +23,76 @@ import System.FilePath.Posix (takeExtension, takeFileName)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.Timeout (timeout)
-
+import System.IO.Unsafe (unsafePerformIO)
 
 main = do
   topDir <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
    _ -> error "Usage : RunRegistFrame2FrameFullDB topdir"
-  source topDir $= watchFile topDir $$ sink
+--  source topDir $= watchFile topDir $$ sink
+  source topDir $$ sink
 
 
 source :: FilePath
        -> Source IO FilePath
-source topDir = do
-  let predicate event' = case event' of
-        Added path _ -> head (takeFileName path) /= '.'
-        _            -> False
-  let config = WatchConfig
-                 { confDebounce = NoDebounce
-                 , confPollInterval = 30000000 -- 30seconds
-                 , confUsePolling = True
-                 }
-  fname <- liftIO $ newEmptyMVar
-  liftIO $ withManagerConf config $ \manager -> do
-    _ <- watchDir manager topDir predicate
-      $ \event -> case event of
-        Added watchdir _ -> 
-         case (take 2 (takeFileName watchdir) == "11") of
-          True -> do putStrLn ("directory "++(takeFileName watchdir)++" created.") >> hFlush stdout
-                     putMVar fname watchdir
-          False-> putStrLn ("directory or file created but ignored.") >> hFlush stdout
-    forever $ threadDelay 1000000
-  x <- liftIO $ takeMVar fname
-  yield x >> source topDir
+source topDir = do  
+  
+  gowatch dname (source topDir)
 
 
 watchFile :: FilePath
           -> Conduit FilePath IO FilePath
 watchFile topDir = do
   watchdir' <- await
-  watchdir <- liftIO $ case watchdir' of
-    Just x -> return $ takeFileName x
-    Nothing-> return []
-  let predicate event' = case event' of
-        Added path _ -> head (takeFileName path) /= '.'
+  watchdir  <- liftIO $ case watchdir' of
+    Just x  -> return $ takeFileName x
+    Nothing -> return []
+  let absPath = encodeString $ decodeString topDir </> decodeString watchdir
+      predicate event' = case event' of
+        Added path _ -> chekingPath path 
         _            -> False
-  let config = WatchConfig
+      config = WatchConfig
                  { confDebounce = NoDebounce
                  , confPollInterval = 5000000 -- 5seconds
                  , confUsePolling = True
                  }
   fname <- liftIO newEmptyMVar
-  (gpsHead', gpsTail') <- liftIO $ getCurrentGps >>= \x -> return $ (take 5 x, drop 5 x)
-  let gpsHead = read gpsHead' :: Int
-      gpsTail = replicate (length gpsTail') '0'
-      nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
-  currGps' <- liftIO getCurrentGps
-  let currGps = read currGps' :: Int
-  maybea <- liftIO $ timeout (nextGps-currGps+20) $ withManagerConf config $ \manager -> 
-    watchDir manager (encodeString $ decodeString topDir </> decodeString watchdir) predicate
+  maybea <- liftIO $ timeout (breakeTime 20) $ withManagerConf config $ \manager -> 
+    watchDir manager absPath predicate
       $ \event -> case event of
-        Added path _ -> case (takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.') of
-                          True  -> putMVar fname path
-                          False -> putStrLn "something strange happens." >> hFlush stdout
+        Added path _ -> putMVar fname path
   case maybea of 
     Nothing -> return ()
     Just _  -> do gwfname <- liftIO $ takeMVar fname
                   liftIO $ putStrLn gwfname >> hFlush stdout
                   yield gwfname >> watchFile topDir
 
+
+sink :: Sink String IO ()
+sink = do
+  c <- await
+  case c of
+    Nothing -> do liftIO $ putStrLn "Nothing" >> hFlush stdout
+                  sink
+    Just fname -> do liftIO $ putStrLn fname >> hFlush stdout
+--                     x <- liftIO $ updateFrameDB' fname
+--                     liftIO $ x `deepseq` return ()
+                     sink
+
+
+chekingPath path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
+
                 
+breakeTime margin = unsafePerformIO $ do
+  (gpsHead', gpsTail') <- liftIO $ getCurrentGps >>= \x -> return $ (take 5 x, drop 5 x)
+  let gpsHead = read gpsHead' :: Int
+      gpsTail = replicate (length gpsTail') '0'
+      nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
+  currGps' <- liftIO getCurrentGps
+  let currGps = read currGps' :: Int
+  return (nextGps-currGps+margin)
+
+
 gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
                       case b of
                        False -> do liftIO $ threadDelay 1000000
@@ -135,17 +136,6 @@ source' topDir dirname = do
 --  yield gwfname >> source' topDir dirname'
   source' topDir dirname'
 
-
-sink :: Sink String IO ()
-sink = do
-  c <- await
-  case c of
-    Nothing -> do liftIO $ putStrLn "Nothing" >> hFlush stdout
-                  sink
-    Just fname -> do liftIO $ putStrLn fname >> hFlush stdout
-                     x <- liftIO $ updateFrameDB' fname
-                     liftIO $ x `deepseq` return ()
-                     sink
 
 
 
