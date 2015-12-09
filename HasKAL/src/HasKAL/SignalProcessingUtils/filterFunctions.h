@@ -5,9 +5,13 @@ int iir_filter_init (double*, unsigned, double[], double[], double[], unsigned, 
 
 int fir_filter (double*, unsigned, double[], unsigned,  double*);
 
+int fir_filtfilt (double*, unsigned, double[], unsigned,  double*);
+
 int iir_filter (double*,  unsigned,  double[],  double[], unsigned, double*);
 
 int fir_filter_init (double*, unsigned, double[], double[], unsigned, double*);
+
+int fir_filtfilt_init (double*, unsigned, double[], double[], unsigned, double*);
 
 int iir_filter_core (double*, unsigned, double[], double[], unsigned, double[], double*);
 
@@ -19,9 +23,14 @@ int filtfilt_init (double*, unsigned, double[], double[], double[], unsigned, do
 
 void sosfilter (double*,  unsigned,  double*,  double*,  double*,  double*,  double*,  double*,  unsigned,  double*);
 
+void sosfiltfilt (double*,  unsigned,  double*,  double*,  double*,  double*,  double*,  double*,  unsigned,  double*);
+
 void sosfilter_init (double*, unsigned, double*, double*, double*, double*, double*, double*, unsigned, double*, double*, double*);
+
+void sosfiltfilt_init (double*, unsigned, double*, double*, double*, double*, double*, double*, unsigned, double*, double*, double*);
 
 double sosform1 (int,  double,  double*,  double*,  double*,  double*,  double*,  double*,  double*,  double*,  double*,  double*);
 
 void sosstatespace (double*, unsigned, double*, double*, double*, double, double, double, double*);
 
+void sosfiltfiltss (double*, unsigned, double*, double*, double*, double, double, double, double*);

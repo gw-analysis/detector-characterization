@@ -104,6 +104,45 @@ int fir_filter (double *input, unsigned inputlen, double fir_coeff[], unsigned f
 }
 
 
+int fir_filtfilt (double *input, unsigned inputlen, double fir_coeff[], unsigned filterlen, double *output){
+
+    int i;
+    double fir_buffer[2*filterlen];
+    unsigned temp;
+    unsigned fir_ix;
+
+    //-- initialize ring buffer
+    for (temp=0;temp<filterlen;temp++){
+        fir_buffer[temp]=0.0;
+        fir_buffer[temp+filterlen]=0.0;
+    }
+    //-- initialize output
+    for (temp=0;temp<inputlen;temp++){
+        output[temp]=0.0;
+    }
+    //-- set input index
+    fir_ix = 0;
+
+    //-- main part
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
+
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
+
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+    for (i=0;i<inputlen;i++){
+        output[i] = input[inputlen-i-1];
+    }
+
+    return 1;
+}
+
+
 int fir_filter_init (double *input, unsigned inputlen, double fir_coeff[], double init[], unsigned filterlen, double *output){
 
     double fir_buffer[2*filterlen];
@@ -125,6 +164,46 @@ int fir_filter_init (double *input, unsigned inputlen, double fir_coeff[], doubl
     //-- main part
     fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
 
+
+    return 1;
+}
+
+
+int fir_filtfilt_init (double *input, unsigned inputlen, double fir_coeff[], double init[], unsigned filterlen, double *output){
+
+    int i;
+    double fir_buffer[2*filterlen];
+    unsigned temp;
+    unsigned fir_ix;
+
+    //-- initialize ring buffer
+    for (temp=0;temp<filterlen;temp++){
+        fir_buffer[temp]=init[temp];
+        fir_buffer[temp+filterlen]=0.0;
+    }
+    //-- initialize output
+    for (temp=0;temp<inputlen;temp++){
+        output[temp]=0.0;
+    }
+    //-- set input index
+    fir_ix = 0;
+
+    //-- main part
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
+
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+
+    fir_filter_core(input,  inputlen,  fir_coeff,  fir_buffer,  &fir_ix,  filterlen, output);
+
+    for (i=0;i<inputlen;i++){
+        input[i] = output[inputlen-i-1];
+    }
+
+    for (i=0;i<inputlen;i++){
+        output[i] = input[i];
+    }
 
     return 1;
 }
@@ -200,9 +279,8 @@ int filtfilt (double *input, unsigned inputlen, double num_coeff[], double denom
         input[i] = output[inputlen-i-1];
     }
     for (i=0;i<inputlen;i++){
-        output[i] = input[inputlen-i-1];
+        output[i] = input[i];
     }
-
 
     return 1;
 }
@@ -233,9 +311,8 @@ int filtfilt_init (double *input, unsigned inputlen, double num_coeff[], double 
         input[i] = output[inputlen-i-1];
     }
     for (i=0;i<inputlen;i++){
-        output[i] = input[inputlen-i-1];
+        output[i] = input[i];
     }
-
 
     return 1;
 }
@@ -267,6 +344,53 @@ void sosfilter (double *input, unsigned inputlen, double *num_coeff0, double *nu
 }
 
 
+void sosfiltfilt (double *input, unsigned inputlen, double *num_coeff0, double *num_coeff1,double *num_coeff2, double *denom_coeff0, double *denom_coeff1, double *denom_coeff2, unsigned nsect, double *output)
+{
+ double y;
+ int i, j, k;
+ double RegX1[nsect], RegX2[nsect], RegY1[nsect], RegY2[nsect];
+
+ for(j=0; j<nsect; j++)
+  {
+   RegX1[j] = 0.0;
+   RegX2[j] = 0.0;
+   RegY1[j] = 0.0;
+   RegY2[j] = 0.0;
+  }
+
+ for(j=0; j<inputlen; j++)
+  {
+   y = sosform1(0, input[j], num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+   for(k=1; k<nsect; k++)
+  {
+   y = sosform1(k, y, num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+  }
+   output[j] = y;
+  }
+
+ for (i=0;i<inputlen;i++){
+   input[i] = output[inputlen-i-1];
+ }
+
+ for(j=0; j<inputlen; j++)
+  {
+   y = sosform1(0, input[j], num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+   for(k=1; k<nsect; k++)
+  {
+   y = sosform1(k, y, num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+  }
+   output[j] = y;
+  }
+ for (i=0;i<inputlen;i++){
+   input[i] = output[inputlen-i-1];
+  }
+ for (i=0;i<inputlen;i++){
+   output[i] = input[i];
+  }
+
+}
+
+
 void sosfilter_init (double *input, unsigned inputlen, double *num_coeff0, double *num_coeff1,double *num_coeff2, double *denom_coeff0, double *denom_coeff1, double *denom_coeff2, unsigned nsect, double *init1, double *init2, double *output)
 {
  double y;
@@ -290,6 +414,54 @@ void sosfilter_init (double *input, unsigned inputlen, double *num_coeff0, doubl
   }
    output[j] = y;
   }
+}
+
+
+void sosfiltfilt_init (double *input, unsigned inputlen, double *num_coeff0, double *num_coeff1,double *num_coeff2, double *denom_coeff0, double *denom_coeff1, double *denom_coeff2, unsigned nsect, double *init1, double *init2, double *output)
+{
+ double y;
+ int i, j, k;
+ double RegX1[nsect], RegX2[nsect], RegY1[nsect], RegY2[nsect];
+
+ for(j=0; j<nsect; j++)
+  {
+   RegX1[j] = init1[j];
+   RegX2[j] = init2[j];
+   RegY1[j] = init1[j];
+   RegY2[j] = init2[j];
+  }
+
+ for(j=0; j<inputlen; j++)
+  {
+   y = sosform1(0, input[j], num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+   for(k=1; k<nsect; k++)
+  {
+   y = sosform1(k, y, num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+  }
+   output[j] = y;
+  }
+
+ for (i=0;i<inputlen;i++){
+   input[i] = output[inputlen-i-1];
+ }
+
+ for(j=0; j<inputlen; j++)
+  {
+   y = sosform1(0, input[j], num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+   for(k=1; k<nsect; k++)
+  {
+   y = sosform1(k, y, num_coeff0, num_coeff1, num_coeff2, denom_coeff0, denom_coeff1, denom_coeff2, RegX1, RegX2, RegY1, RegY2);
+  }
+   output[j] = y;
+  }
+ for (i=0;i<inputlen;i++){
+   input[i] = output[inputlen-i-1];
+  }
+ for (i=0;i<inputlen;i++){
+   output[i] = input[i];
+  }
+
+
 }
 
 
@@ -319,6 +491,39 @@ void sosstatespace (double *x, unsigned inputlen, double *A, double *B, double *
    output[k] = C[0]*x11+C[1]*x12 + D*x[k];
    x11 = A[0]*x11+A[1]*x12 + B[0]*x[k];
    x12 = A[2]*x11+A[3]*x12 + D*x[k];
+  }
+}
+
+
+void sosfiltfiltss (double *x, unsigned inputlen, double *A, double *B, double *C, double D, double x01, double x02, double *output)
+{
+ int i, k;
+ double x11, x12;
+ for (k=0;k<inputlen;k++)
+  {
+   if (k==0) x11=x01; x12=x02;
+   output[k] = C[0]*x11+C[1]*x12 + D*x[k];
+   x11 = A[0]*x11+A[1]*x12 + B[0]*x[k];
+   x12 = A[2]*x11+A[3]*x12 + D*x[k];
+  }
+
+ for (i=0;i<inputlen;i++){
+   x[i] = output[inputlen-i-1];
+  }
+
+ for (k=0;k<inputlen;k++)
+  {
+   if (k==0) x11=x01; x12=x02;
+   output[k] = C[0]*x11+C[1]*x12 + D*x[k];
+   x11 = A[0]*x11+A[1]*x12 + B[0]*x[k];
+   x12 = A[2]*x11+A[3]*x12 + D*x[k];
+  }
+
+ for (i=0;i<inputlen;i++){
+   x[i] = output[inputlen-i-1];
+  }
+ for (i=0;i<inputlen;i++){
+   output[i] = x[i];
   }
 }
 
