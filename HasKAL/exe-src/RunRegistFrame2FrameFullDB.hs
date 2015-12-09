@@ -25,6 +25,7 @@ import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.Timeout (timeout)
 import System.IO.Unsafe (unsafePerformIO)
 
+
 main = do
   topDir <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
@@ -36,8 +37,12 @@ main = do
 source :: FilePath
        -> Source IO FilePath
 source topDir = do  
-  
-  gowatch dname (source topDir)
+  gps <- liftIO getCurrentGps
+  let cdir = getCurrentDir gps
+      cabspath = getAbsPath topDir cdir
+  gowatch cabspath $ do yield cabspath
+                        liftIO $ threadDelay ((timeToNextDir gps+20)*1000000)
+                        source topDir
 
 
 watchFile :: FilePath
@@ -47,9 +52,9 @@ watchFile topDir = do
   watchdir  <- liftIO $ case watchdir' of
     Just x  -> return $ takeFileName x
     Nothing -> return []
-  let absPath = encodeString $ decodeString topDir </> decodeString watchdir
+  let absPath = getAbsPath topDir watchdir
       predicate event' = case event' of
-        Added path _ -> chekingPath path 
+        Added path _ -> chekingFile path 
         _            -> False
       config = WatchConfig
                  { confDebounce = NoDebounce
@@ -80,17 +85,36 @@ sink = do
                      sink
 
 
-chekingPath path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
+chekingFile path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
 
-                
+
+getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
+
+
 breakeTime margin = unsafePerformIO $ do
-  (gpsHead', gpsTail') <- liftIO $ getCurrentGps >>= \x -> return $ (take 5 x, drop 5 x)
-  let gpsHead = read gpsHead' :: Int
+  dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
+  return (dt+margin)
+
+
+getCurrentDir :: String -> String
+getCurrentDir gps = take 5 gps
+
+
+getNextDir :: String -> String
+getNextDir gps = 
+  let gpsHead' = take 5 gps
+      gpsHead = read gpsHead' :: Int
+   in take 5 $ show (gpsHead+1) 
+ 
+
+timeToNextDir :: String -> Int
+timeToNextDir gps = 
+  let currentGps = read gps :: Int
+      (gpsHead', gpsTail') = (take 5 gps, drop 5 gps)
+      gpsHead = read gpsHead' :: Int
       gpsTail = replicate (length gpsTail') '0'
       nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
-  currGps' <- liftIO getCurrentGps
-  let currGps = read currGps' :: Int
-  return (nextGps-currGps+margin)
+   in nextGps - currentGps
 
 
 gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
