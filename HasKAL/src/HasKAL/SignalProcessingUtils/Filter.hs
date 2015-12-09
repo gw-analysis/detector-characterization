@@ -17,6 +17,14 @@ module HasKAL.SignalProcessingUtils.Filter
   , filtfiltInit
   , sosfilterInit
   , sos1filterInit
+  , firFiltfiltV
+  , firFiltfiltVInit
+  , firFiltfilt
+  , firFiltfiltInit
+  , sosfiltfilt
+  , sosfiltfiltInit
+  , sos1filtfilt
+  , sos1filtfiltInit
   , calcInitCond
   ) where
 
@@ -93,6 +101,25 @@ firInit firCoeff initCoeff inputV = do
   cd2dV $ fir_initCore inputV' ilen firCoeff' initCoeff' flen
 
 
+firFiltfiltV :: [Double] -> VS.Vector Double -> VS.Vector Double
+firFiltfiltV firCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length firCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      firCoeff' = d2cd firCoeff
+  cd2dV $ firFiltfiltVCore inputV' ilen firCoeff' flen
+
+
+firFiltfiltVInit :: [Double] -> [Double] -> VS.Vector Double -> VS.Vector Double
+firFiltfiltVInit firCoeff initCoeff inputV = do
+  let ilen = VS.length inputV
+      flen = length firCoeff
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+      firCoeff' = d2cd firCoeff
+      initCoeff'= d2cd initCoeff
+  cd2dV $ firFiltfiltV_initCore inputV' ilen firCoeff' initCoeff' flen
+
+
 fir' :: [Double] -> VS.Vector Double -> VS.Vector Double
 fir' firCoeff inputV = do
   let ilen = VS.length inputV
@@ -120,6 +147,25 @@ firFilterInit input firCoeff initCoeff = do
       firCoeff' = d2cd firCoeff
       initCoeff' = d2cd initCoeff
   cd2d $ firFilterInitCore input' ilen firCoeff' initCoeff' flen
+
+
+firFiltfilt :: [Double] -> [Double] -> [Double]
+firFiltfilt input firCoeff = do
+  let ilen = length input :: Int
+      flen = length firCoeff
+      input' = d2cd input
+      firCoeff' = d2cd firCoeff
+  cd2d $ firFiltfiltCore input' ilen firCoeff' flen
+
+
+firFiltfiltInit :: [Double] -> [Double] -> [Double]-> [Double]
+firFiltfiltInit input firCoeff initCoeff = do
+  let ilen = length input :: Int
+      flen = length firCoeff
+      input' = d2cd input
+      firCoeff' = d2cd firCoeff
+      initCoeff' = d2cd initCoeff
+  cd2d $ firFiltfiltInitCore input' ilen firCoeff' initCoeff' flen
 
 
 filtfilt :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
@@ -174,6 +220,37 @@ sosfilterInit coeffs initCoeff inputV =
    in cd2dV $ sosfilter_initCore inputV' ilen nums0 nums1 nums2 denoms0 denoms1 denoms2 nsec initCoeffs1 initCoeffs2
 
 
+sosfiltfilt :: [([Double], [Double])] -> VS.Vector Double -> VS.Vector Double
+sosfiltfilt coeffs inputV =
+  let (num, denom) = unzip coeffs
+      nums = map (\i->d2cd $ map (!!i) num) [0..length (head num)-1]
+      denoms = map (\i->d2cd $ map (!!i) denom) [0..length (head denom)-1]
+      ilen = VS.length inputV
+      nsec = length coeffs
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+   in cd2dV $ sosfiltfiltCore inputV' ilen (nums!!0) (nums!!1) (nums!!2) (denoms!!0) (denoms!!1) (denoms!!2) nsec
+
+
+sosfiltfiltInit :: [([Double], [Double])] -> [[Double]] -> VS.Vector Double -> VS.Vector Double
+sosfiltfiltInit coeffs initCoeff inputV =
+  let (num, denom) = unzip coeffs
+      nums = map (\i->d2cd $ map (!!i) num) [0..length (head num)-1]
+      nums0 = map head nums
+      nums1 = map (!!1) nums
+      nums2 = map (!!2) nums
+      denoms = map (\i->d2cd $ map (!!i) denom) [0..length (head denom)-1]
+      denoms0 = map head denoms
+      denoms1 = map (!!1) denoms
+      denoms2 = map (!!2) denoms
+      initCoeffs = map (\i->d2cd $ map (!!i) initCoeff) [0..length (head initCoeff)-1]
+      initCoeffs1 = map head initCoeffs
+      initCoeffs2 = map (!!1) initCoeffs
+      ilen = VS.length inputV
+      nsec = length coeffs
+      inputV' = d2cdV inputV :: VS.Vector CDouble
+   in cd2dV $ sosfiltfilt_initCore inputV' ilen nums0 nums1 nums2 denoms0 denoms1 denoms2 nsec initCoeffs1 initCoeffs2
+
+
 sos1filter :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
 sos1filter (num, denom) inputV =
   let inputV' = d2cdV inputV :: VS.Vector CDouble
@@ -194,6 +271,28 @@ sos1filterInit (num, denom) (init1, init2) inputV =
       init2' = realToFrac init2
       nsec = 1
    in cd2dV $ sosfilter_initCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec [init1'] [init2']
+
+
+sos1filtfilt :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
+sos1filtfilt (num, denom) inputV =
+  let inputV' = d2cdV inputV :: VS.Vector CDouble
+      ilen = VS.length inputV
+      num' = d2cd num
+      denom' = d2cd denom
+      nsec = 1
+   in cd2dV $ sosfiltfiltCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec
+
+
+sos1filtfiltInit :: ([Double], [Double]) -> (Double, Double) -> VS.Vector Double -> VS.Vector Double
+sos1filtfiltInit (num, denom) (init1, init2) inputV =
+  let inputV' = d2cdV inputV :: VS.Vector CDouble
+      ilen = VS.length inputV
+      num' = d2cd num
+      denom' = d2cd denom
+      init1' = realToFrac init1
+      init2' = realToFrac init2
+      nsec = 1
+   in cd2dV $ sosfiltfilt_initCore inputV' ilen [num'!!0] [num'!!1] [num'!!2] [denom'!!0] [denom'!!1] [denom'!!2] nsec [init1'] [init2']
 
 
 -------------  Internal Functions  -----------------------------
@@ -242,12 +341,37 @@ fir_initCore input ilen firCoeff initCoeff flen
             wflen = itow32 flen
 
 
+firFiltfiltV_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+firFiltfiltV_initCore input ilen firCoeff initCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   withArray initCoeff $ \ptrInitCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filtfilt_init ptrInput wilen ptrFirCoeff ptrInitCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
 firCore :: VS.Vector CDouble -> Int -> [CDouble] -> Int -> VS.Vector CDouble
 firCore input ilen firCoeff flen
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
    withArray firCoeff $ \ptrFirCoeff ->
    allocaArray ilen $ \ptrOutput ->
    do c_fir_filter ptrInput wilen ptrFirCoeff wflen ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+firFiltfiltVCore :: VS.Vector CDouble -> Int -> [CDouble] -> Int -> VS.Vector CDouble
+firFiltfiltVCore input ilen firCoeff flen
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filtfilt ptrInput wilen ptrFirCoeff wflen ptrOutput
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
@@ -303,12 +427,35 @@ firFilterInitCore input ilen firCoeff initCoeff flen
             wflen = itow32 flen
 
 
+firFiltfiltInitCore :: [CDouble] -> Int -> [CDouble] -> [CDouble] -> Int -> [CDouble]
+firFiltfiltInitCore input ilen firCoeff initCoeff flen
+  = unsafePerformIO $ withArray input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   withArray initCoeff $ \ptrInitCoeff -> 
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filtfilt_init ptrInput wilen ptrFirCoeff ptrInitCoeff wflen ptrOutput
+      peekArray ilen ptrOutput
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
 firFilterCore :: [CDouble] -> Int -> [CDouble] -> Int -> [CDouble]
 firFilterCore input ilen firCoeff flen
   = unsafePerformIO $ withArray input $ \ptrInput ->
    withArray firCoeff $ \ptrFirCoeff ->
    allocaArray ilen $ \ptrOutput ->
    do c_fir_filter ptrInput wilen ptrFirCoeff wflen ptrOutput
+      peekArray ilen ptrOutput
+      where wilen = itow32 ilen
+            wflen = itow32 flen
+
+
+firFiltfiltCore :: [CDouble] -> Int -> [CDouble] -> Int -> [CDouble]
+firFiltfiltCore input ilen firCoeff flen
+  = unsafePerformIO $ withArray input $ \ptrInput ->
+   withArray firCoeff $ \ptrFirCoeff ->
+   allocaArray ilen $ \ptrOutput ->
+   do c_fir_filtfilt ptrInput wilen ptrFirCoeff wflen ptrOutput
       peekArray ilen ptrOutput
       where wilen = itow32 ilen
             wflen = itow32 flen
@@ -358,6 +505,23 @@ sosfilterCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec
             wnsec = itow32 nsec
 
 
+sosfiltfiltCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> VS.Vector CDouble
+sosfiltfiltCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray num0 $ \ptrNum0 ->
+   withArray num1 $ \ptrNum1 ->
+   withArray num2 $ \ptrNum2 ->
+   withArray denom0 $ \ptrDenom0 ->
+   withArray denom1 $ \ptrDenom1 ->
+   withArray denom2 $ \ptrDenom2 ->
+   allocaArray ilen $ \ptrOutput ->
+   do c'sosfiltfilt ptrInput wilen ptrNum0 ptrNum1 ptrNum2 ptrDenom0 ptrDenom1 ptrDenom2 wnsec ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wnsec = itow32 nsec
+
+
 sosfilter_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble] -> VS.Vector CDouble
 sosfilter_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 init2
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
@@ -371,6 +535,25 @@ sosfilter_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 ini
    withArray init2 $ \ptrInit2 ->
    allocaArray ilen $ \ptrOutput ->
    do c'sosfilter_init ptrInput wilen ptrNum0 ptrNum1 ptrNum2 ptrDenom0 ptrDenom1 ptrDenom2 wnsec ptrInit1 ptrInit2 ptrOutput
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where wilen = itow32 ilen
+            wnsec = itow32 nsec
+
+
+sosfiltfilt_initCore :: VS.Vector CDouble -> Int -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> [CDouble] -> Int -> [CDouble] -> [CDouble] -> VS.Vector CDouble
+sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 init2
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray num0 $ \ptrNum0 ->
+   withArray num1 $ \ptrNum1 ->
+   withArray num2 $ \ptrNum2 ->
+   withArray denom0 $ \ptrDenom0 ->
+   withArray denom1 $ \ptrDenom1 ->
+   withArray denom2 $ \ptrDenom2 ->
+   withArray init1 $ \ptrInit1 ->
+   withArray init2 $ \ptrInit2 ->
+   allocaArray ilen $ \ptrOutput ->
+   do c'sosfiltfilt_init ptrInput wilen ptrNum0 ptrNum1 ptrNum2 ptrDenom0 ptrDenom1 ptrDenom2 wnsec ptrInit1 ptrInit2 ptrOutput
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
@@ -408,7 +591,11 @@ foreign import ccall "filterFunctions.h iir_filter_core" c_iir_filter_core :: Pt
 
 foreign import ccall "filterFunctions.h fir_filter" c_fir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
+foreign import ccall "filterFunctions.h fir_filtfilt" c_fir_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
 foreign import ccall "filterFunctions.h fir_filter_init" c_fir_filter_init :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
+foreign import ccall "filterFunctions.h fir_filtfilt_init" c_fir_filtfilt_init :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h filtfilt" c_filtfilt :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
@@ -416,4 +603,8 @@ foreign import ccall "filterFunctions.h filtfilt_init" c_filtfilt_init :: Ptr CD
 
 foreign import ccall "filterFunctions.h sosfilter" c'sosfilter :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 
+foreign import ccall "filterFunctions.h sosfiltfilt" c'sosfiltfilt :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
+
 foreign import ccall "filterFunctions.h sosfilter_init" c'sosfilter_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
+
+foreign import ccall "filterFunctions.h sosfiltfilr_init" c'sosfiltfilt_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
