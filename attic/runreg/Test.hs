@@ -1,7 +1,5 @@
 
-
-
---module RegistDB
+--module Test
 --where
 
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
@@ -26,22 +24,27 @@ import System.Timeout (timeout)
 import System.IO.Unsafe (unsafePerformIO)
 
 
+
 main = do
   topDir <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
    _ -> error "Usage : RunRegistFrame2FrameFullDB topdir"
-  source topDir $= watchFile topDir $$ sink
---  source topDir $$ sink
-
+--  source topDir $= watchFile topDir $$ sink
+  source topDir $$ sink
 
 source :: FilePath
        -> Source IO FilePath
-source topDir = do  
+source topDir = do
   gps <- liftIO getCurrentGps
+  liftIO $ putStrLn gps >> hFlush stdout
   let cdir = getCurrentDir gps
       cabspath = getAbsPath topDir cdir
+  liftIO $ putStrLn cabspath >> hFlush stdout
   gowatch cabspath $ do yield cabspath
-                        liftIO $ threadDelay ((timeToNextDir gps+20)*1000000)
+                        liftIO $ putStrLn "yielding" >> hFlush stdout
+                        liftIO $ threadDelay ((timeToNextDir gps+2)*1000000)
+                        gps' <- liftIO getCurrentGps
+                        liftIO $ putStrLn (gps'++" going to nextdir") >> hFlush stdout
                         source topDir
 
 
@@ -54,20 +57,20 @@ watchFile topDir = do
     Nothing -> return []
   let absPath = getAbsPath topDir watchdir
       predicate event' = case event' of
-        Added path _ -> chekingFile path 
+        Added path _ -> chekingFile path
         _            -> False
       config = WatchConfig
                  { confDebounce = NoDebounce
-                 , confPollInterval = 5000000 -- 5seconds
+                 , confPollInterval = 1000000 -- 1seconds
                  , confUsePolling = True
                  }
-  maybefname <- liftIO $ timeout (breakeTime 20) $ withManagerConf config $ \manager -> do
+  maybefname <- liftIO $ timeout (breakeTime 5) $ withManagerConf config $ \manager -> do
     fname <- liftIO newEmptyMVar
     watchDir manager absPath predicate
       $ \event -> case event of
         Added path _ -> putMVar fname path
     takeMVar fname
-  case maybefname of 
+  case maybefname of
     Nothing -> return ()
     Just gwfname  -> do liftIO $ putStrLn gwfname >> hFlush stdout
                         yield gwfname >> watchFile topDir
@@ -80,8 +83,8 @@ sink = do
     Nothing -> do liftIO $ putStrLn "Nothing" >> hFlush stdout
                   sink
     Just fname -> do liftIO $ putStrLn fname >> hFlush stdout
-                     x <- liftIO $ updateFrameDB' fname
-                     liftIO $ x `deepseq` return ()
+--                     x <- liftIO $ updateFrameDB' fname
+--                     liftIO $ x `deepseq` return ()
                      sink
 
 
@@ -96,21 +99,24 @@ breakeTime margin = unsafePerformIO $ do
   return (dt+margin)
 
 
+num = 8
+
+
 getCurrentDir :: String -> String
-getCurrentDir gps = take 5 gps
+getCurrentDir gps = take num gps
 
 
 getNextDir :: String -> String
-getNextDir gps = 
-  let gpsHead' = take 5 gps
+getNextDir gps =
+  let gpsHead' = take num gps
       gpsHead = read gpsHead' :: Int
-   in take 5 $ show (gpsHead+1) 
- 
+   in take num $ show (gpsHead+1)
+
 
 timeToNextDir :: String -> Int
-timeToNextDir gps = 
+timeToNextDir gps =
   let currentGps = read gps :: Int
-      (gpsHead', gpsTail') = (take 5 gps, drop 5 gps)
+      (gpsHead', gpsTail') = (take num gps, drop num gps)
       gpsHead = read gpsHead' :: Int
       gpsTail = replicate (length gpsTail') '0'
       nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
@@ -122,43 +128,12 @@ gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
                        False -> do liftIO $ threadDelay 1000000
                                    gowatch dname f
                        True  -> f
---                        True  -> do flist <- liftIO $ getDirectoryContents dname >>= \x-> 
---                                      return $ filter (\y-> not (y `elem` [".",".."]) && head y /='.') x
---                                    case null flist of
---                                      True -> f
---                                      False -> do mapM_ yield flist
---                                                  f
 
 
-source' :: FilePath
-        -> FilePath
-        -> Source IO FilePath
-source' topDir dirname = do
-  let watchdir = encodeString $ decodeString topDir </> decodeString dirname
-      predicate event' = case event' of
-        Added path _ -> takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
-        _            -> False
-  eventChan <- liftIO newChan
-  let config = WatchConfig
-                 { confDebounce = NoDebounce
-                 , confPollInterval = 5000000 -- 5seconds
-                 , confUsePolling = True
-                 }
-  _ <- liftIO $ forkIO $ withManagerConf config $ \manager -> do
-    _ <- watchDirChan 
-         manager 
-         watchdir 
-         predicate
-         eventChan
-    return ()
---    forever $ threadDelay 10000000
-  event <- liftIO $  readChan eventChan 
-  let gwfname = eventPath event
-  _<- liftIO $ putStrLn gwfname >> hFlush stdout 
---  source watchdir
-  dirname' <- liftIO $ getCurrentGps >>= \x -> return $ take 5 (show ((read x ::Int)-10))
---  yield gwfname >> source' topDir dirname'
-  source' topDir dirname'
+
+
+
+
 
 
 
