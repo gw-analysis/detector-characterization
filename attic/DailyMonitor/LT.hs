@@ -30,7 +30,7 @@ main = do
       gps2 = gps1 + duration_half
       order    = 6      :: Int
       nsig     = 2      :: Int
-      nframe   = 2048   :: Int
+      nframe   = 32768  :: Int
       fcenter1 = 60     :: Double
       fcenter2 = 120    :: Double
       fcenter3 = 550    :: Double
@@ -72,8 +72,8 @@ main = do
       nend    = (truncate fs*duration_half)
       t01     = 0
       t02     = (fromIntegral duration_half)
-      output1  = butterBandPass dat1 fs (fcenter1-10) (fcenter1+10) order
-      output2  = butterBandPass dat2 fs (fcenter1-10) (fcenter1+10) order
+      output1  = butterBandPass dat1 fs (fcenter1*0.8) (fcenter1*1.2) order
+      output2  = butterBandPass dat2 fs (fcenter1*0.8) (fcenter1*1.2) order
   result1 <- case output1 of
     Left message -> error message
     Right datBP1 -> do
@@ -89,7 +89,7 @@ main = do
   oPlotV Linear Point 1 [RED, BLUE]
          (xlabel, "Amplitude") 0.05 title oFile0 ((0,0),(0,0)) (result!!0)
   oPlotV Linear Point 1 [RED, BLUE]
-         (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1-10),(fcenter1+10))) (result!!1)
+         (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.95),(fcenter1*1.05))) (result!!1)
 
 {--
   case output1 of
