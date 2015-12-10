@@ -60,6 +60,7 @@ main = do
        Left message -> print message
        Right frameV_bp -> do
          let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend t0
+{--
              outV' = [(a,b,c,d) | (a,b,c,d) <- outV
                                 , null [ e | e <- VS.toList b
                                            , isNaN e]
@@ -69,7 +70,8 @@ main = do
                                            , isNaN e]]
                                      
              outText = concat $ map (toText . shift) outV'
---             outText = concat $ map (toText . shift) outV
+--}
+             outText = concat $ map (toText . shift) outV
 --         writeFile "L-L1_LOSC_4_V1-931160064-4096.ana" $ outText
          writeFile fname_out $ outText
 
