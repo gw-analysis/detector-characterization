@@ -3,10 +3,11 @@ module HasKAL.ExternalUtils.KAGALI.KAGALIUtils
  (  dKGLIterativeLeastSquare2DNewton
   , butterBandPass
   , nha
+  , nha_daily
   , formatNHA
  ) where
 
-import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map, slice, fromList)
+import qualified Data.Vector.Storable as VS (Vector,  length,  unsafeWith,  unsafeFromForeignPtr0, map, slice, fromList, toList)
 import Foreign.ForeignPtr (newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
@@ -53,8 +54,8 @@ dKGLIterativeLeastSquare2DNewton frame fs nsig = do
    in (cd2dV out1, cd2dV out2, cd2dV out3)
 
 
-nha :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
-nha datV fs nsig nframe nshift nstart nend t0 = retVal
+nha_org :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha_org datV fs nsig nframe nshift nstart nend t0 = retVal
   where retVal = zipWith3 (\v w (x, y, z) -> ((v+w)/2, x, y, z)) tstart tend result
         tstart = map ( (+t0) . (/fs) . fromIntegral) nIdx
         tend = map ( (+t0) . (/fs) . fromIntegral . (+nframe) ) nIdx
@@ -64,8 +65,43 @@ nha datV fs nsig nframe nshift nstart nend t0 = retVal
           map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
 
 
+nha :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha datV fs nsig nframe nshift nstart nend t0 = retVal
+  where outV = nha_org datV fs nsig nframe nshift nstart nend t0
+        retVal = [(a,b,c,d) | (a,b,c,d) <- outV
+                            , null [ e | e <- VS.toList b
+                                       , isNaN e]
+                            , null [ e | e <- VS.toList c
+                                       , isNaN e]
+                            , null [ e | e <- VS.toList d
+                                       , isNaN e]]
+
+
+nha_daily_org :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha_daily_org datV fs nsig nframe nshift nstart nend t0 = retVal
+  where retVal = zipWith3 (\v w (x, y, z) -> ((v+w)/2, x, y, z)) tstart tend result
+        tstart = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral) nIdx
+        tend = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral . (+nframe) ) nIdx
+        nIdx = [nstart, nstart + nshift .. nstop]
+        nstop = min (VS.length datV - nframe) nend
+        result =
+          map ( (\frameV -> dKGLIterativeLeastSquare2DNewton frameV fs nsig) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
+
+
+nha_daily :: VS.Vector Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)]
+nha_daily datV fs nsig nframe nshift nstart nend t0 = retVal
+  where outV = nha_daily_org datV fs nsig nframe nshift nstart nend t0
+        retVal = [(a,b,c,d) | (a,b,c,d) <- outV
+                            , null [ e | e <- VS.toList b
+                                       , isNaN e]
+                            , null [ e | e <- VS.toList c
+                                       , isNaN e]
+                            , null [ e | e <- VS.toList d
+                                       , isNaN e]]
+
+
 formatNHA :: [(Double, VS.Vector Double, VS.Vector Double, VS.Vector Double)] -> [[(VS.Vector Double, VS.Vector Double)]]
-{- Ueno's Comment: [[(time, para)]]   inner list: nsig;   outer list: (a,f,p) -}
+{- Comment from Ueno: [[(time, para)]]   inner list: nsig;   outer list: (a,f,p) -}
 formatNHA input = output
   where tVec = VS.fromList $ map (\(x, _, _, _) -> x) input
         aVecL = toColumns.fromRows $ map (\(_, y, _, _) -> y) input

@@ -22,11 +22,13 @@ main = do
          nshift = 32     :: Int
          nstart = 0      :: Int
          nend   = 3000   :: Int
+         t0     = 0      :: Double
          output = KGL.butterBandPass frameV fs fmin fmax order
      case output of 
        Left message -> print message 
        Right frameV_bp -> do
-         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
+--         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
+         let outV = KGL.nha_daily frameV_bp fs nsig nframe nshift nstart nend t0
              outText = concat $ map (toText . shift) outV
          writeFile "LIGOtest.ana" $ outText
 

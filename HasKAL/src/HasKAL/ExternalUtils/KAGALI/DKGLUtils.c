@@ -1,4 +1,4 @@
-
+ 
 #include <kagali/KGLStdlib.h>
 #include <kagali/KGLBandPassFilter.h>
 #include <kagali/KGLLeastSquareMethod.h>
@@ -155,6 +155,24 @@ void DKGLIterativeLeastSquare2DNewton( //begin{proto}
   
   KGLIterativeLeastSquare2DNewton(status,Afit,ffit,pfit,frame,fs,nframe,
 				  Fcostthr,a2thr,nsig,nitr,mu0,nu0);
+  
+  for(int i = 0; i < nsig; i++){
+    /*
+    if(Afit[i] > 9.704229e-4 && Afit[i] < 9.70423e-4){
+      printf("%20.16e %20.16e %20.16e\n",Afit[i],ffit[i],pfit[i]);
+    }
+    */
+    
+    if(Afit[i] != Afit[i] 
+       || fabs(ffit[i]) < 1e-6
+       || fabs(pfit[i]) < 1e-5
+       ){
+      Afit[i] = 0;
+      ffit[i] = 0;
+      pfit[i] = 0;
+    }
+  }
+  
   KGLDestroyStatus(status);
   
   return;
