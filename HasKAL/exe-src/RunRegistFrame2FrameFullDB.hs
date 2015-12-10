@@ -30,8 +30,7 @@ main = do
   topDir <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
    _ -> error "Usage : RunRegistFrame2FrameFullDB topdir"
-  source topDir $= watchFile topDir $$ sink
---  source topDir $$ sink
+  source topDir $$ sink
 
 
 source :: FilePath
@@ -40,18 +39,14 @@ source topDir = do
   gps <- liftIO getCurrentGps
   let cdir = getCurrentDir gps
       cabspath = getAbsPath topDir cdir
-  gowatch cabspath $ do yield cabspath
-                        liftIO $ threadDelay ((timeToNextDir gps+20)*1000000)
+  gowatch cabspath $ do watchFile topDir cdir
                         source topDir
 
 
 watchFile :: FilePath
-          -> Conduit FilePath IO FilePath
-watchFile topDir = do
-  watchdir' <- await
-  watchdir  <- liftIO $ case watchdir' of
-    Just x  -> return $ takeFileName x
-    Nothing -> return []
+          -> FilePath
+          -> Source IO FilePath
+watchFile topDir watchdir = do
   let absPath = getAbsPath topDir watchdir
       predicate event' = case event' of
         Added path _ -> chekingFile path 
@@ -68,9 +63,8 @@ watchFile topDir = do
         Added path _ -> putMVar fname path
     takeMVar fname
   case maybefname of 
-    Nothing -> return ()
-    Just gwfname  -> do liftIO $ putStrLn gwfname >> hFlush stdout
-                        yield gwfname >> watchFile topDir
+    Nothing       -> return ()
+    Just gwfname  -> yield gwfname >> watchFile topDir watchdir
 
 
 sink :: Sink String IO ()
@@ -93,7 +87,7 @@ getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
 
 breakeTime margin = unsafePerformIO $ do
   dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
-  return (dt+margin)
+  return $ (dt+margin)*1000000
 
 
 getCurrentDir :: String -> String
