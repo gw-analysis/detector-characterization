@@ -2,6 +2,7 @@
 
 module HasKAL.WebUtils.FileWatcher
 ( hrsync
+, watchNewfile
 , watchNewfilewDB
 , updatingDB
 ) where
@@ -31,16 +32,18 @@ import Data.Text hiding (head)
 
 
 hrsync :: String            -- | executive filename
-             -> String            -- | dir to watch
-             -> String            -- | dir to save
-             -> IO ()
+       -> String            -- | dir to watch
+       -> String            -- | dir to save
+       -> IO ExitCode
 hrsync f from to = do
   let predicate event' = case event' of
-        Add path _ -> chekingFile path
-        _          -> False
+        Added path _ -> chekingFile path
+        _            -> False
+        where
+         chekingFile path = head (takeFileName path) /= '.'
       config = WatchConfig
                  { confDebounce = NoDebounce
-                 , confPollingInterval = 5000000 -- 5seconds
+                 , confPollInterval = 5000000 -- 5seconds
                  , confUsePolling = True
                  }
   eventChan <- liftIO newChan
@@ -56,7 +59,33 @@ hrsync f from to = do
   rawSystem f [to, fname]
 
 
-chekingFile path = head (takeFileName path) /= '.'
+
+
+watchNewfile :: String            -- | executive filename
+             -> String            -- | location where index.html will be
+             -> String            -- | location to watch new file added
+             -> IO ()
+watchNewfile f webhomedir watchdir = do
+  let predicate event' = case event' of
+        Added path _ -> chekingFile path
+        _            -> False
+        where
+         chekingFile path = head (takeFileName path) /= '.' 
+                            && (extension (decodeString path)) == Just (pack "gwf")
+      config = WatchConfig
+                 { confDebounce = NoDebounce
+                 , confPollInterval = 5000000 -- 5seconds
+                 , confUsePolling = True
+                 }
+  withManagerConf config $ \manager -> do
+    watchDir manager watchdir predicate
+      $ \event -> do let gwfname = eventPath event
+                     rawSystem f [webhomedir, gwfname] >> return ()
+    waitBreak
+  where
+    waitBreak = do
+      _ <- catchIOError getLine (\e -> if isEOFError e then exitSuccess else exitFailure)
+      waitBreak
 
 
 watchNewfilewDB :: String            -- | command name
