@@ -8,12 +8,13 @@ module HasKAL.DataBaseUtils.XEndEnv.Function
 , kagraDataFind'
 , kagraDataGet
 , kagraDataGet'
+, kagraDataGetC
 , kagraDataGPS
 , kagraDataPoint
 , kagraDataFindCore
 , kagraDataPointCore
-, kagraTimeDataGet
 , kagraWaveDataGet
+, kagraWaveDataGetC
 )
 where
 
@@ -56,6 +57,8 @@ import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
 import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
+import HasKAL.TimeUtils.Signature (GPSTIME)
+import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData)
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -198,8 +201,8 @@ kagraDataGet' gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         return $ fromJust maybex)
 
 
-kagraTimeDataGet :: Int -> Int -> String -> IO (Maybe [((Int,Int),V.Vector Double)])
-kagraTimeDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
+kagraDataGetC :: Int -> Int -> String -> IO (Maybe [((Int,Int),V.Vector Double)])
+kagraDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
   tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
   case tf of
     Nothing -> return Nothing
@@ -219,6 +222,34 @@ kagraTimeDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                       nduration = floor $ fromIntegral duration * fs
                       nInd = nConsecutive $ (fst . unzip) x
                   return $ Just $ consecutive (readFrameV chname) x nInd
+
+
+kagraWaveDataGetC :: Int -> Int -> String -> IO (Maybe [WaveData])
+kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case tf of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = snd . head $ x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                      nInd = nConsecutive $ (fst . unzip) x
+                      timendat = consecutive (readFrameV chname) x nInd
+                  return $ Just $ for timendat $ \y-> let ts = fst y
+                                                          xvec = snd y
+                                                          nlen = V.length xvec
+                                                          te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
+                                                       in mkWaveData D.General chname fs ts te xvec
 
 
 consecutive :: (String -> IO (Maybe (V.Vector Double)))
