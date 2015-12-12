@@ -30,17 +30,22 @@ main = do
   topDir <- getArgs >>= \args -> case (length args) of
    1 -> return (head args)
    _ -> error "Usage : RunRegistFrame2FrameFullDB topdir"
-  source topDir $$ sink
+  gps <- liftIO getCurrentGps
+  let cdir = getCurrentDir gps
+  source topDir cdir $$ sink
 
 
 source :: FilePath
+       -> FilePath
        -> Source IO FilePath
-source topDir = do  
+source topDir watchdir = do  
   gps <- liftIO getCurrentGps
-  let cdir = getCurrentDir gps
-      cabspath = getAbsPath topDir cdir
-  gowatch cabspath $ do watchFile topDir cdir
-                        source topDir
+  let ndir = getNextDir gps
+  liftIO $ putStrLn "start watching." >> hFlush stdout
+  watchFile topDir watchdir
+  liftIO $ putStrLn "going to next dir to watch." >> hFlush stdout
+  gowatch ndir $ source topDir ndir
+
 
 
 watchFile :: FilePath
@@ -53,18 +58,21 @@ watchFile topDir watchdir = do
         _            -> False
       config = WatchConfig
                  { confDebounce = NoDebounce
-                 , confPollInterval = 5000000 -- 5seconds
+                 , confPollInterval = 10000000 -- 5seconds
                  , confUsePolling = True
                  }
-  maybefname <- liftIO $ timeout (breakeTime 20) $ withManagerConf config $ \manager -> do
-    fname <- liftIO newEmptyMVar
-    watchDir manager absPath predicate
-      $ \event -> case event of
-        Added path _ -> putMVar fname path
-    takeMVar fname
-  case maybefname of 
-    Nothing       -> return ()
-    Just gwfname  -> yield gwfname >> watchFile topDir watchdir
+  cdir <- liftIO $ getCurrentGps >>= \cgps-> return $ getCurrentDir cgps
+  case (cdir == watchdir) of
+    True -> do maybefname <- liftIO $ timeout (breakTime 20) $ withManagerConf config $ \manager -> do
+                 fname <- liftIO newEmptyMVar
+                 watchDir manager absPath predicate
+                   $ \event -> case event of
+                     Added path _ -> putMVar fname path
+                 takeMVar fname
+               case maybefname of 
+                 Nothing       -> return ()
+                 Just gwfname  -> yield gwfname >> watchFile topDir watchdir
+    False-> return ()
 
 
 sink :: Sink String IO ()
@@ -85,7 +93,7 @@ chekingFile path = takeExtension path `elem` [".gwf"] && head (takeFileName path
 getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
 
 
-breakeTime margin = unsafePerformIO $ do
+breakTime margin = unsafePerformIO $ do
   dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
   return $ (dt+margin)*1000000
 
