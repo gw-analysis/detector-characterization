@@ -42,10 +42,12 @@ source topDir watchdir = do
   gps <- liftIO getCurrentGps
   let ndir = getNextDir gps
   liftIO $ putStrLn "start watching." >> hFlush stdout
-  watchFile topDir watchdir
-  liftIO $ putStrLn "going to next dir to watch." >> hFlush stdout
-  gowatch ndir $ source topDir ndir
-
+  maybeT <- liftIO $ timeout (breakTime 20) $ return (watchFile topDir watchdir)
+  case maybeT of
+   Nothing -> do liftIO $ putStrLn "Watching Timeout: going to next dir to watch." >> hFlush stdout
+                 gowatch ndir $ source topDir ndir
+   Just _  -> do liftIO $ putStrLn "going to next dir to watch." >> hFlush stdout
+                 gowatch ndir $ source topDir ndir
 
 
 watchFile :: FilePath
@@ -61,18 +63,13 @@ watchFile topDir watchdir = do
                  , confPollInterval = 10000000 -- 5seconds
                  , confUsePolling = True
                  }
-  cdir <- liftIO $ getCurrentGps >>= \cgps-> return $ getCurrentDir cgps
-  case (cdir == watchdir) of
-    True -> do maybefname <- liftIO $ timeout (breakTime 20) $ withManagerConf config $ \manager -> do
-                 fname <- liftIO newEmptyMVar
-                 watchDir manager absPath predicate
-                   $ \event -> case event of
-                     Added path _ -> putMVar fname path
-                 takeMVar fname
-               case maybefname of 
-                 Nothing       -> return ()
-                 Just gwfname  -> yield gwfname >> watchFile topDir watchdir
-    False-> return ()
+  gwfname <- liftIO $ withManagerConf config $ \manager -> do
+    fname <- newEmptyMVar
+    watchDir manager absPath predicate
+      $ \event -> case event of
+        Added path _ -> putMVar fname path
+    takeMVar fname
+  yield gwfname >> watchFile topDir watchdir
 
 
 sink :: Sink String IO ()
