@@ -29,6 +29,7 @@ import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
@@ -96,8 +97,14 @@ sink param chname = do
           case maybewave of
             Nothing -> sink param chname
             Just wave -> do let param' = GP.updateGlitchParam'channel param chname
-                            s <- liftIO $ glitchMon param' wave
-                            sink s chname
+                                fs = GP.samplingFrequency param'
+                                fsorig = samplingFrequency wave
+                            if (fs /= fsorig)
+                              then do let wave' = downsampleWaveData fs wave
+                                      s <- liftIO $ glitchMon param' wave'
+                                      sink s chname
+                              else do s <- liftIO $ glitchMon param' wave
+                                      sink s chname
 
 
 glitchMon :: GP.GlitchParam
