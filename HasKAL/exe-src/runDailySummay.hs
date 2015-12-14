@@ -13,7 +13,8 @@ main = do
   go f opt
 
 
-go f opt = do localTime <- getCurrentLocalTime "JST"
+go f opt = do localTime' <- getCurrentLocalTime "JST"
+              let localTime = take 10 localTime'
               putStrLn ("generating daily summary page for "++localTime ++".") >> hFlush stdout
               rawSystem f [opt]
               threadDelay (24*3600*1000000)
