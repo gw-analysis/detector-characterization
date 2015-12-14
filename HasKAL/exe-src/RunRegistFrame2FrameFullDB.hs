@@ -57,18 +57,14 @@ source :: FilePath
 source topDir watchdir = do  
   gps <- liftIO getCurrentGps
   let ndir = getNextDir gps
+      ndirabs = getAbsPath topDir ndir
   liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
   !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink
---  watchFile topDir watchdir
---  liftIO $ putStrLn "going to next dir to watch." >> hFlush stdout
---  gowatch ndir $ source topDir ndir
-
---  maybeT <- liftIO $ timeout (breakTime 20) $ return (watchFile topDir watchdir)
   case maybeT of
-   Nothing -> do putStrLn "Watching Timeout: going to next dir to watch." >> hFlush stdout
-                 gowatch ndir $ source topDir ndir
-   Just _  -> do putStrLn "going to next dir to watch." >> hFlush stdout
-                 gowatch ndir $ source topDir ndir
+   Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
+                 gowatch ndirabs $ source topDir ndir
+   Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
+                 gowatch ndirabs $ source topDir ndir
 
 
 
