@@ -2,7 +2,7 @@
 
 import Control.Concurrent (threadDelay)
 import System.Environment (getArgs)
-import System.IO (hPutStrLn, stdout)
+import System.IO (hFlush, stdout)
 import System.Process (rawSystem)
 
 main = do
@@ -12,7 +12,8 @@ main = do
   go f
 
 
-go f = do rawSystem f []
+go f = do putStrLn "generating today's summary page" >> hFlush stdout
+          rawSystem f []
           threadDelay (24*3600*1000000)
           go f
 
