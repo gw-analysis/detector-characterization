@@ -607,4 +607,4 @@ foreign import ccall "filterFunctions.h sosfiltfilt" c'sosfiltfilt :: Ptr CDoubl
 
 foreign import ccall "filterFunctions.h sosfilter_init" c'sosfilter_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
 
-foreign import ccall "filterFunctions.h sosfiltfilr_init" c'sosfiltfilt_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
+foreign import ccall "filterFunctions.h sosfiltfilt_init" c'sosfiltfilt_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
