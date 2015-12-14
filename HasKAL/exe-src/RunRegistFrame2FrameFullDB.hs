@@ -1,28 +1,44 @@
-
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, BangPatterns #-}
 
 
 --module RegistDB
 --where
 
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
-import Control.DeepSeq (deepseq)
+import Control.DeepSeq (NFData, deepseq)
 import Control.Monad (forever, mapM_)
 import Control.Monad.State (liftIO)
-import Data.Conduit (Conduit, Sink, Source, await, yield, ($$),($=))
+import Data.Conduit ( Conduit
+                    , Sink
+                    , Source
+                    , await
+                    , runConduit
+                    , yield
+                    , ($$)
+                    , ($=)
+                    )
 import Data.List (elemIndices)
 import Data.Text (pack)
 import Filesystem.Path (extension, (</>))
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB')
 import System.Environment (getArgs)
-import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchDir, watchTreeChan, watchDirChan, eventPath)
+import System.FSNotify ( Debounce(..)
+                       , Event(..)
+                       , WatchConfig(..)
+                       , withManagerConf
+                       , watchDir
+                       , watchTreeChan
+                       , watchDirChan
+                       , eventPath
+                       )
 import System.IO (hFlush, stdout)
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.Chan
 import System.FilePath.Posix (takeExtension, takeFileName)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import System.Directory (doesDirectoryExist, getDirectoryContents)
-import System.Timeout (timeout)
+import System.Timeout.Lifted (timeout)
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -32,19 +48,23 @@ main = do
    _ -> error "Usage : RunRegistFrame2FrameFullDB topdir"
   gps <- liftIO getCurrentGps
   let cdir = getCurrentDir gps
-  source topDir cdir $$ sink
-
+  _ <- source topDir cdir 
+  return ()
 
 source :: FilePath
        -> FilePath
-       -> Source IO FilePath
+       -> IO FilePath
 source topDir watchdir = do  
   gps <- liftIO getCurrentGps
   let ndir = getNextDir gps
-  liftIO $ putStrLn "start watching." >> hFlush stdout
-  watchFile topDir watchdir
-  liftIO $ putStrLn "going to next dir to watch." >> hFlush stdout
-  gowatch ndir $ source topDir ndir
+      ndirabs = getAbsPath topDir ndir
+  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
+  !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink
+  case maybeT of
+   Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
+                 gowatch ndirabs $ source topDir ndir
+   Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
+                 gowatch ndirabs $ source topDir ndir
 
 
 
@@ -61,18 +81,13 @@ watchFile topDir watchdir = do
                  , confPollInterval = 10000000 -- 5seconds
                  , confUsePolling = True
                  }
-  cdir <- liftIO $ getCurrentGps >>= \cgps-> return $ getCurrentDir cgps
-  case (cdir == watchdir) of
-    True -> do maybefname <- liftIO $ timeout (breakTime 20) $ withManagerConf config $ \manager -> do
-                 fname <- liftIO newEmptyMVar
-                 watchDir manager absPath predicate
-                   $ \event -> case event of
-                     Added path _ -> putMVar fname path
-                 takeMVar fname
-               case maybefname of 
-                 Nothing       -> return ()
-                 Just gwfname  -> yield gwfname >> watchFile topDir watchdir
-    False-> return ()
+  gwfname <- liftIO $ withManagerConf config $ \manager -> do
+    fname <- newEmptyMVar
+    watchDir manager absPath predicate
+      $ \event -> case event of
+        Added path _ -> putMVar fname path
+    takeMVar fname
+  yield gwfname >> watchFile topDir watchdir
 
 
 sink :: Sink String IO ()
