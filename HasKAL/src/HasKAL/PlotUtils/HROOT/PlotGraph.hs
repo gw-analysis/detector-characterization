@@ -140,7 +140,6 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
         (specFPtr, idxS) = unsafeToForeignPtr0 $ (mapVector realToFrac specV :: Vector FCT.CDouble)
     withForeignPtr freqFPtr $ \freqPtr -> withForeignPtr specFPtr $ \specPtr -> do 
       HR.newTGraph (toEnum $ idxF) freqPtr specPtr
-  CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
   CM.zipWithM_ HR.setTitle tGras $ map str2cstr titles -- title
   setColors' tGras $ DL.union colors defColors --[2,3..] -- Line, Markerの色(赤, 緑, 青,...に固定)
   mapM (flip HR.setLineWidth $ fromIntegral lineWidth) tGras
@@ -150,6 +149,7 @@ plotBaseV multi log mark lineWidth colors xyLables labelSize titles fname ranges
    LogXY -> HRS.setLog' tCan LogY
    _     -> return ()
   CM.zipWithM_ HAF.setXYRangeUser tGras ranges -- range (X軸, Y軸)
+  CM.zipWithM_ HAF.setXAxisDateTGraph tGras gps
   case log of -- X軸はsetRangeの後にLogにしないと上手くいかない
    LogX -> HRS.setLog' tCan LogX
    LogXY -> HRS.setLog' tCan LogX
