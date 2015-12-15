@@ -6,7 +6,7 @@ import Data.Packed.Vector (subVector, dim, fromList)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.MonitorUtils.CoherenceMon.Function
 import HasKAL.WebUtils.DailySummaryPage
 import HasKAL.WebUtils.Javascript.Function (expandFont)

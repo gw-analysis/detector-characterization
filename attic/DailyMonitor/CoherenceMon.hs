@@ -5,7 +5,7 @@ import Data.Packed.Vector (subVector)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
 import HasKAL.MonitorUtils.CoherenceMon.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph

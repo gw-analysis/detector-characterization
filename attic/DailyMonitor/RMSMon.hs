@@ -10,7 +10,7 @@ import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 
 {-- memo
@@ -29,7 +29,8 @@ main = do
 
  {-- parameters --}
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
- let totalduration = 86400 :: Int -- 1day = 86400s
+-- let totalduration = 86400 :: Int -- 1day = 86400s
+ let totalduration = 30000 :: Int -- 1day = 86400s
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
@@ -51,7 +52,8 @@ main = do
      f2band = ((read f2low::Double), (read f2high::Double))
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
- let nmon = floor (900 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
+-- let nmon = floor (900 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
+ let nmon = floor (100 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
  let rms   = rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
      rms_min = DVG.minimum $ DVG.concat ( map snd rms)

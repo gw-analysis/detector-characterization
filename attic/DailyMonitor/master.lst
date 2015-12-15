@@ -1,3 +1,1 @@
-##### Naming rule
-# ch_[Sub Group Name].lst mon_[Sub Group Name].lst
-ch_VIS.lst mon_VIS.lst # for VIS group
+ch_IOO.lst mon_IOO.lst

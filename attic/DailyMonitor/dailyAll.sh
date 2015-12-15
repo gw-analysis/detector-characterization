@@ -8,14 +8,14 @@ CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
 CMD_PRINT="./genDailyCmd"
 
-MAX_CORE=4
+MAX_CORE=1
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
-MAIN_CH="K1:PEM-EX_REF"
+MAIN_CH="K1:PSL-PMC_TRANS_DC_OUT_DQ"
 
-# YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
-# DAILY_DIR=${HOME}/public_html/`date -d '1 day ago' "+%Y/%m/%d/"`
-# LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
+#YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
+#DAILY_DIR=${HOME}/public_html/`date -d '1 day ago' "+%Y/%m/%d/"`
+#LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
 #####  for test
 YESTERDAY="2015 07 17"
 DAILY_DIR="2015/07/17/"

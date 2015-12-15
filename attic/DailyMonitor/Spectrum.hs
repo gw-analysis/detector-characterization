@@ -5,7 +5,7 @@ import Numeric (showGFloat)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.SpectrumUtils.Function (mapSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph

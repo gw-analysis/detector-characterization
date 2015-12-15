@@ -4,7 +4,7 @@ import Data.Packed.Vector (Vector, subVector, dim, fromList)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 
