@@ -11,7 +11,7 @@ import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 
 {-- memo
     running time (24hour data) : ~2m30s
@@ -29,8 +29,7 @@ main = do
 
  {-- parameters --}
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
--- let totalduration = 86400 :: Int -- 1day = 86400s
- let totalduration = 30000 :: Int -- 1day = 86400s
+ let totalduration = 86400 :: Int -- 1day = 86400s
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
@@ -48,12 +47,16 @@ main = do
                  (Nothing, _) -> error $ "Can't read data: "++ channel ++"-"++year++"/"++month++"/"++day
                  (_, Nothing) -> error $ "Can't read sampling frequency: "++ channel ++"-"++year++"/"++month++"/"++day
 
+-- mbUnit <- getUnitY file channel
+-- let unit = case mbUnit of
+--             Just x  -> "["++x++"]"
+--             Nothing -> "[]"
+
  let f1band = ((read f1low::Double), (read f1high::Double))
      f2band = ((read f2low::Double), (read f2high::Double))
      f3band = ((read f3low::Double), (read f3high::Double))
      freq  = [f1band, f2band, f3band]::[(Double, Double)]
--- let nmon = floor (900 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
- let nmon = floor (100 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
+ let nmon = floor (900 * fs) ::Int -- 86400s / 96[chunk] = 900[s]
  let rms   = rmsMon nmon fs ys freq
      rms_max = DVG.maximum $ DVG.concat ( map snd rms)
      rms_min = DVG.minimum $ DVG.concat ( map snd rms)
@@ -63,6 +66,7 @@ main = do
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
 
  oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
+-- oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  return 0
 
 
