@@ -22,9 +22,9 @@ main = do
                              _ -> error "Usage: LT yyyy mm dd channel"
                    
   {-- parameters --}
-  let duration = 86400 -- seconds
-{--      duration = 86400 -- seconds --}
-{--      duration = 2048 -- seconds --}
+  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
+      duration = 86400 -- seconds
+--      duration = 2048 -- seconds
       duration_half =  duration `div` 2 -- seconds
       gps1 = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
       gps2 = gps1 + duration_half
@@ -39,8 +39,10 @@ main = do
       oFile0 = ch++"-"++year++"-"++month++"-"++day++"_LTA.png"
       oFile1 = ch++"-"++year++"-"++month++"-"++day++"_LTF.png"
       title = "LineTracker(RED=1st, BLUE=2nd): " ++ ch
-      xlabel = "time [sec] at "++year++"/"++month++"/"++day
-      
+      xlabel = "Date: "++year++"/"++month
+--      xlabel = "time [sec] at "++year++"/"++month++"/"++day
+  
+    
   {-- read data --}
   mbFiles1 <- kagraDataFind (fromIntegral gps1) (fromIntegral duration_half) ch
   let file1 = case mbFiles1 of
@@ -84,12 +86,18 @@ main = do
       return $ formatNHA $ nha datBP2 fs nsig nframe nshift nstart nend t02
       
   let result = zipWith (zipWith concat2) result1 result2
-{-- oPlotV Linear LinePoint 1 [RED, BLUE] --}
-{-- oPlotV Linear LinePoint 1 [RED, BLUE] --}
+{-- 
+  oPlotV Linear LinePoint 1 [RED, BLUE]
+  oPlotV Linear LinePoint 1 [RED, BLUE]
   oPlotV Linear Point 1 [RED, BLUE]
          (xlabel, "Amplitude") 0.05 title oFile0 ((0,0),(0,0)) (result!!0)
   oPlotV Linear Point 1 [RED, BLUE]
-         (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.95),(fcenter1*1.05))) (result!!1)
+         (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.9),(fcenter1*1.1))) (result!!1)
+ --}
+  oPlotDateV Linear Point 1 [RED,BLUE] 
+             (xlabel, "Ampltitude") 0.05 title oFile0 ((0,0),(0,0)) gps (result!!0)
+  oPlotDateV Linear Point 1 [RED,BLUE] 
+             (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.9),(fcenter1*1.1))) gps (result!!1)
 
 {--
   case output1 of
