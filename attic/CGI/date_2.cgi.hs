@@ -31,9 +31,9 @@ fork params = do
   case (gps params, channel1 params, channel2 params, monitors params) of
    (Nothing, _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   (_, [], _, _)      -> return $ "<html><body><h1>unselected channel1</h1></body></html>"
-   (_, _, [], _)      -> return $ "<html><body><h1>unselected channel2</h1></body></html>"
-   (_, _, _, [])      -> return $ "<html><body><h1>unselected monitor</h1></body></html>"
+   (_, [], _, _)      -> return $ "<html><body><h1>Any channel1 is not selected</h1></body></html>"
+   (_, _, [], _)      -> return $ "<html><body><h1>Any channel2 is not selected</h1></body></html>"
+   (_, _, _, [])      -> return $ "<html><body><h1>Any monitor is not selected</h1></body></html>"
    (Just x,  _, _, _)  -> do
      fnames <- process params
      return $ resultPage params fnames

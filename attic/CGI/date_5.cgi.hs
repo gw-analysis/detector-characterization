@@ -35,7 +35,7 @@ fork params = do
   case (gps params, monitors params) of
    (Nothing, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
-   (_, [])      -> return $ "<html><body><h1>unselected monitor</h1></body></html>"
+   (_, [])      -> return $ "<html><body><h1>Any monitor is not selected</h1></body></html>"
    (Just x, _)  -> do
      fnames <- process params
      return $ resultPage params fnames
