@@ -31,11 +31,13 @@ htmlcal subSys (yy, mm, dd) = concat [
   where dateRange = map modDate $ zip (repeat $ fst startDate) $ take (lenMonth (yy, mm)) [snd startDate..]
 
 modDate :: (Int, Int) -> (Int, Int)
-modDate (yyyy, mm) = (yyyy+(num quotient rest), rest)
+modDate (yyyy, mm) = (yyyy+(num quotient rest), mm' rest)
   where rest = mod mm 12
         quotient = mm`div`12
         num x 0 = (x-1)
         num x _ = x
+        mm' 0 = 12
+        mm' _ = rest
 
 lenMonth :: (Int, Int) -> Int
 lenMonth (y2, m2) = 12*(y2-y1) + (m2-m1) + 1
