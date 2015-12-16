@@ -33,7 +33,7 @@ main = do
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
-     ylabel = "Voltage[V]"::String
+--     ylabel = "Voltage[V]"::String
 
  filesmaybe <- kagraDataFind (fromIntegral gps) (fromIntegral totalduration) channel
  let file = case filesmaybe of
@@ -47,10 +47,10 @@ main = do
                  (Nothing, _) -> error $ "Can't read data: "++ channel ++"-"++year++"/"++month++"/"++day
                  (_, Nothing) -> error $ "Can't read sampling frequency: "++ channel ++"-"++year++"/"++month++"/"++day
 
--- mbUnit <- getUnitY file channel
--- let unit = case mbUnit of
---             Just x  -> "["++x++"]"
---             Nothing -> "[]"
+ mbUnit <- getUnitY file channel
+ let unit = case mbUnit of
+             Just x  -> "["++x++"]"
+             Nothing -> "[]"
 
  let f1band = ((read f1low::Double), (read f1high::Double))
      f2band = ((read f2low::Double), (read f2high::Double))
@@ -65,8 +65,8 @@ main = do
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
 
- oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
--- oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
+-- oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
+ oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  return 0
 
 
