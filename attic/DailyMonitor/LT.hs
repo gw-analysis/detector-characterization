@@ -9,7 +9,9 @@ import Numeric
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+--import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
+import qualified HasKAL.DataBaseUtils.FrameFull.Function as FF
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph
@@ -45,17 +47,17 @@ main = do
   
     
   {-- read data --}
-  mbFiles1 <- kagraDataFind (fromIntegral gps1) (fromIntegral duration_half) ch
+  mbFiles1 <- FF.kagraDataFind (fromIntegral gps1) (fromIntegral duration_half) ch
   let file1 = case mbFiles1 of
               Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
               _ -> head $ fromJust mbFiles1
-  mbDat1 <- kagraDataGet gps1 duration_half ch
+  mbDat1 <- FF.kagraDataGet gps1 duration_half ch
   
-  mbFiles2 <- kagraDataFind (fromIntegral gps2) (fromIntegral duration_half) ch
+  mbFiles2 <- FF.kagraDataFind (fromIntegral gps2) (fromIntegral duration_half) ch
   let file2 = case mbFiles2 of
               Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
               _ -> head $ fromJust mbFiles2
-  mbDat2 <- kagraDataGet gps2 duration_half ch
+  mbDat2 <- FF.kagraDataGet gps2 duration_half ch
   
   mbFs <- getSamplingFrequency file1 ch
   
