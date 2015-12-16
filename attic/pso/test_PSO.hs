@@ -4,19 +4,20 @@
 -- ) where
 import Control.Monad.State
 import System.Random
+import System.IO (hClose, hPutStrLn, openFile, stdout, IOMode(..))
 import System.IO.Unsafe (unsafePerformIO)
 
 type Particle = ((Int,  Int),  [Double],  [Double],  [Double],  Double)
 type GlobalParticle = (Int, [Double], Double)
 type Likelihood = [Double] -> Double
-main :: IO ([Particle], [GlobalParticle])
+main :: IO ()
 main = do
-  let w = 1 :: Double
+  let w = 0.1 :: Double
       c1 = 2.0 :: Double
       c2 = 2.0 :: Double
       d = 2 :: Int
-      m = 2 :: Int
-      i0 = 3 :: Int
+      m = 10 :: Int
+      i0 = 30 :: Int
 
       -- | create initial data
       initdata = map (go i0) [1..m]
@@ -27,7 +28,18 @@ main = do
           v = map (\_->unsafePerformIO $ getStdRandom $ randomR (-1, 1) :: Double) [1..d]
           lr = likelihood x
           p = x
-  return $ pso i0 m d w c1 c2 initdata likelihood
+      (a,b) = pso i0 m d w c1 c2 initdata likelihood
+      xx = [y | (x,y,z)<-b]
+      aa = [y | (_,y,_,_,_)<-a]
+
+  mapM_ (\yy-> hPutStrLn stdout $ show (yy!!0)++" "++show (yy!!1)) xx 
+  h1 <- openFile "globalParticle.dat" WriteMode
+  mapM_ (\yy-> hPutStrLn h1 $ show (yy!!0)++" "++show (yy!!1)) xx 
+  hClose h1
+
+
+
+
 
 -- | likelihood function
 likelihood :: [Double] -> Double
