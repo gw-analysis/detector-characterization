@@ -1,12 +1,10 @@
 import qualified Data.Vector.Generic as DVG
-import qualified Numeric.LinearAlgebra as NLA
 import Data.Maybe (fromMaybe, fromJust)
 import Numeric (showFFloat)
 import System.Environment (getArgs)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
@@ -33,7 +31,6 @@ main = do
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
---     ylabel = "Voltage[V]"::String
 
  filesmaybe <- kagraDataFind (fromIntegral gps) (fromIntegral totalduration) channel
  let file = case filesmaybe of
@@ -65,7 +62,6 @@ main = do
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
 
--- oPlotDateV LogY LinePoint 1 color (xlabel, ylabel) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  return 0
 
@@ -79,5 +75,5 @@ show0 digit number
 
 setTitle :: String -> String -> String -> String -> String -> String -> String -> String
 setTitle f1low f1high f2low f2high f3low f3high channel = 
-         "RMS Mon(BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, GREEN=" ++ f2low ++ "-" ++ f2high ++ "Hz, RED=" ++ 
-             f3low ++ "-" ++ f3high ++ ") : " ++ channel
+         "RMS Mon BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, GREEN=" ++ f2low ++ "-" ++ f2high ++ "Hz, RED=" ++ 
+             f3low ++ "-" ++ f3high ++ ":" ++ channel
