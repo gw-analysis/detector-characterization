@@ -12,8 +12,9 @@ TAR3= gps2localtime
 TAR4= localtime2gps
 TAR5= showChannels
 TAR6= showChannelandSamplingRate
+TAR7= showKagraData
 
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6}
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
@@ -46,6 +47,9 @@ ${TAR5}: ${TAR5}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 ${TAR6}: ${TAR6}.hs
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR7}: ${TAR7}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
