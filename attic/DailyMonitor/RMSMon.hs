@@ -30,7 +30,7 @@ main = do
  let totalduration = 86400 :: Int -- 1day = 86400s
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
- let xlabel = "hour[h] since "  ++  show jst ::String
+ let xlabel = "Date: "++year++"/"++month :: String
 
  filesmaybe <- kagraDataFind (fromIntegral gps) (fromIntegral totalduration) channel
  let file = case filesmaybe of
@@ -64,7 +64,6 @@ main = do
 
  oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  return 0
-
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
