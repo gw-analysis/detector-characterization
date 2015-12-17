@@ -1,17 +1,22 @@
+import qualified Data.Vector.Storable as V
 import qualified Data.Vector.Generic as DVG
-import qualified Numeric.LinearAlgebra as NLA
+--import qualified Numeric.LinearAlgebra as NLA
 import Data.Maybe (fromMaybe, fromJust)
 import Numeric (showFFloat)
 import System.Environment (getArgs)
+import System.IO (stdout, hPutStrLn)
 
+import HasKAL.TimeUtils.Function (deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
 
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind, kagraDataGetC)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind, kagraDataGetC, kagraWaveDataGetC)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
+
+import HasKAL.WaveUtils.Data (WaveData(..))
 
 {-- memo
     running time (24hour data) : ~2m30s
@@ -24,16 +29,16 @@ main = do
      8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
      6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
      4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "10", "50", "200", "300", "1000")
-     _ ->  error "Usage: RMSMon yyyy mm dd channel (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\nRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000"
+     _ ->  error "Usage: RMSMon yyyy mm dd channel (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\n./RMSMon 2015 12 15 K1:PSL-PMC_FAST_MON_OUT_DQ 0.1 10 50 200 300 1000"
 
 
  {-- parameters --}
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
- let totalduration = 86400 :: Int -- 1day = 86400s
+-- let totalduration = 86400 :: Int -- 1day = 86400s
+ let totalduration = 2700 :: Int -- 1day = 86400s
 
  let jst = gps2localTime (toInteger gps) "JST" ::String
  let xlabel = "hour[h] since "  ++  show jst ::String
---     ylabel = "Voltage[V]"::String
 
  filesmaybe <- kagraDataFind (fromIntegral gps) (fromIntegral totalduration) channel
  let file = case filesmaybe of
@@ -48,6 +53,12 @@ main = do
                  (_, Nothing) -> error $ "Can't read sampling frequency: "++ channel ++"-"++year++"/"++month++"/"++day
 
  -- ここでtys -> ysへ変換する
+ let duration = 100 :: Int
+ kagraWaveDataGetC gps duration channel >>= \judge -> case judge of
+    Nothing  -> error $ "Can't find file: "++year++"/"++month++"/"++day
+    Just wav -> do let td = concatMap timendat wav
+                   mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) td
+
 -- tysmaybe <- kagraDataGetC gps totalduration channel
 -- let (tys, fs) = case (tysmaybe2, fsmaybe) of
 --                 (Just a, Just b) -> (a, b)
@@ -89,9 +100,15 @@ setTitle f1low f1high f2low f2high f3low f3high channel =
          "RMS Mon(BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, GREEN=" ++ f2low ++ "-" ++ f2high ++ "Hz, RED=" ++ 
              f3low ++ "-" ++ f3high ++ " : " ++ channel
 
---zeroPaddingPieceData :: [(GPSTIME, NLA.Vector Double)] -- ^ time series data missing
+timendat y = let t = deformatGPS $ startGPSTime y
+                 fs = samplingFrequency y
+                 tl = [t+i/fs|i<-[0.0,1.0..fromIntegral (length xl) -1.0]] 
+                 xl = V.toList $ gwdata y
+              in zip tl xl
+
+--zeroPaddingPieceData :: [(GPSTIME, V.Vector Double)] -- ^ time series data missing
 --		     -> Double -- ^ sampling rate [Hz]
---		     -> NLA.Vector Double -- ^ coutinuous time series data
+--		     -> V.Vector Double -- ^ coutinuous time series data
 --zeroPaddingPieceData tys fs
 --  | (length tys) == 1 = snd (tys!!0)
 --  | otherwise = do
