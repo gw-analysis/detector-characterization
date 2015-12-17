@@ -93,7 +93,7 @@ then
     ${MVPNG_CMD}
 
     ssh detchar@seikai.hep.osaka-cu.ac.jp "mkdir -p ${MKDIR_CMD}"
-    scp ${MKDIR_CMD}/* detchar@seikai.hep.osaka-cu.ac.jp:${MKDIR_CMD}
+    scp ${MKDIR_CMD}/\* detchar@seikai.hep.osaka-cu.ac.jp:${MKDIR_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
