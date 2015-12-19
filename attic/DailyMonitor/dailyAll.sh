@@ -91,6 +91,9 @@ then
     ${CMD_PARA} --noswap -d"\n" ${DEBUG} ${JOB_NUM} ${LOGGING} "./{1}" ::: "${EXE_CMD}"
     mkdir -p ${MKDIR_CMD}
     ${MVPNG_CMD}
+    #### send results to seikai ####
+    ssh detchar@seikai.hep.osaka-cu.ac.jp "mkdir -p ${MKDIR_CMD}"
+    scp ${MKDIR_CMD}/\* detchar@seikai.hep.osaka-cu.ac.jp:${MKDIR_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
