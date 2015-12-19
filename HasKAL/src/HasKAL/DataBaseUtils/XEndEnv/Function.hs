@@ -16,6 +16,7 @@ module HasKAL.DataBaseUtils.XEndEnv.Function
 , kagraDataPointCore
 , kagraWaveDataGet
 , kagraWaveDataGetC
+, kagraWaveDataGet0
 )
 where
 
@@ -278,6 +279,43 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                     0 -> return Nothing
                     1 -> return $ Just $ head cdata
                     _ -> return $ Just $ zeropadding fs cdata
+
+
+kagraWaveDataGet0 :: Int -> Int -> String -> IO (Maybe WaveData)
+kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case tf of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = snd . head $ x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                      nInd = nConsecutive $ (fst . unzip) x
+                      cdata = consecutive (readFrameV chname) x nInd
+                  case length cdata of
+                    0 -> return Nothing
+                    1 -> do let timendat = head cdata
+                                ts = fst timendat
+                                xvec = snd timendat
+                                nlen = V.length xvec
+                                te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
+                            return $ Just $ mkWaveData D.General chname fs ts te xvec
+                    _ -> do let timendat = zeropadding fs cdata
+                                ts = fst timendat
+                                xvec = snd timendat
+                                nlen = V.length xvec
+                                te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
+                            return $ Just $ mkWaveData D.General chname fs ts te xvec
 
 
 zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
