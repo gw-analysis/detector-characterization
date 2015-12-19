@@ -9,6 +9,7 @@ module HasKAL.DataBaseUtils.FrameFull.Function
 , kagraDataGet
 , kagraDataGet'
 , kagraDataGetC
+, kagraDataGet0
 , kagraDataGPS
 , kagraDataPoint
 , kagraDataFindCore
@@ -254,6 +255,47 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                                           nlen = V.length xvec
                                                           te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
                                                        in mkWaveData D.General chname fs ts te xvec
+
+
+kagraDataGet0 :: Int -> Int -> String -> IO (Maybe (GPSTIME,V.Vector Double))
+kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
+  tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
+  case tf of
+    Nothing -> return Nothing
+    Just x -> do
+      let headfile = snd . head $ x
+      getSamplingFrequency headfile chname >>= \maybefs ->
+        case maybefs of
+          Nothing -> return Nothing
+          Just fs ->
+            getGPSTime headfile >>= \maybegps ->
+              case maybegps of
+                Nothing -> return Nothing
+                Just (gpstimeSec, gpstimeNano, dt) -> do
+                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
+                                  then 0
+                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
+                      nduration = floor $ fromIntegral duration * fs
+                      nInd = nConsecutive $ (fst . unzip) x
+                      cdata = consecutive (readFrameV chname) x nInd
+                  case length cdata of
+                    0 -> return Nothing
+                    1 -> return $ Just $ head cdata
+                    _ -> return $ Just $ zeropadding fs cdata
+
+
+zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
+zeropadding fs gpsnv =
+  let x = [(deformatGPS gps, deformatGPS gps + (fromIntegral (V.length v)-1)/fs)|(gps, v)<-gpsnv]
+      nx= length x
+      n0pad = flip map [1, 3..(nx-1)] $ \i-> floor $ (fst (x!!(i+1)) - snd (x!!i))*fs
+      v0pad = flip map n0pad $ \x-> V.fromList (replicate x 0.0)
+      zeroPaddedV = V.concat $ interleave (snd (unzip gpsnv)) v0pad
+   in (formatGPS (fst (head x)), zeroPaddedV)
+
+
+interleave [] ys = ys
+interleave (x:xs) ys = x:interleave ys xs
 
 
 consecutive :: (String -> IO (Maybe (V.Vector Double)))
