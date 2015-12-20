@@ -2,7 +2,7 @@
 #set -e
 
 ###  Parameters
-DEBUG_MODE=1
+DEBUG_MODE=0
 
 CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
