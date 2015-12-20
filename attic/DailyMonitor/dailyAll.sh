@@ -16,6 +16,9 @@ MAIN_CH="K1:PSL-PMC_TRANS_DC_OUT_DQ"
 YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
 DAILY_DIR=`date -d '1 day ago' "+%Y/%m/%d/"`
 LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
+
+MIRROR_SERVER="detchar@seikai.hep.osaka-cu.ac.jp"
+
 #####  for test
 #YESTERDAY="2015 07 17"
 #DAILY_DIR="2015/07/17/"
@@ -92,8 +95,10 @@ then
     mkdir -p ${MKDIR_CMD}
     ${MVPNG_CMD}
     #### send results to seikai ####
-    ssh detchar@seikai.hep.osaka-cu.ac.jp "mkdir -p ${MKDIR_CMD}"
-    scp ${MKDIR_CMD}/\* detchar@seikai.hep.osaka-cu.ac.jp:${MKDIR_CMD}
+    SSH_CMD="ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
+    SCP_CMD="scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
+    ${SSH_CMD}
+    ${SCP_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
