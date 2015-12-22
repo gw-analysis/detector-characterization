@@ -5,22 +5,61 @@
 module CleanDataFinder
 where
 
+import Control.Monad (forM)
+import Data.Packed.Matrix (toColumns, fromRows)
+import Data.Vector.Algorithms.Heap (select)
 import Data.Vector.Storable ((!))
 import qualified Data.Vector.Storable as V
 import HasKAL.LineUtils.LineRemoval.RngMedian (rngMedV)
-
-
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
+import HasKAL.TimeUtils.Function (deformatGPS, formatGPS)
+import HasKAL.TimeUtils.Signature
+import Numeric.GSL.Statistics (stddev)
 
 data CutoffType = Low | High deriving (Show)
 
 
+cleanDataFinderCore :: Int                        -- ^ block size for noise floor estimation
+                    -> Int                        -- ^ nfft
+                    -> (Doouble, Double)          -- ^ (f_L, f_U)
+                    -> Double                     -- ^ sample rate
+                    -> (GPSTIME, V.Vector Double) -- ^ (startGPS, data vector)
+                    -> [(GPSTIME, Double)]        -- ^ [(gps,duration)]
+cleanDataFinderCore blcksz nfft flu fs (gps, v) = do
+  let chunks = mkChunks v nfft
+      psdtrain = flip map chunks $ \x-> gwOnesidedPSDV x nfft fs
+      nf = flip map psdtrain $ nfEstimate blcksz flu
+      (f, refpsd, refstd) = takeMedian nf
+      psds = snd . unzip $ nf
+      nlevel = flip map psds $ \x-> V.zipWith (abs . (-)) x refpsd
+      ratioV = map nlevel $ \x-> V.zipWith (/) x (2*refstd)                   -- ^ theadhold 
+      judge = flip map ratioV $ \x-> do let x' = V.length $ V.filter (<1.0) x
+                                        case (V.length x' == V.length x) of
+                                          True -> True
+                                          False-> False
+      t0 = deformateGPS gps
+      dt = fromIntegral nfft / fs
+   in zip [t0,t0+dt..] judge
+
+
+-- | input [(f,psd)]
+-- | output (f, menian values of psd)
+takeMedian :: [(V.Vector Double, V.Vector Double)] 
+           -> (V.Vector Double, V.Vector Double, V.Vector Double)
+takeMedian vs = let (vf,vlist) = unzip vs
+                    fbins = toColumns $ fromRows vlist
+                    len = V.length (head fbins)
+                    len2= len `div` 2
+                 in ( head vf
+                    , V.fromList $ flip map fbins $ \v-> vecSelect len2 v)
+                    , V.fromList $ flip map fbins stddev)
 
 
 -- | Noise Floor Estimation
 nfEstimate :: Int
            -> (Double, Double)
            -> (V.Vector Double, V.Vector Double)
-           -> Maybe (V.Vector Double, V.Vector Double)
+           -> (V.Vector Double, V.Vector Double)
 nfEstimate blcksz (fl, fu) psddat = do
   let (fv', dat') = psddat
       maybeflind = findCutoffInd fv' fl Low
@@ -29,13 +68,12 @@ nfEstimate blcksz (fl, fu) psddat = do
         (Just flind', Just fuind') -> do let (flind, fuind) = (fst flind', fst fuind')
                                              dat = V.drop flind $ V.take fuind dat'
                                              fv  = V.drop flind $ V.take fuind fv'
-                                         Just (fv, rngMedV dat (V.length dat) blcksz)
-        (Nothing, _) -> Nothing
-        (_, Nothing) -> Nothing
+                                          in (fv, rngMedV dat (V.length dat) blcksz)
+        (Nothing, _) -> error "no f_L"
+        (_, Nothing) -> error "no f_U"
 
 
-
-
+-- | find cutoff frequency indexes of frequency vector
 findCutoffInd :: V.Vector Double
               -> Double
               -> CutoffType
@@ -54,4 +92,19 @@ findCutoffInd input x0 cuttype =
                       else if m-1 < 1
                              then Nothing
                              else descend (m-1)
+
+
+-- | quickselect by T. Yamamoto
+vecSelect :: Int -> V.Vector Double -> Double
+vecSelect k vec = V.head $ V.modify (flip select (k+1)) vec
+
+
+-- | divide a vector into n vectors 
+mkChunks :: V.Vector Double -> Int -> [V.Vector Double]
+mkChunks vIn n = mkChunksCore vIn n (V.length vIn `div` n)
+  where
+    mkChunksCore _ _ 0 = []
+    mkChunksCore vIn n m = V.slice 0 n vIn :  mkChunksCore (V.drop n vIn) n (m-1)
+
+
 
