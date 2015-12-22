@@ -183,7 +183,7 @@ library
     HasKAL.WebUtils.CGI.Function,
     HasKAL.WebUtils.DailySummaryPage,
     HasKAL.WebUtils.Data,
-    HasKAL.WebUtils.EventDisplayXend,
+--    HasKAL.WebUtils.EventDisplayXend,
     HasKAL.WebUtils.FileWatcher,
     HasKAL.WebUtils.Javascript.Function
 
