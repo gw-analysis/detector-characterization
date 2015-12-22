@@ -3,9 +3,10 @@
 
 
 module CleanDataFinder
-where
+( cleanDataFinderCore
+--,
+) where
 
-import Control.Monad (forM)
 import Data.Packed.Matrix (toColumns, fromRows)
 import Data.Vector.Algorithms.Heap (select)
 import Data.Vector.Storable ((!))
@@ -21,37 +22,37 @@ data CutoffType = Low | High deriving (Show)
 
 cleanDataFinderCore :: Int                        -- ^ block size for noise floor estimation
                     -> Int                        -- ^ nfft
-                    -> (Doouble, Double)          -- ^ (f_L, f_U)
+                    -> (Double, Double)          -- ^ (f_L, f_U)
                     -> Double                     -- ^ sample rate
                     -> (GPSTIME, V.Vector Double) -- ^ (startGPS, data vector)
-                    -> [(GPSTIME, Double)]        -- ^ [(gps,duration)]
+                    -> [(Double, Bool)]        -- ^ [(gps,True or Fase)]
 cleanDataFinderCore blcksz nfft flu fs (gps, v) = do
   let chunks = mkChunks v nfft
       psdtrain = flip map chunks $ \x-> gwOnesidedPSDV x nfft fs
       nf = flip map psdtrain $ nfEstimate blcksz flu
-      (f, refpsd, refstd) = takeMedian nf
+      (_, refpsd, refstd) = takeMedian nf
       psds = snd . unzip $ nf
-      nlevel = flip map psds $ \x-> V.zipWith (abs . (-)) x refpsd
-      ratioV = map nlevel $ \x-> V.zipWith (/) x (2*refstd)                   -- ^ theadhold 
-      judge = flip map ratioV $ \x-> do let x' = V.length $ V.filter (<1.0) x
-                                        case (V.length x' == V.length x) of
+      nlevel = flip map psds $ \x-> V.map abs $ V.zipWith ((-)) x refpsd
+      ratioV = flip map nlevel $ \x-> V.zipWith (/) x (2*refstd)                   -- ^ theadhold
+      judge = flip map ratioV $ \x-> do let tlen = V.length $ V.filter (<1.0) x
+                                        case (tlen == V.length x) of
                                           True -> True
                                           False-> False
-      t0 = deformateGPS gps
+      t0 = deformatGPS gps
       dt = fromIntegral nfft / fs
    in zip [t0,t0+dt..] judge
 
 
 -- | input [(f,psd)]
 -- | output (f, menian values of psd)
-takeMedian :: [(V.Vector Double, V.Vector Double)] 
+takeMedian :: [(V.Vector Double, V.Vector Double)]
            -> (V.Vector Double, V.Vector Double, V.Vector Double)
 takeMedian vs = let (vf,vlist) = unzip vs
                     fbins = toColumns $ fromRows vlist
                     len = V.length (head fbins)
                     len2= len `div` 2
                  in ( head vf
-                    , V.fromList $ flip map fbins $ \v-> vecSelect len2 v)
+                    , V.fromList $ flip map fbins $ \v-> vecSelect len2 v
                     , V.fromList $ flip map fbins stddev)
 
 
@@ -99,7 +100,7 @@ vecSelect :: Int -> V.Vector Double -> Double
 vecSelect k vec = V.head $ V.modify (flip select (k+1)) vec
 
 
--- | divide a vector into n vectors 
+-- | divide a vector into n vectors
 mkChunks :: V.Vector Double -> Int -> [V.Vector Double]
 mkChunks vIn n = mkChunksCore vIn n (V.length vIn `div` n)
   where
