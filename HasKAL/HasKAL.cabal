@@ -55,10 +55,13 @@ library
     HasKAL.Constant.MKSA,
     -- DataBaseUtils --
     HasKAL.DataBaseUtils,
-    HasKAL.DataBaseUtils.Function,
-    HasKAL.DataBaseUtils.Framedb,
-    HasKAL.DataBaseUtils.DataBaseAdmin,
-    HasKAL.DataBaseUtils.DataSource,
+    HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin,
+    HasKAL.DataBaseUtils.FrameFull.Function,
+    HasKAL.DataBaseUtils.FrameFull.Table,
+    HasKAL.DataBaseUtils.XEndEnv.DataBaseAdmin,
+    HasKAL.DataBaseUtils.XEndEnv.Function,
+    HasKAL.DataBaseUtils.XEndEnv.Table,
+    HasKAL.DataBaseUtils.KAGRADataSource,
     -- DetectorUtils --
     HasKAL.DetectorUtils,
     HasKAL.DetectorUtils.Detector,
@@ -90,7 +93,12 @@ library
     -- LineUtils --
     HasKAL.LineUtils.LineRemoval.Mblt,
     HasKAL.LineUtils.LineRemoval.RngMedian,
+    -- MathUtils --
+    HasKAL.MathUtils.LinearAlgebra.Function,
+    HasKAL.MathUtils.Morphology.Function,
+    HasKAL.MathUtils.FFTW,
     -- Misc --
+    HasKAL.Misc.BitMask,
     HasKAL.Misc.CoastData,
     HasKAL.Misc.Environment,
     HasKAL.Misc.Flip3param,
@@ -133,14 +141,18 @@ library
     -- SignalProcessingUtils --
     HasKAL.SignalProcessingUtils.Bilinear,
     HasKAL.SignalProcessingUtils.ButterWorth,
+    HasKAL.SignalProcessingUtils.Cascade,
     HasKAL.SignalProcessingUtils.Chebyshev,
     HasKAL.SignalProcessingUtils.Filter,
     HasKAL.SignalProcessingUtils.FilterType,
     HasKAL.SignalProcessingUtils.Interpolation,
     HasKAL.SignalProcessingUtils.InterpolationType,
+    HasKAL.SignalProcessingUtils.Kaiser,
     HasKAL.SignalProcessingUtils.LinearPrediction,
+    HasKAL.SignalProcessingUtils.Parallel,
     HasKAL.SignalProcessingUtils.Resampling,
     HasKAL.SignalProcessingUtils.Signature,
+    HasKAL.SignalProcessingUtils.StateSpace,
     HasKAL.SignalProcessingUtils.WindowFunction,
     HasKAL.SignalProcessingUtils.WindowType,
     -- SimulationUtils --
@@ -169,21 +181,24 @@ library
     HasKAL.WebUtils,
     HasKAL.WebUtils.CGI.Data,
     HasKAL.WebUtils.CGI.Function,
+    HasKAL.WebUtils.DailySummaryPage,
     HasKAL.WebUtils.Data,
     HasKAL.WebUtils.EventDisplayXend,
-    HasKAL.WebUtils.FileWatcher
+    HasKAL.WebUtils.FileWatcher,
+    HasKAL.WebUtils.Javascript.Function
 
   -- Modules included in this library but not exported.
   -- other-modules:
   C-sources:
-    src/HasKAL/SignalProcessingUtils/filterFunctions.c
+    src/HasKAL/LineUtils/LineRemoval/rng_median.c
     src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
+    src/HasKAL/SignalProcessingUtils/filterFunctions.c
     -- "extern C" しているのでCとして扱っておそらく大丈夫
 
   -- Other library packages from which modules are imported.
   build-depends:
        array,
---       async, 
+--       async,
        base >=4.7,
        bindings-gsl,
        carray,
@@ -244,26 +259,6 @@ library
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   build-tools:         hsc2hs
   extra-libraries:  Frame, gsl, gslcblas
-
-
-
-executable loadFrameData
-  hs-source-dirs: exe-src
-  main-is:        loadFrameData.hs
-  build-depends:
-    base >4.7
-   ,HasKAL
-   ,Chart >= 1.3
-   ,Chart-cairo >= 1.3
-   ,Chart-gtk >= 1.3
-   ,colour
-   ,data-default-class
-   ,hmatrix >=0.16
-   ,hmatrix-gsl
-   ,hmatrix-special
-   ,lens
-  ghc-options:  -O2 -threaded -rtsopts -eventlog
-  extra-libraries:  Frame
 
 
 executable kagraDataFind
