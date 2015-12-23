@@ -40,7 +40,7 @@ cleanDataFinderCore blcksz nfft chunk flu fs (gps, v) = do
                                           True -> True
                                           False-> False
       t0 = deformatGPS gps
-      dt = fromIntegral nfft / fs
+      dt = fromIntegral chunk / fs
    in zip (map formatGPS [t0,t0+dt..]) judge
 
 
