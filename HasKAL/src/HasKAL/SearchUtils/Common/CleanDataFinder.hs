@@ -22,17 +22,18 @@ data CutoffType = Low | High deriving (Show)
 
 cleanDataFinderCore :: Int                        -- ^ block size for noise floor estimation
                     -> Int                        -- ^ nfft
+                    -> Int                        -- ^ chunk size
                     -> (Double, Double)          -- ^ (f_L, f_U)
                     -> Double                     -- ^ sample rate
                     -> (GPSTIME, V.Vector Double) -- ^ (startGPS, data vector)
-                    -> [(Double, Bool)]        -- ^ [(gps,True or Fase)]
-cleanDataFinderCore blcksz nfft flu fs (gps, v) = do
-  let chunks = mkChunks v nfft
+                    -> [(GPSTIME, Bool)]        -- ^ [(gps,True or Fase)]
+cleanDataFinderCore blcksz nfft chunk flu fs (gps, v) = do
+  let chunks = mkChunks v chunk
       psdtrain = flip map chunks $ \x-> gwOnesidedPSDV x nfft fs
       nf = flip map psdtrain $ nfEstimate blcksz flu
       (_, refpsd, refstd) = takeMedian nf
       psds = snd . unzip $ nf
-      nlevel = flip map psds $ \x-> V.map abs $ V.zipWith ((-)) x refpsd
+      nlevel = flip map psds $ \x-> V.map abs $ V.zipWith (-) x refpsd
       ratioV = flip map nlevel $ \x-> V.zipWith (/) x (2*refstd)                   -- ^ theadhold
       judge = flip map ratioV $ \x-> do let tlen = V.length $ V.filter (<1.0) x
                                         case (tlen == V.length x) of
@@ -40,7 +41,7 @@ cleanDataFinderCore blcksz nfft flu fs (gps, v) = do
                                           False-> False
       t0 = deformatGPS gps
       dt = fromIntegral nfft / fs
-   in zip [t0,t0+dt..] judge
+   in zip (map formatGPS [t0,t0+dt..]) judge
 
 
 -- | input [(f,psd)]
