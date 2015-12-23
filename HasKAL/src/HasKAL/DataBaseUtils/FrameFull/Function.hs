@@ -1,7 +1,8 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
 
 module HasKAL.DataBaseUtils.FrameFull.Function
-( db2framelist
+( cleanDataFinder
+, db2framelist
 , db2framecache
 , kagraChannelList
 , kagraDataFind
@@ -59,10 +60,37 @@ import HasKAL.DataBaseUtils.FrameFull.Table (Framefull(..), insertFramefull)
 import qualified HasKAL.DataBaseUtils.FrameFull.Table as FrameFull
 import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
+import HasKAL.SearchUtils.Common.CleanDataFinder (cleanDataFinderCore)
 import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData, dropWaveData, takeWaveData)
 import System.IO.Unsafe (unsafePerformIO)
+
+
+data CDFParam = CDFParam { cdf'samplingFrequency :: Double
+                         , cdf'cutoffFrequencyLow :: Double
+                         , cdf'cutoffFrequencyHigh :: Double
+                         , cdf'blockSize :: Int
+                         , cdf'fftSize :: Int
+                         , cdf'chunkSize :: Int
+                         }
+
+
+cleanDataFinder :: CDFParam -> String -> (GPSTIME, Double) -> IO (Maybe [(GPSTIME, Bool)])
+cleanDataFinder param ch (gps', dt') = do
+  let fs = cdf'samplingFrequency param
+      fl = cdf'cutoffFrequencyLow param
+      fu = cdf'cutoffFrequencyHigh param
+      blcksz = cdf'blockSize param
+      nfft = cdf'fftSize param
+      nchunk = cdf'chunkSize param
+      gpsstrt = floor $ deformatGPS gps' - dt'
+      dt = floor dt' :: Int
+  kagraDataGetC gpsstrt dt ch >>= \maybedat ->
+    case maybedat of
+      Nothing -> return Nothing
+      Just timendat -> return $ Just $ flip concatMap timendat $ \x ->
+        cleanDataFinderCore blcksz nfft nchunk (fl, fu) fs x
 
 
 kagraChannelList :: Int32 -> IO (Maybe [String])
@@ -235,7 +263,7 @@ kagraDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                    then let ntake = V.length v - floor ((t1 - t0) * fs)
                                          in (t, V.take ntake v)
                                    else wav
-    
+
     checkStartGPS :: Double -> Double -> (GPSTIME,V.Vector Double) -> (GPSTIME, V.Vector Double)
     checkStartGPS t0 fs wav = let (t,v) = wav
                                   t1 = deformatGPS t
@@ -264,22 +292,22 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                       nInd = nConsecutive $ (fst . unzip) x
                       timendat = consecutive (readFrameV chname) x nInd
                       gpsstop = fromIntegral gpsstrt + fromIntegral duration
-                  return $ Just $ for timendat $ \y-> 
+                  return $ Just $ for timendat $ \y->
                     let ts = fst y
                         xvec = snd y
                         nlen = V.length xvec
                         te' = deformatGPS ts + fromIntegral nlen/fs
                         te = formatGPS te'
                         element =  mkWaveData D.General chname fs ts te xvec
-                        headNum = checkStartGPSW (fromIntegral gpsstrt) element 
+                        headNum = checkStartGPSW (fromIntegral gpsstrt) element
                         endNum = checkStopGPSW (fromIntegral gpsstop) element
                      in dropWaveData headNum $ takeWaveData (nlen-endNum) element
   where
     checkStopGPSW t0 wav = let t1 = deformatGPS $ stopGPSTime wav :: Double
                             in if (t0 - t1) <= 0
                                   then floor $ (t1-t0)*samplingFrequency wav
-                                  else 0 
-    
+                                  else 0
+
     checkStartGPSW t0 wav = let t1 = deformatGPS $ startGPSTime wav :: Double
                              in if (t0 - t1) <= 0
                                    then 0
