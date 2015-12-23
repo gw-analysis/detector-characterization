@@ -61,7 +61,7 @@ import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
 import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
-import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData)
+import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData, dropWaveData, takeWaveData)
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -222,12 +222,27 @@ kagraDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
-                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
-                                  then 0
-                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
-                      nduration = floor $ fromIntegral duration * fs
-                      nInd = nConsecutive $ (fst . unzip) x
-                  return $ Just $ consecutive (readFrameV chname) x nInd
+                  let nInd = nConsecutive $ (fst . unzip) x
+                      out' = consecutive (readFrameV chname) x nInd
+                      gpsstop = fromIntegral $ gpsstrt + duration
+                      gpsstrt' = fromIntegral gpsstrt
+                  return $ Just $ map (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) out'
+  where
+    checkStopGPS :: Double -> Double -> (GPSTIME, V.Vector Double)-> (GPSTIME, V.Vector Double)
+    checkStopGPS t0 fs wav = let (t,v) = wav
+                                 t1 = deformatGPS t
+                              in if (t0 - t1) <= 0
+                                   then let ntake = V.length v - floor ((t1 - t0) * fs)
+                                         in (t, V.take ntake v)
+                                   else wav
+    
+    checkStartGPS :: Double -> Double -> (GPSTIME,V.Vector Double) -> (GPSTIME, V.Vector Double)
+    checkStartGPS t0 fs wav = let (t,v) = wav
+                                  t1 = deformatGPS t
+                               in if (t0 - t1) <= 0
+                                  then wav
+                                  else let ndrop = floor $ (t0 - t1) * fs
+                                        in (formatGPS t0, V.drop ndrop v)
 
 
 kagraWaveDataGetC :: Int -> Int -> String -> IO (Maybe [WaveData])
@@ -245,17 +260,30 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
-                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
-                                  then 0
-                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
-                      nduration = floor $ fromIntegral duration * fs
+                  let nduration = floor $ fromIntegral duration * fs
                       nInd = nConsecutive $ (fst . unzip) x
                       timendat = consecutive (readFrameV chname) x nInd
-                  return $ Just $ for timendat $ \y-> let ts = fst y
-                                                          xvec = snd y
-                                                          nlen = V.length xvec
-                                                          te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                                                       in mkWaveData D.General chname fs ts te xvec
+                      gpsstop = fromIntegral gpsstrt + fromIntegral duration
+                  return $ Just $ for timendat $ \y-> 
+                    let ts = fst y
+                        xvec = snd y
+                        nlen = V.length xvec
+                        te' = deformatGPS ts + fromIntegral nlen/fs
+                        te = formatGPS te'
+                        element =  mkWaveData D.General chname fs ts te xvec
+                        headNum = checkStartGPSW (fromIntegral gpsstrt) element 
+                        endNum = checkStopGPSW (fromIntegral gpsstop) element
+                     in dropWaveData headNum $ takeWaveData (nlen-endNum) element
+  where
+    checkStopGPSW t0 wav = let t1 = deformatGPS $ stopGPSTime wav :: Double
+                            in if (t0 - t1) <= 0
+                                  then floor $ (t1-t0)*samplingFrequency wav
+                                  else 0 
+    
+    checkStartGPSW t0 wav = let t1 = deformatGPS $ startGPSTime wav :: Double
+                             in if (t0 - t1) <= 0
+                                   then 0
+                                   else floor $ (t0 - t1) * samplingFrequency wav
 
 
 kagraDataGet0 :: Int -> Int -> String -> IO (Maybe (GPSTIME,V.Vector Double))
@@ -324,7 +352,7 @@ kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
 
 zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
 zeropadding fs gpsnv =
-  let x = [(deformatGPS gps, deformatGPS gps + (fromIntegral (V.length v)-1)/fs)|(gps, v)<-gpsnv]
+  let x = [(deformatGPS gps, deformatGPS gps + fromIntegral (V.length v)/fs)|(gps, v)<-gpsnv]
       nx= length x
       n0pad = flip map [1, 3..(nx-1)] $ \i-> floor $ (fst (x!!(i+1)) - snd (x!!i))*fs
       v0pad = flip map n0pad $ \x-> V.fromList (replicate x 0.0)
@@ -346,7 +374,7 @@ consecutive f x (j:js) = do
   let y = take j x
       (tlist, flist) = unzip y
       v = V.concat $ for flist (fromJust . unsafePerformIO . f)
-   in (((fst . head) tlist, (snd . last) tlist), v) : consecutive f (drop j x) js
+   in (((fst . head) tlist, 0), v) : consecutive f (drop j x) js
 
 
 findConsecutiveInd :: [(Int,Int)] -> [Int]
