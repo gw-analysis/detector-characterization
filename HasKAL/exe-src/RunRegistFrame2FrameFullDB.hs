@@ -58,13 +58,19 @@ source topDir watchdir = do
   gps <- liftIO getCurrentGps
   let ndir = getNextDir gps
       ndirabs = getAbsPath topDir ndir
-  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
-  !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink
-  case maybeT of
-   Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
-                 gowatch ndirabs $ source topDir ndir
-   Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
-                 gowatch ndirabs $ source topDir ndir
+--  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
+  x <- doesDirectoryExist (getAbsPath topDir watchdir)
+  case x of
+    False -> do threadDelay 1000000
+                gps2 <- getCurrentGps
+                let cdir2 = getCurrentDir gps2
+                source topDir cdir2
+    True -> do !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink
+               case maybeT of
+                Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
+                              gowatch ndirabs (source topDir ndir) (source topDir)
+                Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
+                              gowatch ndirabs (source topDir ndir) (source topDir)
 
 
 
@@ -134,11 +140,18 @@ timeToNextDir gps =
    in nextGps - currentGps
 
 
-gowatch dname f =  do b <- liftIO $ doesDirectoryExist dname
-                      case b of
-                       False -> do liftIO $ threadDelay 1000000
-                                   gowatch dname f
-                       True  -> f
+gowatch dname f g =  do b <- liftIO $ doesDirectoryExist dname
+                        case b of
+                          False -> do gps <- liftIO getCurrentGps
+                                      let cdir' = getCurrentDir gps
+                                          cdir  = drop (length dname -5) dname
+                                      case cdir' > cdir of
+                                        True -> do let dname' = (take (length dname -5) dname)++cdir'
+                                                   liftIO $ threadDelay 1000000
+                                                   gowatch dname' (g cdir') g
+                                        False -> do liftIO $ threadDelay 1000000
+                                                    gowatch dname f g
+                          True  -> f
 --                        True  -> do flist <- liftIO $ getDirectoryContents dname >>= \x-> 
 --                                      return $ filter (\y-> not (y `elem` [".",".."]) && head y /='.') x
 --                                    case null flist of
