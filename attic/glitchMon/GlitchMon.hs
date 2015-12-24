@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 
 module GlitchMon.GlitchMon
 ( runGlitchMon
@@ -7,20 +8,33 @@ module GlitchMon.GlitchMon
 where
 
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
 import Control.Monad.Trans.Resource (runResourceT)
 import Control.Monad ((>>=), mapM_)
-import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
-import Data.Conduit (bracketP, yield,  await, ($$), Source, Sink, Conduit)
+import Control.Monad.State ( StateT
+                           , runStateT
+                           , execStateT
+                           , get
+                           , put
+                           , liftIO
+                           )
+import Data.Conduit ( bracketP
+                    , yield
+                    , await
+                    , ($$)
+                    , Source
+                    , Sink
+                    , Conduit
+                    )
 import qualified Data.Conduit.List as CL
 import Data.Int (Int32)
 import Data.List (nub, foldl', elemIndices, maximum, minimum, lookup)
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Text ( pack )
-import Filesystem.Path (extension)
-import Filesystem.Path.CurrentOS (decodeString,  encodeString)
+import Filesystem.Path (extension, (</>))
+import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DetectorUtils.Detector(Detector(..))
 import HasKAL.FrameUtils.FrameUtils (getGPSTime)
 import HasKAL.FrameUtils.Function (readFrameWaveData')
@@ -31,11 +45,22 @@ import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
+import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra as NL
-import System.FSNotify (Debounce(..), Event(..), WatchConfig(..), withManagerConf, watchTree, eventPath)
+import System.Directory (doesDirectoryExist, getDirectoryContents)
+import System.FilePath.Posix (takeExtension, takeFileName)
+import System.FSNotify ( Debounce(..)
+                       , Event(..)
+                       , WatchConfig(..)
+                       , withManagerConf
+                       , watchDir
+                       , eventPath
+                       )
 import System.IO (hFlush, stdout)
+import System.IO.Unsafe (unsafePerformIO)
+import System.Timeout.Lifted (timeout)
 
 import qualified GlitchMon.GlitchParam as GP
 import GlitchMon.PipelineFunction
@@ -53,32 +78,55 @@ import GlitchMon.RegisterEventtoDB
 --------------------}
 
 
-runGlitchMon watchdir param chname =
-  source watchdir $$ sink param chname
+runGlitchMon watchdir param chname = do
+  gps <- liftIO getCurrentGps
+  let cdir = getCurrentDir gps
+  source param chname watchdir cdir
+
+source :: GP.GlitchParam
+       -> String
+       -> FilePath
+       -> FilePath
+       -> IO FilePath
+source param chname topDir watchdir = do
+  gps <- liftIO getCurrentGps
+  let ndir = getNextDir gps
+      ndirabs = getAbsPath topDir ndir
+--  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
+  x <- doesDirectoryExist (getAbsPath topDir watchdir)
+  case x of
+    False -> do threadDelay 1000000
+                gps2 <- getCurrentGps
+                let cdir2 = getCurrentDir gps2
+                source param chname topDir cdir2    
+    True -> do !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink param chname
+               case maybeT of
+                Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
+                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
+                Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
+                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
 
 
-source :: FilePath
-       -> Source IO FilePath
-source watchdir = do
-  let config = WatchConfig
-                 { confDebounce = DebounceDefault
-                 , confPollInterval = 20000000 -- 20seconds
+watchFile :: FilePath
+          -> FilePath
+          -> Source IO FilePath
+watchFile topDir watchdir = do
+  let absPath = getAbsPath topDir watchdir
+      predicate event' = case event' of
+        Added path _ -> chekingFile path
+        _            -> False
+      config = WatchConfig
+                 { confDebounce = NoDebounce
+                 , confPollInterval = 1000000 -- 1seconds
                  , confUsePolling = True
                  }
-  x <- liftIO $ withManagerConf config $ \manager -> do
-    fname <- liftIO newEmptyMVar
-    _ <- watchTree manager watchdir (const True)
+  gwfname <- liftIO $ withManagerConf config $ \manager -> do
+    fname <- newEmptyMVar
+    watchDir manager absPath predicate
       $ \event -> case event of
-        Removed _ _ -> putStrLn "file removed" >> hFlush stdout
-        _           -> do let gwfname = eventPath event
-                          case (length (elemIndices '.' gwfname)) of
-                            1 -> putMVar fname gwfname
-                            2 -> putStrLn "file saving" >> hFlush stdout
-                            _ -> putStrLn "file extension should be .filepart or .gwf" >> hFlush stdout
+        Added path _ -> putMVar fname path
     takeMVar fname
-  yield x >> source watchdir
-  where filepart = pack "filepart"
-        gwf = pack "gwf"
+  yield gwfname >> watchFile topDir watchdir
 
 
 sink :: GP.GlitchParam
@@ -147,5 +195,51 @@ eventDisplayF param fname chname = do
                           return (trigparam, param',a')
 
 
+{- internal functions -}
+
+chekingFile path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
+
+
+getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
+
+
+breakTime margin = unsafePerformIO $ do
+  dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
+  return $ (dt+margin)*1000000
+
+
+getCurrentDir :: String -> String
+getCurrentDir gps = take 5 gps
+
+
+getNextDir :: String -> String
+getNextDir gps =
+  let gpsHead' = take 5 gps
+      gpsHead = read gpsHead' :: Int
+   in take 5 $ show (gpsHead+1)
+
+
+timeToNextDir :: String -> Int
+timeToNextDir gps =
+  let currentGps = read gps :: Int
+      (gpsHead', gpsTail') = (take 5 gps, drop 5 gps)
+      gpsHead = read gpsHead' :: Int
+      gpsTail = replicate (length gpsTail') '0'
+      nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
+   in nextGps - currentGps
+
+
+gowatch dname f g =  do b <- liftIO $ doesDirectoryExist dname
+                        case b of
+                          False -> do gps <- liftIO getCurrentGps
+                                      let cdir' = getCurrentDir gps
+                                          cdir  = drop (length dname -5) dname
+                                      case cdir' > cdir of
+                                        True -> do let dname' = (take (length dname -5) dname)++cdir'
+                                                   liftIO $ threadDelay 1000000
+                                                   gowatch dname' (g cdir') g
+                                        False -> do liftIO $ threadDelay 1000000
+                                                    gowatch dname f g
+                          True  -> f
 
 
