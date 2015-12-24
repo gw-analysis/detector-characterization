@@ -4,7 +4,9 @@ module GlitchMon.GlitchParam
 where
 
 --import qualified Data.Vector.Storable as V
+import HasKAL.DataBaseUtils.FrameFull.Data
 import HasKAL.SpectrumUtils.Signature (Spectrum)
+import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.WaveUtils.Data(WaveData)
 
 
@@ -24,6 +26,10 @@ data GlitchParam = GlitchParam
   , resolvFreq :: Int
   , cutoffFreq :: Double
   , clusterThres :: Double
+-- * clean data finder
+  , cdfInterval :: Int -- ^ interval[s] to run clean data finder (default 600[s])
+  , cdfparameter :: CDFParam
+  , cgps  :: Maybe GPSTIME
 -- * temporary data
   , refpsd :: Spectrum
   , refwave :: WaveData
@@ -66,6 +72,15 @@ updateGlitchParam'cutoffFreq x f = x {cutoffFreq = f}
 
 updateGlitchParam'clusterThres :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'clusterThres x thres = x {clusterThres = thres}
+
+updateGlitchParam'cdfInterval :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'cdfInterval x param = x {cdfInterval = param}
+
+updateGlitchParam'cdfparameter :: GlitchParam -> CDFParam -> GlitchParam
+updateGlitchParam'cdfparameter x param = x {cdfparameter = param}
+
+updateGlitchParam'cgps :: GlitchParam -> Maybe GPSTIME -> GlitchParam
+updateGlitchParam'cgps x param = x {cgps =  param}
 
 updateGlitchParam'refpsd :: GlitchParam -> Spectrum -> GlitchParam
 updateGlitchParam'refpsd x psd = x {refpsd = psd}

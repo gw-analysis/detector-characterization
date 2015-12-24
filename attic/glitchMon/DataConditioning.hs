@@ -9,9 +9,9 @@ module GlitchMon.DataConditioning
 
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
-import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
+import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
 
 import qualified GlitchMon.GlitchParam as GP
