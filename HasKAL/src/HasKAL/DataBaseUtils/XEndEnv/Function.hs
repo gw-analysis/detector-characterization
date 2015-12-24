@@ -56,6 +56,7 @@ import Database.Record
 import Database.Record.ToSql
 import Foreign.C.Types
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
+import HasKAL.DataBaseUtils.Data
 import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
 import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import qualified HasKAL.DetectorUtils.Detector as D
@@ -65,15 +66,6 @@ import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData, dropWaveData, takeWaveData)
 import System.IO.Unsafe (unsafePerformIO)
-
-
-data CDFParam = CDFParam { cdf'samplingFrequency :: Double
-                         , cdf'cutoffFrequencyLow :: Double
-                         , cdf'cutoffFrequencyHigh :: Double
-                         , cdf'blockSize :: Int
-                         , cdf'fftSize :: Int
-                         , cdf'chunkSize :: Int
-                         }
 
 
 cleanDataFinder :: CDFParam -> String -> (GPSTIME, Double) -> IO (Maybe [(GPSTIME, Bool)])
