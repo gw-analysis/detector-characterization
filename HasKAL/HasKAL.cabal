@@ -55,9 +55,11 @@ library
     HasKAL.Constant.MKSA,
     -- DataBaseUtils --
     HasKAL.DataBaseUtils,
+    HasKAL.DataBaseUtils.FrameFull.Data,
     HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin,
     HasKAL.DataBaseUtils.FrameFull.Function,
     HasKAL.DataBaseUtils.FrameFull.Table,
+    HasKAL.DataBaseUtils.XEndEnv.Data,
     HasKAL.DataBaseUtils.XEndEnv.DataBaseAdmin,
     HasKAL.DataBaseUtils.XEndEnv.Function,
     HasKAL.DataBaseUtils.XEndEnv.Table,
