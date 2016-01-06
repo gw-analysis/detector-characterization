@@ -306,7 +306,6 @@ executable kagraDataFind
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
-  extra-lib-dirs : /home/detchar/tools/detector-characterization/HasKAL/src/HasKAL/LineUtils/LineRemoval
 
 executable kagraDataPoint
   hs-source-dirs: exe-src
