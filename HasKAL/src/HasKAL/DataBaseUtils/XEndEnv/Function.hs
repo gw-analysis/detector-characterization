@@ -5,6 +5,7 @@ module HasKAL.DataBaseUtils.XEndEnv.Function
 , db2framelist
 , db2framecache
 , kagraChannelList
+, kagraDailyFileList
 , kagraDataFind
 , kagraDataFind'
 , kagraDataGet
@@ -56,14 +57,15 @@ import Database.Record
 import Database.Record.ToSql
 import Foreign.C.Types
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
-import HasKAL.DataBaseUtils.Data
+import HasKAL.DataBaseUtils.XEndEnv.Data
 import HasKAL.DataBaseUtils.XEndEnv.Table (Xendenv(..), insertXendenv)
 import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
 import HasKAL.SearchUtils.Common.CleanDataFinder (cleanDataFinderCore)
-import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.TimeUtils.Signature (GPSTIME, Date, LocalTime)
 import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData, dropWaveData, takeWaveData)
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -91,6 +93,23 @@ kagraChannelList gpstime = runMaybeT $ MaybeT $ do
     return $ head $ fromMaybe (error "no file in this gps") maybel
   getChannelList file >>= \maybech ->
     return $ Just $ fst . unzip $ fromMaybe (error "no channel in this gps") maybech
+
+
+kagraDailyFileList :: Date -> LocalTime -> IO (Maybe [String])
+kagraDailyFileList day loc = runMaybeT $ MaybeT $ do
+  if (length day) /= 10
+    then error "Usage: kagraDailyFileList yyyy-mm-dd localtime"
+    else do
+      let day' = day++" 00:00:00 "++loc
+          gpsstrt = read (time2gps day') :: Int32
+          duration = 24*60*60 :: Int32
+      flist <- kagraDataFindCore gpsstrt duration
+      let out = [ u
+                | (Just u) <- flist
+                ]
+      case out of
+        []     -> return Nothing
+        x -> return (Just x)
 
 
 kagraDataFind :: Int32 -> Int32 -> String -> IO (Maybe [String])
