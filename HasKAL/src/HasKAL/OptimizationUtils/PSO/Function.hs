@@ -1,4 +1,4 @@
-module HasKAL.OptimizationUtils.PSO
+module HasKAL.OptimizationUtils.PSO.Function
 ( pso
 --,
 ) where
