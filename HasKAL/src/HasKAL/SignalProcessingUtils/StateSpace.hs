@@ -1,6 +1,6 @@
 
 
-module HasKAL.SignalPocessingUtils.StateSpace
+module HasKAL.SignalProcessingUtils.StateSpace
 ( tf2NthStateSpace
 , barnes
 , sosstatespace
