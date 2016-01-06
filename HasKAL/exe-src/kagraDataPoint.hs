@@ -1,6 +1,6 @@
 
 
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataPoint)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataPoint)
 import System.Environment (getArgs)
 import Data.Int (Int32)
 import System.IO (stdout, hPutStrLn)
