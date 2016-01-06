@@ -1,3 +1,5 @@
+{-# LANGUAGE ForeignFunctionInterface #-}
+
 {-*********************************
  *RngMedian.hs
  *Created:2014/07/18
@@ -70,7 +72,8 @@ cd2dV = V.map realToFrac
 
 
 foreign import ccall "rng_median.h rng_med" c_rng_med :: Ptr CDouble -> CInt -> CInt -> Ptr CDouble -> IO()
+-- foreign import ccall "rng_median.h rng_med" c_rng_med :: Ptr CDouble -> CInt -> CInt -> Ptr CDouble -> IO()
 
---In C language : rng_med(double *data,int lendata,int nblocks,double *after_med)
+-- In C language : rng_med(double *data,int lendata,int nblocks,double *after_med)
 
 
