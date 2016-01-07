@@ -16,7 +16,7 @@ module HasKAL.TimeUtils.GPSfunction
 , gps2unix
 ) where
 
-import Data.Time
+import Data.Time hiding (defaultTimeLocale)
 import Data.Time.Calendar
 import Data.Time.Clock
 import Data.Time.Clock.TAI
