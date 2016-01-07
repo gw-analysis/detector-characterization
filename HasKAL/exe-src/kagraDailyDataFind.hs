@@ -13,7 +13,7 @@ main = do
             case statement of
               Nothing -> print "Nothing"
               Just x -> mapM_ (hPutStrLn stdout) x
-    _ -> error "Usage: kagraDailyDataFind day(yyyy-mm-dd) loocation(JST,UTC,etc)"
+    _ -> error "Usage: kagraDailyDataFind day(yyyy-mm-dd) localtime(JST,UTC,etc)"
 
 
 
