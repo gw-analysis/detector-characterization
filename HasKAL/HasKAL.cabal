@@ -129,6 +129,8 @@ library
     HasKAL.MonitorUtils.SensMon.Function,
     HasKAL.MonitorUtils.SensMon.SensMon,
     HasKAL.MonitorUtils.SensMon.Signature,
+    -- OptimizationUtils --
+    HasKAL.OptimizationUtils.PSO.Function,
     -- PlotUtils --
 --    HasKAL.PlotUtils.DynamicPlot,
 --    HasKAL.PlotUtils.PlotUtilsHROOT,
@@ -140,6 +142,8 @@ library
     HasKAL.PlotUtils.HROOT.PlotGraph3D,
     HasKAL.PlotUtils.HROOT.Supplement,
     HasKAL.PlotUtils.PlotOption.PlotOptionHROOT,
+    -- SearchUtils --
+    HasKAL.SearchUtils.Common.CleanDataFinder,
     -- SignalProcessingUtils --
     HasKAL.SignalProcessingUtils.Bilinear,
     HasKAL.SignalProcessingUtils.ButterWorth,
@@ -226,16 +230,20 @@ library
        hmatrix >=0.16,
        hmatrix-special,
        hmatrix-gsl,
+       hmatrix-gsl-stats,
        HROOT==0.8.*,
        lens,
        matrices >= 0.3,
 --       MissingH,
        monad-par,
        monad-par-extras,
+       mtl,
        names-th,
        old-locale,
        old-time,
+       persistable-record,
        process >=1.1,
+       random,
        resourcet,
        relational-query,
        relational-query-HDBC,
@@ -269,9 +277,35 @@ executable kagraDataFind
   build-depends:
     base > 4.7
    ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
-
 
 executable kagraDataPoint
   hs-source-dirs: exe-src
@@ -279,6 +313,33 @@ executable kagraDataPoint
   build-depends:
     base > 4.7
    ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
 

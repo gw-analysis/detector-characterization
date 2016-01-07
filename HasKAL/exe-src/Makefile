@@ -49,8 +49,8 @@ ${TAR5}: ${TAR5}.hs
 ${TAR6}: ${TAR6}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
-${TAR7}: ${TAR7}.hs
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR7}: ${TAR7}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
