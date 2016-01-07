@@ -13,8 +13,9 @@ TAR4= localtime2gps
 TAR5= showChannels
 TAR6= showChannelandSamplingRate
 TAR7= showKagraData
-
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7}
+TAR8= kagraDailyDataFind
+TAR9= updateFrameFullDB
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
@@ -51,6 +52,14 @@ ${TAR6}: ${TAR6}.hs
 
 ${TAR7}: ${TAR7}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+
+${TAR8}: ${TAR8}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+
+
+${TAR9}: ${TAR9}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
