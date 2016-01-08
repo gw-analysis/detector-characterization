@@ -1,7 +1,7 @@
 
 
 import System.Environment (getArgs)
-import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB)
+import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB')
 
 main = do
   args <- getArgs 
@@ -9,5 +9,5 @@ main = do
             1 -> return $ head args
             _ -> error "Usage: updateFrameDB framefile"
 
-  updateFrameDB fname
+  updateFrameDB' fname
   
