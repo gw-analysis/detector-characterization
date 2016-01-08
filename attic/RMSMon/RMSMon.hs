@@ -2,7 +2,6 @@ import qualified Data.Vector.Storable as V
 import qualified Data.Vector.Generic as DVG
 --import qualified Numeric.LinearAlgebra as NLA
 import Data.Maybe (fromMaybe, fromJust)
-import Numeric (showFFloat)
 import System.Environment (getArgs)
 import System.IO (stdout, hPutStrLn)
 
