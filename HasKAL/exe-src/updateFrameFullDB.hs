@@ -7,7 +7,7 @@ main = do
   args <- getArgs 
   fname <- case (length args) of
             1 -> return $ head args
-            _ -> error "Usage: updateFrameDB framefile"
+            _ -> error "Usage: updateFrameFullDB framefile"
 
   updateFrameDB' fname
   
