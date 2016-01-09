@@ -3,13 +3,16 @@
 HC=ghc --make
 
 OBJ1=RMSMon.hs
+OBJ2=readTest.hs
+OBJ3=checkGPS.hs
 
 DEP1 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
+DEP2 = ./HasKAL/LineUtils/LineRemoval/rng_median.c
 LIBLINK= -lFrame -lm -lgsl -lgslcblas
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=sypoliclink RMSMon
+TARGET=sypoliclink RMSMon readTest
 
 #########################################
 # link path
@@ -24,9 +27,19 @@ all:$(TARGET)
 sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
-RMSMon:${OBJ1} ${DEP1}
-	-ghc --make -o $@ RMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc --make -o $@ RMSMon.hs ${DEP1} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+checkGPS:${OBJ3} ${DEP1} ${DEP2}
+	-ghc --make -o $@ ${OBJ3} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ ${OBJ3} ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	@echo "*** Making $@ ***"
+
+readTest:${OBJ2} ${DEP1} ${DEP2}
+	-ghc --make -o $@ ${OBJ2} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ ${OBJ2} ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	@echo "*** Making $@ ***"
+
+RMSMon:${OBJ1} ${DEP1} ${DEP2}
+	-ghc --make -o $@ ${OBJ1} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ ${OBJ1} ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
 
 clean:
