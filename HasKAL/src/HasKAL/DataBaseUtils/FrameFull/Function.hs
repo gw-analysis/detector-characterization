@@ -391,9 +391,9 @@ kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
 
 zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
 zeropadding fs gpsnv =
-  let x = [(deformatGPS gps, deformatGPS gps + fromIntegral (V.length v)/fs)|(gps, v)<-gpsnv]
+  let x = [(deformatGPS gps, deformatGPS gps + fromIntegral (V.length v-1)/fs)|(gps, v)<-gpsnv]
       nx= length x
-      n0pad = flip map [1, 3..(nx-1)] $ \i-> floor $ (fst (x!!i) - snd (x!!(i-1)))*fs
+      n0pad = flip map [1, 2..(nx-1)] $ \i-> floor $ (fst (x!!i) - snd (x!!(i-1)))*fs
       v0pad = flip map n0pad $ \x-> V.fromList (replicate x 0.0)
       zeroPaddedV = V.concat $ interleave (snd (unzip gpsnv)) v0pad
    in (formatGPS (fst (head x)), zeroPaddedV)
