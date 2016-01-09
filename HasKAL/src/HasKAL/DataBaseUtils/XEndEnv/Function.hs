@@ -262,22 +262,6 @@ kagraDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                       gpsstop = fromIntegral $ gpsstrt + duration
                       gpsstrt' = fromIntegral gpsstrt
                   return $ Just $ map (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) out'
-  where
-    checkStopGPS :: Double -> Double -> (GPSTIME, V.Vector Double)-> (GPSTIME, V.Vector Double)
-    checkStopGPS t0 fs wav = let (t,v) = wav
-                                 t1 = deformatGPS t
-                              in if (t0 - t1) <= 0
-                                   then let ntake = V.length v - floor ((t1 - t0) * fs)
-                                         in (t, V.take ntake v)
-                                   else wav
-
-    checkStartGPS :: Double -> Double -> (GPSTIME,V.Vector Double) -> (GPSTIME, V.Vector Double)
-    checkStartGPS t0 fs wav = let (t,v) = wav
-                                  t1 = deformatGPS t
-                               in if (t0 - t1) <= 0
-                                  then wav
-                                  else let ndrop = floor $ (t0 - t1) * fs
-                                        in (formatGPS t0, V.drop ndrop v)
 
 
 kagraWaveDataGetC :: Int -> Int -> String -> IO (Maybe [WaveData])
@@ -309,16 +293,6 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         headNum = checkStartGPSW (fromIntegral gpsstrt) element
                         endNum = checkStopGPSW (fromIntegral gpsstop) element
                      in dropWaveData headNum $ takeWaveData (nlen-endNum) element
-  where
-    checkStopGPSW t0 wav = let t1 = deformatGPS $ stopGPSTime wav :: Double
-                            in if (t0 - t1) <= 0
-                                  then floor $ (t1-t0)*samplingFrequency wav
-                                  else 0
-
-    checkStartGPSW t0 wav = let t1 = deformatGPS $ startGPSTime wav :: Double
-                             in if (t0 - t1) <= 0
-                                   then 0
-                                   else floor $ (t0 - t1) * samplingFrequency wav
 
 
 kagraDataGet0 :: Int -> Int -> String -> IO (Maybe (GPSTIME,V.Vector Double))
@@ -344,8 +318,13 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                       cdata = consecutive (readFrameV chname) x nInd
                   case length cdata of
                     0 -> return Nothing
-                    1 -> return $ Just $ head cdata
-                    _ -> return $ Just $ zeropadding fs cdata
+                    1 -> do let gpsstop = fromIntegral $ gpsstrt + duration
+                                gpsstrt' = fromIntegral gpsstrt
+                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) $ head cdata
+                    _ -> do let gpsstop = fromIntegral $ gpsstrt + duration
+                                gpsstrt' = fromIntegral gpsstrt
+                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) 
+                              $ zeropadding fs cdata
 
 
 kagraWaveDataGet0 :: Int -> Int -> String -> IO (Maybe WaveData)
@@ -363,10 +342,7 @@ kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
               case maybegps of
                 Nothing -> return Nothing
                 Just (gpstimeSec, gpstimeNano, dt) -> do
-                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
-                                  then 0
-                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
-                      nduration = floor $ fromIntegral duration * fs
+                  let gpsstop = fromIntegral gpsstrt + fromIntegral duration
                       nInd = nConsecutive $ (fst . unzip) x
                       cdata = consecutive (readFrameV chname) x nInd
                   case length cdata of
@@ -376,13 +352,50 @@ kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                 xvec = snd timendat
                                 nlen = V.length xvec
                                 te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                            return $ Just $ mkWaveData D.General chname fs ts te xvec
+                                element =  mkWaveData D.General chname fs ts te xvec
+                                headNum = checkStartGPSW (fromIntegral gpsstrt) element
+                                endNum = checkStopGPSW (fromIntegral gpsstop) element
+                            return $ Just $ dropWaveData headNum $ takeWaveData (nlen-endNum) element
                     _ -> do let timendat = zeropadding fs cdata
                                 ts = fst timendat
                                 xvec = snd timendat
                                 nlen = V.length xvec
                                 te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                            return $ Just $ mkWaveData D.General chname fs ts te xvec
+                                element =  mkWaveData D.General chname fs ts te xvec
+                                headNum = checkStartGPSW (fromIntegral gpsstrt) element
+                                endNum = checkStopGPSW (fromIntegral gpsstop) element
+                            return $ Just $ dropWaveData headNum $ takeWaveData (nlen-endNum) element
+
+
+
+checkStopGPS :: Double -> Double -> (GPSTIME, V.Vector Double)-> (GPSTIME, V.Vector Double)
+checkStopGPS t0 fs wav = let (t,v) = wav
+                             t1 = deformatGPS t
+                          in if (t0 - t1) <= 0
+                               then let ntake = V.length v - floor ((t1 - t0) * fs)
+                                     in (t, V.take ntake v)
+                               else wav
+
+
+checkStartGPS :: Double -> Double -> (GPSTIME,V.Vector Double) -> (GPSTIME, V.Vector Double)
+checkStartGPS t0 fs wav = let (t,v) = wav
+                              t1 = deformatGPS t
+                           in if (t0 - t1) <= 0
+                              then wav
+                              else let ndrop = floor $ (t0 - t1) * fs
+                                    in (formatGPS t0, V.drop ndrop v)
+
+
+checkStopGPSW t0 wav = let t1 = deformatGPS $ stopGPSTime wav :: Double
+                        in if (t0 - t1) <= 0
+                              then floor $ (t1-t0)*samplingFrequency wav
+                              else 0
+
+
+checkStartGPSW t0 wav = let t1 = deformatGPS $ startGPSTime wav :: Double
+                         in if (t0 - t1) <= 0
+                               then 0
+                               else floor $ (t0 - t1) * samplingFrequency wav
 
 
 zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
