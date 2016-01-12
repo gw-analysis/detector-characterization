@@ -7,7 +7,7 @@ import Control.Monad (forM, liftM)
 import Data.List (isInfixOf)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getChannelList)
 import HasKAL.MonitorUtils.CoherenceMon.Function (hBruco)
 import HasKAL.WebUtils.CGI.Function

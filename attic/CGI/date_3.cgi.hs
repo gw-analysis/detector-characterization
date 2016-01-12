@@ -5,7 +5,7 @@ import qualified Data.Vector.Storable as V (maximum)
 import Control.Monad (forM, liftM)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV) 
 import HasKAL.WebUtils.CGI.Function
