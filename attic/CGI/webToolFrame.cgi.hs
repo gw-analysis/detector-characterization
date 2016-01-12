@@ -9,7 +9,7 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  gps <- return "1120543424" --liftIO getCurrentGps
+  gps <- return "1134572417" --liftIO getCurrentGps
   portal <- getInput "portal"
   output $ html portal gps
 

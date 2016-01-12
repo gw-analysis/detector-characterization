@@ -21,7 +21,7 @@ cgiMain = do
 
 fork :: ParamCGI -> Maybe String -> Maybe String -> Maybe String -> IO String
 fork params flag word oName = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps 
+  nowGps <- return $ show 1134572417 -- getCurrentGps 
   case flag of
    Nothing -> do
      case (gps params, word) of
