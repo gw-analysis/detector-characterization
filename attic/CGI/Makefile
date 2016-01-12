@@ -29,7 +29,8 @@ TARs= ${TAR11} ${TAR10} ${TAR9} ${TAR8} ${TAR7} ${TAR6} ${TAR5} ${TAR4} ${TAR3} 
 # HasKAL 関連
 DEP1=./HasKAL/PlotUtils/HROOT/AppendFunction.o
 DEP2=./HasKAL/SignalProcessingUtils/filterFunctions.o
-DEPs= ${DEP1} ${DEP2}
+DEP3=./HasKAL/LineUtils/LineRemoval/rng_median.o
+DEPs= ${DEP1} ${DEP2} ${DEP3}
 
 # kagali 関連
 DEPK1=./HasKAL/ExternalUtils/KAGALI/DKGLUtils.o
@@ -51,19 +52,19 @@ ${TAR1}: ${TAR1}.hs ${DEPs} ${DEPKs}
 	chmod 755 ${TAR1}
 	mv -f ${TAR1} ~/public_html/cgi-bin/
 
-${TAR2}: ${TAR2}.hs ${DEPs}
+${TAR2}: ${TAR2}.hs ${DEPs} ${DEP3}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	chmod 755 ${TAR2}
 	mv -f ${TAR2} ~/public_html/cgi-bin/
 
-${TAR3}: ${TAR3}.hs ${DEP2}
+${TAR3}: ${TAR3}.hs ${DEP2} ${DEP3}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	chmod 755 ${TAR3}
 	mv -f ${TAR3} ~/public_html/cgi-bin/
 
-${TAR4}: ${TAR4}.hs ${DEP2}
+${TAR4}: ${TAR4}.hs ${DEP2} ${DEP3}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	chmod 755 ${TAR4}
@@ -105,7 +106,7 @@ ${TAR10}: ${TAR10}.hs
 	chmod 755 ${TAR10}
 	mv -f ${TAR10} ~/public_html/cgi-bin/
 
-${TAR11}: ${TAR11}.hs
+${TAR11}: ${TAR11}.hs ${DEP3}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} ${CFLAGS2}
 	chmod 755 ${TAR11}
