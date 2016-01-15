@@ -105,10 +105,10 @@ process params = do
                   let coh = coherenceMon 1 fs1 fs2 dat1 dat2 -- length of FFT = 1 second
                   plotV Linear Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "|Coh(f)|^2") 0.05 ("Coherence: "++ch1++" vs "++ch2)
                     pngfile ((read fmin',read fmax'),(-0.05,1.05)) coh
-                "Peason" -> do
+                "Pearson" -> do
                   let cor = takeCorrelationV (read mon) dat1 dat2 16
                       tvec = V.fromList [0, 1/fs2..(fromIntegral $ V.length cor-1)/fs2]
-                  plotV Linear LinePoint 1 BLUE ("time [s] since GPS="++gps', "correlation") 0.05 ("Peason: "++ch1++" vs "++ch2)
+                  plotV Linear LinePoint 1 BLUE ("time [s] since GPS="++gps', "correlation") 0.05 ("Pearson: "++ch1++" vs "++ch2)
                     pngfile ((0,0),(0,0)) (tvec, cor)
                 "MIC" -> do
                   return () -- 未実装
@@ -132,7 +132,7 @@ inputForm params = inputFrame params formbody
           channelForm params [Single, Multi],
           paramForm [],
           monitorForm Multi [(True, COH, "CoherenceMon")
-                            ,(False, Peason, "Peason Correlation")
+                            ,(False, Pearson, "Pearson Correlation")
                             ,(False, MIC, "<s>MIC</s>")
                             ],
           "<br><center>",

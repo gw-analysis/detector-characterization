@@ -32,7 +32,7 @@ fork params = do
      fnames <- process params
      return $ resultPage params fnames
    -- (_, [], []) -> do
-   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] $ defaultMon ["Peason"] params
+   --   let params' = defaultChs ["K1:PEM-EX_ACC_NO2_X_FLOOR","K1:PEM-EX_ACC_NO2_Y_FLOOR"] [] $ defaultMon ["Pearson"] params
    --   fnames <- process params'
    --   return $ resultPage params' fnames
    -- (_, [], _) -> do
@@ -40,7 +40,7 @@ fork params = do
    --   fnames <- process params'
    --   return $ resultPage params' fnames
    -- (_, _, []) ->  do
-   --   let params' = defaultMon ["Peason"] params
+   --   let params' = defaultMon ["Pearson"] params
    --   fnames <- process params'
    --   return $ resultPage params' fnames
    -- (Just x,  _, _) -> do
@@ -78,7 +78,7 @@ inputForm params = inputFrame params formbody
           (dateForm params),
           channelForm params [Multi],
           paramForm [],
-          monitorForm Single [(True, Peason, "Peason Correlation"),
+          monitorForm Single [(True, Pearson, "Pearson Correlation"),
                               (False, MIC, "<s>MIC</s>")
                              ],
           "<br><center>",
