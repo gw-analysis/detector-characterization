@@ -6,7 +6,7 @@ import Control.Monad (liftM, forM)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.SpectrumUtils.Function (mapSpectrum)
@@ -27,7 +27,7 @@ cgiMain = do
 
 fork :: ParamCGI -> IO String
 fork params = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps
+  nowGps <- return $ show 1134572417 -- getCurrentGps
   case (gps params, channel1 params, channel2 params, monitors params) of
    (Nothing, _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params

@@ -5,7 +5,7 @@ import qualified Data.Vector.Storable as V (maximum)
 import Control.Monad (forM, liftM)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV) 
 import HasKAL.WebUtils.CGI.Function
@@ -22,7 +22,7 @@ cgiMain = do
 
 fork :: ParamCGI -> IO String
 fork params = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps
+  nowGps <- return $ show 1134572417 -- getCurrentGps
   case (gps params, channel1 params, monitors params) of
    (Nothing, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params

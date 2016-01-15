@@ -7,7 +7,7 @@ import System.Directory (doesFileExist)
 
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
 import HasKAL.SpectrumUtils.Function (fromSpectrum, toSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)

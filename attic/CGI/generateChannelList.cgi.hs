@@ -4,7 +4,7 @@ import Data.List (isInfixOf, isPrefixOf, nub, foldl')
 import Data.Maybe (fromJust)
 
 import HasKAL.WebUtils.CGI.Function
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraChannelList)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraChannelList)
 import SampleChannel
 
 main :: IO ()
@@ -21,7 +21,7 @@ cgiMain = do
 
 fork :: ParamCGI -> Maybe String -> Maybe String -> Maybe String -> IO String
 fork params flag word oName = do
-  nowGps <- return $ show 1120543424 -- getCurrentGps 
+  nowGps <- return $ show 1134572417 -- getCurrentGps 
   case flag of
    Nothing -> do
      case (gps params, word) of

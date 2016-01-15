@@ -11,6 +11,7 @@ TARs= ${TAR1}
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 CSRC = ./HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
+LINE= ./HasKAL/LineUtils/LineRemoval/rng_median.o
 DEPs= ${DEP1}
 
 #########################################
@@ -24,7 +25,7 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ${DEPs} ${CSRC}
+${TAR1}: ${TAR1}.hs ${DEPs} ${CSRC} ${LINE}
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
