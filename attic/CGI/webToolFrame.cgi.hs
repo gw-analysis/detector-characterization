@@ -51,7 +51,7 @@ html portal gps = concat [
                             Just "Coherence Analysis"      -> "date_2.cgi?Date=GPS&gps="++gps++"&channel1="++ch1
                                                                 ++"&channel2="++ch2++"&monitor=COH\" name=\"plotframe\">"
                             Just "Correlation Map"         -> "date_3.cgi?Date=GPS&gps="++gps++"&channel1="++ch1
-                                                                ++"&channel1="++ch2++"&monitor=Peason\" name=\"plotframe\">"
+                                                                ++"&channel1="++ch2++"&monitor=Pearson\" name=\"plotframe\">"
                             Just "Bruco"                   -> "" 
                             Just "Detection Range"         -> "date_5.cgi?Date=GPS&gps="++gps
                                                            ++"&monitor=INSP\" name=\"plotframe\">"
