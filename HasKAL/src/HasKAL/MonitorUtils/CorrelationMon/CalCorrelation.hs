@@ -110,7 +110,7 @@ takeCorrelationCore :: CorrelationMethod -- ^ Pearson / MIC
                     -> Int -- ^ number of shift to take correlation
                     -> U.Vector Double -- ^ Vector of correlation coefficient 
 takeCorrelationCore method x y nshift = case method of
-  Peason -> twoChannelData2CorrelationV x y nshift
+  Pearson -> twoChannelData2CorrelationV x y nshift
   MIC    -> twoChannelData2CorrelationV x y nshift
 
 twoChannelData2CorrelationV :: U.Vector Double -- ^ data Vector x
@@ -146,7 +146,7 @@ correlationChunkCore :: CorrelationMethod -- ^ Pearson / MIC
                      -> Int    -- ^ number of shift to take correlation
                      -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized ([time], [rho_max], [timeshift])
 correlationChunkCore method x y ttotal tchunk fs nshift = case method of 
-  Peason -> correlationChunkPearson x y ttotal tchunk fs nshift
+  Pearson -> correlationChunkPearson x y ttotal tchunk fs nshift
   MIC    -> correlationChunkPearson x y ttotal tchunk fs nshift
 
 correlationChunkPearson :: U.Vector Double -- ^ data x

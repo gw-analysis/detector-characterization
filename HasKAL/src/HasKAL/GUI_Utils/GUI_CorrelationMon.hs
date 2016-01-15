@@ -70,7 +70,7 @@ hasKalGuiCorrMon activeChannelLabels = do
     sig2 <- readFrameFromGPS cGPS cObsTime (activeChannelLabels!!1) cCache
     case (sig1, sig2) of
      (Just x, Just y) -> do
-       let corr't = takeCorrelation Peason x y 10
+       let corr't = takeCorrelation Pearson x y 10
        putStrLn ("### Not Implemented yet. ###")
        print $ corr't
        plotX Linear Line 1 BLUE ("Time [sec]", "Correlation") 0.05 "CorrelationMon" ((0,0),(0,0)) $ zip [0..] corr't

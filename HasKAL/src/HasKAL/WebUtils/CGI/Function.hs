@@ -302,7 +302,7 @@ genePngTableCore (msg, ch, files) = concat ["<h3>"++ch++msg'++"</h3>"
         newline n xs = map ((++"<br><br>").concat.(\i -> (take n).(drop $ i*n) $ xs)) [0,1..length xs`div`n]
 
 
--- For Peason and MIC
+-- For Pearson and MIC
 geneChMap :: ParamCGI -> [(Message, String, [String])] -> String
 geneChMap params x = concat [
   "<table border=\"1\" cellpadding=\"6\"><tr bgcolor=\"dddddd\"><th></th>",

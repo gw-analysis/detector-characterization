@@ -1,6 +1,6 @@
 
 module HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod(
-       CorrelationMethod(Peason, MIC)
+       CorrelationMethod(Pearson, MIC)
        ) where
 
-data CorrelationMethod = Peason | MIC deriving (Eq, Read)
+data CorrelationMethod = Pearson | MIC deriving (Eq, Read)
