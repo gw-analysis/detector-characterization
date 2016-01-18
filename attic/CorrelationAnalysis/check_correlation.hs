@@ -15,14 +15,14 @@ main = do
 --     data3 = NLA.fromList [1,2..] :: NLA.Vector Double
 -- problem : if input data is infinite, this functioin does not work. 
 
- let rValue1 = takeCorrelationV Peason data1 data2 2
+ let rValue1 = takeCorrelationV Pearson data1 data2 2
  print rValue1
 
- let rValue2 = takeCorrelationV Peason data2 data1 2
+ let rValue2 = takeCorrelationV Pearson data2 data1 2
  print rValue2
 
- let rValue3 = takeCorrelationV Peason data2 data3 2
+ let rValue3 = takeCorrelationV Pearson data2 data3 2
  print rValue3
 
- let rValue4 = takeCorrelationV Peason data3 data2 2
+ let rValue4 = takeCorrelationV Pearson data3 data2 2
  print rValue4
