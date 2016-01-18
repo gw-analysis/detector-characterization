@@ -22,7 +22,7 @@ generateUpconvNoise:${OBJ3}
 	${HC} --make -o $@ $^ ${DEP2}
 	@echo "*** Making $@ ***"
 
-check_correlation:${OBJ1}
+check_correlation:${OBJ1} 
 	ln -fs ${HASKALPATH} ./
 	-ghc --make -o $@ check_correlation.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
 	-ghc --make -o $@ check_correlation.hs -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
