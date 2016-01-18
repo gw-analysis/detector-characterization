@@ -18,7 +18,7 @@ import qualified Data.Vector.Unboxed as U
 
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
-
+import HasKAL.SignalProcessingUtils.Resampling (downsampleV, downsampleUV)
 
 {-- ToDo :
     ・CGIだけのためにデータのサンプリングレートを揃えるLPFをかける関数を用意する
@@ -43,6 +43,26 @@ takeCorrelationV :: CorrelationMethod -- ^ Pearson / MIC
                  -> Int -- ^ number of shift to take correlation
                  -> S.Vector Double -- ^ Vector of correlation coefficient 
 takeCorrelationV method x y nshift = U.convert $ takeCorrelationCore method (U.convert x) (U.convert y) nshift
+
+
+takeCorrelationCheckSamplingFrequency :: CorrelationMethod -- ^ Pearson / MIC
+                                      -> Double -- ^ sampling rate [Hz] of data x
+                                      -> Double -- ^ sampling rate [Hz] of data y
+                                      -> [Double] -- ^ data list x
+                                      -> [Double] -- ^ data list y
+                                      -> Int -- ^ number of shift to take correlation
+                                      -> [Double] -- ^ list of correlation coefficient [x_2, x_-1, x_0, x_1, x_2]
+takeCorrelationCheckSamplingFrequency method fsx fsy x y nshift = U.toList $ takeCorrelationCheckSamplingFrequencyCore method fsx fsy (U.fromList x) (U.fromList y) nshift
+
+takeCorrelationCheckSamplingFrequencyV :: CorrelationMethod -- ^ Pearson / MIC
+                                      -> Double -- ^ sampling rate [Hz] of data x
+                                      -> Double -- ^ sampling rate [Hz] of data y
+                                      -> S.Vector Double -- ^ data Vector x
+                                      -> S.Vector Double -- ^ data Vector y
+                                      -> Int -- ^ number of shift to take correlation
+                                      -> S.Vector Double -- ^ Vector of correlation coefficient [x_2, x_-1, x_0, x_1, x_2]
+takeCorrelationCheckSamplingFrequencyV method fsx fsy x y nshift = U.convert $ takeCorrelationCheckSamplingFrequencyCore method fsx fsy (U.convert x) (U.convert y) nshift
+
 
 findIndexMaxCorrelationMaxValueIndex :: [Double] -- ^ list of correlation coefficient
                                      -> Double -- ^ sampling rate [Hz]
@@ -70,7 +90,7 @@ significance :: Int -- ^
              -> Double -- ^ significance 
 significance n r
   | n < 3     = 0
-    | abs r > 1 = 0
+  | abs r > 1 = 0
   | t <  0    = 2.0 * gslCdfTdistP t (realToFrac (n-2))
   | t >= 0    = 2.0 * gslCdfTdistQ t (realToFrac (n-2))
   where t = r * sqrt (realToFrac n - 2) / sqrt (1 - r*r)
@@ -99,6 +119,8 @@ correlationChunkV :: CorrelationMethod -- ^ Pearson / MIC
                               -> Int    -- ^ number of shift to take correlation
                               -> (S.Vector Double, S.Vector Double, S.Vector Double) -- ^ vector of correlation coefficient maximized ([time], [rho_max], [timeshift])
 correlationChunkV method x y ttotal tchunk fs nshift = correlationChunkCore method (U.convert x) (U.convert y) ttotal tchunk fs nshift
+
+
 
 
 
@@ -136,6 +158,31 @@ dataHeadDropNV listData n = U.drop n listData
 
 --dataTailDropNV ::  U.Vector Double -> Int -> U.Vector Double
 --dataTailDropNV listData n = U.take ((U.length listData) - n) listData
+
+takeCorrelationCheckSamplingFrequencyCore :: CorrelationMethod -- ^ Pearson / MIC
+                                          -> Double -- ^ sampling rate [Hz] of x
+                                          -> Double -- ^ sampling rate [Hz] of y 
+                                          -> U.Vector Double -- ^ vector x
+                                          -> U.Vector Double -- ^ vector y
+                                          -> Int -- ^ number of shift to take correlation
+                                          -> U.Vector Double -- ^ Vector fo correlation coefficient
+takeCorrelationCheckSamplingFrequencyCore method fsx fsy x y nshift
+  | fsx == fsx                                 = takeCorrelationCore method x y nshift
+  | (truncate $ fsl / fss) == 0 && (fsx > fsy) = takeCorrelationCore method (dsFunction fsx fsy x) y nshift
+  | (truncate $ fsl / fss) == 0 && (fsx < fsy) = takeCorrelationCore method x (dsFunction fsy fsx y) nshift
+  | otherwise                                  = takeCorrelationCore method x y nshift
+     where fsl = max fsx fsy
+           fss = min fsx fsy
+-- How should the statement(otherwise) be treated? Now otherwise statement does nothing.
+
+dsFunction :: Double -> Double -> U.Vector Double -> U.Vector Double
+dsFunction fs newfs xs = dsCore fs p xs
+       where dsCore :: Double -> Int -> U.Vector Double -> U.Vector Double
+             dsCore fs 0 xs = xs
+             dsCore fs n xs = dsCore fs (n-1) $ downsampleUV fs (fs/2) xs
+             p = truncate $ fs / newfs
+
+
 
 correlationChunkCore :: CorrelationMethod -- ^ Pearson / MIC
                      -> U.Vector Double -- ^ data x
