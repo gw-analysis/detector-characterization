@@ -7,6 +7,7 @@ module Function (
   ,multiCoherence
 ) where
 
+import Debug.Trace (trace)
 import Data.Complex (Complex(..), magnitude, conjugate)
 import Data.List (foldl1')
 import Numeric.LinearAlgebra.Algorithms (eigSH, inv)
@@ -27,11 +28,12 @@ multiCoherence ny fsy fsxi yt xit = (fvec, calcCoh vSYY vSYi vDmU, coupleCoeff m
         vY = fsd nmin ny yt
         vXi = zipWith (fsd nmin) nxi xit
         vSYY = psd vY
-        vSYi = map (csd vY) vXi
+        vSYi = M.toRows $ M.fromColumns $ map (csd vY) vXi
         mSX = csdMat vXi
         vDmU = map eigSH mSX
         fvec = V.fromList $ map ((*df).fromIntegral) [0,1..nmin`div`2] :: V.Vector Double
         df = fsy / (fromIntegral ny)
+
 
 coupleCoeff :: [M.Matrix (Complex Double)] -> [V.Vector (Complex Double)] -> [V.Vector (Complex Double)]
 coupleCoeff mSX vSY = M.toRows $ M.fromColumns $ zipWith prod'MCV (map inv mSX) (map (V.map conjugate) vSY)
@@ -59,7 +61,7 @@ csd :: [V.Vector (Complex Double)] -- ^ list of SFT
     -> [V.Vector (Complex Double)] -- ^ list of SFT
     -> V.Vector (Complex Double)   -- ^ cross spectrum: S[x1, x2]
 csd xfs yfs = ave csds
-  where csds = zipWith (V.zipWith (*)) xfs yfs
+  where csds = zipWith (V.zipWith (*)) xfs (map (V.map conjugate) yfs)
 
 -- average for list of spectrum
 ave :: (Fractional a, V.Storable a)
