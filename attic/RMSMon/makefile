@@ -1,18 +1,17 @@
-# dailyRMSMon.mk
-
 HC=ghc --make
 
 OBJ1=RMSMon.hs
 OBJ2=readTest.hs
-OBJ3=checkGPS.hs
+OBJ3=FileFinder.hs
 
 DEP1 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 DEP2 = ./HasKAL/LineUtils/LineRemoval/rng_median.c
+DEP3 = ./HasKAL/SignalProcessingUtils/filterFunctions.c
 LIBLINK= -lFrame -lm -lgsl -lgslcblas
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=sypoliclink RMSMon readTest
+TARGET=sypoliclink RMSMon readTest FileFinder
 
 #########################################
 # link path
@@ -27,9 +26,9 @@ all:$(TARGET)
 sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
-checkGPS:${OBJ3} ${DEP1} ${DEP2}
+FileFinder: ${OBJ3} ${DEP2}
 	-ghc --make -o $@ ${OBJ3} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc --make -o $@ ${OBJ3} ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	-ghc --make -o $@ $^ -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
 
 readTest:${OBJ2} ${DEP1} ${DEP2}
