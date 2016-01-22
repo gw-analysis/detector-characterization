@@ -44,7 +44,6 @@ main = do
                        True -> (dsfs, dropBothSide 8 $ downsampleSV fs dsfs dat)
                        False -> (fs, dat)
   let tvec = fromList [0, 1/dsfs..(fromIntegral $ dim dat' - 1)/minfs]
-  print $ dim dat'
   plotDateV Linear Line 1 RED (xlabel, "amplitude "++unit) 0.05 title oFile ((0,0),(0,0)) gps (tvec, dat')
 
 {-- Internal Functions --}
