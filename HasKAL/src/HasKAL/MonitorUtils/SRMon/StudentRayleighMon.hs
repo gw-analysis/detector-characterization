@@ -76,6 +76,7 @@ srMonM method dataFs
   | method == LSM = error "Not Implemented yet."
   | method == MLE = error "Not Implemented yet."
   | method == (QUANT pVal) = mapRows0 (getNuQuantV pVal) dataFs
+  -- | method == (QUANT pVal) = mapRows0 (empiricalQuantileV pVal) dataFs -- for test
   where (QUANT pVal) = method
 
 frequencyClusteringM :: Int -> Matrix Double -> Matrix Double
@@ -99,10 +100,8 @@ getNuQuantV pVal dataF = getClosestValueV e t
         t = V.map (theoreticalQuantileV pVal) $ fromList [2.0, 2.1..200.0]
 
 empiricalQuantileV :: Double -> Vector Double -> Double
--- empiricalQuantileV pVal dataF = V.unsafeIndex (sort4Vec dataF) (pIdx -1)
 empiricalQuantileV pVal dataF = V.head $ select4Vec (pIdx-1) dataF
   where pIdx = truncate $ pVal * (fromIntegral $ V.length dataF)
-        -- sort4Vec = modify H.sort
         select4Vec k = modify (flip H.select (k+1))
 
 theoreticalQuantileV :: Double -> Double -> (Double, Double)

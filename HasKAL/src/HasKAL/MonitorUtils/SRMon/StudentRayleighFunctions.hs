@@ -41,16 +41,18 @@ hkalCdfStudentRayleighPinv :: Double -- ^ sigma
                            -> Double -- ^ nu
                            -> Double -- ^ P(x)
                            -> Double -- ^ x
-hkalCdfStudentRayleighPinv sigma nu p = sqrt $ norm * qOfFdist
+hkalCdfStudentRayleighPinv sigma nu p = sigma * (sqrt $ nu * ( (1-p)**(-2.0/nu) - 1.0 ) )
+-- hkalCdfStudentRayleighPinv sigma nu p = sqrt $ norm * qOfFdist
   where norm = 2.0 * sigma *sigma
         qOfFdist = hkalCdfFdistPinv p nu --RND.gslCdfFdistPinv p 2.0 nu
+
+
 
 hkalCdfStudentRayleighQinv :: Double -- ^ sigma
                            -> Double -- ^ nu
                            -> Double -- ^ Q(x)
                            -> Double -- ^ x
 hkalCdfStudentRayleighQinv sigma nu p = hkalCdfStudentRayleighPinv sigma nu (1.0 - p)
-
 
 {--  Internal Functions  --}
 -- Cumulative functions of F-dist in GSL maybe contain bugs
