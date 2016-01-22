@@ -1,25 +1,14 @@
-{- |
-Module      : main
-Description : This is documentation tests.
-Copyright   : (c) WhoAmI, 2014
-License     : ???
-Maintainer  : Takahiro Yamamoto %mail%
-Stability   : test
-Portability : POSIX
 
--}{-
-  * Last Modified: 2016/01/22 17:48:26
--}
+import Control.Monad (liftM)
+import Data.Maybe (catMaybes)
+import Data.Complex (magnitude)
+import qualified Data.Vector.Storable as V
 
 import HasKAL.FrameUtils.Function (readFrameWaveData')
 import HasKAL.DetectorUtils.Detector (Detector(..))
-import HasKAL.WaveUtils (WaveData(..))
-import Function (multiCoherenceW)
-import Control.Monad (liftM)
-import Data.Maybe (catMaybes)
+import HasKAL.WaveUtils (WaveData(..), mkWaveData)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import Data.Complex (magnitude)
-import qualified Data.Vector.Storable as V
+import HasKAL.MonitorUtils.CoherenceMon.Function
 
 main = do
   let fname = "/data/kagra/xend/R0206/K-K1_R-1120443552-32.gwf"
