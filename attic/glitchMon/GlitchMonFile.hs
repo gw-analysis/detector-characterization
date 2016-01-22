@@ -109,41 +109,42 @@ sink param chname = do
                                 fsorig = samplingFrequency wave
                             if (fs /= fsorig)
                               then do let wave' = downsampleWaveData fs wave
-                                      go wave' param'
-                              else go wave param'
-  where 
-    go w param' = do
-      let maybegps = GP.cgps param'
-      case maybegps of
-        Nothing -> do
-          currGps' <- liftIO $ getCurrentGps
-          let currGps = formatGPS (read currGps')
-              param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
-              param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (GP.chunklen param'2) w)
-          s <- liftIO $ glitchMon param'3 w
-          sink s chname
-        Just gpsold -> do
-          currGps' <- liftIO $ getCurrentGps
-          let currGps = formatGPS (read currGps')
-              difft = (deformatGPS currGps) - (deformatGPS gpsold)
-              cdfIntvl = GP.cdfInterval param' 
-          case difft >= (fromIntegral cdfIntvl) of  -- ^ clean data update every 10 minutes
-            True -> do
-              let cdfp = GP.cdfparameter param'
-              maybecdlist <- liftIO $ cleanDataFinder cdfp chname (currGps, 600.0)
-              case maybecdlist of
-                Nothing -> error "no clean data in the given gps interval"
-                Just cdlist -> do
-                  let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
-                      cdgps = fst cdgps'
-                      param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                  maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname (WD.detector w)
-                  let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-                  s <- liftIO $ glitchMon param'3 w
-                  sink s chname
-            False -> do
-              s <- liftIO $ glitchMon param' w
+                                      fileRun wave' param'
+                              else fileRun wave param'
+
+
+streamingRun w param' = do
+  let maybegps = GP.cgps param'
+  case maybegps of
+    Nothing -> do
+      currGps' <- liftIO $ getCurrentGps
+      let currGps = formatGPS (read currGps')
+          param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
+          param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (GP.chunklen param'2) w)
+      s <- liftIO $ glitchMon param'3 w
+      sink s chname
+    Just gpsold -> do
+      currGps' <- liftIO $ getCurrentGps
+      let currGps = formatGPS (read currGps')
+          difft = (deformatGPS currGps) - (deformatGPS gpsold)
+          cdfIntvl = GP.cdfInterval param'
+      case difft >= (fromIntegral cdfIntvl) of  -- ^ clean data update every 10 minutes
+        True -> do
+          let cdfp = GP.cdfparameter param'
+          maybecdlist <- liftIO $ cleanDataFinder cdfp chname (currGps, 600.0)
+          case maybecdlist of
+            Nothing -> error "no clean data in the given gps interval"
+            Just cdlist -> do
+              let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
+                  cdgps = fst cdgps'
+                  param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
+              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname (WD.detector w)
+              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
+              s <- liftIO $ glitchMon param'3 w
               sink s chname
+        False -> do
+          s <- liftIO $ glitchMon param' w
+          sink s chname
 
 
 glitchMon :: GP.GlitchParam
