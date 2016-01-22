@@ -1,7 +1,11 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
+import Data.Packed.Vector (subVector,vjoin,dim,fromList,toList,mapVector, Vector)
+-- import Data.List (transpose)
+-- import qualified Data.Vector.Storable as V (modify, head)
+-- import Data.Packed.Matrix (fromColumns, toRows, Matrix, mapMatrix, cols, rows)
+-- import qualified Data.Vector.Algorithms.Heap as H (sort, select)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -9,7 +13,8 @@ import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+-- import HasKAL.SpectrumUtils.Signature
+-- import HasKAL.Misc.StrictMapping (forM')
 
 main = do
   args <- getArgs
@@ -24,6 +29,7 @@ main = do
       fftLength = 1    -- seconds
       freqResol = 16   -- Hz
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
+  -- let partSec = 864 -- 1日を100分割
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_RMon.png"
       title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
@@ -47,6 +53,15 @@ main = do
       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
   oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK]
     (xlabel, "normalized noise Lv.") 0.05 title oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
+
+  -- result <- forM' [0,1..(dim dat)`div`partSec`div`(truncate fs)-1] $ \idx -> do 
+  --   let dat' = subVector (idx*partSec*(truncate fs)) (partSec*(truncate fs)) dat :: Vector Double
+  --       hf   = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat'
+  --       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf :: [(Spectrum, Spectrum)]
+  --   return $ map fst result :: IO [Spectrum]
+  -- unsafePlot3d ((1,1280),(3,960)) Linear COLZ (replicate len (xlabel, "normalized noise Lv. [/rHz]", "yield")) 
+  --   titles oFile (replicate (length quantiles) ((0,0), (0,0))) $ rayleighHist result
+
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String

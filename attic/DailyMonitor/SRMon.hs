@@ -2,7 +2,9 @@
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
 import Data.Packed.Vector (subVector)
+-- import Data.Packed.Matrix (cols, rows, toRows, fromColumns) {-- for nu hist --}
 
+-- import HasKAL.SpectrumUtils.Signature {-- for nu hist --}
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
@@ -49,6 +51,7 @@ main = do
       nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
   histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
 
+  -- histgram2dM LogZ COLZ (xlabel, "nu", "yield") title oFile ((0,0),(0,0)) $ srMonNuHist nu {-- for nu hist --}
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
