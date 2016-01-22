@@ -18,6 +18,7 @@ module HasKAL.PlotUtils.HROOT.PlotGraph3D (
   ,skyMapMX
   ,histgram2dDateM
   ,histgram2dDateMX
+  ,unsafePlot3d
 ) where
 
 import qualified Control.Monad as CM
@@ -135,6 +136,42 @@ plot3dBaseM wmap log mark xyzLabel title fname range gps (tV, fV, specM) = do
 
   HRS.runOrSave' tCan tApp fname
   HR.delete tH2d
+  HR.delete tCan
+
+unsafePlot3d :: ((Int,Int), (Int,Int)) -> LogOption -> PlotTypeOption3D -> [(String, String, String)] -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Spectrogram] -> IO ()
+unsafePlot3d ((r,rd),(c,cd)) log mark xyzLabels titles fname ranges dats = do
+  tApp <- HRS.newTApp' fname
+  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") (toEnum rd) (toEnum cd)
+  HRS.setLog' tCan log
+  HAF.setPadMargin 0.15 0.15 1 1
+
+  let idx = minimum [length xyzLabels, length titles, length ranges, length dats]
+  tH2ds <- CM.forM [0,1..idx-1] $ \idxI -> do
+    let (tV, fV, specM) = dats !! idxI
+        xyzLabel = xyzLabels !! idxI
+        title = titles !! idxI
+        range = ranges !! idxI
+    let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
+        (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
+    tH2d <- HR.newTH2D (str2cstr ("2dHist"++":"++(show idxI))) (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
+    forM' [1..xNum-1] $ \idxX -> forM' [1..yNum-1] $ \idxY ->
+      HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
+    setXYZLabel' tH2d xyzLabel
+    HR.setStats tH2d 0
+    HAF.setRangeTH2D tH2d range
+    return tH2d
+
+  case idx of
+   1 -> do
+     HR.draw (tH2ds!!0) $ str2cstr $ show mark
+   _ -> do
+     HR.divide_tvirtualpad tCan (toEnum r) (toEnum c) 0.01 0.01 0
+     CM.forM_ [1..(min idx $ r*c)] $ \lambda -> do
+        HR.cd tCan (toEnum $ lambda)
+        HR.draw (tH2ds!!(lambda-1)) $ str2cstr $ show mark
+     
+  HRS.runOrSave' tCan tApp fname
+  CM.mapM HR.delete tH2ds
   HR.delete tCan
 
 oPlotCoastLine :: IO ()

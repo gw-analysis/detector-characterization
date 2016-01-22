@@ -4,9 +4,14 @@
 module HasKAL.MonitorUtils.RayleighMon.RayleighMon (
    rayleighMon
   ,rayleighMonV
+  ,rayleighHist
 ) where
 
+import Prelude as P
+import Data.List (transpose)
 import System.IO.Unsafe (unsafePerformIO)
+import qualified Data.Packed.Vector as PV (subVector, fromList, toList, dim)
+import qualified Data.Packed.Matrix as PM (cols, rows, toRows, fromColumns)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
@@ -49,6 +54,18 @@ rayleighMonV pVals fsample stride fClust (freqV1, specV1) (tV2, freqV2, specM2) 
             theorem = gslCdfRayleighPinv pVal 1.0
             theoremV = (convert $ fromList [0.0, V.last newFV], convert $ fromList [theorem, theorem])
         return $ ((convert newFV, convert noiseLv), theoremV)
+
+rayleighHist :: [[Spectrum]] -> [Spectrogram]
+rayleighHist xss = P.zip3 (repeat freqV) (repeat (PV.fromList $ P.init bins)) yields
+  where freqV = (fst . P.head . P.head) xss
+        bins = [0,0.1..10]
+        yields = P.map (PM.fromColumns . P.map (PV.fromList . snd . histogram1d 0 0 bins . PV.toList)
+                      . PM.toRows . PM.fromColumns . (P.map snd)) . transpose $ xss
+        histogram1d xmin xmax bins input =
+          let intervals = P.zipWith (\x y ->(x, y)) (P.init bins) (P.tail bins)
+              within u x = x >= fst u && x < snd u
+           in (P.map fst intervals, P.map ((fromIntegral.P.length) . (\u -> P.filter (within u) input)) intervals)
+
 
 runningRayleighMonV :: Double -> Double -> Int -> Int -> Int -> Int -> Spectrum -> Spectrogram -> Spectrogram
 runningRayleighMonV pVal fsample stride chunck shift fClust (freqV1, specV1) (tV2, freqV2, specM2) = do
