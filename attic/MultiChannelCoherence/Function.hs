@@ -16,12 +16,12 @@ import qualified Data.Packed.Matrix as M
 import HasKAL.MathUtils.FFTW (dftRC1d)
 import HasKAL.WaveUtils (WaveData(..))
 
-multiCoherenceW :: Int -> WaveData -> [WaveData] -> (V.Vector Double, V.Vector (Complex Double), [V.Vector (Complex Double)])
+multiCoherenceW :: Int -> WaveData -> [WaveData] -> (V.Vector Double, V.Vector Double, [V.Vector (Complex Double)])
 multiCoherenceW ny yoft xioft = 
   multiCoherence ny (samplingFrequency yoft) (map samplingFrequency xioft) (gwdata yoft) (map gwdata xioft)
 
 multiCoherence :: Int -> Double -> [Double] -> V.Vector Double -> [V.Vector Double] 
-               -> (V.Vector Double, V.Vector (Complex Double), [V.Vector (Complex Double)])
+               -> (V.Vector Double, V.Vector Double, [V.Vector (Complex Double)])
 multiCoherence ny fsy fsxi yt xit = (fvec, calcCoh vSYY vSYi vDmU, coupleCoeff mSX vSYi)
   where nxi = map (\x -> truncate $ (fromIntegral ny) * x / fsy) fsxi
         nmin = minimum $ ny:nxi
@@ -38,9 +38,9 @@ multiCoherence ny fsy fsxi yt xit = (fvec, calcCoh vSYY vSYi vDmU, coupleCoeff m
 coupleCoeff :: [M.Matrix (Complex Double)] -> [V.Vector (Complex Double)] -> [V.Vector (Complex Double)]
 coupleCoeff mSX vSY = M.toRows $ M.fromColumns $ zipWith prod'MCV (map inv mSX) (map (V.map conjugate) vSY)
 
-calcCoh :: V.Vector Double -> [V.Vector (Complex Double)] -> [(V.Vector Double, M.Matrix (Complex Double))] -> V.Vector (Complex Double)
+calcCoh :: V.Vector Double -> [V.Vector (Complex Double)] -> [(V.Vector Double, M.Matrix (Complex Double))] -> V.Vector Double
 calcCoh vSYY vSY vDmU = V.map ( \idx -> coh' (vSYY V.! idx) (vSY!!idx) (vDmU!!idx) ) $ V.fromList [0..V.length vSYY - 1]
-  where coh' syy vsy (vd, mu) = ( V.sum $ V.zipWith (/) (prod'RVM vsy mu) (V.map (:+0) vd) ) / (syy:+0)
+  where coh' syy vsy (vd, mu) = ( V.sum $ V.zipWith (\x y -> (magnitude x)**2/y) (prod'RVM vsy mu) vd ) / syy
 
 -- Fourier spectrum
 fsd :: Int                         -- ^ minimum n of y(f) and xi(f)
