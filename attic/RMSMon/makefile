@@ -26,7 +26,7 @@ all:$(TARGET)
 sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
-FileFinder: ${OBJ3} ${DEP2}
+FileFinder: ${OBJ3} ${DEP1} ${DEP2}
 	-ghc --make -o $@ ${OBJ3} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
 	-ghc --make -o $@ $^ -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
