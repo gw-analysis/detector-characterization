@@ -4,7 +4,7 @@
 module HasKAL.PlotUtils.HROOT.PlotGraph (
    LogOption(Linear, LogX, LogY, LogXY)
   ,PlotTypeOption(Line, Point, LinePoint, PointLine, Dot)
-  ,ColorOpt(BLACK, RED, GREEN, BLUE, YELLOW, PINK, CYAN)
+  ,ColorOpt(WHITE, BLACK, RED, GREEN, BLUE, YELLOW, PINK, CYAN)
   ,easyPlot
   ,easyPlotX
   ,plot -- plot in file 
@@ -223,6 +223,7 @@ setXYLabel' tGra (labelX, labelY) = do
 
 color2cint :: ColorOpt -> FCT.CInt
 color2cint color
+  | color == WHITE  = 0
   | color == BLACK  = 1
   | color == RED    = 2
   | color == GREEN  = 3
