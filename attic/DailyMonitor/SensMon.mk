@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: DailySensMon.mk
 #        Author: Takahiro Yamamoto
-# Last Modified: 2015/11/13 15:15:13
+# Last Modified: 2016/01/26 12:00:01
 #******************************************#
 
 # compiler option
@@ -16,7 +16,8 @@ TARs= ${TAR1}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-DEPs= ${DEP1}
+DEP2= ./HasKAL/LineUtils/LineRemoval/rng_median.c
+DEPs= ${DEP1} ${DEP2}
 
 # link path
 ifneq (${USELIB},)
