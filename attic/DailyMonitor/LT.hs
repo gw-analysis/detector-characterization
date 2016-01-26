@@ -97,9 +97,9 @@ main = do
   oPlotV Linear Point 1 [RED, BLUE]
          (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.9),(fcenter1*1.1))) (result!!1)
  --}
-  oPlotDateV Linear Point 1 [RED,BLUE] 
+  oPlotDateV Linear [Point, Point] 1 [RED,BLUE] 
              (xlabel, "Ampltitude") 0.05 title oFile0 ((0,0),(0,0)) gps (result!!0)
-  oPlotDateV Linear Point 1 [RED,BLUE] 
+  oPlotDateV Linear [Point, Point] 1 [RED,BLUE] 
              (xlabel, "Frequency [Hz]") 0.05 title oFile1 ((0,0),((fcenter1*0.9),(fcenter1*1.1))) gps (result!!1)
 
 {--

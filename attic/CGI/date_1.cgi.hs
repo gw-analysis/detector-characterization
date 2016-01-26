@@ -103,9 +103,9 @@ process params = do
                 Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
                 Right dat' -> do
                   let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat') 0.0
-                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05
+                  oPlotV Linear [Point] 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05
                     ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
-                  oPlotV Linear Point 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
+                  oPlotV Linear [Point] 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
                     ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
                   return [pngfile1, pngfile2]
             -- return [""]
@@ -131,7 +131,7 @@ process params = do
                           True -> 1 -- データ長T<1/16s なら df=1/T
                           False -> truncate $ 16 * (fromIntegral nfft) / fs -- 16Hz に固定
                let qv = rayleighMonV [0.5, 0.9, 0.95, 0.99] fs nfft ndf snf hfs
-               oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK, GREEN, GREEN]
+               oPlotV Linear (concat $ replicate 4 [Line, LinePoint]) 1 [RED, RED, BLUE, BLUE, PINK, PINK, GREEN, GREEN]
                   ("frequency [Hz] (GPS="++gps'++")", "Normalized Noise Lv.") 0.05 ("RayleighMon: "++ch)
                  pngfile (fRange, (0,6)) (concat $ map (\(x,y)->[x,y]) qv) -- レンジ(0,6)は経験的に決めた
              {-- Student-Rayleigh Monitor --}
@@ -149,7 +149,7 @@ process params = do
                      where fmaxfs 0 = fs/2
                            fmaxfs x = min x (fs/2)
                            n = 32
-               oPlotV Linear LinePoint 1 [] ("time [s] since GPS="++gps', unitBracket "RMS" unit) 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
+               oPlotV Linear [LinePoint] 1 [] ("time [s] since GPS="++gps', unitBracket "RMS" unit) 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
                let (sens, _) = runSensMon dat fs (truncate fs)

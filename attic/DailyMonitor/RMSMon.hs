@@ -62,7 +62,7 @@ main = do
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
 
- oPlotDateV LogY LinePoint 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
+ oPlotDateV LogY [LinePoint] 1 color (xlabel, "RMS" ++unit) 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) gps rms
  return 0
 
 {-- Internal Functions --}

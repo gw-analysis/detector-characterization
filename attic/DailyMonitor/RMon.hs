@@ -1,9 +1,10 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector,vjoin,dim,fromList,toList,mapVector, Vector)
+import Data.Vector.Storable (Vector, fromList, toList)
+import qualified Data.Vector.Storable as V (slice)
 -- import Data.List (transpose)
--- import qualified Data.Vector.Storable as V (modify, head)
+-- import qualified Data.Vector.Storable as V (modify, head, length)
 -- import Data.Packed.Matrix (fromColumns, toRows, Matrix, mapMatrix, cols, rows)
 -- import qualified Data.Vector.Algorithms.Heap as H (sort, select)
 
@@ -48,14 +49,14 @@ main = do
                    (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
+  let snf = gwOnesidedPSDV (V.slice 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
       hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
-  oPlotV Linear LinePoint 1 [RED, RED, BLUE, BLUE, PINK, PINK]
+  oPlotV Linear [Line, LinePoint, Line, LinePoint, Line, LinePoint] 1 [RED, RED, BLUE, BLUE, PINK, PINK]
     (xlabel, "normalized noise Lv.") 0.05 title oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
 
-  -- result <- forM' [0,1..(dim dat)`div`partSec`div`(truncate fs)-1] $ \idx -> do 
-  --   let dat' = subVector (idx*partSec*(truncate fs)) (partSec*(truncate fs)) dat :: Vector Double
+  -- result <- forM' [0,1..(V.length dat)`div`partSec`div`(truncate fs)-1] $ \idx -> do 
+  --   let dat' = V.slice (idx*partSec*(truncate fs)) (partSec*(truncate fs)) dat :: Vector Double
   --       hf   = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat'
   --       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf :: [(Spectrum, Spectrum)]
   --   return $ map fst result :: IO [Spectrum]
