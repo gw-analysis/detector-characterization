@@ -1,13 +1,14 @@
 
 import System.Environment (getArgs)
-import qualified Data.Vector.Storable as V (length)
+import qualified Data.Vector.Storable as V (length, (!))
 
 import HasKAL.TimeUtils.Function (deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraWaveDataGet, kagraWaveDataGetC, kagraWaveDataGet0)
 import HasKAL.WaveUtils.Data (WaveData(..))
 import HasKAL.DetectorUtils.Detector (Detector(..))
-
+-- import HasKAL.DataBaseUtils.XEndEnv.Function (kagraWaveDataGet, kagraWaveDataGetC, kagraWaveDataGet0)
+import XEndEnvFunction (kagraWaveDataGet, kagraWaveDataGetC, kagraWaveDataGet0)
+ 
 main = do
   args <- getArgs
   (year, month, day) <- case length args of
@@ -49,9 +50,21 @@ main = do
   putStrLn . ("   kagraWaveDataGet0: "++) . show . stopGPSTime $ wd0
 
   putStrLn "\nList of StartGPS ~ StopGPS (kagraWaveDataGetC)"
-  mapM (\x -> putStrLn . ("   "++) $ (show $ startGPSTime x) ++  " ~ " ++ (show $ stopGPSTime x)) wdC
+  mapM (\x -> putStrLn . ("   "++) $ (show $ startGPSTime x) ++  " ~ " ++ (show $ stopGPSTime x)
+              ++ " = " ++ (show $ (fst $ stopGPSTime x) - (fst $ startGPSTime x)) ++ "   " ++ (show $ V.length $ gwdata x)
+       ) wdC
 
+  putStrLn "\nData Value"
+  print $ map (\i -> (gwdata wd)V.!i) [3000..3004]
+  print $ map (\i -> (gwdata $ head wdC)V.!i) [3000..3004]
+  print $ map (\i -> (gwdata wd0)V.!i) [3000..3004]
 
+  putStrLn ""
+  print $ map (\i -> (gwdata wd)V.!(V.length (gwdata wd) - 1 - i)) [0..4]
+  print $ map (\i -> (gwdata $ last wdC)V.!(V.length (gwdata $ last wdC) - 1 - i)) [0..4]
+  print $ map (\i -> (gwdata wd0)V.!(V.length (gwdata wd0) - 1 - i)) [0..4]
+
+  
 {-- Internal Functions --}
 show0 :: Int -> String -> String
 show0 digit number
