@@ -412,9 +412,9 @@ kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                                 xvec = snd timendat
                                 nlen = V.length xvec
                                 te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                                element =  mkWaveData D.General chname fs ts te xvec    --
-                                headNum = checkStartGPSW (fromIntegral gpsstrt) element -- ここ3行がまだおかしい
-                                endNum = checkStopGPSW (fromIntegral gpsstop) element   --
+                                element =  mkWaveData D.General chname fs ts te xvec
+                                headNum = checkStartGPSW (fromIntegral gpsstrt) element
+                                endNum = checkStopGPSW (fromIntegral gpsstop) element
                             return $ Just $ dropWaveData headNum $ takeWaveData (nlen-endNum) element
 
 
