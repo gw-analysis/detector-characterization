@@ -6,9 +6,11 @@ module HasKAL.SpectrumUtils.SpectrumUtils
 , module HasKAL.SpectrumUtils.Signature
 , gwpsd
 , gwspectrogram
+, gwspectrogramWaveData
 , gwpsdV
 , gwspectrogramV'
 , gwOnesidedPSDV
+, gwOnesidedPSDWaveData
 , gwOnesidedPSDVP
 , gwspectrogramV
 , gwspectrogramVP1
@@ -29,7 +31,7 @@ import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.Signature
 import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
-
+import HasKAL.WaveUtils (WaveData(..))
 
 {- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
@@ -138,6 +140,9 @@ gwpsdMedianAverageCoreV dat nfft fs w = do
   (fvec, fromList medianAverageSpectrum)
 
 
+gwOnesidedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
+gwOnesidedPSDWaveData fftSec w = gwOnesidedPSDV (gwdata w) (truncate $ fs * fftSec) fs
+  where fs = samplingFrequency w
 
 gwOnesidedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
 gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV Welch dat nfft fs Hann
@@ -190,6 +195,9 @@ gwOnesidedPSDWelchP dat nfft fs w = Par.runPar $ do
        | windowtype==Hann = Par.parMap (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
 
+gwspectrogramWaveData :: Double -> Double -> WaveData -> Spectrogram
+gwspectrogramWaveData overlapSec fftSec w = gwspectrogramV (truncate $ overlapSec * fs) (truncate $ fftSec * fs) fs (gwdata w)
+  where fs = samplingFrequency w
 
 gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
