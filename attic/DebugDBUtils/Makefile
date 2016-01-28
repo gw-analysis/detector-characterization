@@ -1,7 +1,7 @@
 #******************************************#
 #     File Name: Makefile
 #        Author: Takahiro Yamamoto
-# Last Modified: 2016/01/26 16:30:22
+# Last Modified: 2016/01/28 02:52:00
 #******************************************#
 
 # compiler option
@@ -29,9 +29,9 @@ endif
 # compile rule
 all: ${TARs}
 
-${TAR1}: ${TAR1}.hs ${DEPs}
+${TAR1}: ${TAR1}.hs ${DEPs} XEndEnvFunction.hs
 	-${HC} -o $@ $< ${CFLAGS} ${LDFLAGS} ${LIBS}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} -o $@ $< ${DEPs} ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 
 clean:
