@@ -51,7 +51,8 @@ main = do
 
  -- record as png file
  let oFile = year++"-"++month++"-"++day++"_FileFinder.png"
- plotDateV Linear Point 1 BLUE ("GPS time[s]", "available flag") 0.05 "" oFile ((gpsstartd,gpsendd),(0.5,1.5)) gpsstart (gpssvec, flagvec)
+ let xlabel = "Date: "++year++"/"++month :: String
+ plotDateV Linear Point 1 BLUE (xlabel, "available flag") 0.05 "" oFile ((gpsstartd,gpsendd),(0.5,1.5)) 0 (gpssvec, flagvec)
 
 -- print $ take 10 gpslist
  return 0
