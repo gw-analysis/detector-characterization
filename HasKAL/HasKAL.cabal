@@ -182,6 +182,7 @@ library
     -- WaveUtils --
     HasKAL.WaveUtils,
     HasKAL.WaveUtils.Data,
+    HasKAL.WaveUtils.Function,
     HasKAL.WaveUtils.Signature,
     -- WebUtils --
     HasKAL.WebUtils,
