@@ -17,8 +17,10 @@ module XEndEnvFunction
 , kagraDataFindCore
 , kagraDataPointCore
 , kagraWaveDataGet
+, kagraWaveDataGetOld
 , kagraWaveDataGetC
 , kagraWaveDataGet0
+, kagraWaveDataGet0Old
 )
 where
 
@@ -67,6 +69,7 @@ import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature (GPSTIME, Date, LocalTime)
 import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData, dropWaveData, takeWaveData)
+import HasKAL.WaveUtils.Function (catWaveData, catWaveData0)
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -190,8 +193,12 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         return $ fromJust maybex)
 
 
-kagraWaveDataGet :: Int -> Int -> String -> D.Detector -> IO (Maybe WaveData)
-kagraWaveDataGet gpsstrt duration chname detector = runMaybeT $ MaybeT $ do
+kagraWaveDataGet :: Int -> Int -> String -> IO (Maybe WaveData)
+kagraWaveDataGet gpsstrt duration chname 
+  = liftM (liftM catWaveData) $ kagraWaveDataGetC gpsstrt duration chname
+
+kagraWaveDataGetOld :: Int -> Int -> String -> D.Detector -> IO (Maybe WaveData)
+kagraWaveDataGetOld gpsstrt duration chname detector = runMaybeT $ MaybeT $ do
   flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
   case flist of
     Nothing -> return Nothing
@@ -339,7 +346,6 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         endNum = checkStopGPSW (fromIntegral gpsstop) element
                      in dropWaveData headNum $ takeWaveData (nlen-endNum) element
 
-
 kagraDataGet0 :: Int -> Int -> String -> IO (Maybe (GPSTIME,V.Vector Double))
 kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
   tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
@@ -371,9 +377,12 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                             return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) 
                               $ zeropadding fs cdata
 
-
 kagraWaveDataGet0 :: Int -> Int -> String -> IO (Maybe WaveData)
-kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
+kagraWaveDataGet0 gpsstrt duration chname 
+  = liftM (liftM catWaveData0) $ kagraWaveDataGetC gpsstrt duration chname
+
+kagraWaveDataGet0Old :: Int -> Int -> String -> IO (Maybe WaveData)
+kagraWaveDataGet0Old gpsstrt duration chname = runMaybeT $ MaybeT $ do
   tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
   case tf of
     Nothing -> return Nothing
