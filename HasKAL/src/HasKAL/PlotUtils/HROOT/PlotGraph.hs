@@ -34,7 +34,7 @@ import qualified Foreign.Storable as FS
 import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
 import Data.Packed.Vector
-import Data.Vector.Storable (unsafeToForeignPtr0)
+import Data.Vector.Storable as V (unsafeToForeignPtr0, minimum, maximum, concat)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.ForeignPtr (withForeignPtr, ForeignPtr)
 
@@ -129,11 +129,15 @@ plotBase multi log marks lineWidth colors xyLables labelSize titles fname ranges
 
 -- intermediate array: ForeignPtr
 plotBaseV :: MultiPlot -> LogOption -> [PlotTypeOption] -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [Spectrum] -> IO ()
-plotBaseV multi log marks lineWidth colors xyLables labelSize titles fname ranges gps dats = do
+plotBaseV multi log marks' lineWidth colors' xyLables labelSize titles fname ranges gps dats' = do
   tApp <- HRS.newTApp' fname
   tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
   HAF.setGrid tCan
   HAF.setPadMargin 0.15 1 1 1
+
+  let (marks, colors, dats) = case (length dats' > 1, multi) of
+                               (True, Over) -> (Dot:marks', WHITE:colors', addEdgeData (ranges!!0) dats')
+                               (_, _) -> (marks', colors', dats')
 
   tGras <- CM.forM dats $ \(freqV, specV) -> do 
     let (freqFPtr, idxF) = unsafeToForeignPtr0 $ (mapVector realToFrac freqV :: Vector FCT.CDouble)
@@ -200,6 +204,16 @@ plotBaseV' multi log marks lineWidth colors xyLables labelSize titles fname rang
   CM.mapM HR.delete tGras
   HR.delete tCan
 
+
+
+{-- helper function for setting range in overplot--}
+addEdgeData :: ((Double, Double),(Double, Double)) -> [(Vector Double, Vector Double)] -> [(Vector Double, Vector Double)]
+addEdgeData ((xmin, xmax),(ymin,ymax)) dats
+  | and [xmin==xmax, ymin==ymax] = (fromList [V.minimum xv, V.maximum xv], fromList [V.minimum yv, V.maximum yv]) : dats
+  | xmin==xmax                   = (fromList [V.minimum xv, V.maximum xv], fromList [ymin,ymax]) : dats
+  | ymin==ymax                   = (fromList [xmin, xmax], fromList [V.minimum yv, V.maximum yv]) : dats
+  | otherwise                    = (fromList [xmin,xmax], fromList [ymin,ymax]) : dats
+  where (xv, yv) = (\(a1,a2) -> (V.concat a1, V.concat a2)) $ unzip dats
 
 
 {--  Supplementary Functions for TGraph --}

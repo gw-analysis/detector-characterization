@@ -14,4 +14,4 @@ data LogOption = Linear | LogX | LogY | LogZ | LogXY | LogXZ | LogYZ | LogXYZ de
 data MultiPlot = Over | Divide deriving (Eq)
 
 data PlotTypeOption3D = COLZ | CONTZ | LEGO2Z | AITOFF | MERCATOR deriving (Eq, Show)
-data ColorOpt = WHITE | BLACK | RED | GREEN | BLUE | YELLOW | PINK | CYAN deriving (Eq, Ord)
+data ColorOpt = WHITE | BLACK | RED | GREEN | BLUE | YELLOW | PINK | CYAN deriving (Eq, Ord, Show, Read)
