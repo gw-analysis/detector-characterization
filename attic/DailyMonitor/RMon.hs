@@ -1,21 +1,13 @@
 
-import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Vector.Storable (Vector, fromList, toList)
-import qualified Data.Vector.Storable as V (slice)
--- import Data.List (transpose)
--- import qualified Data.Vector.Storable as V (modify, head, length)
--- import Data.Packed.Matrix (fromColumns, toRows, Matrix, mapMatrix, cols, rows)
--- import qualified Data.Vector.Algorithms.Heap as H (sort, select)
 
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
-import HasKAL.MonitorUtils.RayleighMon.RayleighMon
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonV)
 import HasKAL.PlotUtils.HROOT.PlotGraph
--- import HasKAL.SpectrumUtils.Signature
--- import HasKAL.Misc.StrictMapping (forM')
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (getMaximumChunck)
 
 main = do
   args <- getArgs
@@ -30,38 +22,27 @@ main = do
       fftLength = 1    -- seconds
       freqResol = 16   -- Hz
       quantiles  = [0.50, 0.95, 0.99] -- 0 < quantile < 1
-  -- let partSec = 864 -- 1日を100分割
       -- for Plot
+      colors = [RED, BLUE, PINK]
       oFile = ch++"-"++year++"-"++month++"-"++day++"_RMon.png"
-      title = "RayleighMon(RED=0.5, BLUE=0.95, PINK=0.99): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
+      title w = "#splitline{RayleighMon: "++ch++")}{("++x++y++")}"
+        where x = concat $ zipWith (\c q -> (show c)++"="++(show q)++", ") colors quantiles
+              y = " GPS: "++(show . fst $ startGPSTime w)++" ~ "++(show . fst $ stopGPSTime w)
 
   {-- read data --}
-  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
-  let file = case mbFiles of
-              Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              _ -> head $ fromJust mbFiles
-  mbDat <- kagraDataGet gps duration ch
-  mbFs <- getSamplingFrequency file ch
-  let (dat, fs) = case (mbDat, mbFs) of
-                   (Just a, Just b) -> (a, b)
-                   (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
-                   (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
+  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
+  let wd = case mbWd of
+            Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
+            Just x -> getMaximumChunck x
 
   {-- main --}
-  let snf = gwOnesidedPSDV (V.slice 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
-      hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
+  let fs = samplingFrequency wd
+  let snf = gwOnesidedPSDWaveData fftLength wd
+      hf = gwspectrogramWaveData 0 fftLength wd
       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
-  oPlotV Linear [Line, LinePoint, Line, LinePoint, Line, LinePoint] 1 [RED, RED, BLUE, BLUE, PINK, PINK]
-    (xlabel, "normalized noise Lv.") 0.05 title oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
-
-  -- result <- forM' [0,1..(V.length dat)`div`partSec`div`(truncate fs)-1] $ \idx -> do 
-  --   let dat' = V.slice (idx*partSec*(truncate fs)) (partSec*(truncate fs)) dat :: Vector Double
-  --       hf   = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat'
-  --       result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf :: [(Spectrum, Spectrum)]
-  --   return $ map fst result :: IO [Spectrum]
-  -- unsafePlot3d ((1,1280),(3,960)) Linear COLZ (replicate len (xlabel, "normalized noise Lv. [/rHz]", "yield")) 
-  --   titles oFile (replicate (length quantiles) ((0,0), (0,0))) $ rayleighHist result
+  oPlotV Linear (concat $ replicate (length colors) [LinePoint, Line]) 1 (concat $ map (replicate 2) colors)
+    (xlabel, "normalized noise Lv.") 0.05 (title wd) oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
 
 
 {-- Internal Functions --}
@@ -70,3 +51,4 @@ show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
   | otherwise   = number
   where len = length number
+

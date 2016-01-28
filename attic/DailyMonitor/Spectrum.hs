@@ -1,15 +1,16 @@
 
-import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
+import qualified Data.Vector.Storable as V (length)
 import Numeric (showGFloat)
+import System.Environment (getArgs)
 
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
-import HasKAL.SpectrumUtils.Function (mapSpectrum)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraDataFind)
+import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData)
+import HasKAL.SpectrumUtils.Function (mapSpectrum)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (getMaximumChunck)
 
 main = do
   args <- getArgs
@@ -24,29 +25,23 @@ main = do
       fftLength = 120  -- seconds
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrum.png"
-      title = "Spectrum " ++"(df="++(showGFloat (Just 4) (1/fftLength) "")++"): " ++ ch
       xlabel = "frequency [Hz] at "++year++"/"++month++"/"++day
+      title w = "#splitline{Spectrum: "++ch++" (df="++(showGFloat (Just 3) (1/fftLength) ", ")++x++")}{"++y++"}"
+        where x = "AVG= "++(show $ div (V.length $ gwdata w) (truncate $ fftLength * samplingFrequency w) )
+              y = "GPS: "++(show . fst $ startGPSTime w)++" ~ "++(show . fst $ stopGPSTime w)
 
   {-- read data --}
+  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch 
   mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
-  let file = case mbFiles of
-              Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              Just x -> head $ x
-  mbDat <- kagraDataGet gps duration ch
-  mbFs <- getSamplingFrequency file ch
-  let (dat, fs) = case (mbDat, mbFs) of
-                   (Just a, Just b) -> (a, b)
-                   (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
-                   (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
-  mbUnit <- getUnitY file ch
-  let unit = case mbUnit of
-              Just x  -> "["++x++"/rHz]"
-              Nothing -> "[/rHz]"
+  let (wd, file) = case (mbWd, mbFiles) of
+                    (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
+                    (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
+                    (Just x, Just y) -> (getMaximumChunck x, head y)
+  unit <- safeGetUnitY file ch "" "/rHz"
 
   {-- main --}
-  let snf = gwOnesidedPSDV dat (truncate $ fftLength * fs) fs
-  plotV LogXY Line 1 RED (xlabel, unit) 0.05 title oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
-
+  let snf = gwOnesidedPSDWaveData fftLength wd
+  plotV LogXY Line 1 RED (xlabel, unit) 0.05 (title wd) oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
