@@ -4,6 +4,7 @@
 module HasKAL.MonitorUtils.RayleighMon.RayleighMon (
    rayleighMon
   ,rayleighMonV
+  ,rayleighMonWaveData
   ,rayleighHist
 ) where
 
@@ -18,22 +19,29 @@ import qualified Control.Monad as CM (forM)
 import qualified Data.Vector.Algorithms.Heap as H (sort, select)
 
 import HasKAL.Misc.UMatrixMapping
-import HasKAL.SpectrumUtils.Signature
+import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.Function
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV, gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions (gslCdfRayleighPinv)
+import HasKAL.WaveUtils.Data (WaveData(..))
 
 {-- Expose Functions --}
 -- | rayleigh monitor
-rayleighMon :: [Double] -- ^ p values
-            -> Double -- ^ sampling rate [Hz]
-            -> Int -- ^ stride 
-            -> Int -- ^ df
-            -> [(Double, Double)] -- ^ averaged spectrum Sn(f)
-            -> [(Double, Double, Double)] -- ^ spectrogram h(t, f)
-            -> [([(Double, Double)], [(Double, Double)])]
-rayleighMon pVals fsample stride fClust snf hfs = fromSpectrumPair $
-  rayleighMonV pVals fsample stride fClust (toSpectrum snf) (toSpectrogram hfs)
-    where fromSpectrumPair xs = unsafePerformIO $ CM.forM xs $ \(x,y) -> return $ (fromSpectrum x, fromSpectrum y)
+rayleighMon :: [Double] -> Double -> Double -> Double -> [Double] -> [Double] -> [([(Double, Double)], [(Double, Double)])]
+rayleighMon pVals fs fftSec df snt ht = fromSpectrumPair $ rayleighMonV pVals fs nfft ndf snf hfs
+    where nfft = truncate (fftSec * fs)
+          ndf = truncate (df * fftSec)
+          snf = gwOnesidedPSDV (PV.fromList snt) nfft fs
+          hfs = gwspectrogramV 0 nfft fs $ PV.fromList ht
+          fromSpectrumPair xs = unsafePerformIO $ CM.forM xs $ \(x,y) -> return $ (fromSpectrum x, fromSpectrum y)
+
+rayleighMonWaveData :: [Double] -> Double -> Double -> WaveData -> WaveData -> [(Spectrum, Spectrum)]
+rayleighMonWaveData pVals fftSec df snt ht = rayleighMonV pVals fs nfft ndf snf hfs
+  where fs = samplingFrequency snt
+        nfft = truncate (fftSec * fs)
+        ndf = truncate (df * fftSec)
+        snf = gwOnesidedPSDWaveData fftSec snt
+        hfs = gwspectrogramWaveData 0 fftSec ht
 
 -- | rayleigh monitor (vector I/O)
 rayleighMonV :: [Double] -- ^ pValues

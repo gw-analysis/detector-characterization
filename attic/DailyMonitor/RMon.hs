@@ -2,7 +2,7 @@
 import System.Environment (getArgs)
 
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
-import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonV)
+import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonWaveData)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
@@ -37,10 +37,7 @@ main = do
             Just x -> getMaximumChunck x
 
   {-- main --}
-  let fs = samplingFrequency wd
-  let snf = gwOnesidedPSDWaveData fftLength wd
-      hf = gwspectrogramWaveData 0 fftLength wd
-      result = rayleighMonV quantiles fs (truncate $ fftLength * fs) (truncate $ freqResol/fftLength) snf hf
+  let result = rayleighMonWaveData quantiles fftLength freqResol wd wd
   oPlotV Linear (concat $ replicate (length colors) [LinePoint, Line]) 1 (concat $ map (replicate 2) colors)
     (xlabel, "normalized noise Lv.") 0.05 (title wd) oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
 
