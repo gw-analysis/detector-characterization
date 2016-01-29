@@ -4,7 +4,6 @@ import System.Environment (getArgs)
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
 import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonWaveData)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WaveUtils.Data (WaveData(..))
 import HasKAL.WaveUtils.Function (getMaximumChunck)

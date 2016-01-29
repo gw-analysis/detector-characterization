@@ -6,7 +6,6 @@ import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon (studentRayleighMonWaveData)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 import HasKAL.SpectrumUtils.Function (catSpectrogramT0)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.TimeUtils.Function (diffGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WaveUtils.Data (WaveData(..))

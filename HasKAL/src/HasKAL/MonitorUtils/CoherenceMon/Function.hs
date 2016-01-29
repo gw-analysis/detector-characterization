@@ -3,6 +3,7 @@
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
   hBruco,
+  coherenceMonW,
   coherenceMon,
   multiCoherenceW,
   multiCoherence
@@ -32,6 +33,9 @@ hBruco sec (fsx, xt, xch) yts = zip fvec result
         trd' (_,_,c) = c
 
 -- | frequency based coherency
+coherenceMonW :: Double -> WaveData -> WaveData -> Spectrum
+coherenceMonW fftSec w1 w2 = coherenceMon fftSec (samplingFrequency w1) (samplingFrequency w2) (gwdata w1) (gwdata w2)
+
 coherenceMon :: Double              -- ^ length of FFT [s]
              -> Double           -- ^ sampling of x(t): fs
              -> Double           -- ^ sampling of y(t): fs

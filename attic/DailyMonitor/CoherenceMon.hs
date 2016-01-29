@@ -1,14 +1,12 @@
 
-import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
 
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwspectrogramV)
-import HasKAL.MonitorUtils.CoherenceMon.Function
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMonW)
 import HasKAL.PlotUtils.HROOT.PlotGraph
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (getMaximumChunck)
 
 main = do
   args <- getArgs
@@ -27,23 +25,15 @@ main = do
       xlabel = "Date: "++year++"/"++month++"/"++day
 
   {-- read data --}
-  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch1
-  let file = case mbFiles of
-              Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              _ -> head $ fromJust mbFiles
-  mbDat1 <- kagraDataGet gps duration ch1
-  mbFs1 <- getSamplingFrequency file ch1
-  mbDat2 <- kagraDataGet gps duration ch2
-  mbFs2 <- getSamplingFrequency file ch2
-  let (dat1, fs1, dat2, fs2) = case (mbDat1, mbFs1, mbDat2, mbFs2) of
-                   (Just a, Just b, Just c, Just d) -> (a, b, c, d)
-                   (Nothing, _, _, _) -> error $ "Can't read data: "++ch1++"-"++year++"/"++month++"/"++day
-                   (_, Nothing, _, _) -> error $ "Can't read sampling frequency: "++ch1++"-"++year++"/"++month++"/"++day
-                   (_, _, Nothing, _) -> error $ "Can't read data: "++ch2++"-"++year++"/"++month++"/"++day
-                   (_, _, _, Nothing) -> error $ "Can't read sampling frequency: "++ch2++"-"++year++"/"++month++"/"++day
+  mbWd1 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch1
+  mbWd2 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch2
+  let (wd1, wd2) = case (mbWd1, mbWd2) of
+                    (Just x, Just y) -> (getMaximumChunck x, getMaximumChunck y)
+                    (Nothing, _) -> error $ "Can't read data: "++ch1++"-"++year++"/"++month++"/"++day
+                    (_, Nothing) -> error $ "Can't read data: "++ch2++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let coh = coherenceMon fftLength fs1 fs2 dat1 dat2
+  let coh = coherenceMonW fftLength wd1 wd2
   plotV Linear Line 1 BLUE (xlabel, "|coh(f)|^2") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
 
 {-- Internal Functions --}
