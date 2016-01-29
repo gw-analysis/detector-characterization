@@ -17,6 +17,7 @@ module HasKAL.SpectrumUtils.Function
 , normalizeSpectrogram
 , mapSpectrum
 , mapSpectrogram
+, catSpectrogramT0
 , readSpectrum
 , writeSpectrum
 , readSpectrogram
@@ -29,6 +30,7 @@ import Data.Packed.ST
 import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.Signature
 import Data.List (nub)
+import qualified Data.Vector.Storable as V (map, length)
 import Data.Packed.Vector (zipVectorWith, mapVector)
 import Data.Packed.Matrix (mapMatrix)
 import HasKAL.Misc.SMatrixMapping (mapCols1)
@@ -102,6 +104,21 @@ mapSpectrum f (xv, yv) = (xv, mapVector f yv)
 mapSpectrogram :: (Double -> Double) -> Spectrogram -> Spectrogram
 mapSpectrogram f (tv, fv, xm) = (tv, fv, mapMatrix f xm)
 
+-- concat
+catSpectrogramT0 :: Double -> Double -> [Int] -> [Spectrogram] -> Spectrogram
+catSpectrogramT0 x dt ns ss1 = (t2, f1, fromBlocks [m2])
+  where l1 = sum $ map (\(t, _, _) -> V.length t) ss1
+        t2 = V.map ((*dt) . fromIntegral) $ fromList [0 .. l1 + sum ns - 1]
+        f1 = case length ff of
+              0 -> fromList []
+              _ -> (\(_, f, _) -> f) $ head ff
+          where ff = filter (\(_,f,_) -> V.length f/=0) ss1
+        m0 = map (\n -> buildMatrix (V.length f1) n $ \(i, j) -> x) ns
+        m1 = map (\(_, _, m) -> m) ss1
+        m2 = filter (\m -> rows m /= 0) $ merge m0 m1
+          where merge [] ys = ys
+                merge xs [] = xs
+                merge (x:xs) ys = x : merge ys xs
 
 -- text IO
 readSpectrum :: FilePath -> IO Spectrum

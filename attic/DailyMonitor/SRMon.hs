@@ -1,17 +1,16 @@
 
-import Data.Maybe (fromJust)
+
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
--- import Data.Packed.Matrix (cols, rows, toRows, fromColumns) {-- for nu hist --}
 
--- import HasKAL.SpectrumUtils.Signature {-- for nu hist --}
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.XEndEnv.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
-import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.MonitorUtils.SRMon.StudentRayleighMon (studentRayleighMonWaveData)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
-
+import HasKAL.SpectrumUtils.Function (catSpectrogramT0)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
+import HasKAL.TimeUtils.Function (diffGPS, deformatGPS)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (getMaximumChunck)
 
 main = do
   args <- getArgs
@@ -30,28 +29,20 @@ main = do
       quantile  = 0.99 -- 0 < quantile < 1
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_SRMon.png"
-      title = "StudentRayleighMon: " ++ ch
+      title = "StudentRayleighMon: " ++ ch ++ " (dt= "++(show srmLength)++"s, df= "++(show freqResol)++"Hz)"
       xlabel = "Date: "++year++"/"++month
 
   {-- read data --}
-  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
-  let file = case mbFiles of
-              Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              _ -> head $ fromJust mbFiles
-  mbDat <- kagraDataGet gps duration ch
-  mbFs <- getSamplingFrequency file ch
-  let (dat, fs) = case (mbDat, mbFs) of
-                   (Just a, Just b) -> (a, b)
-                   (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
-                   (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
+  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
+  let wd = case mbWd of
+            Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
+            Just x -> x
 
   {-- main --}
-  let snf = gwOnesidedPSDV (subVector 0 (truncate $ fftLength * fs * 1024) dat) (truncate $ fftLength * fs) fs
-      hf  = gwspectrogramV 0 (truncate $ fftLength * fs) fs dat
-      nu = studentRayleighMonV (QUANT quantile) fs (truncate $ fftLength * fs) srmLength timeShift (truncate $ freqResol/fftLength) snf hf
-  histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps nu
+  let nu = map (studentRayleighMonWaveData quantile fftLength srmLength timeShift freqResol (getMaximumChunck wd)) wd
+      n0 = nblocks timeShift gps duration wd
+  histgram2dDateM Linear COLZ (xlabel, "frequency [Hz]", "nu") title oFile ((0,0),(0,0)) gps $ catSpectrogramT0 0 timeShift n0 nu
 
-  -- histgram2dM LogZ COLZ (xlabel, "nu", "yield") title oFile ((0,0),(0,0)) $ srMonNuHist nu {-- for nu hist --}
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -60,3 +51,9 @@ show0 digit number
   | otherwise   = number
   where len = length number
 
+nblocks :: Double -> Int -> Int -> [WaveData] -> [Int]
+nblocks dt gps duration [] = [ceiling . (/dt) . fromIntegral $ duration]
+nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGPS) ss
+  where ss = (startGPSTime $ head ws, (gps,0))
+             : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
+             ++ [((gps+duration, 0), stopGPSTime $ last ws)]

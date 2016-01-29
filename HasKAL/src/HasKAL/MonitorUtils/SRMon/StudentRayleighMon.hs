@@ -4,6 +4,7 @@
 module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
    FitMethod(LSM, MLE, QUANT)
   ,studentRayleighMon
+  ,studentRayleighMonWaveData
   ,studentRayleighMonV
   ,srMonNuHist
 ) where
@@ -22,19 +23,28 @@ import HasKAL.MonitorUtils.SRMon.Signature
 import HasKAL.MonitorUtils.SRMon.StudentRayleighFunctions
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV, gwOnesidedPSDWaveData, gwspectrogramWaveData)
+import HasKAL.WaveUtils.Data (WaveData(..))
 
 {-- Expose Functions --}
-studentRayleighMon :: FitMethod
-                   -> Double -- ^ sampling rate [Hz]
-                   -> Int -- ^ stride
-                   -> Int -- ^ chunck size
-                   -> Int -- ^ time shift
-                   -> Int -- ^ df
-                   -> [(Double, Double)] -- ^ averaged spectrum Sn(f)
-                   -> [(Double, Double, Double)] -- ^ spectrogram h(t, f)
-                   -> [(Double, Double, Double)] -- ^ nu(t, f)
-studentRayleighMon method fsample stride chunck shift clusteringF snf hfs = plotFormatedSpectogram $
-  studentRayleighMonV method fsample stride chunck shift clusteringF (toSpectrum snf) (toSpectrogram hfs)
+studentRayleighMon :: Double -> Double -> Double -> Double -> Double -> Double -> [Double] -> [Double] -> [(Double, Double, Double)]
+studentRayleighMon quantile fs fftSec chunkT shiftT df snt ht
+  = plotFormatedSpectogram $ studentRayleighMonV (QUANT quantile) fs nfft (t2c chunkT) (t2c shiftT) ndf snf hfs
+  where nfft = truncate (fftSec * fs)
+        ndf = truncate (df * fftSec)
+        snf = gwOnesidedPSDV (PV.fromList snt) nfft fs
+        hfs = gwspectrogramV 0 nfft fs $ PV.fromList ht
+        t2c x = truncate (x / fftSec)
+
+studentRayleighMonWaveData :: Double -> Double -> Double -> Double -> Double -> WaveData -> WaveData -> Spectrogram
+studentRayleighMonWaveData quantile fftSec chunkT shiftT df snt ht
+  = studentRayleighMonV (QUANT quantile) fs nfft (t2c chunkT) (t2c shiftT) ndf snf hfs
+  where fs = samplingFrequency snt
+        nfft = truncate (fftSec * fs)
+        ndf = truncate (df * fftSec)
+        snf = gwOnesidedPSDWaveData fftSec snt
+        hfs = gwspectrogramWaveData 0 fftSec ht
+        t2c x = truncate (x / fftSec)
 
 studentRayleighMonV :: FitMethod 
                     -> Double -- ^ sampling rate [Hz]
