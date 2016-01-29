@@ -67,6 +67,7 @@ import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature (GPSTIME, Date, LocalTime)
 import HasKAL.WaveUtils.Data (WaveData(..),  mkWaveData, dropWaveData, takeWaveData)
+import HasKAL.WaveUtils.Function (catWaveData, catWaveData0)
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -190,31 +191,8 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
                         return $ fromJust maybex)
 
 
-kagraWaveDataGet :: Int -> Int -> String -> D.Detector -> IO (Maybe WaveData)
-kagraWaveDataGet gpsstrt duration chname detector = runMaybeT $ MaybeT $ do
-  flist <- kagraDataFind (fromIntegral gpsstrt) (fromIntegral duration) chname
-  case flist of
-    Nothing -> return Nothing
-    Just x -> do
-      let headfile = head x
-      getSamplingFrequency headfile chname >>= \maybefs ->
-        case maybefs of
-          Nothing -> return Nothing
-          Just fs ->
-            getGPSTime headfile >>= \maybegps ->
-              case maybegps of
-                Nothing -> return Nothing
-                Just (gpstimeSec, gpstimeNano, dt) -> do
-                  let headNum = if (fromIntegral gpsstrt - gpstimeSec) <= 0
-                                  then 0
-                                  else floor $ fromIntegral (fromIntegral gpsstrt - gpstimeSec) * fs
-                      nduration = floor $ fromIntegral duration * fs
-                  DT.sequence $ Just $ liftM
-                    (mkWaveData detector chname fs (gpsstrt, 0) (gpsstrt+duration, 0)
-                      . V.force . (V.slice headNum nduration) . V.concat)
-                        $ forM x (\y -> do
-                            maybex <- readFrameV chname y
-                            return $ fromJust maybex)
+kagraWaveDataGet :: Int -> Int -> String -> IO (Maybe WaveData)
+kagraWaveDataGet gpsstrt duration chname = liftM (liftM catWaveData) $ kagraWaveDataGetC gpsstrt duration chname
 
 
 kagraDataGet' :: Int -> Int -> String -> IO (Maybe (V.Vector CDouble))
@@ -284,7 +262,7 @@ kagraWaveDataGetC gpsstrt duration chname = runMaybeT $ MaybeT $ do
                       timendat = consecutive (readFrameV chname) x nInd
                       gpsstop = fromIntegral gpsstrt + fromIntegral duration
                   return $ Just $ for timendat $ \y->
-                    let ts = fst y
+                    let ts = (fst $ fst y, 0)
                         xvec = snd y
                         nlen = V.length xvec
                         te' = deformatGPS ts + fromIntegral nlen/fs
@@ -328,43 +306,7 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
 
 
 kagraWaveDataGet0 :: Int -> Int -> String -> IO (Maybe WaveData)
-kagraWaveDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
-  tf <- kagraDataFind' (fromIntegral gpsstrt) (fromIntegral duration) chname
-  case tf of
-    Nothing -> return Nothing
-    Just x -> do
-      let headfile = snd . head $ x
-      getSamplingFrequency headfile chname >>= \maybefs ->
-        case maybefs of
-          Nothing -> return Nothing
-          Just fs ->
-            getGPSTime headfile >>= \maybegps ->
-              case maybegps of
-                Nothing -> return Nothing
-                Just (gpstimeSec, gpstimeNano, dt) -> do
-                  let gpsstop = fromIntegral gpsstrt + fromIntegral duration
-                      nInd = nConsecutive $ (fst . unzip) x
-                      cdata = consecutive (readFrameV chname) x nInd
-                  case length cdata of
-                    0 -> return Nothing
-                    1 -> do let timendat = head cdata
-                                ts = fst timendat
-                                xvec = snd timendat
-                                nlen = V.length xvec
-                                te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                                element =  mkWaveData D.General chname fs ts te xvec
-                                headNum = checkStartGPSW (fromIntegral gpsstrt) element
-                                endNum = checkStopGPSW (fromIntegral gpsstop) element
-                            return $ Just $ dropWaveData headNum $ takeWaveData (nlen-endNum) element
-                    _ -> do let timendat = zeropadding fs cdata
-                                ts = fst timendat
-                                xvec = snd timendat
-                                nlen = V.length xvec
-                                te = formatGPS (deformatGPS ts + fromIntegral nlen/fs)
-                                element =  mkWaveData D.General chname fs ts te xvec
-                                headNum = checkStartGPSW (fromIntegral gpsstrt) element
-                                endNum = checkStopGPSW (fromIntegral gpsstop) element
-                            return $ Just $ dropWaveData headNum $ takeWaveData (nlen-endNum) element
+kagraWaveDataGet0 gpsstrt duration chname = liftM (liftM (catWaveData0 0)) $ kagraWaveDataGetC gpsstrt duration chname
 
 
 
@@ -400,11 +342,12 @@ checkStartGPSW t0 wav = let t1 = deformatGPS $ startGPSTime wav :: Double
 
 zeropadding :: Double -> [(GPSTIME, V.Vector Double)] -> (GPSTIME, V.Vector Double)
 zeropadding fs gpsnv =
-  let x = [(deformatGPS gps, deformatGPS gps + fromIntegral (V.length v-1)/fs)|(gps, v)<-gpsnv]
+  let x = [(deformatGPS gps, deformatGPS gps + fromIntegral (V.length v)/fs)|(gps, v)<-gpsnv]
       nx= length x
       n0pad = flip map [1, 2..(nx-1)] $ \i-> floor $ (fst (x!!i) - snd (x!!(i-1)))*fs
       v0pad = flip map n0pad $ \x-> V.fromList (replicate x 0.0)
-      zeroPaddedV = V.concat $ interleave (snd (unzip gpsnv)) v0pad
+      gpsnv' = (snd $ gpsnv!!0) : (flip map [1, 2..(nx-1)] $ \i -> V.drop (negate (n0pad!!(i-1))) (snd $ gpsnv!!i))
+      zeroPaddedV = V.concat $ interleave gpsnv' v0pad
    in (formatGPS (fst (head x)), zeroPaddedV)
 
 
@@ -440,7 +383,7 @@ nConsecutive x =
   let ind = findConsecutiveInd x
    in case (ind==[0]) of
         True -> [length x]
-        False-> head ind : zipWith (-) (tail ind) (init ind)
+        False-> head ind : zipWith (-) (tail ind) (init ind) ++ [length x - last ind]
 
 
 for = flip map

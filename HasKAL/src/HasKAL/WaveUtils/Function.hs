@@ -19,14 +19,14 @@ import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData, dropWaveData)
 
 catWaveData :: [WaveData] -> WaveData
 catWaveData ws = mkWaveData (detector w) (dataType w) (samplingFrequency w) (startGPSTime w) endGPS (gwdata w)
-  where w = foldl1' (mergeWaveDataCore False) ws
+  where w = foldl1' (mergeWaveDataCore False 0) ws
         endGPS = addGPS (startGPSTime w) . formatGPS . (/(samplingFrequency w)) . fromIntegral . V.length $ gwdata w
 
-catWaveData0 :: [WaveData] -> WaveData
-catWaveData0 = foldl1' mergeWaveData0
+catWaveData0 :: Double -> [WaveData] -> WaveData
+catWaveData0 x ws = foldl1' (mergeWaveData0 x) ws
 
-mergeWaveData0 :: WaveData -> WaveData -> WaveData
-mergeWaveData0 w1 w2 = mergeWaveDataCore True w1 w2 
+mergeWaveData0 :: Double -> WaveData -> WaveData -> WaveData
+mergeWaveData0 x w1 w2 = mergeWaveDataCore True x w1 w2 
 
 waveData2TimeSeries :: GPSTIME -> WaveData -> (Vector Double, Vector Double)
 waveData2TimeSeries stdGPS w = (tv, gwdata w)
@@ -37,10 +37,10 @@ waveData2TimeSeries stdGPS w = (tv, gwdata w)
 mergeOverlapWaveDataC :: [WaveData] -> [WaveData]
 mergeOverlapWaveDataC (w1:[])     = [w1]
 mergeOverlapWaveDataC (w1:w2:[])
-  | chkOverlap w1 w2 == True  = [mergeWaveData0 w1 w2]
+  | chkOverlap w1 w2 == True  = [mergeWaveData0 0 w1 w2]
   | chkOverlap w1 w2 == False = [w1, w2]
 mergeOverlapWaveDataC (w1:w2:ws)
-  | chkOverlap w1 w2 == True  = mergeOverlapWaveDataC $ (mergeWaveData0 w1 w2):ws
+  | chkOverlap w1 w2 == True  = mergeOverlapWaveDataC $ (mergeWaveData0 0 w1 w2):ws
   | chkOverlap w1 w2 == False = w1 : mergeOverlapWaveDataC (w2:ws)
 
 
@@ -50,14 +50,14 @@ getMaximumChunck ws = ws!!maxIdx
 
 
 {-- Internal Function --}
-mergeWaveDataCore :: Bool -> WaveData -> WaveData -> WaveData
-mergeWaveDataCore flg w1 w2
+mergeWaveDataCore :: Bool -> Double -> WaveData -> WaveData -> WaveData
+mergeWaveDataCore flg x w1 w2
   | chkWD w1 w2 == False = w1
   | chkWD w1 w2 == True = mkWaveData (detector w1) (dataType w1) fs1 (startGPSTime w1) (stopGPSTime w2) dat
   where fs1 = samplingFrequency w1
         nOverlap = floor . (*fs1) . deformatGPS $ diffGPS (stopGPSTime w1) (startGPSTime w2)
         dat = case flg of
-               True -> V.concat [gwdata w1, V.replicate (negate nOverlap) 0.0, V.drop nOverlap $ gwdata w2]
+               True -> V.concat [gwdata w1, V.replicate (negate nOverlap) x, V.drop nOverlap $ gwdata w2]
                False -> V.concat [gwdata w1, V.drop nOverlap $ gwdata w2]
 
 chkWD :: WaveData -> WaveData -> Bool

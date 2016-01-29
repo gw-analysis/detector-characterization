@@ -194,8 +194,7 @@ kagraDataGet gpsstrt duration chname = runMaybeT $ MaybeT $ do
 
 
 kagraWaveDataGet :: Int -> Int -> String -> IO (Maybe WaveData)
-kagraWaveDataGet gpsstrt duration chname 
-  = liftM (liftM catWaveData) $ kagraWaveDataGetC gpsstrt duration chname
+kagraWaveDataGet gpsstrt duration chname = liftM (liftM catWaveData) $ kagraWaveDataGetC gpsstrt duration chname
 
 kagraWaveDataGetOld :: Int -> Int -> String -> D.Detector -> IO (Maybe WaveData)
 kagraWaveDataGetOld gpsstrt duration chname detector = runMaybeT $ MaybeT $ do
@@ -378,8 +377,7 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                               $ zeropadding fs cdata
 
 kagraWaveDataGet0 :: Int -> Int -> String -> IO (Maybe WaveData)
-kagraWaveDataGet0 gpsstrt duration chname 
-  = liftM (liftM catWaveData0) $ kagraWaveDataGetC gpsstrt duration chname
+kagraWaveDataGet0 gpsstrt duration chname = liftM (liftM (catWaveData0 0)) $ kagraWaveDataGetC gpsstrt duration chname
 
 kagraWaveDataGet0Old :: Int -> Int -> String -> IO (Maybe WaveData)
 kagraWaveDataGet0Old gpsstrt duration chname = runMaybeT $ MaybeT $ do
