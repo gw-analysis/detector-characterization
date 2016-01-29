@@ -37,11 +37,11 @@ main = do
                     (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                     (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                     (Just x, Just y) -> (getMaximumChunck x, head y)
-  unit <- safeGetUnitY file ch "" "/rHz"
+  unit <- safeGetUnitY file ch
 
   {-- main --}
   let snf = gwOnesidedPSDWaveData fftLength wd
-  plotV LogXY Line 1 RED (xlabel, unit) 0.05 (title wd) oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
+  plotV LogXY Line 1 RED (xlabel, "["++unit++"/rHz]") 0.05 (title wd) oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -49,4 +49,3 @@ show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
   | otherwise   = number
   where len = length number
-

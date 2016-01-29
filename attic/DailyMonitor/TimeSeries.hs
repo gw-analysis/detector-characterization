@@ -31,12 +31,12 @@ main = do
               (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
               (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
               (Just x, Just y) -> (x, head y)
-  unit <- safeGetUnitY file ch "" ""
+  unit <- safeGetUnitY file ch
 
   {-- main --}
   let wdDS = map (waveData2TimeSeries (gps,0) . downsampleWaveData dsfs) wd
   oPlotDateV Linear [Line] 1 (replicate (length wd) RED)
-    (xlabel, "amplitude "++unit) 0.05 title oFile ((0,86400),(0,0)) gps $ wdDS
+    (xlabel, unitBracket "amplitude" unit) 0.05 title oFile ((0,86400),(0,0)) gps $ wdDS
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -45,3 +45,6 @@ show0 digit number
   | otherwise   = number
   where len = length number
 
+unitBracket :: String -> String -> String
+unitBracket x "" = x
+unitBracket x y  = x++" ["++y++"]"

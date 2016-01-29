@@ -539,17 +539,12 @@ getSamplingFrequency frameFile channelName = runMaybeT $ MaybeT $ do
                     | rate<1.0  = rate
                     where rate = 1.0 / dt :: Double
 
-safeGetUnitY :: String -> String -> String -> String -> IO String
-safeGetUnitY frameFile channelName bra ket = 
+safeGetUnitY :: String -> String -> IO String
+safeGetUnitY frameFile channelName =
   getUnitY frameFile channelName >>= \mbUnit -> do
-    case mbUnit of
-     Just "" -> return $ bra++ket
-     Just x  -> return $ bra++x++ket
-     Nothing -> return $ bra++ket
-    >>= \unit -> do
-      case unit=="" of
-       True -> return ""
-       False -> return $ "["++unit++"]"
+    case mbUnit of Just "" -> return $ ""
+                   Just x  -> return $ x
+                   Nothing -> return $ ""
 
 getUnitY :: String -> String -> IO (Maybe String)
 getUnitY frameFile channelName = runMaybeT $ MaybeT $ do
