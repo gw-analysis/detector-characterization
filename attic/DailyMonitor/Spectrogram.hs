@@ -1,16 +1,16 @@
 
-import Data.Maybe (fromJust)
-import System.Environment (getArgs)
-import Data.Packed.Vector (Vector, subVector, fromList, dim)
 import Numeric (showGFloat)
+import System.Environment (getArgs)
 
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramV)
-import HasKAL.SpectrumUtils.Function (mapSpectrogram)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraDataFind)
+import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
-import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
+import HasKAL.SpectrumUtils.Function (mapSpectrogram, catSpectrogramT0)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramWaveData)
+import HasKAL.TimeUtils.Function (diffGPS, deformatGPS)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WaveUtils.Data (WaveData(..))
 
 main = do
   args <- getArgs
@@ -26,33 +26,23 @@ main = do
       fftLength = 120    -- seconds
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrogram.png"
-      title = "Spectrogram " ++"(df="++(showGFloat (Just 4) (1/fftLength) "")++"): " ++ ch
+      title = "Spectrogram: "++ch ++" (dt= "++(show fftLength)++", df="++(showGFloat (Just 3) (1/fftLength) "")++")"
       xlabel = "Date: "++year++"/"++month
 
   {-- read data --}
+  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
   mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
-  let file = case mbFiles of
-              Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-              _ -> head $ fromJust mbFiles
-  mbDat <- kagraDataGet gps duration ch
-  mbFs <- getSamplingFrequency file ch
-  let (dat, fs) = case (mbDat, mbFs) of
-                   (Just a, Just b) -> (a, b)
-                   (Nothing, _) -> error $ "Can't read data: "++ch++"-"++year++"/"++month++"/"++day
-                   (_, Nothing) -> error $ "Can't read sampling frequency: "++ch++"-"++year++"/"++month++"/"++day
-  mbUnit <- getUnitY file ch
-  let unit = case mbUnit of
-              Just x  -> "["++x++"/rHz]"
-              Nothing -> "[/rHz]"
+  let (wd, file) = case (mbWd, mbFiles) of
+              (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
+              (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
+              (Just x, Just y) -> (x, head y)
+  unit <- safeGetUnitY file ch
 
   {-- main --}
-  let (minfs, dat') = case (fs > dsfs) of
-                       True -> (dsfs, dropBothSide 8 $ downsampleSV fs dsfs dat)
-                       False -> (fs, dat)
-  let hf  = gwspectrogramV 0 (truncate $ fftLength * minfs) minfs dat'
-  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", unit) title oFile ((0,0),(0,0)) gps $ mapSpectrogram sqrt hf
-  
-
+  let hf = map (gwspectrogramWaveData 0 fftLength . downsampleWaveData dsfs) wd
+      n0 = nblocks fftLength gps duration wd
+  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", "["++unit++"/rHz]") title oFile ((0,0),(0,0)) gps 
+    $ mapSpectrogram sqrt $ catSpectrogramT0 0 fftLength n0 hf
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -61,8 +51,9 @@ show0 digit number
   | otherwise   = number
   where len = length number
 
-dropBothSide :: Int -> Vector Double -> Vector Double
-dropBothSide n xv 
-  | len <= 2*n = fromList []
-  | otherwise  = subVector n (len-2*n) xv
-  where len = dim xv
+nblocks :: Double -> Int -> Int -> [WaveData] -> [Int]
+nblocks dt gps duration [] = [ceiling . (/dt) . fromIntegral $ duration]
+nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGPS) ss
+  where ss = (startGPSTime $ head ws, (gps,0))
+             : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
+             ++ [((gps+duration, 0), stopGPSTime $ last ws)]
