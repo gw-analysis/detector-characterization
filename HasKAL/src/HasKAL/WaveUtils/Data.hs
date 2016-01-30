@@ -70,7 +70,7 @@ updateWaveDatagwdata v w
 
 dropWaveData :: Int -> WaveData -> WaveData
 dropWaveData n x = do
-  let n' = max n 0
+  let n' = min (dim $ gwdata x) $ max n 0
   let t = (fromIntegral n') / (samplingFrequency x)
       newstartGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
       newgwdata = subVector n' (dim (gwdata x) - n') (gwdata x)
@@ -79,7 +79,7 @@ dropWaveData n x = do
 
 takeWaveData :: Int -> WaveData -> WaveData
 takeWaveData n x = do
-  let n' = max n 0
+  let n' = min (dim $ gwdata x) $ max n 0
   let t = (fromIntegral n') / (samplingFrequency x)
       newstopGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
       newgwdata = subVector 0 n' (gwdata x)
