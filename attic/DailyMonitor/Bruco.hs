@@ -1,6 +1,7 @@
 
 import Control.Monad (zipWithM, forM, liftM)
 import Data.List (sort)
+import Data.Maybe (fromJust)
 import Data.Packed.Matrix (fromColumns, toLists)
 import System.Environment (getArgs)
 
@@ -11,7 +12,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WebUtils.DailySummaryPage (startHTML, startBODY, addTitle, addStyle, addDate, endHTML)
 import HasKAL.WebUtils.Javascript.Function (expandFont)
 import HasKAL.WaveUtils.Data (WaveData(..))
-import HasKAL.WaveUtils.Function (getMaximumChunck)
+import HasKAL.WaveUtils.Function (getMaximumChunck, getCoincidentData)
 
 
 main = do
@@ -24,35 +25,39 @@ main = do
   let gps = read $ time2gps $ year+-+month+-+day++" 00:00:00 JST"
       duration = 86400 -- seconds
       -- for Bruco
-      gwCh = "K1:PEM-EX_REF" -- <- 後で変える
+      ch1 = "K1:PEM-EX_REF" -- <- 後で変える
       fftLength = 1 -- seconds
       -- for Result
       oFile = year+-+month+-+day++"_Bruco.html"
 
   {-- read data --}
-  mbWd1 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) gwCh
-  let wd1 = case mbWd1 of
-             Just x  -> getMaximumChunck x
-             Nothing -> error $ "Can't read data: "++gwCh++"-"++year++"/"++month++"/"++day
+  mbWd1 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch1
+  let wss1 = case mbWd1 of
+             Just x  -> x
+             Nothing -> error $ "Can't find data: "++ch1++"-"++year++"/"++month++"/"++day
 
-  chs <- liftM ((filter (/=gwCh)).lines) $ readFile chlst
-  wd2 <- forM chs $ \ch2 -> do
-    mbWd2 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch2
-    case mbWd2 of
-     Just x -> return [(getMaximumChunck x, ch2)]
-     Nothing -> return []
+  chs <- liftM ((filter (/=ch1)).lines) $ readFile chlst
+  mbWd2 <- mapM (kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration)) chs
+  let (wss2, ch2) = unzip . filter (\(x,_) -> x/=Nothing) $ zip mbWd2 chs
+      (ws1:ws2) = getCoincidentData (wss1 : map fromJust wss2)
 
   {-- main --}
-  result <- hBrucoPng (year+-+month+-+day) fftLength (wd1, gwCh) $ concat wd2
-  let body = geneRankTable (year,month,day) gwCh result
-  writeFile oFile $
-    startHTML
-    ++ addStyle 
-    ++ startBODY 
-    ++ addTitle "Bruco"
-    ++ addDate (year+-+month+-+day)
-    ++ body
-    ++ endHTML
+  case ws1 /= [] of
+   True -> do
+     let (wd1:wd2) = map getMaximumChunck (ws1:ws2)
+     result <- hBrucoPng (year+-+month+-+day) fftLength (wd1, ch1) $ zip wd2 ch2
+     let body = geneRankTable (year,month,day) ch1 result
+     writeFile oFile $
+       startHTML
+       ++ addStyle
+       ++ startBODY
+       ++ addTitle "Bruco"
+       ++ addDate (year+-+month+-+day)
+       ++ body
+       ++ endHTML
+   False -> do
+     error $ concat $ ("Channels are not active at the same time.\n   "++ch1) : map ("\n   "++) ch2
+
   
 
 {-- Internal Functions --}

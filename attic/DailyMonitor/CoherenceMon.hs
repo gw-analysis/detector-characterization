@@ -6,7 +6,7 @@ import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMonW)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WaveUtils.Data (WaveData(..))
-import HasKAL.WaveUtils.Function (getMaximumChunck)
+import HasKAL.WaveUtils.Function (getMaximumChunck, getCoincidentData)
 
 main = do
   args <- getArgs
@@ -25,16 +25,20 @@ main = do
       xlabel = "Date: "++year++"/"++month++"/"++day
 
   {-- read data --}
-  mbWd1 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch1
-  mbWd2 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch2
-  let (wd1, wd2) = case (mbWd1, mbWd2) of
-                    (Just x, Just y) -> (getMaximumChunck x, getMaximumChunck y)
-                    (Nothing, _) -> error $ "Can't read data: "++ch1++"-"++year++"/"++month++"/"++day
-                    (_, Nothing) -> error $ "Can't read data: "++ch2++"-"++year++"/"++month++"/"++day
+  [mbWd1, mbWd2] <- mapM (kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration)) [ch1, ch2]
+  let [ws1, ws2] = case (mbWd1, mbWd2) of
+                    (Just x, Just y) -> getCoincidentData [x, y]
+                    (Nothing, _) -> error $ "Can't find data: "++ch1++"-"++year++"/"++month++"/"++day
+                    (_, Nothing) -> error $ "Can't find data: "++ch2++"-"++year++"/"++month++"/"++day
 
   {-- main --}
-  let coh = coherenceMonW fftLength wd1 wd2
-  plotV Linear Line 1 BLUE (xlabel, "|coh(f)|^2") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
+  case ws1 /= [] of
+   True -> do
+     let [wd1, wd2] = map getMaximumChunck [ws1, ws2]
+         coh = coherenceMonW fftLength wd1 wd2
+     plotV Linear Line 1 BLUE (xlabel, "|coh(f)|^2") 0.05 title oFile ((0,0),((-0.05),1.05)) coh
+   False ->
+     error $ "Channels are not active at the same time.\n   "++ch1++"\n   "++ch2
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
