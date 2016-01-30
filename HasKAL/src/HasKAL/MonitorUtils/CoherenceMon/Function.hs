@@ -2,8 +2,9 @@
 
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (
-  hBruco,
+  hBrucoW,
   coherenceMonW,
+  coherenceMonW',
   coherenceMon,
   multiCoherenceW,
   multiCoherence
@@ -21,37 +22,27 @@ import Numeric.LinearAlgebra.LAPACK (multiplyR)
 import HasKAL.WaveUtils (WaveData(..))
 
 -- | Bruco like tool
-hBruco :: Double -> (Double, V.Vector Double, String) -> [(Double, V.Vector Double, String)] -> [(Double, [(Double, String)])]
-hBruco sec (fsx, xt, xch) yts = zip fvec result
+hBrucoW :: Double -> (WaveData, String) -> [(WaveData, String)] -> [(Double, [(Double, String)])]
+hBrucoW sec (wd1, ch1) wd2 = zip fvec result
   where fvec = [0, 1/sec..]
         result = map (ranked.labeled) cohList
           where ranked x = reverse $ sort x
-                labeled x = zip x (map trd' yts)
-        cohList = M.toLists.M.fromColumns $ map (snd.(\x -> coherenceMon sec fsx (fst' x) xt (snd' x))) yts
-        fst' (a,_,_) = a
-        snd' (_,b,_) = b
-        trd' (_,_,c) = c
+                labeled x = zip x (map snd wd2)
+        cohList = M.toLists.M.fromColumns.map snd $ coherenceMonW' sec wd1 (map fst wd2)
 
 -- | frequency based coherency
 coherenceMonW :: Double -> WaveData -> WaveData -> Spectrum
-coherenceMonW fftSec w1 w2 = coherenceMon fftSec (samplingFrequency w1) (samplingFrequency w2) (gwdata w1) (gwdata w2)
+coherenceMonW fftSec w1 w2 = head $ coherenceMon fftSec (samplingFrequency w1) [samplingFrequency w2] (gwdata w1) [gwdata w2]
 
-coherenceMon :: Double              -- ^ length of FFT [s]
-             -> Double           -- ^ sampling of x(t): fs
-             -> Double           -- ^ sampling of y(t): fs
-             -> V.Vector Double  -- ^    time series 1: x(t)
-             -> V.Vector Double  -- ^    time series 2: y(t)
-             -> Spectrum         -- ^     coherency: |coh(f)|^2
-coherenceMon sec fsx fsy xt yt = (fv, coh'f1)
+coherenceMonW' :: Double -> WaveData -> [WaveData] -> [Spectrum]
+coherenceMonW' fftSec w1 w2 = coherenceMon fftSec (samplingFrequency w1) (map samplingFrequency w2) (gwdata w1) (map gwdata w2)
+
+coherenceMon :: Double -> Double -> [Double] -> V.Vector Double -> [V.Vector Double] -> [Spectrum]
+coherenceMon sec fsx fsys xt yts
+  = zipWith (\fsy yt -> coherenceMonCore sec fsx fsy xf pxx yt) fsys yts
   where nfftx = truncate $ fsx * sec
-        nffty = truncate $ fsy * sec
-        fv = V.fromList [0, fsx/(fromIntegral nfftx)..fsx/2]
         xf = fsd nfftx nfftx xt
-        yf = fsd nffty nffty yt
         pxx = apsd xf
-        pyy = apsd yf
-        pxy = acsd xf yf
-        coh'f1 = V.slice 0 (V.length fv) $ coh pxy pxx pyy
 
 multiCoherenceW :: Int -> WaveData -> [WaveData] -> (V.Vector Double, V.Vector Double, [V.Vector (Complex Double)])
 multiCoherenceW ny yoft xioft = 
@@ -73,6 +64,21 @@ multiCoherence ny fsy fsxi yt xit = (fvec, multiCoh vSYY vSYi vDmU, coupleCoeff 
 
 
 {-- Internal Function --}
+coherenceMonCore :: Double -- ^ length of FFT [s]
+                 -> Double -- ^ sampling of x(t): fs
+                 -> Double -- ^ sampling of y(t): fs
+                 -> [V.Vector (Complex Double)] -- ^ list of fourier spectrum: X(f)
+                 -> V.Vector Double  -- ^ power spectrum: Px(f)
+                 -> V.Vector Double  -- ^ time series 2: y(t)
+                 -> Spectrum         -- ^ coherency: |coh(f)|^2
+coherenceMonCore sec fsx fsy xf pxx yt = (fv, coh'f1)
+  where fv = V.fromList [0, 1/sec .. (min fsx fsy)/2]
+        nffty = truncate $ fsy * sec
+        yf = fsd nffty nffty yt
+        pyy = apsd yf
+        pxy = acsd xf yf
+        coh'f1 = V.slice 0 (V.length fv) $ coh pxy pxx pyy
+
 coupleCoeff :: [M.Matrix (Complex Double)] -> [V.Vector (Complex Double)] -> [V.Vector (Complex Double)]
 coupleCoeff mSX vSY = M.toRows $ M.fromColumns $ zipWith prod'MV (map inv mSX) (map (V.map conjugate) vSY)
 

@@ -1,22 +1,18 @@
 
-import Data.Maybe (fromJust)
-import Control.Monad (forM, liftM)
-import System.Environment (getArgs)
-import Data.Packed.Vector (subVector, dim, fromList)
-
-import HasKAL.TimeUtils.GPSfunction (time2gps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.MonitorUtils.CoherenceMon.Function
-import HasKAL.WebUtils.DailySummaryPage
-import HasKAL.WebUtils.Javascript.Function (expandFont)
-import HasKAL.PlotUtils.HROOT.PlotGraph 
-
-import Data.Packed.Vector (Vector)
-import Data.Packed.Matrix (Matrix, fromColumns, toLists)
-import Control.Monad (zipWithM_)
+import Control.Monad (zipWithM, forM, liftM)
 import Data.List (sort)
-import HasKAL.SpectrumUtils.Signature (Spectrum)
+import Data.Packed.Matrix (fromColumns, toLists)
+import System.Environment (getArgs)
+
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMonW')
+import HasKAL.PlotUtils.HROOT.PlotGraph 
+import HasKAL.TimeUtils.GPSfunction (time2gps)
+import HasKAL.WebUtils.DailySummaryPage (startHTML, startBODY, addTitle, addStyle, addDate, endHTML)
+import HasKAL.WebUtils.Javascript.Function (expandFont)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (getMaximumChunck)
+
 
 main = do
   args <- getArgs
@@ -34,28 +30,20 @@ main = do
       oFile = year+-+month+-+day++"_Bruco.html"
 
   {-- read data --}
-  mbFiles1 <- kagraDataFind (fromIntegral gps) (fromIntegral duration) gwCh
-  let file1 = case mbFiles1 of
-               Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day
-               _ -> head $ fromJust mbFiles1
-  mbDat1 <- kagraDataGet gps duration gwCh
-  mbFs1 <- getSamplingFrequency file1 gwCh
-  let (dat1, fs1) = case (mbDat1, mbFs1) of
-                     (Just a, Just b) -> (a, b)
-                     (Nothing, _) -> error $ "Can't read data: "++gwCh++"-"++year++"/"++month++"/"++day
-                     (_, Nothing) -> error $ "Can't read sampling frequency: "++gwCh++"-"++year++"/"++month++"/"++day
+  mbWd1 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) gwCh
+  let wd1 = case mbWd1 of
+             Just x  -> getMaximumChunck x
+             Nothing -> error $ "Can't read data: "++gwCh++"-"++year++"/"++month++"/"++day
 
   chs <- liftM ((filter (/=gwCh)).lines) $ readFile chlst
-  dat2 <- forM chs $ \ch -> do
-    mbDat2 <- kagraDataGet gps duration ch
-    mbFs2 <- getSamplingFrequency file1 ch
-    case (mbFs2, mbDat2) of
-     (Just a, Just b) -> return (a, b, ch)
-     (Nothing, _) -> return (0, fromList [], "")
-     (_, Nothing) -> return (0, fromList [], "")
+  wd2 <- forM chs $ \ch2 -> do
+    mbWd2 <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch2
+    case mbWd2 of
+     Just x -> return [(getMaximumChunck x, ch2)]
+     Nothing -> return []
 
   {-- main --}
-  result <- hBrucoPng (year+-+month+-+day) fftLength (fs1, dat1, gwCh) $ filter ((/=0).(\(x,_,_) -> x)) dat2
+  result <- hBrucoPng (year+-+month+-+day) fftLength (wd1, gwCh) $ concat wd2
   let body = geneRankTable (year,month,day) gwCh result
   writeFile oFile $
     startHTML
@@ -68,22 +56,17 @@ main = do
   
 
 {-- Internal Functions --}
-hBrucoPng :: String -> Double -> (Double, Vector Double, String) -> [(Double, Vector Double, String)] -> IO [(Double, [(Double, String)])]
-hBrucoPng dateStr sec (fsx, xt, xch) yts = do
-  let cohResults = map (\x -> coherenceMon sec fsx (fst' x) xt (snd' x) ) yts
-  zipWithM_ (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++dateStr, "|coh(f)|^2") 0.05 (xch++" vs "++x)
-                     (xch+-+x+-+dateStr++"_Bruco.png") ((0,0),(0,0)) y) (map trd' yts) cohResults
+hBrucoPng :: String -> Double -> (WaveData, String) -> [(WaveData , String)] -> IO [(Double, [(Double, String)])]
+hBrucoPng date sec (wd1, ch1) wd2 = do
+  let cohResults = coherenceMonW' sec wd1 (map fst wd2)
+  zipWithM (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++date, "|coh(f)|^2") 0.05 (ch1++" vs "++x)
+                    (ch1+-+x+-+date++"_Bruco.png") ((0,0),(0,0)) y) (map snd wd2) cohResults
   let cohList = toLists.fromColumns $ map snd cohResults
       fvec = [0, 1/sec..]
       result = map (ranked.labeled) cohList
         where ranked x = reverse $ sort x
-              labeled x = zip x (map trd' yts)
+              labeled x = zip x (map snd wd2)
   return $ zip fvec result
-
-fst' (a,_,_) = a
-snd' (_,b,_) = b
-trd' (_,_,c) = c
-
 
 (+-+) x y = x ++ "-" ++ y
 
