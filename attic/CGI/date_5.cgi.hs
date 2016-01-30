@@ -5,15 +5,15 @@ import Data.Maybe (fromJust)
 import Control.Monad (forM, liftM)
 import System.Directory (doesFileExist)
 
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData)
 import HasKAL.SpectrumUtils.Function (fromSpectrum, toSpectrum)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
 import HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta (distInspiral, distRingdown)
 import HasKAL.MonitorUtils.RangeMon.IMBH (distImbh)
 import HasKAL.WebUtils.CGI.Function
+import HasKAL.WaveUtils.Data (WaveData(..))
 import SampleChannel
 
 -- 主干渉信号が無いので、感度曲線で計算
@@ -55,13 +55,11 @@ process params = do
       fmax' = fmax params
       monitors' = monitors params
       ch1 = "K1:GW-channel"
-  datMaybe <- return (Just "a") --- kagraDataGet (read gps') (read duration') ch1
-  case datMaybe of
+  mbWd <- return $ Just ["a"] --- kagraWaveDataGetC (read gps') (read duration') ch1
+  case mbWd of
    Nothing -> return [("Can't find file or GW-channel", "", [])]
-   _ -> do
-     --- fs <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
-     --- let dat = fromJust datMaybe
-     ---     fromSpectrum $ gwpsdV dat (truncate fs) fs
+   Just (wd:_) -> do
+     -- let snf = fromSpectrum $ gwOnesidedPSDWaveData 1 (gwdata wd)
      let snf = fromSpectrum $ (\x -> (x, V.map (*2) $ ifonoisepsd KAGRA x)) $ V.fromList [1.0,2..2048]
          fRange = (read fmin', read fmax') :: (Double, Double)
      files <- forM monitors' $ \mon -> do
@@ -86,7 +84,7 @@ process params = do
            "Stoch" -> do
              return ()
        return pngfile
-     return [("", ch1, files)] -- [(show fs1, ch1, files)] -- 後で変える
+     return [("", ch1, files)] -- [(show $ samplingFrequency wd1, ch1, files)] -- 後で変える
 
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody

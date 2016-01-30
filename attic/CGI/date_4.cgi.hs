@@ -7,10 +7,10 @@ import Control.Monad (forM, liftM)
 import Data.List (isInfixOf)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getChannelList)
-import HasKAL.MonitorUtils.CoherenceMon.Function (hBruco)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
+import HasKAL.MonitorUtils.CoherenceMon.Function (hBrucoW)
 import HasKAL.WebUtils.CGI.Function
+import HasKAL.WaveUtils.Data (WaveData(..))
 import SampleChannel
 
 main :: IO ()
@@ -58,20 +58,19 @@ process params = do
       ch1 = head $ channel1 params
       chlist = filter (/=ch1) $ channel2 params
       mon = head $ monitors params
-  datMaybe1 <- kagraDataGet (read gps') (read duration') ch1
-  case datMaybe1 of
+  mbWd1 <- kagraWaveDataGetC (read gps') (read duration') ch1
+  case mbWd1 of
    Nothing -> return [((0), [(0.0, "")])]
-   Just dat1 -> do
-     fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
+   Just (wd1:_) -> do
      let chlist' = case chlist==[] of
                     True -> [ch1]
                     False -> take 20 chlist -- 最大20chで制限
-     dat2List <- forM chlist' $ \ch2 -> do
-       datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
-       mbFs2 <- (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
-       return (mbFs2, datMaybe2, ch2)
-     return $ hBruco 1 (fs1, dat1, ch1) $
-       map (\(x, y, z) -> (fromJust x, fromJust y, z)) $ filter ((/=Nothing).(\(x,_,_) -> x)) dat2List
+     wd2 <- forM chlist' $ \ch2 -> do
+       mbWd2 <- kagraWaveDataGetC (read gps') (read duration') ch2
+       case mbWd2 of
+        Nothing      -> return []
+        Just (x:_) -> return [(x, ch2)]
+     return $ hBrucoW 1 (wd1, ch1) (concat wd2)
             
 inputForm :: ParamCGI -> String
 inputForm params = inputFrame params formbody

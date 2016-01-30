@@ -5,10 +5,10 @@ import qualified Data.Vector.Storable as V (maximum)
 import Control.Monad (forM, liftM)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
 import HasKAL.MonitorUtils.CorrelationMon.CalCorrelation (takeCorrelationV) 
 import HasKAL.WebUtils.CGI.Function
+import HasKAL.WaveUtils.Data (WaveData(..))
 import SampleChannel
 
 main :: IO ()
@@ -56,19 +56,17 @@ process params = do
       chs = channel1 params
       mon = head $ monitors params
   forM chs $ \ch1 -> do
-    datMaybe <- kagraDataGet (read gps') (read duration') ch1
-    case datMaybe of
+    mbWd1 <- kagraWaveDataGetC (read gps') (read duration') ch1
+    case mbWd1 of
      Nothing -> return ("Can't find channel", ch1, [""])
-     _       -> do
-       fs1 <- liftM fromJust $ (`getSamplingFrequency` ch1) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch1)
+     Just (wd1:_) -> do
        vals <- forM chs $ \ch2 -> do
-         datMaybe2 <- kagraDataGet (read gps') (read duration') ch2
-         case (datMaybe2, ch1/=ch2) of
-          (Nothing, _) -> return "0"
-          (_, False)   -> return "1"
-          (_, True)    -> do
-            fs2 <- liftM fromJust $ (`getSamplingFrequency` ch2) =<< liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch2)
-            return $ show $ V.maximum $ takeCorrelationV (read $ mon) (fromJust datMaybe) (fromJust datMaybe2) 16
+         mbWd2 <- kagraWaveDataGetC (read gps') (read duration') ch2
+         case (mbWd2, ch1/=ch2) of
+          (Nothing, _)         -> return "0"
+          (_, False)           -> return "1"
+          (Just (wd2:_), True) -> do
+            return $ show $ V.maximum $ takeCorrelationV (read mon) (gwdata wd1) (gwdata wd2) 16
        return ("", ch1, vals)
 
 inputForm :: ParamCGI -> String

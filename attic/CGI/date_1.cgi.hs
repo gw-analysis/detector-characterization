@@ -11,8 +11,8 @@ import qualified Data.Vector.Storable as V (fromList, length, toList, map)
 import System.Directory (doesFileExist)
 
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency, getUnitY)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGet, kagraDataFind)
+import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraDataFind)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
 import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum, mapSpectrum, mapSpectrogram)
 import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
@@ -22,6 +22,8 @@ import HasKAL.MonitorUtils.SRMon.StudentRayleighMon (FitMethod(..), studentRayle
 import HasKAL.MonitorUtils.SensMon.SensMon (runSensMon)
 -- import HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon (getNoiseFloorStatusV, makeNFMparam, estimateThreshold)
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (waveData2TimeSeries)
 
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
 import HasKAL.WebUtils.CGI.Function
@@ -70,16 +72,16 @@ process params = do
       channel1' = channel1 params
       monitors' = monitors params
   forM channel1' $ \ch -> do
-    datMaybe <- kagraDataGet (read gps') (read duration') ch
-    case datMaybe of
+    mbWd <- kagraWaveDataGetC (read gps') (read duration') ch
+    case mbWd of
      Nothing -> return ("ERROR: Can't find file or channel", ch, []) -- データが無ければメッセージを返す
-     _ -> do
+     Just (wd:wds) -> do
        fname <- liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch) -- データがあったのでファイルは必ずある
-       fs <- liftM fromJust $ getSamplingFrequency fname ch
-       unit <- liftM (fromMaybe "") $ getUnitY fname ch
+       unit <- safeGetUnitY fname ch
+       let fs = samplingFrequency wd
        let fmin' = show $ max 0.0 $ read $ fmin params -- 負の周波数なら0Hzを返す
            fmax' = show $ min (fs/2) $ read $ fmax params -- ナイキスト周波数を超えたらナイキスト周波数を返す
-       let dat = fromJust datMaybe
+       let dat = gwdata wd
            tvec = V.fromList $ take (V.length dat) [0,1/fs..]
            nfft = case (truncate fs * 2) < (V.length dat) of -- データが1秒以下の時のケア
                    True -> truncate fs
@@ -116,14 +118,14 @@ process params = do
              (True, _) -> return () -- 既にPNGがあれば何もしない
              {-- Time Series Plot --}
              (_, "TS") -> do
-               plotV Linear Line 1 BLUE ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05 ("Time Series: "++ch) pngfile ((0,0),(0,0)) (tvec, dat)
+               oPlotV Linear [Line] 1 [BLUE] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05 ("Time Series: "++ch) pngfile ((0,read duration'),(0,0)) $ map (waveData2TimeSeries (read gps',0)) (wd:wds)
              {-- Spectrum Plot --}
              (_, "PSD") -> do
-               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", unitBracket "" ("ASD"++unit++"/rHz")) 0.05 ("Spectrum: "++ch)
+               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", unitBracket "ASD" (unit++"/rHz")) 0.05 ("Spectrum: "++ch)
                  pngfile (fRange,(0,0)) $ mapSpectrum sqrt snf
              {-- Spectrogram Plot --}
              (_, "SPE") -> do
-               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", unitBracket "" ("ASD"++unit++"/rHz")) ("Spectrogram: "++ch)
+               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", unitBracket "ASD" (unit++"/rHz")) ("Spectrogram: "++ch)
                  pngfile ((0,0),fRange) $ mapSpectrogram sqrt hfs
              {-- Rayleigh Monitor --}
              (_, "RM") -> do
