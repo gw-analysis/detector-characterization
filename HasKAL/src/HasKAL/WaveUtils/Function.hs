@@ -32,10 +32,11 @@ mergeWaveData0 :: Double -> WaveData -> WaveData -> WaveData
 mergeWaveData0 x w1 w2 = mergeWaveDataCore True x w1 w2 
 
 waveData2TimeSeries :: GPSTIME -> WaveData -> (Vector Double, Vector Double)
-waveData2TimeSeries stdGPS w = (tv, gwdata w)
-  where offset = floor . (*(samplingFrequency w)) . deformatGPS $ diffGPS (startGPSTime w) stdGPS
-        tv = V.map ( (/(samplingFrequency w)) . fromIntegral . (+offset) ) $ fromList [0 .. V.length (gwdata w) - 1]
-
+waveData2TimeSeries (gpsS, gpsN) w = (tv, gwdata w)
+  where tv = V.map ( (/samplingFrequency w) . fromIntegral . (+offset) ) $ fromList [0 .. V.length (gwdata w) - 1]
+        offset
+          | gpsS >= 0 = floor . (*samplingFrequency w) . deformatGPS $ diffGPS (startGPSTime w) (gpsS, gpsN)
+          | gpsS <  0 = 0
 
 mergeOverlapWaveDataC :: [WaveData] -> [WaveData]
 mergeOverlapWaveDataC (w1:[])     = [w1]
