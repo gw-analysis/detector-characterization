@@ -1,32 +1,31 @@
 
 {-- for Debug --}
 import Debug.Trace (trace)
-import qualified Data.Packed.Matrix as M (cols, rows)
-import HasKAL.SpectrumUtils.Function (writeSpectrum, writeSpectrogram)
 
-import Network.CGI
 import Control.Monad (liftM, forM)
-import Data.Maybe (fromJust, fromMaybe)
-import qualified Data.Vector.Storable as V (fromList, length, toList, map)
+import Data.Maybe (fromJust)
+import qualified Data.Vector.Storable as V (fromList, length)
+import Network.CGI (CGI, CGIResult, liftIO, output, runCGI, handleErrors)
 import System.Directory (doesFileExist)
 
-import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
-import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraDataFind)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV)
-import HasKAL.SpectrumUtils.Function (getSpectrum, toSpectrum, mapSpectrum, mapSpectrogram)
-import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
-import HasKAL.PlotUtils.HROOT.PlotGraph3D (LogOption(..), PlotTypeOption3D(..), spectrogramM, histgram2dM)
-import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonV)
-import HasKAL.MonitorUtils.SRMon.StudentRayleighMon (FitMethod(..), studentRayleighMonV)
-import HasKAL.MonitorUtils.SensMon.SensMon (runSensMon)
+import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
+import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 -- import HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon (getNoiseFloorStatusV, makeNFMparam, estimateThreshold)
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMon)
+import HasKAL.MonitorUtils.RayleighMon.RayleighMon (rayleighMonWaveData)
+import HasKAL.MonitorUtils.SRMon.StudentRayleighMon (studentRayleighMonWaveData)
+import HasKAL.MonitorUtils.SensMon.SensMon (runSensMon)
+import HasKAL.PlotUtils.HROOT.PlotGraph (LogOption(..), PlotTypeOption(..), ColorOpt(..), plotV, oPlotV)
+import HasKAL.PlotUtils.HROOT.PlotGraph3D (LogOption(..), PlotTypeOption3D(..), histgram2dM)
+import HasKAL.SpectrumUtils.Function (getSpectrum, mapSpectrum, mapSpectrogram)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
+import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.WaveUtils.Data (WaveData(..))
 import HasKAL.WaveUtils.Function (waveData2TimeSeries)
-
-import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (nha, formatNHA, butterBandPass)
-import HasKAL.WebUtils.CGI.Function
+import HasKAL.WebUtils.CGI.Function (Message, ParamCGI(..), MonitorType(..), MultiSelect(..)
+                                    ,pngDir ,getInputParams, updateMsg, updateGps, genePngTable
+                                    ,inputFrame, resultFrame, dateForm, channelForm, paramForm, monitorForm)
 import SampleChannel
 
 main :: IO ()
@@ -67,119 +66,102 @@ fork params = do
 
 process :: ParamCGI -> IO [(String, String, [String])]
 process params = do
-  let gps' = fromJust $ gps params
-      duration' = duration params
+  {-- 入力パラメタ --}
+  let gps' = read $ fromJust $ gps params
+      duration' = read $ duration params
       channel1' = channel1 params
       monitors' = monitors params
+      fminS = fmin params
+      fmaxS = fmax params
+  {-- データ取得 --}
   forM channel1' $ \ch -> do
-    mbWd <- kagraWaveDataGetC (read gps') (read duration') ch
+    mbWd <- kagraWaveDataGetC gps' (truncate duration') ch
     case mbWd of
-     Nothing -> return ("ERROR: Can't find file or channel", ch, []) -- データが無ければメッセージを返す
+     Nothing -> return ("ERROR: Can't find file or channel", ch, [])
      Just (wd:wds) -> do
-       fname <- liftM (head.fromJust) (kagraDataFind (read gps') (read duration') ch) -- データがあったのでファイルは必ずある
-       unit <- safeGetUnitY fname ch
-       let fs = samplingFrequency wd
-       let fmin' = show $ max 0.0 $ read $ fmin params -- 負の周波数なら0Hzを返す
-           fmax' = show $ min (fs/2) $ read $ fmax params -- ナイキスト周波数を超えたらナイキスト周波数を返す
-       let dat = gwdata wd
-           tvec = V.fromList $ take (V.length dat) [0,1/fs..]
-           nfft = case (truncate fs * 2) < (V.length dat) of -- データが1秒以下の時のケア
-                   True -> truncate fs
-                   False -> V.length dat `div` 20 -- 1秒以下のデータは20分割(20は適当)
-           snf = gwOnesidedPSDV dat nfft fs -- モニタの引数に合わせて [/Hz]
-           hfs = gwspectrogramV 0 nfft fs dat -- モニタの引数に合わせて [/Hz]
-           fRange = (read fmin', read fmax') -- plotツール用レンジ
+       unit <- (\x -> safeGetUnitY x ch) =<<
+               liftM (head.fromJust) (kagraDataFind (fromIntegral gps') (truncate duration') ch) -- データがあったのでファイルは必ずある
+       {-- 各モニタ共通パラメタ --}
+       let oFile cName mName = pngDir++cName++"_"++(show gps')++"-"++mName++"_"++(show duration')++"_fl"++fminS++"_fh"++fmaxS++".png"
+           labelTime = "time [s] since GPS="++(show gps')
+           labelFreq = "frequency [Hz] (GPS="++(show gps')++")"
+           fmin' | read fminS >= samplingFrequency wd = 0.0
+                 | otherwise = max 0.0 . read $ fminS
+           fmax' | read fmaxS <= 0.0 = samplingFrequency wd
+                 | otherwise = min (samplingFrequency wd) . read $ fmaxS
+       {-- 各モニタ処理 --}
        filesL <- forM monitors' $ \mon -> do
-         case mon of
-          "NHA" -> do -- 1モニタ複数プロット
-            let pngfile1 = pngDir++ch++"_"++gps'++"_"++mon++"-A_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
-                pngfile2 = pngDir++ch++"_"++gps'++"_"++mon++"-F_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+         case mon of -- 1モニタ複数プロット
+          {-- NHA Plot --}
+          "NHA" -> do 
+            let pngfile1 = oFile ch $ mon++"-A"
+                pngfile2 = oFile ch $ mon++"-F"
             pngExist <- doesFileExist pngfile1
             case pngExist of
              True -> return [pngfile1, pngfile2] -- 既にPNGがあれば何もしない
              False -> do
-               let eiDat = butterBandPass dat fs (read fmin') (fmaxfs $ read fmax') 6 -- とりあえず6次固定
-                     where fmaxfs 0 = fs/2
-                           fmaxfs f = f
+               let eiDat = butterBandPass (gwdata wd) (samplingFrequency wd) fmin' fmax' 6
                case eiDat of
                 Left msg -> return ["ERROR: "++msg] -- フィルタエラーならメッセージを返す
                 Right dat' -> do
-                  let output = formatNHA $ nha dat' fs 4 1024 256 0 (V.length dat') 0.0
-                  oPlotV Linear [Point] 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05
+                  let output = formatNHA $ nha dat' (samplingFrequency wd) 4 1024 256 0 (V.length dat') 0.0
+                  oPlotV Linear [Point] 1 [RED, BLUE] (labelTime, unitBracket "amplitude" unit) 0.05
                     ("NHA: "++ch) pngfile1 ((0,0),(0,0)) $ (output!!0)
-                  oPlotV Linear [Point] 1 [RED, BLUE, PINK, GREEN, BLACK, CYAN, YELLOW] ("time [s] since GPS="++gps', "frequency [Hz]") 0.05 
-                    ("NHA: "++ch) pngfile2 ((0,0),fRange) $ (output!!1)
+                  oPlotV Linear [Point] 1 [RED, BLUE] (labelTime, "frequency [Hz]") 0.05 
+                    ("NHA: "++ch) pngfile2 ((0,0),(fmin',fmax')) $ (output!!1)
                   return [pngfile1, pngfile2]
-            -- return [""]
-          _ -> do -- 1モニタ1プロット
-            let pngfile = pngDir++ch++"_"++gps'++"_"++mon++"_"++duration'++"_fl"++fmin'++"_fh"++fmax'++".png"
+          -- ここから1モニタ1プロット
+          _ -> do 
+            let pngfile = oFile ch mon
             pngExist <- doesFileExist pngfile
             case (pngExist, mon) of
              (True, _) -> return () -- 既にPNGがあれば何もしない
              {-- Time Series Plot --}
              (_, "TS") -> do
-               oPlotV Linear [Line] 1 [BLUE] ("time [s] since GPS="++gps', unitBracket "amplitude" unit) 0.05 ("Time Series: "++ch) pngfile ((0,read duration'),(0,0)) $ map (waveData2TimeSeries (read gps',0)) (wd:wds)
+               let hts = map (waveData2TimeSeries (gps',0)) (wd:wds)
+               oPlotV Linear [Line] 1 (replicate (length hts) BLUE) (labelTime, unitBracket "amplitude" unit) 0.05
+                 ("Time Series: "++ch) pngfile ((0,duration'),(0,0)) hts
              {-- Spectrum Plot --}
              (_, "PSD") -> do
-               plotV LogXY Line 1 BLUE ("frequency [Hz] (GPS="++gps'++")", unitBracket "ASD" (unit++"/rHz")) 0.05 ("Spectrum: "++ch)
-                 pngfile (fRange,(0,0)) $ mapSpectrum sqrt snf
+               let snf = mapSpectrum sqrt $ gwOnesidedPSDWaveData duration' wd
+               plotV LogXY Line 1 BLUE (labelFreq, "ASD ["++unit++"/rHz]") 0.05
+                 ("Spectrum: "++ch) pngfile ((fmin',fmax'),(0,0)) snf
              {-- Spectrogram Plot --}
              (_, "SPE") -> do
-               histgram2dM LogZ COLZ ("time [s] since GPS="++gps', "frequency [Hz]", unitBracket "ASD" (unit++"/rHz")) ("Spectrogram: "++ch)
-                 pngfile ((0,0),fRange) $ mapSpectrogram sqrt hfs
+               let hfs = mapSpectrogram sqrt $ gwspectrogramWaveData 0 (min 1 duration') wd
+               histgram2dM LogZ COLZ (labelTime, "frequency [Hz]", "ASD ["++unit++"/rHz]")
+                 ("Spectrogram: "++ch) pngfile ((0,0),(fmin',fmax')) hfs
              {-- Rayleigh Monitor --}
              (_, "RM") -> do
-               let ndf = case (truncate fs `div` nfft) > 16 of -- 周波数分解能
-                          True -> 1 -- データ長T<1/16s なら df=1/T
-                          False -> truncate $ 16 * (fromIntegral nfft) / fs -- 16Hz に固定
-               let qv = rayleighMonV [0.5, 0.9, 0.95, 0.99] fs nfft ndf snf hfs
-               oPlotV Linear (concat $ replicate 4 [Line, LinePoint]) 1 [RED, RED, BLUE, BLUE, PINK, PINK, GREEN, GREEN]
-                  ("frequency [Hz] (GPS="++gps'++")", "Normalized Noise Lv.") 0.05 ("RayleighMon: "++ch)
-                 pngfile (fRange, (0,6)) (concat $ map (\(x,y)->[x,y]) qv) -- レンジ(0,6)は経験的に決めた
+               let qval = concatMap (\(x,y)->[x,y]) $ rayleighMonWaveData [0.5, 0.95, 0.99] (min 1 duration') 16 wd wd
+               oPlotV Linear (take 6 $ cycle [LinePoint, Line]) 1 (concatMap (replicate 2) [RED, BLUE, PINK]) (labelFreq, "Normalized Noise Lv.") 0.05
+                 ("RayleighMon: "++ch) pngfile ((fmin',fmax'), (0,0)) qval
              {-- Student-Rayleigh Monitor --}
              (_, "SRM") -> do
-               let ndf = case (truncate fs `div` nfft) > 16 of -- 周波数分解能
-                          True -> 1 -- データ長T<1/16s なら df=1/T
-                          False -> truncate $ 16 * (fromIntegral nfft) / fs -- 16Hz に固定
-                   size = V.length dat `div` nfft
-                   nus = studentRayleighMonV (QUANT 0.95) fs nfft size size ndf snf hfs
-               plotV Linear LinePoint 1 BLUE ("frequency [Hz] (GPS="++gps'++")", "nu") 0.05 ("StudentRayleighMon: "++ch) pngfile
-                 (fRange,(0,0)) (getSpectrum 0 nus)
+               let nus = getSpectrum 0 $ studentRayleighMonWaveData 0.95 (min 1 duration') duration' duration' 16 wd wd
+               plotV Linear LinePoint 1 BLUE (labelFreq, "#nu") 0.05 
+                 ("StudentRayleighMon: "++ch) pngfile ((fmin',fmax'),(0,0)) nus
              {-- RMS Monitor --}
-             (_, "RMS") -> do -- パラメータは適当
-               let rms = rmsMon (V.length dat `div` n) fs dat [(read fmin', fmaxfs $ read fmax')]
-                     where fmaxfs 0 = fs/2
-                           fmaxfs x = min x (fs/2)
-                           n = 32
-               oPlotV Linear [LinePoint] 1 [] ("time [s] since GPS="++gps', unitBracket "RMS" unit) 0.05 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
+             (_, "RMS") -> do
+               let rms = rmsMon (V.length (gwdata wd) `div` 32) (samplingFrequency wd) (gwdata wd) [(fmin', fmax')]
+               oPlotV Linear [LinePoint] 1 [] (labelTime, unitBracket "RMS" unit) 0.05
+                 ("RMSMon: "++ch) pngfile ((0,0),(0,0)) rms
              {-- Sensitivity Monitor --}
              (_, "Sens") -> do
-               let (sens, _) = runSensMon dat fs (truncate fs)
-               histgram2dM LogXZ COLZ ("frequency [Hz] (GPS="++gps'++")" ,unitBracket "ASD" ("log("++unit++"/rHz)"),"yield") ("SensMon: "++ch) pngfile ((0,0),fRange) sens
+               let (sens, _) = runSensMon (gwdata wd) (samplingFrequency wd) (truncate (samplingFrequency wd))
+               histgram2dM LogXZ COLZ (labelFreq, "ASD [log("++unit++"/rHz)]", "yield")
+                 ("SensMon: "++ch) pngfile ((0,0),(fmin',fmax')) sens
              {-- Glitch Monitor --}
              (_, "Glitch") -> do
                return ()
              {-- Line Finder --}
              (_, "LineFind") -> do
                return ()
---            {-- Noise Floor Monitor --}
---            (_, "NFM") -> do -- パラメータは適当
---              let (rmSize, fltSize) = case (V.length dat) < 12800 of
---                                       True -> ((V.length dat) `div` 50, (V.length dat) `div` 5000 * 100)
---                                       False -> (128, 100)
---                  fs' = fs/2
---                  fmaxfs 0 = fs'/2
---                  fmaxfs x = min x (fs'/2)
---              param <- makeNFMparam fs' (fltSize) (rmSize*50) 0 rmSize (read fmin') (fmaxfs $ read fmax') 6 6
---               nfm <- getNoiseFloorStatusV dat fs (0,0) param
---              let nfm' = formatNFM nfm
---                    where formatNFM xs = (V.fromList [0, (fromIntegral $ 1*rmSize)/fs'..(fromIntegral $ (length xs - 1)*rmSize)/fs']
---                                         , V.fromList $ map (\(_,_,z) -> z) xs)
---               plotV Linear LinePoint 1 BLUE ("time [s] since GPS="++gps', "Amplitude") 0.05 ("NoiseFloorMon: "++ch) pngfile
---                ((0,0),(0,0)) $ nfm'
---            return ()
-            return [pngfile]
-       return (show fs, ch, concat filesL)
+             {-- Noise Floor Monitor --}
+             (_, "NFM") -> do
+               return ()
+            return [pngfile] {-- 各種モニタ処理終了 --}
+       return (show (samplingFrequency wd), ch, concat filesL)
 
 unitBracket :: String -> String -> String
 unitBracket x "" = x

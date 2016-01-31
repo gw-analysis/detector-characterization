@@ -7,6 +7,7 @@ module HasKAL.WaveUtils.Function (
   mergeOverlapWaveDataC,
   getMaximumChunck,
   getCoincidentData,
+  getCoincidentTime
 ) where
 
 import Debug.Trace (trace)
@@ -53,6 +54,9 @@ getMaximumChunck ws = ws!!maxIdx
 getCoincidentData :: [[WaveData]] -> [[WaveData]]
 getCoincidentData ws = map (\x -> mapMaybe (f3 x) tl) $ ws
   where tl = f2 . f1 $ map mergeOverlapWaveDataC ws
+
+getCoincidentTime :: [[(GPSTIME, GPSTIME)]] -> [(GPSTIME, GPSTIME)]
+getCoincidentTime = f2 . f0
 
 {-- Internal Function --}
 mergeWaveDataCore :: Bool -> Double -> WaveData -> WaveData -> WaveData
@@ -105,4 +109,11 @@ f1 wss = sort . concat $ g1 1 wss
         g1 n (ws:wss) = g2 n ws : g1 (n+1) wss
         g2 n [] = []
         g2 n (w:ws) = (startGPSTime w, n) : (stopGPSTime w, n) : g2 n ws
+
+f0 :: [[(GPSTIME, GPSTIME)]] -> [(GPSTIME, Int)]
+f0 gss = sort . concat $ g1 1 gss
+  where g1 n [] = []
+        g1 n (gs:gss) = g2 n gs : g1 (n+1) gss
+        g2 n [] = []
+        g2 n (g:gs) = (fst g, n) : (snd g, n) : g2 n gs
 
