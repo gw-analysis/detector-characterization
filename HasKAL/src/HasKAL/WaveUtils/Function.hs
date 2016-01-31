@@ -39,6 +39,7 @@ waveData2TimeSeries (gpsS, gpsN) w = (tv, gwdata w)
           | gpsS <  0 = 0
 
 mergeOverlapWaveDataC :: [WaveData] -> [WaveData]
+mergeOverlapWaveDataC []          = []
 mergeOverlapWaveDataC (w1:[])     = [w1]
 mergeOverlapWaveDataC (w1:w2:[])
   | chkOverlap w1 w2 == True  = [mergeWaveData0 0 w1 w2]
@@ -54,7 +55,7 @@ getMaximumChunck ws = ws!!maxIdx
 
 getCoincidentData :: [[WaveData]] -> [[WaveData]]
 getCoincidentData ws = map (\x -> mapMaybe (f3 x) tl) $ ws
-  where tl = f2 . f1 $ map mergeOverlapWaveDataC ws
+  where tl = f2 . f1 $ ws
 
 getCoincidentTime :: [[(GPSTIME, GPSTIME)]] -> [(GPSTIME, GPSTIME)]
 getCoincidentTime = f2 . f0
@@ -105,7 +106,7 @@ f2 xs = g1 (replicate (maximum $ map snd xs) False) xs
                 n = snd x
 
 f1 :: [[WaveData]] -> [(GPSTIME, Int)]
-f1 wss = sort . concat $ g1 1 wss
+f1 wss = sort . concat $ g1 1 $ map mergeOverlapWaveDataC wss
   where g1 n [] = []
         g1 n (ws:wss) = g2 n ws : g1 (n+1) wss
         g2 n [] = []
