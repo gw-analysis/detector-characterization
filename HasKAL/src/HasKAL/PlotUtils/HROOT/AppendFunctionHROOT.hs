@@ -13,6 +13,7 @@ module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(
  ,setPadMargin
  ,setXAxisDateTGraph
  ,setXAxisDateTH2D
+ ,setPallete
 ) where
 
 import qualified Data.IORef as DIO
@@ -29,8 +30,7 @@ import HasKAL.TimeUtils.GPSfunction (gps2unix)
 setGrid :: HR.TCanvas -> IO ()
 setGrid canvas = do
   let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
-  dummy <- FFP.withForeignPtr ptr'canvas c'SetGrid 
-  return ()
+  FFP.withForeignPtr ptr'canvas c'SetGrid
 
 setXRangeUser :: HR.TGraph -> (Double, Double) -> IO ()
 setXRangeUser tGra (min, max) = do
@@ -50,39 +50,33 @@ setXYRangeUser tGra ((xMin, xMax), (yMin, yMax)) = do
 modified :: HR.TCanvas -> IO ()
 modified canvas = do
   let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
-  dummy <- FFP.withForeignPtr ptr'canvas c'Modified
-  return ()
+  FFP.withForeignPtr ptr'canvas c'Modified
 
 update :: HR.TCanvas -> IO ()
 update canvas = do
   let ptr'canvas = FRC.get_fptr canvas :: FFP.ForeignPtr (FRC.Raw HR.TCanvas)
-  dummy <- FFP.withForeignPtr ptr'canvas c'Update
-  return ()
+  FFP.withForeignPtr ptr'canvas c'Update
 
 addSignalHandle :: IO ()
 addSignalHandle = do
-  DIO.readIORef $ SIOU.unsafePerformIO globalSignalHandle
+  dummy <- DIO.readIORef $ SIOU.unsafePerformIO globalSignalHandle
   return ()
 -- 外部にダミー変数を見せないように `()' で返す
 
 setRangeTH2D :: HR.TH2D -> ((Double, Double), (Double, Double)) -> IO ()
 setRangeTH2D hist ((xmin, xmax), (ymin, ymax)) = do
   let ptr'hist = FRC.get_fptr hist :: FFP.ForeignPtr (FRC.Raw HR.TH2D)
-  dummy <- FFP.withForeignPtr ptr'hist $ \lambda -> c'SetRangeTH2D lambda (realToFrac xmin) (realToFrac xmax) (realToFrac ymin) (realToFrac ymax)
-  return ()
+  FFP.withForeignPtr ptr'hist $ \lambda -> c'SetRangeTH2D lambda (realToFrac xmin) (realToFrac xmax) (realToFrac ymin) (realToFrac ymax)
 
 setPadMargin :: Double -> Double -> Double -> Double -> IO ()
-setPadMargin l r t b = do
-  dummy <- c'SetPadMargin (realToFrac l) (realToFrac r) (realToFrac t) (realToFrac b)
-  return ()
+setPadMargin l r t b = c'SetPadMargin (realToFrac l) (realToFrac r) (realToFrac t) (realToFrac b)
 
 setXAxisDateTGraph :: HR.TGraph -> Int -> IO ()
 setXAxisDateTGraph gra gps = do
   case gps >= 0 of
    True -> do
      let ptr'gra = FRC.get_fptr gra :: FFP.ForeignPtr (FRC.Raw HR.TGraph)
-     dummy <- FFP.withForeignPtr ptr'gra $ \lambda -> c'SetXAxisDateTGraph lambda (fromInteger $ gps2unix $ toInteger gps)
-     return ()
+     FFP.withForeignPtr ptr'gra $ \lambda -> c'SetXAxisDateTGraph lambda (fromInteger $ gps2unix $ toInteger gps)
    False -> return ()
 
 setXAxisDateTH2D :: HR.TH2D -> Int -> IO ()
@@ -90,9 +84,11 @@ setXAxisDateTH2D th2d gps = do
   case gps >= 0 of
    True -> do
      let ptr'th2d = FRC.get_fptr th2d :: FFP.ForeignPtr (FRC.Raw HR.TH2D)
-     dummy <- FFP.withForeignPtr ptr'th2d $ \lambda -> c'SetXAxisDateTH2D lambda (fromInteger $ gps2unix $ toInteger gps)
-     return ()
+     FFP.withForeignPtr ptr'th2d $ \lambda -> c'SetXAxisDateTH2D lambda (fromInteger $ gps2unix $ toInteger gps)
    False -> return ()
+
+setPallete :: Int -> IO ()
+setPallete color = c'SetPallete (fromIntegral color)
 
 
 {--  Internal Functions  --}
@@ -114,12 +110,13 @@ globalSignalHandle = do
 
 
 {--  Foreign Functions  --}
-foreign import ccall "hSetGrid" c'SetGrid :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
-foreign import ccall "SetRangeUser" c'SetRangeUser :: FP.Ptr (FRC.Raw HR.TAxis) -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
-foreign import ccall "cModified" c'Modified :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
-foreign import ccall "cUpdate" c'Update :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO (FCT.CInt)
+foreign import ccall "hSetGrid" c'SetGrid :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO ()
+foreign import ccall "SetRangeUser" c'SetRangeUser :: FP.Ptr (FRC.Raw HR.TAxis) -> FCT.CDouble -> FCT.CDouble -> IO ()
+foreign import ccall "cModified" c'Modified :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO ()
+foreign import ccall "cUpdate" c'Update :: FP.Ptr (FRC.Raw HR.TCanvas) -> IO ()
 foreign import ccall "AddSignalHandle" c'AddSignalHandle :: IO (FCT.CInt)
-foreign import ccall "SetRangeTH" c'SetRangeTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
-foreign import ccall "SetPadMargin" c'SetPadMargin :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO (FCT.CInt)
-foreign import ccall "SetXAxisDateTGraph" c'SetXAxisDateTGraph :: FP.Ptr (FRC.Raw HR.TGraph) -> FCT.CInt -> IO (FCT.CInt)
-foreign import ccall "SetXAxisDateTH2D" c'SetXAxisDateTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CInt -> IO (FCT.CInt)
+foreign import ccall "SetRangeTH" c'SetRangeTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO ()
+foreign import ccall "SetPadMargin" c'SetPadMargin :: FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> FCT.CDouble -> IO ()
+foreign import ccall "SetXAxisDateTGraph" c'SetXAxisDateTGraph :: FP.Ptr (FRC.Raw HR.TGraph) -> FCT.CInt -> IO ()
+foreign import ccall "SetXAxisDateTH2D" c'SetXAxisDateTH2D :: FP.Ptr (FRC.Raw HR.TH2D) -> FCT.CInt -> IO ()
+foreign import ccall "SetPallete" c'SetPallete :: FCT.CInt -> IO ()

@@ -4,6 +4,8 @@
 module HasKAL.PlotUtils.HROOT.PlotGraph3D (
    LogOption(Linear, LogX, LogY, LogZ, LogXY, LogXZ, LogYZ, LogXYZ)
   ,PlotTypeOption3D(COLZ, CONTZ, LEGO2Z, AITOFF, MERCATOR)
+  ,HAF.addSignalHandle
+  ,HAF.setPallete
   ,histgram2d
   ,histgram2dX
   ,spectrogram

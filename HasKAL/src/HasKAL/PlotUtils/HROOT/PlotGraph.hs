@@ -5,6 +5,7 @@ module HasKAL.PlotUtils.HROOT.PlotGraph (
    LogOption(Linear, LogX, LogY, LogXY)
   ,PlotTypeOption(Line, Point, LinePoint, PointLine, Dot)
   ,ColorOpt(WHITE, BLACK, RED, GREEN, BLUE, YELLOW, PINK, CYAN)
+  ,HAF.addSignalHandle
   ,easyPlot
   ,easyPlotX
   ,plot -- plot in file 
