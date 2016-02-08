@@ -2,7 +2,8 @@ HC=ghc --make
 
 OBJ1=RMSMon.hs
 OBJ2=readTest.hs
-OBJ3=FileFinder.hs
+OBJ3=FileFinder_func.hs
+OBJ4=FileFinder_nofunc.hs
 
 DEP1 = ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
 DEP2 = ./HasKAL/LineUtils/LineRemoval/rng_median.c
@@ -11,7 +12,7 @@ LIBLINK= -lFrame -lm -lgsl -lgslcblas
 
 HASKALPATH=../../HasKAL/src/HasKAL
 
-TARGET=sypoliclink RMSMon readTest FileFinder
+TARGET=sypoliclink RMSMon readTest FileFinder_func FileFinder_nofunc
 
 #########################################
 # link path
@@ -26,7 +27,12 @@ all:$(TARGET)
 sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
-FileFinder: ${OBJ3} ${DEP1} ${DEP2}
+FileFinder_nofunc: ${OBJ4} ${DEP1} ${DEP2}
+	-ghc --make -o $@ ${OBJ4} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ $^ -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	@echo "*** Making $@ ***"
+
+FileFinder_func: ${OBJ3} ${DEP1} ${DEP2}
 	-ghc --make -o $@ ${OBJ3} ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
 	-ghc --make -o $@ $^ -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
