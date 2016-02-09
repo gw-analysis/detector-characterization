@@ -1,42 +1,48 @@
 
-import Data.List (delete)
-import Data.Packed.Vector (fromList, dim)
+import Data.List (delete, elemIndex, intersect)
+import Data.Maybe (catMaybes)
 import System.Environment (getArgs)
 
-import HasKAL.FrameUtils.FrameUtils (getGPSTime, getSamplingFrequency)
-import HasKAL.FrameUtils.Function (readFrameV)
+import HasKAL.DetectorUtils.Detector (Detector(..))
+import HasKAL.FrameUtils.Function (readFrameWaveData')
+import HasKAL.Misc.ConfFile (readFileList)
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (waveData2TimeSeries, mergeOverlapWaveDataC)
 
 main = do
   {-- parameters --}
   args <- getArgs
-  let (chname, filename, flag) = case (length args, elem "-X" args) of
-        (3, True) -> ((delete "-X" args)!!0, (delete "-X" args)!!1, True)
-        (2, False) -> (args!!0, args!!1, False)
-        (_, _) -> error "Usage: plottimeseries [-X] chname filename"
+  (ch, lst, oFile) <- case (length args, elemIndex "-o" args, elemIndex "-l" args) of
+                         (5, Just n, Just m) -> do
+                           let arg' = delete "-o" $ delete (args!!(n+1)) args
+                               arg'' = delete "-l" $ delete (args!!(m+1)) args
+                           lst <- readFileList (args!!(m+1))
+                           return (head $ intersect arg' arg'', lst, args!!(n+1))
+                         (4, Just n, Nothing) -> do
+                           let arg' = delete "-o" $ delete (args!!(n+1)) args
+                           return (arg'!!0, [arg'!!1], args!!(n+1))
+                         (3, Nothing, Just m) -> do
+                           let arg' = delete "-l" $ delete (args!!(m+1)) args
+                           lst <- readFileList (args!!(m+1))
+                           return (arg'!!0, lst, "X11")
+                         (2, Nothing, Nothing) -> return (args!!0, [args!!1], "X11")
+                         (_, _, _) -> error "Usage: plottimeseries [-o output] channel [filename/-l filelist]"
 
   {-- read data --}
-  mb_dat <- readFrameV chname filename
-  dat <- case mb_dat of
-          Nothing -> error "Can't find file or channel."
-          Just dat -> return dat
+  mbWd <- mapM (readFrameWaveData' KAGRA ch) lst
+  let wd = case catMaybes mbWd of
+            [] -> error "Can't find data."
+            xs  -> mergeOverlapWaveDataC xs
 
-  mb_fs <- getSamplingFrequency filename chname
-  fs <- case mb_fs of
-         Nothing -> error "Can't read sampling rate."
-         Just fs -> return fs
-
-  mb_gps <- getGPSTime filename
-  gps <- case mb_gps of
-          Nothing -> error "Can't read GPS time."
-          Just (gpsS,_,_) -> return $ show gpsS
-
-  (title, ofile) <- case flag of
-                     True  -> return (gps++": "++chname, "X11")
-                     False -> return (gps++": "++chname, chname++"_"++gps++"-TS.png")
+  {-- plot paramter --}
+  let sGPS = startGPSTime $ head wd
+      eGPS = startGPSTime $ last wd
+      title = "Time Series: "++ch
+      xlabel = "time since GPS="++(show . fst $ sGPS)++" [s]"
 
   {-- main --}
-  let tvec = fromList [0, 1/fs..(fromIntegral $ dim dat) /fs]
-  plotV Linear Line 1 RED ("time [s]", "amplitude") 0.05 title ofile ((0,0),(0,0)) (tvec, dat)
+  let dat = map (waveData2TimeSeries (fst sGPS, 0)) wd
+  oPlotV Linear [Line] 1 (replicate (length dat) BLUE) (xlabel, "amplitude") 0.05 title oFile
+    ((0,0),(0,0)) dat
 
