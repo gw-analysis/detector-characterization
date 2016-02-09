@@ -38,7 +38,7 @@ main = do
   {-- main --}
   let result = rayleighMonWaveData quantiles fftLength freqResol wd wd
   oPlotV Linear (concat $ replicate (length colors) [LinePoint, Line]) 1 (concat $ map (replicate 2) colors)
-    (xlabel, "normalized noise Lv.") 0.05 (title wd) oFile ((0,0),(0,10)) $ concat $ map (\(x,y) -> [x,y]) result
+    (xlabel, "normalized noise Lv.") 0.05 (title wd) oFile ((0,0),(0,0)) $ concat $ map (\(x,y) -> [x,y]) result
 
 
 {-- Internal Functions --}
