@@ -8,6 +8,7 @@ module HasKAL.WaveUtils.Data
 , updateWaveDatagwdata
 , dropWaveData
 , takeWaveData
+, dropBothWaveData
 ) where
 
 
@@ -85,7 +86,12 @@ takeWaveData n x = do
       newgwdata = subVector 0 n' (gwdata x)
   mkWaveData (detector x) (dataType x) (samplingFrequency x) (startGPSTime x) newstopGPSTime newgwdata
 
+dropBothWaveData :: Int -> WaveData -> WaveData
+dropBothWaveData n w = dropWaveData n $ takeWaveData (l-n) w
+  where l = wavelen w
 
+wavelen :: WaveData -> Int
+wavelen = dim . gwdata
 
 
 

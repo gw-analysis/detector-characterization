@@ -3,6 +3,7 @@
 
 module HasKAL.SignalProcessingUtils.Filter
   ( iir
+  , iirW
   , fir
 --  , fir'
   , iirFilter
@@ -39,6 +40,12 @@ import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLi
 import System.IO.Unsafe
 import Unsafe.Coerce (unsafeCoerce)
 
+import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData)
+
+iirW :: ([Double],[Double]) -> WaveData -> WaveData
+iirW coeffs w = w'
+  where w' = mkWaveData (detector w) (dataType w) (samplingFrequency w) (startGPSTime w) (stopGPSTime w) v
+        v = iir coeffs (gwdata w)
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
