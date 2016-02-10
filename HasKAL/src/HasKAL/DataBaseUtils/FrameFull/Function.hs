@@ -1,7 +1,8 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, FlexibleInstances, MultiParamTypeClasses, FlexibleContexts #-}
 
 module HasKAL.DataBaseUtils.FrameFull.Function
-( cleanDataFinder
+( dailyFileFinder
+, cleanDataFinder
 , db2framelist
 , db2framecache
 , kagraChannelList
@@ -63,13 +64,30 @@ import qualified HasKAL.DataBaseUtils.FrameFull.Table as FrameFull
 import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
 import HasKAL.SearchUtils.Common.CleanDataFinder (cleanDataFinderCore)
+import HasKAL.SpectrumUtils.Signature
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature (GPSTIME, Date, LocalTime)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData, dropWaveData, takeWaveData)
 import HasKAL.WaveUtils.Function (catWaveData, catWaveData0)
+import qualified Numeric.LinearAlgebra as NLA
 import System.IO.Unsafe (unsafePerformIO)
 
+dailyFileFinder :: Date -> LocalTime -> IO (Spectrum)
+dailyFileFinder day loc = do
+ filelistmaybe <- kagraDailyFileList day loc
+ case filelistmaybe of 
+   Nothing -> return (NLA.fromList [], NLA.fromList [])
+   Just x  -> do
+     let filelist = x
+     -- open frame file and get (GPStime[s], GPStime[ns], duration[s])
+     result' <- mapM getGPSTime filelist
+     let result    = catMaybes result'
+     let gpsstart  = read $ time2gps $ day ++ " 00:00:00 JST"
+         gpsstartd = fromIntegral gpsstart :: Double
+         flagvec   = NLA.fromList $ replicate (length result) 1.0 :: NLA.Vector Double
+         gpssvec   = NLA.fromList $ map (+(-gpsstartd)) $ map (fromIntegral.( \(x, _, _)->x) ) result :: NLA.Vector Double
+     return (gpssvec, flagvec)
 
 cleanDataFinder :: CDFParam -> String -> (GPSTIME, Double) -> IO (Maybe [(GPSTIME, Bool)])
 cleanDataFinder param ch (gps', dt') = do
