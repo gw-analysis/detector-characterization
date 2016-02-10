@@ -1,5 +1,6 @@
 module HasKAL.MonitorUtils.RMSMon.RMSMon(
-       rmsMon
+       rmsMon,
+       rmsMonWaveData
 ) where
 
 import qualified Data.Vector.Generic as DVG
@@ -9,6 +10,7 @@ import Data.List (transpose, partition)
 
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDVP)
 import HasKAL.SpectrumUtils.Signature
+import HasKAL.WaveUtils.Data (WaveData(..))
 
 
 {-- Expose Functions --}
@@ -16,7 +18,7 @@ rmsMon :: Int -- ^ chunk size
              -> Double -- ^ sampling rate [Hz]
              -> NLA.Vector Double -- ^ analysis data in time series 
              -> [(Double, Double)] -- ^ frequency bands (f_low, f_high)
-             -> [(NLA.Vector Double, NLA.Vector Double)] -- ^ (time, RMS value) in different frequency bands
+             -> [Spectrum] -- ^ (time, RMS value) in different frequency bands
 rmsMon nmon fs ys freq = do
  let nSplit    = (DVG.length ys) `div` nmon :: Int
      duration  = fromIntegral nmon / fs :: Double
@@ -37,7 +39,16 @@ rmsMon nmon fs ys freq = do
  rmsoutput
 -- [(DVG.empty, DVG.empty)]
 
+rmsMonWaveData :: Int -- ^ chunk size
+                   -> [(Double, Double)] -- ^ frequency bands (f_low, f_high)
+                   -> WaveData -- ^ the data to calculate RMS
+                   -> [Spectrum] -- ^ (time, RMS value) in different frequency bands
+rmsMonWaveData nmon freq st = rmsMon nmon fs ys freq
+  where fs = samplingFrequency st
+        ys = gwdata st
 
+
+{-- Internal Functions --}
 rmsMoncore :: Int -- ^ chunk size
                  -> Double -- ^ duration [s]
                  -> Double -- ^ sampling rate [Hz]
@@ -56,7 +67,7 @@ rmsMoncore nmon duration fs freq yschunk = do
                      freq3 = snd $ partition (\(f1, f2) -> f1>(fs/2.0) || f2>(fs/2.0) ) freq2
                  map sqrt $ map (*df) $ map (\(f1, f2) -> sumHoff fs gwpsd f1 f2) freq3
 
-{-- Internal Functions --}
+
 sumHoff::Double -- ^ sampling rate [Hz]
             -> (NLA.Vector Double, NLA.Vector Double) -- ^ power spectrum (f, s(f))
             -> Double -- ^ low frequency to calculate RMS
