@@ -17,11 +17,15 @@ TAR8= kagraDailyDataFind
 TAR9= updateFrameFullDB
 TAR10= rayleighMon
 TAR11= studentRayleighMon
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR11}
+TAR12= timeseries
+TAR13= spectrum
+TAR14= spectrogram
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR11} ${TAR12} ${TAR13} ${TAR14}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
-DEPs= ${DEP1}
+DEP2= ./HasKAL/SignalProcessingUtils/filterFunctions.c
+DEPs= ${DEP1} ${DEP2}
 
 #########################################
 # link path
@@ -68,9 +72,17 @@ ${TAR10}: ${TAR10}.hs ${DEPs}
 ${TAR11}: ${TAR11}.hs ${DEPs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
+${TAR12}: ${TAR12}.hs ${DEPs}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR13}: ${TAR13}.hs ${DEPs}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+${TAR14}: ${TAR14}.hs ${DEPs}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
 
 cleanall: clean
 	rm -f ${TARs}
-	rm -f ./HasKAL

@@ -1,43 +1,39 @@
 
-import Data.List (delete)
-import Data.Packed.Vector (fromList, dim)
+import Data.List (delete, elemIndex, intersect)
+import Data.Maybe (catMaybes)
 import System.Environment (getArgs)
 
-import HasKAL.FrameUtils.FrameUtils (getGPSTime, getSamplingFrequency)
-import HasKAL.FrameUtils.Function (readFrameV)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
+import HasKAL.DetectorUtils.Detector (Detector(..))
+import HasKAL.FrameUtils.Function (readFrameWaveData')
 import HasKAL.PlotUtils.HROOT.PlotGraph
-
+import HasKAL.SpectrumUtils.Function (mapSpectrum)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData)
+import HasKAL.WaveUtils.Data (WaveData(..))
+import HasKAL.WaveUtils.Function (catWaveData)
 
 main = do
   {-- parameters --}
   args <- getArgs
-  let (chname, filename, flag) = case (length args, elem "-X" args) of
-        (3, True) -> ((delete "-X" args)!!0, (delete "-X" args)!!1, True)
-        (2, False) -> (args!!0, args!!1, False)
-        (_, _) -> error "Usage: plottimeseries [-X] chname filename"
+  (ch, fname, oFile) <- case (length args, elemIndex "-o" args) of
+                       (4, Just n) -> do
+                         let arg' = delete "-o" $ delete (args!!(n+1)) args
+                         return (arg'!!0, arg'!!1, args!!(n+1))
+                       (2, Nothing) -> return (args!!0, args!!1, "X11")
+                       (_, _) -> error "Usage: plottimeseries [-o output] channel filename"
 
   {-- read data --}
-  mb_dat <- readFrameV chname filename
-  dat <- case mb_dat of
-          Nothing -> error "Can't find file or channel."
-          Just dat -> return dat
+  mbWd <- readFrameWaveData' KAGRA ch fname
+  let wd = case mbWd of
+            Nothing -> error "Can't find data."
+            Just x -> x
 
-  mb_fs <- getSamplingFrequency filename chname
-  fs <- case mb_fs of
-         Nothing -> error "Can't read sampling rate."
-         Just fs -> return fs
-
-  mb_gps <- getGPSTime filename
-  gps <- case mb_gps of
-          Nothing -> error "Can't read GPS time."
-          Just (gpsS,_,_) -> return $ show gpsS
-
-  (title, ofile) <- case flag of
-                     True  -> return (gps++": "++chname, "X11")
-                     False -> return (gps++": "++chname, chname++"_"++gps++"-PSD.png")
+  {-- plot parameter --}
+  let dtfft = "1.0"
+      title = "#splitline{Spectrum: "++ch++" ("++z++")}{   ("++x++")}"
+        where x = "GPS: "++(show . fst $ startGPSTime wd)++" ~ "++(show . fst $ stopGPSTime wd)
+              z = "dt_{FFT}="++dtfft++"s"
 
   {-- main --}
-  let snf = gwOnesidedPSDV dat (dim dat) fs
-  plotV LogXY Line 1 RED ("frequency [Hz]", "[X/Hz]") 0.05 title ofile ((0,0),(0,0)) snf
+  let snf = mapSpectrum sqrt $ gwOnesidedPSDWaveData (read dtfft) wd
+  plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((0,0),(0,0)) snf
 
