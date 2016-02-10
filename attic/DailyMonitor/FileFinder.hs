@@ -38,7 +38,7 @@ main = do
  -- record as png file
  let oFile = year++"-"++month++"-"++day++"_FileFinder.png"
  let xlabel = "Date: "++year++"/"++month :: String
- plotDateV Linear Point 1 BLUE (xlabel, "available flag") 0.05 "" oFile ((0,0),(0.5,1.5)) gpsstart result
+ plotDateV Linear Point 1 BLUE (xlabel, "available flag") 0.05 "" oFile ((0,86400.0),(0.5,1.5)) gpsstart result
  return 0
 
 
@@ -49,11 +49,11 @@ dailyFileFinder day loc = do
  case filelistmaybe of 
    Nothing -> return (NLA.fromList [], NLA.fromList [])
    Just x  -> do
-     let filelist = fromJust filelistmaybe
+     let filelist = x
      -- open frame file and get (GPStime[s], GPStime[ns], duration[s])
      result' <- mapM getGPSTime filelist
      let result    = catMaybes result'
-     let gpsstart  = read $ time2gps $ day ++ "00:00:00 JST"
+     let gpsstart  = read $ time2gps $ day ++ " 00:00:00 JST"
          gpsstartd = fromIntegral gpsstart :: Double
          flagvec   = NLA.fromList $ replicate (length result) 1.0 :: NLA.Vector Double
          gpssvec   = NLA.fromList $ map (+(-gpsstartd)) $ map (fromIntegral.fst') result :: NLA.Vector Double
