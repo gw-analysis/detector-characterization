@@ -1,22 +1,20 @@
 import qualified Data.Vector.Generic as DVG
-import Data.Maybe (fromMaybe, fromJust)
-import Numeric (showFFloat)
 import System.Environment (getArgs)
 
-import HasKAL.TimeUtils.GPSfunction (time2gps, gps2localTime)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMonWaveData)
 
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGet0, kagraWaveDataGetC)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGet0)
 --import HasKAL.DataBaseUtils.XEndEnv.Function (kagraWaveDataGet0)
 import HasKAL.WaveUtils.Data (WaveData(..))
-import HasKAL.WaveUtils.Function (getMaximumChunck)
 
 {-- memo
     running time (24hour data) : ~2m30s
 --}
- -- TODO : how we get unit of y-axis?
+
+-- TODO : how we get unit of y-axis?
 
 main = do
  args <- getArgs
@@ -25,7 +23,7 @@ main = do
      8 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, args!!6, args!!7, "0", "0")
      6 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, args!!4, args!!5, "0", "0", "0", "0")
      4 ->  return (args!!0, show0 2 (args!!1), show0 2 (args!!2), args!!3, "0.1", "10", "50", "200", "300", "1000")
-     _ ->  error "Usage: RMSMon yyyy mm dd channel (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\nRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000\nRMSMon 2015 12 18 K1:PSL-PMC_MIXER_OUT_DQ 0.1 10 50 200 300 1000"
+     _ ->  error "Usage: RMSMon yyyy mm dd channel (f1low f1high f2low f2high f3low f3high)\n(frequency bands are option)\nexample)\nRMSMon 2015 7 15 K1:PEM-EX_MAG_X_FLOOR 0.1 10 50 200 300 1000\nRMSMon 2015 12 17 K1:PSL-PMC_MIXER_OUT_DQ 0.1 10 50 200 300 1000"
 
 
  {-- parameters --}
