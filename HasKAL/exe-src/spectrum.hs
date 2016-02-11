@@ -50,5 +50,5 @@ main = do
   {-- main --}
   let snf = mapSpectrum sqrt $ gwOnesidedPSDWaveData (read dtfft) wd
       snf' = mapSpectrum sqrt $ gwOnesidedPSDWaveData (read dtfft) . filt $ wd
-  oPlotV LogXY [Line,Line, Line] 1 [BLACK, BLUE] ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((0,0),(0,0)) [snf, snf']
+  oPlotV LogXY [Line,Line] 1 [BLACK, BLUE] ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((1,1500),(5e-27,3e-19)) [snf, snf']
 
