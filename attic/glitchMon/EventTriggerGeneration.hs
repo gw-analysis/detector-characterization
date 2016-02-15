@@ -37,13 +37,14 @@ section'TimeFrequencyExpression whnWaveData = do
       fs = GP.samplingFrequency param
       nfreq2 = GP.nfrequency param`div`2
       nfreq = GP.nfrequency param
-      ntime = GP.ntimeSlide param
+      ntimeSlide = GP.ntimeSlide param
+      ntime = (NL.dim $ gwdata whnWaveData) `div` ntimeSlide
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
       snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
         (
-        snd $ gwOnesidedPSDV (subVector (nfreq*i) nfreq (gwdata whnWaveData)) nfreq fs)
+        snd $ gwOnesidedPSDV (subVector (ntimeSlide*i) nfreq (gwdata whnWaveData)) nfreq fs)
         (snd refpsd)
         )) [0..ntime-1]) [0..nfreq2] :: Matrix Double
   return (snrMatT', snrMatF, snrMatP)

@@ -85,7 +85,8 @@ import GlitchMon.RegisterEventtoDB
 runGlitchMonFile :: GP.GlitchParam
                  -> String
                  -> FilePath
-                 -> IO FilePath
+                 -> IO()
+--                 -> IO FilePath
 runGlitchMonFile param chname fname = yield fname $$ sink param chname
 
 
@@ -109,11 +110,22 @@ sink param chname = do
                                 fsorig = samplingFrequency wave
                             if (fs /= fsorig)
                               then do let wave' = downsampleWaveData fs wave
-                                      fileRun wave' param'
+                                          dataGps = (s,n)
+                                          param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+                                      fileRun wave' param'2
                               else fileRun wave param'
 
 
-streamingRun w param' = do
+fileRun w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
+   liftIO $ print dataGps
+--   s <- liftIO $ glitchMon param' w
+--   sink s chname
+
+
+
+streamingRun chname w param' = do
   let maybegps = GP.cgps param'
   case maybegps of
     Nothing -> do
@@ -138,7 +150,7 @@ streamingRun w param' = do
               let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                   cdgps = fst cdgps'
                   param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname (WD.detector w)
+              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname 
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               s <- liftIO $ glitchMon param'3 w
               sink s chname
@@ -155,7 +167,8 @@ glitchMon param w =
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
-           Just t -> part'RegisterEventtoDB t >> return s''
+--           Just t -> part'RegisterEventtoDB t >> return s''
+           Just t -> return s''
            Nothing -> return s''
 
 
