@@ -110,18 +110,20 @@ sink param chname = do
                                 fsorig = samplingFrequency wave
                             if (fs /= fsorig)
                               then do let wave' = downsampleWaveData fs wave
-                                          dataGps = (s,n)
+                                          dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                      fileRun wave' param'2
-                              else fileRun wave param'
+                                      s <- fileRun wave' param'2
+                                      sink s chname
+                              else do let dataGps = (s, n)
+                                          param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+                                      s <- fileRun wave param'2
+                                      sink s chname
 
 
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
        param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
-   liftIO $ print dataGps
---   s <- liftIO $ glitchMon param' w
---   sink s chname
+   liftIO $ glitchMon param' w
 
 
 
@@ -150,7 +152,7 @@ streamingRun chname w param' = do
               let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                   cdgps = fst cdgps'
                   param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname 
+              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               s <- liftIO $ glitchMon param'3 w
               sink s chname

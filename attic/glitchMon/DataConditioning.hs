@@ -10,12 +10,14 @@ module GlitchMon.DataConditioning
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwspectrogramWaveData)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
 
 import qualified GlitchMon.GlitchParam as GP
 
+
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H
 
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
@@ -27,6 +29,14 @@ part'DataConditioning wave = do
                 put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
                 put $ GP.updateGlitchParam'refpsd param
                   (gwpsdV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
+                let out = applyWhitening whtCoeffList wave
+                liftIO $ H.spectrogramM H.LogY
+                                      H.COLZ
+                                      "mag"
+                                      "whitened data"
+                                      "gw150914_whitened_spectrogram.eps"
+                                      ((0, 0), (0, 0))
+                                      $ gwspectrogramWaveData 0.9 1.0 out
                 return $ applyWhitening whtCoeffList wave
     True  -> return $ applyWhitening whtcoeff wave
 

@@ -7,9 +7,9 @@ import HasKAL.DataBaseUtils.FrameFull.Data
 
 main = do
   let fs = 4096
-  let param = GlitchParam 
+  let param = GlitchParam
                { channel = "H1:LOSC-STRAIN"
-               , chunklen = truncate $ 4*fs 
+               , chunklen = truncate $ 4*fs
                , samplingFrequency = fs
              -- * whitening
                , refpsdlen = truncate $ fs/2
@@ -28,8 +28,8 @@ main = do
                , cdfparameter = cdfp
                , cgps = Nothing
              -- * temporary data
---               , refpsd = 
---               , refwave = 
+--               , refpsd =
+--               , refwave =
                , reftime = 0
                }
 
@@ -43,7 +43,7 @@ main = do
               }
 
 
-  runGlitchMonFile param (channel param) "./gw20150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
+  runGlitchMonFile param (channel param) "./gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 
 
 
