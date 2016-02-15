@@ -74,17 +74,20 @@ import qualified Numeric.LinearAlgebra as NLA
 import System.IO.Unsafe (unsafePerformIO)
 
 dailyFileFinder :: Date -> LocalTime -> IO (Spectrum)
-dailyFileFinder day loc = Double
+dailyFileFinder day loc = do
  filelistmaybe <- kagraDailyFileList day loc
  case filelistmaybe of
    Nothing -> return (NLA.fromList [], NLA.fromList [])
-   Just x  -> Double
+   Just x  -> do
      let filelist = x
      -- open frame file and get (GPStime[s], GPStime[ns], duration[s])
      result' <- mapM getGPSTime filelist
      let result    = catMaybes result'
      let gpsstart  = read $ time2gps $ day ++ " 00:00:00 JST"
-         gpsstartd = fromIntegral gpss
+         gpsstartd = fromIntegral gpsstart :: Double
+         flagvec   = NLA.fromList $ replicate (length result) 1.0 :: NLA.Vector Double
+         gpssvec   = NLA.fromList $ map (+(-gpsstartd)) $ map (fromIntegral.( \(x, _, _)->x) ) result :: NLA.Vector Double
+     return (gpssvec, flagvec)
 
 cleanDataFinder :: CDFParam -> String -> (GPSTIME, Double) -> IO (Maybe [(GPSTIME, Bool)])
 cleanDataFinder param ch (gps', dt') = do
