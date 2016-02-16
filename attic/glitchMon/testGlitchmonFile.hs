@@ -17,7 +17,7 @@ main = do
                , whtCoeff = []
              -- * t-f expression
                , nfrequency = 1000
-               , ntimeSlide = 200
+               , ntimeSlide = 1000
              -- * clustering
                , resolvTime = 10
                , resolvFreq = 10

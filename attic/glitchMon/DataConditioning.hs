@@ -22,6 +22,7 @@ import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
 part'DataConditioning wave = do
+  liftIO $ print "start data conditioning"
   param <- get
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of

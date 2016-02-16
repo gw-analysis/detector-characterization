@@ -112,17 +112,26 @@ sink param chname = do
                               then do let wave' = downsampleWaveData fs wave
                                           dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+--                                      fileRun' wave' param'2
                                       s <- fileRun wave' param'2
                                       sink s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+--                                      fileRun' wave param'2
                                       s <- fileRun wave param'2
                                       sink s chname
 
 
+fileRun' w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
+   liftIO $ print dataGps
+--   liftIO $ glitchMon param' w
+
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
        param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
+   liftIO $ print dataGps
    liftIO $ glitchMon param' w
 
 
