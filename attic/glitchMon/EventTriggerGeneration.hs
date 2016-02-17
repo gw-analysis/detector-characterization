@@ -41,19 +41,13 @@ section'TimeFrequencyExpression whnWaveData = do
       nfreq = GP.nfrequency param
       ntimeSlide = GP.ntimeSlide param
       ntime = ((NL.dim $ gwdata whnWaveData)-nfreq) `div` ntimeSlide
-      snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2]
+      snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-  liftIO $ print $ NL.dim snrMatF
-  liftIO $ print $ NL.dim snrMatT'
-  liftIO $ print ntime
-  liftIO $ print ntimeSlide
-  liftIO $ print $ NL.dim $ gwdata whnWaveData
-  let snrMatP = (nfreq2><ntime) $ takeNyquist (\i -> map (calcSpec i) [0..ntime-1]) [0..nfreq2-1] :: Matrix Double
-        where calcSpec tindx = (!! tindx) . ( \tindx->toList $ zipVectorWith (/)
-                    (snd $ gwOnesidedPSDV (subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
-                    (snd refpsd))
-              takeNyquist = concatMap
+      snrMatP = flipud . NL.takeRows nfreq2 $ NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
+        where calcSpec tindx = NL.zipVectorWith (/)
+                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
+                (snd refpsd)
       out = (snrMatT', snrMatF, snrMatP)
   liftIO $ H.spectrogramM H.LogY
                           H.COLZ
@@ -78,17 +72,28 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       zeroElement = zeroElementr ++ zeroElementc
       dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
       snrMatP = idct2d dcted
-      thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
-      snrMat = (snrMatT, subVector thresIndex (nrow-thresIndex) snrMatF, dropRows thresIndex snrMatP)
+  let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
+      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex) snrMatF, NL.dropRows thresIndex snrMatP)
       (_, _, mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
-      survivor = nub $ excludeOnePixelIsland basePixel25 thrsed
-      survivorwID = taggingIsland survivor
+      survivor = thrsed -- nub' $ excludeOnePixelIsland basePixel25 thrsed
+  liftIO $ print $ length survivor
+  let survivorwID = taggingIsland survivor
       excludedIndx = Set.toList $ Set.difference (Set.fromList thrsed) (Set.fromList survivor)
       newM = updateSpectrogramSpec snrMat
        $ updateMatrixElement mg excludedIndx (replicate (length excludedIndx) 0.0)
+  liftIO $ print "finishing ETG section.."
   return (newM, survivorwID)
 
 
+
+-- | O (nlog n) nub 
+-- | lent from http://d.hatena.ne.jp/jeneshicc/20090908/1252413541
+nub' :: (Ord a) => [a] -> [a]
+nub' l = nub'' l Set.empty
+   where nub'' [] _ = []
+         nub'' (x:xs) s
+           | x `Set.member` s = nub'' xs s
+           | otherwise    = x : nub'' xs (x `Set.insert` s)
 
 

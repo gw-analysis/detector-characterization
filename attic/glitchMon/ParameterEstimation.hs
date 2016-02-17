@@ -23,6 +23,7 @@ import GlitchMon.Signature
 part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
                          -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID)])
 part'ParameterEstimation (m,ids) = do
+  liftIO $ print "start parameter estimation."
   param <- get
   let fs = GP.samplingFrequency param
    in getParam param (m,ids)

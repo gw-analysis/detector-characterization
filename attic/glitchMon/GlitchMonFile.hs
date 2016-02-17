@@ -131,7 +131,6 @@ fileRun' w param = do
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
        param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
-   liftIO $ print dataGps
    liftIO $ glitchMon param' w
 
 
@@ -179,8 +178,10 @@ glitchMon param w =
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
 --           Just t -> part'RegisterEventtoDB t >> return s''
-           Just t -> return s''
-           Nothing -> return s''
+           Just t -> do print "finishing glitchmon"
+                        return s''
+           Nothing -> do print "finishing glitchmon"
+                         return s''
 
 
 eventDisplay :: GP.GlitchParam
