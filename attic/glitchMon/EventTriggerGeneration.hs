@@ -19,7 +19,8 @@ import Numeric.LinearAlgebra as NL
 import qualified GlitchMon.GlitchParam as GP
 import GlitchMon.PipelineFunction
 import GlitchMon.Signature
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
@@ -49,13 +50,23 @@ section'TimeFrequencyExpression whnWaveData = do
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd refpsd)
       out = (snrMatT', snrMatF, snrMatP)
-  liftIO $ H.spectrogramM H.LogY
-                          H.COLZ
+  liftIO $ H3.spectrogramM H3.LogY
+                          H3.COLZ
                           "mag"
                           "pixelSNR spectrogram"
                           "gw150914_pixelSNR_spectrogram.eps"
                           ((0, 0), (0, 0))
                           out
+  liftIO $ H.plot H.Linear
+                  H.Line
+                  1
+                  H.RED
+                  ("time","amplitude")
+                  0.05
+                  "whitened data"
+                  "gw150219_whitened_timeseries.eps"
+                  ((0,0),(0,0))
+                  $ zip [0,1/4096..] (NL.toList $ gwdata whnWaveData)
   return out
 
 
