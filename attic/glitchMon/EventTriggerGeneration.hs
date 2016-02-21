@@ -45,28 +45,25 @@ section'TimeFrequencyExpression whnWaveData = do
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      snrMatP = flipud . NL.takeRows nfreq2 $ NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
+--      snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
+--        (
+--        snd $ gwOnesidedPSDV (subVector (ntimeSlide*i) nfreq (gwdata whnWaveData)) nfreq fs)
+--        (snd refpsd)
+--        )) [0..ntime-1]) [0..nfreq2-1] :: Matrix Double
+      snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
         where calcSpec tindx = NL.zipVectorWith (/)
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd refpsd)
+              calcSpec' tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
+
       out = (snrMatT', snrMatF, snrMatP)
-  liftIO $ H3.spectrogramM H3.LogY
+  liftIO $ H3.spectrogramM H3.LogYZ
                           H3.COLZ
                           "mag"
                           "pixelSNR spectrogram"
-                          "gw150914_pixelSNR_spectrogram.eps"
-                          ((0, 0), (0, 0))
+                          "gw150914_pixelSNR_spectrogram.png"
+                          ((0, 0), (20, 400))
                           out
-  liftIO $ H.plot H.Linear
-                  H.Line
-                  1
-                  H.RED
-                  ("time","amplitude")
-                  0.05
-                  "whitened data"
-                  "gw150219_whitened_timeseries.eps"
-                  ((0,0),(0,0))
-                  $ zip [0,1/4096..] (NL.toList $ gwdata whnWaveData)
   return out
 
 

@@ -10,14 +10,18 @@ module GlitchMon.DataConditioning
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwspectrogramWaveData)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
 
 import qualified GlitchMon.GlitchParam as GP
 
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H
+
+data WhnMethod = TimeDomain | FrequencyDomain
+
 
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
@@ -26,29 +30,52 @@ part'DataConditioning wave = do
   param <- get
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
-    False -> do (whtCoeffList, rfwave) <- section'Whitening
-                put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-                put $ GP.updateGlitchParam'refpsd param
-                  (gwpsdV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
-                let out = applyWhitening whtCoeffList wave
-                liftIO $ H.spectrogramM H.LogY
-                                      H.COLZ
-                                      "mag"
-                                      "whitened data"
-                                      "gw150914_whitened_spectrogram.eps"
-                                      ((0, 0), (0, 0))
-                                      $ gwspectrogramWaveData 0.9 1.0 out
-                return $ applyWhitening whtCoeffList wave
-    True  -> return $ applyWhitening whtcoeff wave
+    False -> do out <- section'Whitening TimeDomain wave
+                liftIO $ H3.spectrogramM H3.LogYZ
+                                         H3.COLZ
+                                         "mag"
+                                         "whitened data"
+                                         "gw150914_whitened_spectrogram.png"
+                                         ((0, 0), (20, 400))
+                                         $ gwspectrogramWaveData 0.98 1 out
+                liftIO $ H.plot H.Linear
+                                H.Line
+                                1
+                                H.RED
+                                ("time","amplitude")
+                                0.05
+                                "whitened data"
+                                "gw150914_whitened_timeseries.png"
+                                ((16.05,16.2),(0,0))
+                                $ zip [0,1/4096..] (NL.toList $ gwdata out)
+                liftIO $ H.plotV H.LogXY
+                                 H.Line
+                                 1
+                                 H.RED
+                                 ("frequency [Hz]","ASD [Hz^-1/2]")
+                                 0.05
+                                 "whitened data spectrum"
+                                 "gw150914_whitened_spectrum.png"
+                                 ((0,0),(0,0))
+                                 $ gwOnesidedPSDWaveData 1 out
+                return out
+    True  -> section'Whitening TimeDomain wave
 
 
 section'LineRemoval = id
 
 
-section'Whitening :: StateT GP.GlitchParam IO ([([Double],  Double)],  WaveData)
-section'Whitening = do
-  param <- get
-  liftIO $ calcWhiteningCoeff param
+section'Whitening :: WhnMethod -> WaveData -> StateT GP.GlitchParam IO WaveData
+section'Whitening opt wave = case opt of
+  TimeDomain -> do param <- get
+                   (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
+                   put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+                   put $ GP.updateGlitchParam'refpsd param 
+                     (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
+                   return $ applyWhitening whtCoeffList wave
+  FrequencyDomain -> do param <- get
+                          
+
 
 
 calcWhiteningCoeff :: GP.GlitchParam

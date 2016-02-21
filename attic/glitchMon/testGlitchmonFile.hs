@@ -12,12 +12,12 @@ main = do
                , chunklen = truncate $ 4*fs
                , samplingFrequency = fs
              -- * whitening
-               , refpsdlen = truncate $ fs/2
-               , whtfiltordr = 1000
+               , refpsdlen = truncate $ fs
+               , whtfiltordr = 1500
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = 1000
-               , ntimeSlide = 100
+               , nfrequency = truncate $ fs/3
+               , ntimeSlide = truncate $ 0.02*fs
              -- * clustering
                , resolvTime = 10
                , resolvFreq = 10
