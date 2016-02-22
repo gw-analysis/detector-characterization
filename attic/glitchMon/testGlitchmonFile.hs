@@ -13,16 +13,16 @@ main = do
                , samplingFrequency = fs
              -- * whitening
                , refpsdlen = truncate $ fs
-               , whtfiltordr = 1500
+               , whtfiltordr = 1000
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = truncate $ fs/3
+               , nfrequency = truncate $ fs/5
                , ntimeSlide = truncate $ 0.02*fs
              -- * clustering
-               , resolvTime = 10
-               , resolvFreq = 10
+               , resolvTime = 0
+               , resolvFreq = 0
                , cutoffFreq = 10
-               , clusterThres = 3
+               , clusterThres = 5
              -- * clean data finder
                , cdfInterval = 600
                , cdfparameter = cdfp

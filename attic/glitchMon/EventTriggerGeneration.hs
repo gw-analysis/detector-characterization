@@ -1,4 +1,5 @@
 
+{-# LANGUAGE BangPatterns #-}
 
 module GlitchMon.EventTriggerGeneration
 ( part'EventTriggerGeneration
@@ -53,17 +54,17 @@ section'TimeFrequencyExpression whnWaveData = do
       snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
         where calcSpec tindx = NL.zipVectorWith (/)
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
-                (snd refpsd)
+                (NL.fromList $ replicate nfreq  $ std $ NL.toList $ snd refpsd)
               calcSpec' tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
 
       out = (snrMatT', snrMatF, snrMatP)
-  liftIO $ H3.spectrogramM H3.LogYZ
-                          H3.COLZ
-                          "mag"
-                          "pixelSNR spectrogram"
-                          "gw150914_pixelSNR_spectrogram.png"
-                          ((0, 0), (20, 400))
-                          out
+  liftIO $ H3.spectrogramM H3.LogY
+                           H3.COLZ
+                           "mag"
+                           "pixelSNR spectrogram"
+                           "gw150914_pixelSNR_spectrogram.png"
+                           ((0, 0), (20, 400))
+                           out
   return out
 
 
@@ -81,8 +82,8 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
       snrMatP = idct2d dcted
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
-      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex) snrMatF, NL.dropRows thresIndex snrMatP)
-      (_, _, mg) = snrMat
+      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows thresIndex snrMatP)
+      (tt, ff, mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
       survivor = thrsed -- nub' $ excludeOnePixelIsland basePixel25 thrsed
   liftIO $ print $ length survivor
@@ -90,6 +91,14 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       excludedIndx = Set.toList $ Set.difference (Set.fromList thrsed) (Set.fromList survivor)
       newM = updateSpectrogramSpec snrMat
        $ updateMatrixElement mg excludedIndx (replicate (length excludedIndx) 0.0)
+  liftIO $ H3.spectrogramM H3.LogY
+                           H3.COLZ
+                           "mag"
+                           "pixelSNR spectrogram"
+                           "gw150914_cluster_spectrogram.png"
+                           ((0, 0), (20, 400))
+                           newM              
+ 
   liftIO $ print "finishing ETG section.."
   return (newM, survivorwID)
 
@@ -103,5 +112,22 @@ nub' l = nub'' l Set.empty
          nub'' (x:xs) s
            | x `Set.member` s = nub'' xs s
            | otherwise    = x : nub'' xs (x `Set.insert` s)
+
+{--------------------
+- Helper Functions  -
+--------------------}
+
+
+mean :: Floating a => [a] -> a
+mean x = fst $ foldl' (\(!m,  !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
+
+
+var :: (Fractional a, Floating a) => [a] -> a
+var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
+    where mu = mean xs
+          n = fromIntegral $ length xs
+
+std :: (RealFloat a) => [a] -> a
+std x = sqrt $ var x
 
 

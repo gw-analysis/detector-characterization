@@ -9,7 +9,9 @@ module GlitchMon.DataConditioning
 
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
-import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
+import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData, whiteningWaveData')
+import HasKAL.SignalProcessingUtils.Interpolation (interpV)
+import HasKAL.SignalProcessingUtils.InterpolationType
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
@@ -31,13 +33,13 @@ part'DataConditioning wave = do
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
     False -> do out <- section'Whitening TimeDomain wave
-                liftIO $ H3.spectrogramM H3.LogYZ
+                liftIO $ H3.spectrogramM H3.LogY
                                          H3.COLZ
                                          "mag"
                                          "whitened data"
                                          "gw150914_whitened_spectrogram.png"
                                          ((0, 0), (20, 400))
-                                         $ gwspectrogramWaveData 0.98 1 out
+                                         $ gwspectrogramWaveData 0.19 0.2 out
                 liftIO $ H.plot H.Linear
                                 H.Line
                                 1
@@ -57,7 +59,7 @@ part'DataConditioning wave = do
                                  "whitened data spectrum"
                                  "gw150914_whitened_spectrum.png"
                                  ((0,0),(0,0))
-                                 $ gwOnesidedPSDWaveData 1 out
+                                 $ gwOnesidedPSDWaveData 0.2 out
                 return out
     True  -> section'Whitening TimeDomain wave
 
@@ -67,14 +69,20 @@ section'LineRemoval = id
 
 section'Whitening :: WhnMethod -> WaveData -> StateT GP.GlitchParam IO WaveData
 section'Whitening opt wave = case opt of
-  TimeDomain -> do param <- get
-                   (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
-                   put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-                   put $ GP.updateGlitchParam'refpsd param 
-                     (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
-                   return $ applyWhitening whtCoeffList wave
-  FrequencyDomain -> do param <- get
-                          
+  TimeDomain 
+    -> do param <- get
+          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
+          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+          put $ GP.updateGlitchParam'refpsd param 
+            (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
+          return $ applyWhitening TimeDomain whtCoeffList wave
+  FrequencyDomain
+    -> do param <- get
+          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
+          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+          put $ GP.updateGlitchParam'refpsd param
+            (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
+          return $ applyWhitening FrequencyDomain whtCoeffList wave      
 
 
 
@@ -106,12 +114,16 @@ calcWhiteningCoeffCore param (whtCoeffList, train) =
 checkingWhitening wave = std (NL.toList (gwdata wave))  < 2.0
 
 
-applyWhitening :: [([Double],  Double)]
+applyWhitening :: WhnMethod
+               -> [([Double],  Double)]
                -> WaveData
                -> WaveData
-applyWhitening [] wave = wave
-applyWhitening (x:xs) wave =
-  applyWhitening xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+applyWhitening opt [] wave = wave
+applyWhitening opt (x:xs) wave = case opt of
+  TimeDomain -> 
+    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+  FrequencyDomain -> 
+    applyWhitening FrequencyDomain xs $ whiteningWaveData' x wave
 
 
 {--------------------
