@@ -101,7 +101,8 @@ hasKalGuiRayleighMon activeChannelLabels = do
            hfs = HSS.gwspectrogramV 0 rmStride rmSampling y
            quant = RM.rayleighMonV [0.5,0.9,0.95,0.99] rmSampling rmStride rmFClust snf hfs
            colors = [RED,RED,GREEN,GREEN,BLUE,BLUE,PINK,PINK]
-       oPlotXV LogXY LinePoint 2 colors ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
+           lineopts = replicate 8 LinePoint
+       oPlotXV LogXY lineopts 2 colors ("frequency [Hz]", "normalized noise level [/rHz]") 0.05 "RMon" ((0,0),(1,5)) $ concatPair quant
      (_, _) -> do
        putStrLn "###  Can't read data  ###"
 {----}

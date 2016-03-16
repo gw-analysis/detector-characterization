@@ -37,7 +37,7 @@ hrsync :: String            -- | executive filename
        -> IO ExitCode
 hrsync f from to = do
   let predicate event' = case event' of
-        Added path _ -> chekingFile path
+        Added path _ -> chekingFile $ encodeString path
         _            -> False
         where
          chekingFile path = head (takeFileName path) /= '.'
@@ -50,13 +50,13 @@ hrsync f from to = do
   withManagerConf config $ \manager -> do
     watchTreeChan
       manager
-      from
+      (decodeString from)
       predicate
       eventChan
     forever $ threadDelay 10000000
   event <- liftIO $ readChan eventChan
   let fname = eventPath event
-  rawSystem f [to, fname]
+  rawSystem f [to, (encodeString fname)]
 
 
 
@@ -67,7 +67,7 @@ watchNewfile :: String            -- | executive filename
              -> IO ()
 watchNewfile f webhomedir watchdir = do
   let predicate event' = case event' of
-        Added path _ -> chekingFile path
+        Added path _ -> chekingFile (encodeString path)
         _            -> False
         where
          chekingFile path = head (takeFileName path) /= '.' 
@@ -78,9 +78,9 @@ watchNewfile f webhomedir watchdir = do
                  , confUsePolling = True
                  }
   withManagerConf config $ \manager -> do
-    watchDir manager watchdir predicate
+    watchDir manager (decodeString watchdir) predicate
       $ \event -> do let gwfname = eventPath event
-                     rawSystem f [webhomedir, gwfname] >> return ()
+                     rawSystem f [webhomedir, (encodeString gwfname)] >> return ()
     waitBreak
   where
     waitBreak = do
@@ -95,17 +95,17 @@ watchNewfilewDB :: String            -- | command name
                 -> IO ()
 watchNewfilewDB f g webhomedir watchdir = do
   withManager $ \manager -> do
-    watchDir manager watchdir (const True)
+    watchDir manager (decodeString watchdir) (const True)
       $ \event -> case event of
         Removed _ _ -> print "file removed"
-        _ -> case extension (decodeString $ eventPath event) of
+        _ -> case extension (eventPath event) of
                Just "filepart" -> print "file downloading"
                Just "gwf" -> do
                  let gwfname = eventPath event
                  print gwfname
-                 rawSystem f [webhomedir, gwfname]
+                 rawSystem f [webhomedir, (encodeString gwfname)]
                  print "event display updated."
-                 rawSystem g [gwfname]
+                 rawSystem g [(encodeString gwfname)]
                  print "database updated."
 
                Nothing -> print "file extension should be .filepart or .gwf"
@@ -121,15 +121,15 @@ updatingDB :: String            -- | DB command
            -> IO ()
 updatingDB f watchdir = do
   withManager $ \manager -> do
-    watchDir manager watchdir (const True)
+    watchDir manager (decodeString watchdir) (const True)
       $ \event -> case event of
         Removed _ _ -> print "file removed"
-        _ -> case extension (decodeString $ eventPath event) of
+        _ -> case extension (eventPath event) of
                Just "filepart" -> print "file downloading"
                Just "gwf" -> do
                  let gwfname = eventPath event
                  print gwfname
-                 rawSystem f [gwfname]
+                 rawSystem f [(encodeString gwfname)]
                  print "framefile database updated."
                Nothing -> print "file extension should be .filepart or .gwf"
 --      $ \event -> do rawSystem f [webhomedir, "/home/detchar/xend/K-K1_R-1113209036-32.gwf"]

@@ -6,6 +6,7 @@ module HasKAL.SignalProcessingUtils.LinearPrediction
 , levinsonV
 , whitening
 , whiteningWaveData
+, whiteningWaveData'
 ) where
 
 import qualified Data.Array.CArray as CA
@@ -17,6 +18,7 @@ import Data.Maybe
 import Foreign.Storable (pokeElemOff)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
+import HasKAL.MathUtils.FFTW (dftRC1d,dftCR1d)
 import HasKAL.SignalProcessingUtils.Filter
 import HasKAL.SignalProcessingUtils.WindowType
 import HasKAL.SignalProcessingUtils.WindowFunction
@@ -58,6 +60,17 @@ whiteningWaveData (whnb,rho) x = do
   let y = G.map (/sqrt rho) $ fir whnb (gwdata x)
   fromJust $ updateWaveDatagwdata x y
 
+
+whiteningWaveData' :: ([Double],Double) -> WaveData -> WaveData
+whiteningWaveData' (whnb,rho) x = do
+  let datlen = VS.length $ gwdata x
+      whnb' = whnb ++ replicate (datlen-(length whnb)) 0.0
+      fftwhnb' = dftRC1d $ fromList whnb'
+      absfftwhnb' = sqrt $ (zipVectorWith (*) fftwhnb' (conj fftwhnb'))
+      fftdat = dftRC1d $ gwdata x
+      fftwhndat = dftCR1d $ zipVectorWith (*) absfftwhnb' fftdat
+  let y = G.map (/sqrt rho) fftwhndat
+  fromJust $ updateWaveDatagwdata x y
 
 
 lpefCoeffV :: Int -> (Vector Double, Vector Double) -> ([Double], Double)
