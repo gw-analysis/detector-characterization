@@ -15,12 +15,15 @@ TAR6= showChannelandSamplingRate
 TAR7= showKagraData
 TAR8= kagraDailyDataFind
 TAR9= updateFrameFullDB
-TAR10= rayleighMon
-TAR11= studentRayleighMon
-TAR12= timeseries
-TAR13= spectrum
-TAR14= spectrogram
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR11} ${TAR12} ${TAR13} ${TAR14}
+TAR10= generateCacheFile
+TAR11= updateFrameFullDBfromCache 
+#TAR12= rayleighMon
+#TAR13= studentRayleighMon
+#TAR14= timeseries
+#TAR15= spectrum
+#TAR16= spectrogram
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR11}
+# ${TAR12} ${TAR13} ${TAR14} ${TAR15} ${TAR16}
 
 # dependency
 DEP1= ./HasKAL/PlotUtils/HROOT/AppendFunction.cc
@@ -62,24 +65,26 @@ ${TAR7}: ${TAR7}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 ${TAR8}: ${TAR8}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
 
-
 ${TAR9}: ${TAR9}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
 
-${TAR10}: ${TAR10}.hs ${DEPs}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR10}: ${TAR10}.hs 
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
 
-${TAR11}: ${TAR11}.hs ${DEPs}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+${TAR11}: ${TAR11}.hs  ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
-${TAR12}: ${TAR12}.hs ${DEPs}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+#${TAR11}: ${TAR11}.hs ${DEPs}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
-${TAR13}: ${TAR13}.hs ${DEPs}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+#${TAR12}: ${TAR12}.hs ${DEPs}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
-${TAR14}: ${TAR14}.hs ${DEPs}
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+#${TAR13}: ${TAR13}.hs ${DEPs}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+
+#${TAR14}: ${TAR14}.hs ${DEPs}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
 clean:
 	rm -f ./*~ ./*.o ./*.hi ./*.dyn_o ./*.dyn_hi
