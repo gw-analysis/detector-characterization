@@ -37,7 +37,7 @@ part'DataConditioning wave = do
                                          H3.COLZ
                                          "mag"
                                          "whitened data"
-                                         "gw150914_whitened_spectrogram.png"
+                                         "production/gw150914_whitened_spectrogram.png"
                                          ((0, 0), (20, 400))
                                          $ gwspectrogramWaveData 0.19 0.2 out
                 liftIO $ H.plot H.Linear
@@ -47,7 +47,7 @@ part'DataConditioning wave = do
                                 ("time","amplitude")
                                 0.05
                                 "whitened data"
-                                "gw150914_whitened_timeseries.png"
+                                "production/gw150914_whitened_timeseries.png"
                                 ((16.05,16.2),(0,0))
                                 $ zip [0,1/4096..] (NL.toList $ gwdata out)
                 liftIO $ H.plotV H.LogXY
@@ -57,7 +57,7 @@ part'DataConditioning wave = do
                                  ("frequency [Hz]","ASD [Hz^-1/2]")
                                  0.05
                                  "whitened data spectrum"
-                                 "gw150914_whitened_spectrum.png"
+                                 "production/gw150914_whitened_spectrum.png"
                                  ((0,0),(0,0))
                                  $ gwOnesidedPSDWaveData 0.2 out
                 return out

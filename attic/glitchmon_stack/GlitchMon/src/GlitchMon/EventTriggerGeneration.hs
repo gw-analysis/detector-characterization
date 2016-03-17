@@ -42,7 +42,7 @@ section'TimeFrequencyExpression whnWaveData = do
       nfreq2 = GP.nfrequency param`div`2
       nfreq = GP.nfrequency param
       ntimeSlide = GP.ntimeSlide param
-      ntime = ((NL.dim $ gwdata whnWaveData)-nfreq) `div` ntimeSlide
+      ntime = ((NL.dim $ gwdata whnWaveData)-ntimeSlide) `div` ntimeSlide
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
@@ -51,18 +51,21 @@ section'TimeFrequencyExpression whnWaveData = do
 --        snd $ gwOnesidedPSDV (subVector (ntimeSlide*i) nfreq (gwdata whnWaveData)) nfreq fs)
 --        (snd refpsd)
 --        )) [0..ntime-1]) [0..nfreq2-1] :: Matrix Double
-      snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
-        where calcSpec tindx = NL.zipVectorWith (/)
-                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
-                (NL.fromList $ replicate nfreq  $ std $ NL.toList $ snd refpsd)
-              calcSpec' tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
+      snrMatP = (nfreq2><ntime) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+        where 
+          calcSpec tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) ntimeSlide (gwdata whnWaveData)) ntimeSlide fs
+--      snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
+--        where calcSpec tindx = NL.zipVectorWith (/)
+--                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
+--                (NL.fromList $ replicate nfreq  $ std $ NL.toList $ snd refpsd)
+--              calcSpec' tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
 
       out = (snrMatT', snrMatF, snrMatP)
   liftIO $ H3.spectrogramM H3.LogY
                            H3.COLZ
                            "mag"
                            "pixelSNR spectrogram"
-                           "gw150914_pixelSNR_spectrogram.png"
+                           "production/gw150914_pixelSNR_spectrogram.png"
                            ((0, 0), (20, 400))
                            out
   return out
@@ -95,7 +98,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
                            H3.COLZ
                            "mag"
                            "pixelSNR spectrogram"
-                           "gw150914_cluster_spectrogram.png"
+                           "production/gw150914_cluster_spectrogram.png"
                            ((0, 0), (20, 400))
                            newM              
  
