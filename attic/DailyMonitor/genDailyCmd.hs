@@ -14,11 +14,11 @@ filterRule :: [(MonName, ChName)] -> [(MonName, ChName)]
 filterRule = myfilter.nub
   where 
     -- enabled filters
-    myfilter = rangeMonOnly . stVectorOnly
+    myfilter = timeSeriesOnly . rangeMonOnly
 
     -- each filters
-    rangeMonOnly = limitChannels "dailyRangeMon" ["K1:GW-Channel"]
-    stVectorOnly = limitChannels "dailySTVectorMon" ["K1:StVec1", "K1:StVec2"]
+    timeSeriesOnly = limitChannels "TimeSeries" ["K1:GRD-PSL_STATE_N", "K1:GRD-IMC_LOCK_STATE_N"]
+    rangeMonOnly = limitChannels "RangeMon" ["K1:GW-Channel"]
 
 
 {-- Sample Filter 
