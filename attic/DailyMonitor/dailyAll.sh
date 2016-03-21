@@ -2,13 +2,13 @@
 #set -e
 
 ###  Parameters
-DEBUG_MODE=0
+DEBUG_MODE=1
 
 CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
 CMD_PRINT="./genDailyCmd"
 
-MAX_CORE=1
+MAX_CORE=5
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
 MAIN_CH="K1:PSL-PMC_TRANS_DC_OUT_DQ"
@@ -20,9 +20,9 @@ LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
 MIRROR_SERVER="detchar@seikai.hep.osaka-cu.ac.jp"
 
 #####  for test
-#YESTERDAY="2015 07 17"
-#DAILY_DIR="2015/07/17/"
-#LOG_FILE="2015-07-17.log"
+#YESTERDAY="2016 03 18"
+#DAILY_DIR="2016/03/18/"
+#LOG_FILE="2016-03-18.log"
 
 ###  Parameter check
 if test ! ${1}
@@ -95,10 +95,10 @@ then
     mkdir -p ${MKDIR_CMD}
     ${MVPNG_CMD}
     #### send results to seikai ####
-    SSH_CMD="ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
-    SCP_CMD="scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
-    ${SSH_CMD}
-    ${SCP_CMD}
+#    SSH_CMD="ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
+#    SCP_CMD="scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
+#    ${SSH_CMD}
+#    ${SCP_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
