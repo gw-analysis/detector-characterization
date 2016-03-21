@@ -32,9 +32,11 @@ html subSys date = concat [
   concat $ map (subhtml subSys date) [
     "General",
     {- "TUN", "FCL", "VAC", "CRY", -}
+    "MIF",
     "VIS", {- "MIR", "LAS", "MIF", -}
     "IOO", {- "AOS", "AEL", "DGS", -}
     {- "DMG", "DAS", "GIF", "DEC"  -}
+    "ENV",
     "Bruco"],
   "<td align=center valign=middle width=98 height=30>",
   "<div align=center><a href=\"webToolFrame.cgi\">Web Tools</a></div>",
