@@ -33,7 +33,9 @@ import Data.Maybe                 (fromJust, fromMaybe, catMaybes)
 import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 import qualified Data.Vector.Storable as V
-import Database.Relational.Query ( relationalQuery
+import Database.Relational.Query ( asc
+                                 , distinct 
+                                 , relationalQuery
                                  , query
                                  , relation
                                  , wheres
@@ -425,10 +427,12 @@ kagraDataFindCore gpsstrt duration =
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query flist
+      asc $ ch ! FrameFull.gpsStart'
       wheres $ not' ((ch ! FrameFull.gpsStart' .<=. value (Just gpsstrt)
         `and'` ch ! FrameFull.gpsStop'  .<=. value (Just gpsstrt))
         `or'` (ch ! FrameFull.gpsStart' .>=. value (Just gpsend)
         `and'` ch ! FrameFull.gpsStop'  .>=. value (Just gpsend)))
+      distinct
       return $ ch ! FrameFull.fname'
 
 
@@ -446,10 +450,12 @@ kagraDataFindCore' gpsstrt duration =
     core :: Relation () (Maybe Int32, Maybe Int32, Maybe String)
     core = relation $ do
       ch <- query flist
+      asc $ ch ! FrameFull.gpsStart'
       wheres $ not' ((ch ! FrameFull.gpsStart' .<=. value (Just gpsstrt)
         `and'` ch ! FrameFull.gpsStop'  .<=. value (Just gpsstrt))
         `or'` (ch ! FrameFull.gpsStart' .>=. value (Just gpsend)
         `and'` ch ! FrameFull.gpsStop'  .>=. value (Just gpsend)))
+      distinct
       return $ (,,) |$| ch ! FrameFull.gpsStart' |*| ch ! FrameFull.gpsStop' |*| ch ! FrameFull.fname'
 
 

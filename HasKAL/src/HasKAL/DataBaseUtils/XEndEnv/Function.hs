@@ -33,7 +33,9 @@ import Data.Maybe                 (fromJust, fromMaybe, catMaybes)
 import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 import qualified Data.Vector.Storable as V
-import Database.Relational.Query ( relationalQuery
+import Database.Relational.Query ( asc
+                                 , relationalQuery
+                                 , distinct
                                  , query
                                  , relation
                                  , wheres
@@ -421,10 +423,12 @@ kagraDataFindCore gpsstrt duration =
     core :: Relation () (Maybe String)
     core = relation $ do
       ch <- query flist
+      asc $ ch ! XEndEnv.gpsStart'
       wheres $ not' ((ch ! XEndEnv.gpsStart' .<=. value (Just gpsstrt)
         `and'` ch ! XEndEnv.gpsStop'  .<=. value (Just gpsstrt))
         `or'` (ch ! XEndEnv.gpsStart' .>=. value (Just gpsend)
         `and'` ch ! XEndEnv.gpsStop'  .>=. value (Just gpsend)))
+      distinct
       return $ ch ! XEndEnv.fname'
 
 
@@ -442,10 +446,12 @@ kagraDataFindCore' gpsstrt duration =
     core :: Relation () (Maybe Int32, Maybe Int32, Maybe String)
     core = relation $ do
       ch <- query flist
+      asc $ ch ! XEndEnv.gpsStart'
       wheres $ not' ((ch ! XEndEnv.gpsStart' .<=. value (Just gpsstrt)
         `and'` ch ! XEndEnv.gpsStop'  .<=. value (Just gpsstrt))
         `or'` (ch ! XEndEnv.gpsStart' .>=. value (Just gpsend)
         `and'` ch ! XEndEnv.gpsStop'  .>=. value (Just gpsend)))
+      distinct
       return $ (,,) |$| ch ! XEndEnv.gpsStart' |*| ch ! XEndEnv.gpsStop' |*| ch ! XEndEnv.fname'
 
 
