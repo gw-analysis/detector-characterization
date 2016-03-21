@@ -102,7 +102,7 @@ defColors = [BLACK, RED, GREEN, BLUE, YELLOW, PINK, CYAN]
 plotBase :: MultiPlot -> LogOption -> [PlotTypeOption] -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [[(Double, Double)]] -> IO ()
 plotBase multi log marks lineWidth colors xyLables labelSize titles fname ranges dats = do
   tApp <- HRS.newTApp' fname
-  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 800 600
   HAF.setGrid tCan
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 1 1 1
@@ -132,7 +132,7 @@ plotBase multi log marks lineWidth colors xyLables labelSize titles fname ranges
 plotBaseV :: MultiPlot -> LogOption -> [PlotTypeOption] -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [Spectrum] -> IO ()
 plotBaseV multi log marks' lineWidth colors' xyLables labelSize titles fname ranges gps dats' = do
   tApp <- HRS.newTApp' fname
-  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 800 600
   HAF.setGrid tCan
   HAF.setPadMargin 0.15 1 1 1
 
@@ -178,7 +178,7 @@ plotBaseV multi log marks' lineWidth colors' xyLables labelSize titles fname ran
 plotBaseV' :: MultiPlot -> LogOption -> [PlotTypeOption] -> Int -> [ColorOpt] -> [(String, String)] -> Double -> [String] -> String -> [((Double, Double), (Double, Double))] -> [Int] -> [Spectrum] -> IO ()
 plotBaseV' multi log marks lineWidth colors xyLables labelSize titles fname ranges gps dats = do
   tApp <- HRS.newTApp' fname
-  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 640 480
+  tCan <- HR.newTCanvas (str2cstr "title") (str2cstr "HasKAL ROOT") 800 600
   HAF.setGrid tCan
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 1 1 1
