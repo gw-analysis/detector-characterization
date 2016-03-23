@@ -2,13 +2,13 @@
 #set -e
 
 ###  Parameters
-DEBUG_MODE=1
+DEBUG_MODE=0
 
 CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
 CMD_PRINT="./genDailyCmd"
 
-MAX_CORE=5
+MAX_CORE=6
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
 MAIN_CH="K1:PSL-PMC_TRANS_DC_OUT_DQ"

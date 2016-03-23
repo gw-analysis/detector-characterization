@@ -84,7 +84,7 @@ watchFile topDir watchdir = do
         _            -> False
       config = WatchConfig
                  { confDebounce = NoDebounce 
-                 , confPollInterval = 1000000 -- 5seconds
+                 , confPollInterval = 1000000 -- 1s
                  , confUsePolling = True
                  }
   gwfname <- liftIO $ withManagerConf config $ \manager -> do

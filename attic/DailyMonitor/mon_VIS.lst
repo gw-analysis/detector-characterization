@@ -1,5 +1,5 @@
 ######  '#' is prefix of comment
-#SensMon     # Sensitivity Monitor
+SensMon     # Sensitivity Monitor
 RMSMon      # RMS Monitor
 RMon        # Rayleigh Monitor
 #SRMon       # Student Rayleigh Monitor
