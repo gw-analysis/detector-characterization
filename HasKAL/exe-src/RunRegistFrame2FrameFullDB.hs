@@ -19,6 +19,7 @@ import Data.Conduit ( Conduit
                     )
 import Data.List (elemIndices)
 import Data.Text (pack)
+import Data.Time.Clock
 import Filesystem.Path (extension, (</>))
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DataBaseUtils.FrameFull.DataBaseAdmin (updateFrameDB')
@@ -83,8 +84,8 @@ watchFile topDir watchdir = do
         Added path _ -> chekingFile path 
         _            -> False
       config = WatchConfig
-                 { confDebounce = NoDebounce 
-                 , confPollInterval = 1000000 -- 1s
+                 { confDebounce = Debounce (30::NominalDiffTime) -- DebounceDefault -- NoDebounce  or Debounce 5::NominalDiffTime
+                 , confPollInterval = 30000000 -- 1s
                  , confUsePolling = True
                  }
   gwfname <- liftIO $ withManagerConf config $ \manager -> do
