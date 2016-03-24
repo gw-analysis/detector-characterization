@@ -51,9 +51,10 @@ section'TimeFrequencyExpression whnWaveData = do
 --        snd $ gwOnesidedPSDV (subVector (ntimeSlide*i) nfreq (gwdata whnWaveData)) nfreq fs)
 --        (snd refpsd)
 --        )) [0..ntime-1]) [0..nfreq2-1] :: Matrix Double
-      snrMatP = (nfreq2><ntime) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+      snrMatP = NL.trans $ (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
         where 
-          calcSpec tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) ntimeSlide (gwdata whnWaveData)) ntimeSlide fs
+          calcSpec tindx = snd $ gwOnesidedPSDV 
+            (NL.subVector (ntimeSlide*tindx) ntimeSlide (gwdata whnWaveData)) ntimeSlide fs
 --      snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
 --        where calcSpec tindx = NL.zipVectorWith (/)
 --                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)

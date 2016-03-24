@@ -20,7 +20,7 @@ import HasKAL.SignalProcessingUtils.Filter
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.TimeUtils.Function
-import HasKAL.WaveUtils.Data
+import HasKAL.WaveUtils.Data (WaveData(..),mkWaveData)
 import Numeric.LinearAlgebra
 
 
@@ -42,11 +42,9 @@ resample fs newfs x = undefined
 
 downsampleWaveData :: Double -> WaveData -> WaveData
 downsampleWaveData newfs x = y
-  where y = x
-        samplingFrequency y = newfs
-        fs = samplingFrequency x
-        gwdata y = downsampleSV fs newfs (gwdata x)
-        stopGPSTime y = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
+  where y = mkWaveData (detector x) (dataType x) newfs (startGPSTime x) stopT v
+        v = downsampleSV (samplingFrequency x) newfs (gwdata x)
+        stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
 downsampleV :: Double -> Double -> Vector Double -> Vector Double

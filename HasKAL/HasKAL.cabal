@@ -344,4 +344,39 @@ executable kagraDataPoint
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
+executable showChannels
+  hs-source-dirs: exe-src
+  main-is:        showChannels.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
 
