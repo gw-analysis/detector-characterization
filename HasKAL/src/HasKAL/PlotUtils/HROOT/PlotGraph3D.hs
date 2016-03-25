@@ -94,7 +94,7 @@ histgram2dDateMX log mark (xl, yl, zl) title range gps dat = plot3dBaseM NONE lo
 plot3dBase :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> [(Double, Double, Double)] -> IO ()
 plot3dBase wmap log mark xyzLabel title fname range dats = do
   tApp <- HRS.newTApp' fname
-  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
+  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 800 600
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 0.15 1 1
 
@@ -118,7 +118,7 @@ plot3dBase wmap log mark xyzLabel title fname range dats = do
 plot3dBaseM :: OptBG -> LogOption -> PlotTypeOption3D -> (String, String, String) -> String -> String -> ((Double, Double), (Double, Double)) -> Int -> Spectrogram -> IO ()
 plot3dBaseM wmap log mark xyzLabel title fname range gps (tV, fV, specM) = do
   tApp <- HRS.newTApp' fname
-  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 640 480
+  tCan <- HR.newTCanvas (str2cstr "hoge") (str2cstr "HasKAL") 800 600
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 0.15 1 1
 
