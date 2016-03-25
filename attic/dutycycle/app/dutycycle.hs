@@ -21,20 +21,20 @@ main = do
      duration' = read dur :: Int  -- hours
      duration = fromIntegral (3600*duration') :: Double -- seconds
      oFile = ch++"-"++year++"-"++month++"-"++day++"-"++hour++"-"++dur++"_DutyCycle.png"
-     xlabel = "Since "++year++"/"++month++"/"++day++"-"++hour++":00:00 JST"
+     xlabel = "Since "++year++"/"++month++"/"++day++"-"++"00:00:00 JST"
+     hour' = read (args!!3) :: Double
  mbWd <- kagraWaveDataGetC (fromIntegral gps) (floor duration) ch
  let wd = case mbWd of
       Nothing -> error $ "Can't find file: "++year++"/"++month++"/"++day++"-"++hour++":00:00 JST"
       Just x -> x
      wdDS = map (waveData2TimeSeries (gps,0)) wd
      lockinfo = map checkLock $ V.toList $ V.concat $ (snd . unzip) wdDS
-     xduty = show $ 
-      (100/(samplingFrequency (head wd)) * (sum lockinfo))/duration
-     title = "DutyCycle: "++xduty++"%"
-     x1 = map ((1/3600*) . fst) wdDS
+     xduty = (100/(samplingFrequency (head wd)) * (sum lockinfo))/duration
+     title = "DutyCycle: "++show ((fromIntegral (truncate (xduty*100)))/100)++"%"
+     x1 = map (\x->V.map (hour'+) x) $ map ((1/3600*) . fst) wdDS
      x2 = map V.fromList $ map (\x->map checkLock x) $ map (V.toList . snd) wdDS
  oPlotV Linear [Line] 1 (replicate (length wd) RED)
-  (xlabel, "Lock Status") 0.05 title oFile ((0,0),(0,2)) $ zip x1 x2
+  (xlabel, "Lock Status") 0.05 title oFile ((0,0),(0,1.2)) $ zip x1 x2
 
 
 {-- Internal Functions --}
