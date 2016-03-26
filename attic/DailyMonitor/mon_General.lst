@@ -1,0 +1,9 @@
+######  '#' is prefix of comment
+SensMon     # Sensitivity Monitor
+RMSMon      # RMS Monitor
+RMon        # Rayleigh Monitor
+SRMon       # Student Rayleigh Monitor
+TimeSeries  # Time Series Plot
+#Spectrum    # Spectrum Plot
+Spectrogram # Spectrogram Plot
+LT          # Line Tracking
