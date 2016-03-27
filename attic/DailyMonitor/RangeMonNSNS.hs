@@ -1,7 +1,8 @@
 
+import Data.List (find)
 import qualified Data.Vector.Storable as V
 import qualified Data.Packed.Matrix as V
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraDataFind)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraWaveDataGet0, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 import HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta (distInspiral)
 import HasKAL.PlotUtils.HROOT.PlotGraph
@@ -12,17 +13,19 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Function (deformatGPS,diffGPS)
 import HasKAL.WaveUtils.Data (WaveData(..))
 import System.Environment (getArgs)
+import System.IO.Unsafe (unsafePerformIO)
 
 main = do
  args <- getArgs
  (year, month, day, ch) <- case length args of
   4 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), args!!3)
-  _ -> error "Usage: RangeMon yyyy mm dd channel"
+  _ -> error "Usage: RangeMonNSNS yyyy mm dd channel"
  
- let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
+ let chunkLen = 15*60 ::Int -- seconds
+     gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
      duration = 86400 -- seconds
      dsfs = 2048
-     fftLength = 15*60  -- seconds
+     fftLength = fromIntegral chunkLen
      oFile = ch++"-"++year++"-"++month++"-"++day++"_RangeMonNSNS.png"
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = "1.4Mo-1.4Mo Inspiral Range [pc]"
@@ -39,8 +42,9 @@ main = do
      n0 = nblocks fftLength gps duration wd
      (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
      x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (V.toColumns specgram))
-     ir' = map (10**6*) $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
-     ir  = V.fromList $ map infinityTo0 ir'
+     ir'' = map (10**6*) $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
+     ir'  = map infinityTo0 ir'' :: [Double]
+     ir   = V.fromList $ zipWith (*) (map (\x->(checkLoking gps chunkLen x)) (V.toList vecT)) ir'
      vecT_hr = V.map (1/3600*) vecT
 -- print $ V.toList ir
 -- print $ V.toList vecT_hr
@@ -50,6 +54,21 @@ main = do
 infinityTo0 x | isInfinite x == True = 0 :: Double
               | otherwise = x :: Double
 
+
+checkLoking gps chunkLen t = unsafePerformIO $ do
+ let t' = gps + floor t :: Int
+ mbWd <- kagraWaveDataGet0 t' chunkLen "K1:GRD-MICH_LOCK_STATE_N"
+ let wd = case mbWd of
+           Nothing -> error "no valid file."
+           Just x -> x 
+     lockinfo = V.toList $ gwdata wd 
+ case (find (\x-> x /= 1000) lockinfo) of
+  Just _ -> return (0 :: Double)
+  Nothing-> return (1 ::Double)
+
+
+   
+ 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
 show0 digit number
