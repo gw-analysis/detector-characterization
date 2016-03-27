@@ -14,30 +14,30 @@ filterRule :: [(MonName, ChName)] -> [(MonName, ChName)]
 filterRule = myfilter.nub
   where 
     -- enabled filters
-    myfilter = timeSeriesOnly1 . 
-               timeSeriesOnly2 . 
-               timeSeriesOnly3 . 
-               timeSeriesOnly4 . 
-               timeSeriesOnly5 . 
-               timeSeriesOnly6 . 
-               timeSeriesOnly7 . 
-               timeSeriesOnly8 . 
-               timeSeriesOnly9 . 
-               timeSeriesOnly10 . 
-               rangeMonOnly
+    myfilter = rule1 .
+               rule2 .
+               rule3 .
+               rule4 .
+               rule5 .
+               rule6 .
+               rule7 .
+               rule8 . 
+               rule9 .
+               rule10 .
+               rule11
 
     -- each filters
-    timeSeriesOnly1 = limitMonitors "K1:GRD-PSL_STATE_N" ["TimeSeries"]
-    timeSeriesOnly2 = limitMonitors "K1:GRD-IMC_LOCK_STATE_N" ["TimeSeries"]
-    timeSeriesOnly3 = limitMonitors "K1:GRD-MICH_LOCK_STATE_N" ["TimeSeries"]
-    timeSeriesOnly4 = limitMonitors "K1:GRD-IFO_STATE_N" ["TimeSeries"]
-    timeSeriesOnly5 = limitMonitors "K1:GRD-LSC_LOCK_STATE_N" ["TimeSeries"]
-    timeSeriesOnly6 = limitMonitors "K1:GRD-VIS_BS_STATE_N" ["TimeSeries"]
-    timeSeriesOnly7 = limitMonitors "K1:GRD-VIS_MCE_STATE_N" ["TimeSeries"]
-    timeSeriesOnly8 = limitMonitors "K1:GRD-VIS_MCI_STATE_N" ["TimeSeries"]
-    timeSeriesOnly9 = limitMonitors "K1:GRD-VIS_MCO_STATE_N" ["TimeSeries"]
-    timeSeriesOnly10 = limitMonitors "K1:GRD-VIS_PR3_STATE_N" ["TimeSeries"]
-    rangeMonOnly = limitChannels "RangeMon" ["K1:LSC-MICH_ERR_CAL_OUT_DQ"]
+    rule1 = limitMonitors "K1:GRD-PSL_STATE_N" ["TimeSeries"]
+    rule2 = limitMonitors "K1:GRD-IMC_LOCK_STATE_N" ["TimeSeries"]
+    rule3 = limitMonitors "K1:GRD-IFO_STATE_N" ["TimeSeries"]
+    rule4 = limitMonitors "K1:GRD-LSC_LOCK_STATE_N" ["TimeSeries"]
+    rule5 = limitMonitors "K1:GRD-VIS_BS_STATE_N" ["TimeSeries"]
+    rule6 = limitMonitors "K1:GRD-VIS_MCE_STATE_N" ["TimeSeries"]
+    rule7 = limitMonitors "K1:GRD-VIS_MCI_STATE_N" ["TimeSeries"]
+    rule8 = limitMonitors "K1:GRD-VIS_MCO_STATE_N" ["TimeSeries"]
+    rule9 = limitMonitors "K1:GRD-VIS_PR3_STATE_N" ["TimeSeries"]
+    rule10= limitMonitors "K1:GRD-MICH_LOCK_STATE_N" ["TimeSeries"]
+    rule11= limitMonitors "K1:LSC-MICH_ERR_CAL_OUT_DQ" ["SensMon","RMSMon","RMon","SRMon","Spectrum","Spectrogram","LT","RangeMonNSNS","RangeMonBHBH"]
 
 
 {-- Sample Filter 

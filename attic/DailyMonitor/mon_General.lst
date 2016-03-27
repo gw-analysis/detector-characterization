@@ -4,6 +4,8 @@ RMSMon      # RMS Monitor
 RMon        # Rayleigh Monitor
 SRMon       # Student Rayleigh Monitor
 TimeSeries  # Time Series Plot
-#Spectrum    # Spectrum Plot
+Spectrum    # Spectrum Plot
 Spectrogram # Spectrogram Plot
 LT          # Line Tracking
+RangeMonNSNS    # Inspiral/Ringdown/IMBH range
+RangeMonBHBH
