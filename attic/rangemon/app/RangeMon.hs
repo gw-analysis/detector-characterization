@@ -39,8 +39,9 @@ main = do
      n0 = nblocks fftLength gps duration wd
      (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
      x = map (\x-> zip (V.toList vecF) x) (map V.toList $ (V.toColumns specgram))
-     ir = V.fromList $ map (sqrt . distInspiral 1.4 1.4) x
- plotV Linear Line 1 RED (xlabel, "Inspiral Rabge") 0.05 title oFile ((0,0),(0,0)) $ (vecT, ir)
+     ir = V.fromList $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
+     vecT_hr = V.map (1/3600*) vecT
+ plotV Linear Line 1 RED (xlabel, "Inspiral Range") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
 
 
 
