@@ -20,7 +20,9 @@ TAR10= LT
 TAR11= SensMon
 TAR12= genDailyCmd
 TAR13= FileFinder
-TARs= ${TAR1} ${TAR2} ${TAR4} ${TAR6} ${TAR7} ${TAR8} ${TAR3} ${TAR5} ${TAR9} ${TAR10} ${TAR11} ${TAR12} ${TAR13}
+TAR14= RangeMonNSNS
+TAR15= RangeMonBHBH
+TARs= ${TAR1} ${TAR2} ${TAR4} ${TAR6} ${TAR7} ${TAR8} ${TAR3} ${TAR5} ${TAR9} ${TAR10} ${TAR11} ${TAR12} ${TAR13} ${TAR14} ${TAR15}
 
 # compile rule
 all: ${TARs}
