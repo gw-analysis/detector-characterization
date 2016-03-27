@@ -25,7 +25,7 @@ main = do
      fftLength = 15*60  -- seconds
      oFile = ch++"-"++year++"-"++month++"-"++day++"_RangeMonNSNS.png"
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
-     title = "1.4Mo-1.4Mo Inspiral Range"
+     title = "1.4Mo-1.4Mo Inspiral Range [pc]"
 
  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch 
  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
@@ -39,12 +39,16 @@ main = do
      n0 = nblocks fftLength gps duration wd
      (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
      x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (V.toColumns specgram))
-     ir = V.fromList $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
+     ir' = map (10**6*) $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
+     ir  = V.fromList $ map infinityTo0 ir'
      vecT_hr = V.map (1/3600*) vecT
- print $ V.toList ir
- plotV Linear Line 1 RED (xlabel, "Inspiral Range") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
+-- print $ V.toList ir
+-- print $ V.toList vecT_hr
+ plotV Linear Line 1 RED (xlabel, "Inspiral Range[pc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
 
 
+infinityTo0 x | isInfinite x == True = 0 :: Double
+              | otherwise = x :: Double
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String

@@ -37,7 +37,7 @@ filterRule = myfilter.nub
     rule8 = limitMonitors "K1:GRD-VIS_MCO_STATE_N" ["TimeSeries"]
     rule9 = limitMonitors "K1:GRD-VIS_PR3_STATE_N" ["TimeSeries"]
     rule10= limitMonitors "K1:GRD-MICH_LOCK_STATE_N" ["TimeSeries"]
-    rule11= limitMonitors "K1:LSC-MICH_ERR_CAL_OUT_DQ" ["SensMon","RMSMon","RMon","SRMon","Spectrum","Spectrogram","LT","RangeMonNSNS","RangeMonBHBH"]
+    rule11= limitMonitors "K1:LSC-MICH_ERR_CAL_OUT_DQ" ["SensMon","RMSMon","RMon","SRMon","Spectrum","Spectrogram","LT","RangeMonNSNS"]
 
 
 {-- Sample Filter 
