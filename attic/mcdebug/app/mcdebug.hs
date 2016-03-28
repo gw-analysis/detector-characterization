@@ -28,15 +28,15 @@ main = do
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = ch++"over threshold each 10 minutes (%)"
 
-
- mbWd <- kagraWaveDataGet0 (fromIntegral gps) (fromIntegral duration) ch
- let chunkLen = 10*60 --seconds
+ mbWd <- kagraWaveDataGet0 gps duration ch
+ let chunkLen = 15*60 --seconds
      chunkLenD = fromIntegral chunkLen
      wd = case mbWd of
            Nothing -> error "no valid data."
            Just x -> x
      wdDS = (waveData2TimeSeries (gps,0) . downsampleWaveData newfs) wd
      ts =  map V.toList $ mkChunks (snd wdDS) (chunkLen*(floor newfs))
+-- print $ V.length $ snd wdDS
      surviver5000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 5000]) ts
      surviver10000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 10000]) ts
      surviver15000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 15000]) ts
@@ -60,10 +60,13 @@ show0 digit number
   | otherwise   = number
   where len = length number
 
+
 nblocks :: Double -> Int -> Int -> [WaveData] -> [Int]
 nblocks dt gps duration [] = [ceiling . (/dt) . fromIntegral $ duration]
 nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGPS) ss
   where ss = (startGPSTime $ head ws, (gps,0))
              : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
              ++ [((gps+duration, 0), stopGPSTime $ last ws)]
+
+
 
