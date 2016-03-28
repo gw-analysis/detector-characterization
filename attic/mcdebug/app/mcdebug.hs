@@ -25,6 +25,9 @@ main = do
      oFile5000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo5000over.png"
      oFile10000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo10000over.png"
      oFile15000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo15000over.png"
+     dFile5000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo5000over.dat"
+     dFile10000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo10000over.dat"
+     dFile15000 = ch++"-"++year++"-"++month++"-"++day++"_MCServo15000over.dat"
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = ch++"over threshold each 10 minutes (%)"
 
@@ -37,14 +40,16 @@ main = do
      wdDS = (waveData2TimeSeries (gps,0) . downsampleWaveData newfs) wd
      ts =  map V.toList $ mkChunks (snd wdDS) (chunkLen*(floor newfs))
 -- print $ V.length $ snd wdDS
-     surviver5000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 5000]) ts
-     surviver10000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 10000]) ts
-     surviver15000 = V.fromList $ map (\y-> (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 15000]) ts
+     surviver5000 = V.fromList $ map (\y-> (100/chunkLenD*) . (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 5000]) ts
+     surviver10000 = V.fromList $ map (\y-> (100/chunkLenD*) . (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 10000]) ts
+     surviver15000 = V.fromList $ map (\y-> (100/chunkLenD*) . (1/newfs*) . fromIntegral . length $ [x | x<-y, (abs x) > 15000]) ts
      tvec = V.fromList ([0,chunkLenD/3600..chunkLenD/3600*(fromIntegral (V.length surviver5000)-1)]::[Double])
  plotV Linear Line 1 RED (xlabel, "percentage") 0.05 title oFile5000 ((0,0),(0,0)) $ (tvec, surviver5000)
+ writeFile dFile5000 $ unlines [show x1++" "++show x2|(x1,x2)<-zip (V.toList tvec) (V.toList surviver5000)]
  plotV Linear Line 1 RED (xlabel, "percentage") 0.05 title oFile10000 ((0,0),(0,0)) $ (tvec, surviver10000)
+ writeFile dFile10000 $ unlines [show x1++" "++show x2|(x1,x2)<-zip (V.toList tvec) (V.toList surviver10000)]
  plotV Linear Line 1 RED (xlabel, "percentage") 0.05 title oFile15000 ((0,0),(0,0)) $ (tvec, surviver15000)
-
+ writeFile dFile15000 $ unlines [show x1++" "++show x2|(x1,x2)<-zip (V.toList tvec) (V.toList surviver15000)]
 
 mkChunks :: V.Vector Double -> Int -> [V.Vector Double]
 mkChunks vIn n = mkChunksCore vIn n (V.length vIn `div` n)
