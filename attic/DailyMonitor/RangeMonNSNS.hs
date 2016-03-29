@@ -27,6 +27,7 @@ main = do
      dsfs = 2048
      fftLength = fromIntegral chunkLen
      oFile = ch++"-"++year++"-"++month++"-"++day++"_RangeMonNSNS.png"
+     dFile = ch++"-"++year++"-"++month++"-"++day++"_RangeMonNSNS.dat"
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = "1.4Mo-1.4Mo Inspiral Range [pc]"
 
@@ -49,6 +50,9 @@ main = do
 -- print $ V.toList ir
 -- print $ V.toList vecT_hr
  plotV Linear Line 1 RED (xlabel, "Inspiral Range[pc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
+ let xir = V.toList ir
+     xt  = V.toList vecT_hr
+ writeFile dFile $ unlines [show x1++" "++show x2|(x1,x2)<-zip xt xir]
 
 
 infinityTo0 x | isInfinite x == True = 0 :: Double
