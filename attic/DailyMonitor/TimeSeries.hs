@@ -37,7 +37,10 @@ main = do
   unit <- safeGetUnitY file ch
 
   {-- main --}
-  let wdDS = map (waveData2TimeSeries (gps,0) . downsampleWaveData dsfs) wd
+  let fs = samplingFrequency (head wd)
+      wdDS = case (fs > dsfs) of
+              True -> map (waveData2TimeSeries (gps,0) . downsampleWaveData dsfs) wd
+              False-> map (waveData2TimeSeries (gps,0)) wd
 --  let wdDS = map ((\v -> (V.fromList [1.0 .. fromIntegral . V.length $ v], v) ) . downsampleV (samplingFrequency (head wd)) dsfs) (map gwdata wd)
   oPlotDateV Linear [Line] 1 (replicate (length wd) RED)
     (xlabel, unitBracket "amplitude" unit) 0.05 title oFile ((0,86400),(0,0)) gps $ wdDS
