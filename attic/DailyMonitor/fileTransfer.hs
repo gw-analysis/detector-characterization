@@ -6,7 +6,7 @@
 #YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
 #YESTERDAY="2016-12-19"
 YESTERDAY=$1
-MIRROR_SERVER="detchar@seikai.hep.osaka-cu.ac.jp"
+MIRROR_SERVER="detchar@157.82.231.187"
 filelist=`kagraDailyDataFind ${YESTERDAY} JST`
 DBCMD="${HOME}/tools/detector-characterization/HasKAL/exe-src/updateFrameFullDB"
 if test ${filelist} = \"Nothing\" ; then
