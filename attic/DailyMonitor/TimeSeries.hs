@@ -9,7 +9,7 @@ import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WaveUtils.Data (WaveData(..))
 import HasKAL.WaveUtils.Function (waveData2TimeSeries)
 
-import qualified Data.Vector.Storable as V (length, fromList)
+import qualified Data.Vector.Storable as V (length, fromList, map)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleV)
 
 main = do
@@ -25,7 +25,8 @@ main = do
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_TimeSeries.png"
       title = "TimeSeries: " ++ ch
-      xlabel = "Date: "++year++"/"++month
+--      xlabel = "Date: "++year++"/"++month
+      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++" 00:00:00 JST"
 
   {-- read data --}
   mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
@@ -39,11 +40,11 @@ main = do
   {-- main --}
   let fs = samplingFrequency (head wd)
       wdDS = case (fs > dsfs) of
-              True -> map (waveData2TimeSeries (gps,0) . downsampleWaveData dsfs) wd
-              False-> map (waveData2TimeSeries (gps,0)) wd
---  let wdDS = map ((\v -> (V.fromList [1.0 .. fromIntegral . V.length $ v], v) ) . downsampleV (samplingFrequency (head wd)) dsfs) (map gwdata wd)
-  oPlotDateV Linear [Line] 1 (replicate (length wd) RED)
-    (xlabel, unitBracket "amplitude" unit) 0.05 title oFile ((0,86400),(0,0)) gps $ wdDS
+              True -> map (toHours . waveData2TimeSeries (gps,0) . downsampleWaveData dsfs) wd
+              False-> map (toHours . waveData2TimeSeries (gps,0)) wd
+  -- oPlotDateV Linear [Line] 1 (replicate (length wd) RED)
+  --   (xlabel, unitBracket "amplitude" unit) 0.05 title oFile ((0,86400),(0,0)) gps $ wdDS
+  oPlotV Linear [Line] 1 (replicate (length wd) RED) (xlabel, "amplitude") 0.05 title oFile ((0,0),(0,0)) $ wdDS
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -55,3 +56,6 @@ show0 digit number
 unitBracket :: String -> String -> String
 unitBracket x "" = x
 unitBracket x y  = x++" ["++y++"]"
+
+toHours w = (V.map (1/3600*) (fst w ), snd w)
+

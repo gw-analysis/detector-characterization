@@ -41,7 +41,7 @@ main = do
 
   {-- main --}
   let snf = gwOnesidedPSDWaveData fftLength wd
-  plotV LogXY Line 1 RED (xlabel, "["++unit++"/rHz]") 0.05 (title wd) oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
+  plotV LogXY Line 1 RED (xlabel, "[1/rHz]") 0.05 (title wd) oFile ((0,0),(0,0)) $ mapSpectrum sqrt snf
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String

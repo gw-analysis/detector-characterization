@@ -11,6 +11,7 @@ import HasKAL.SpectrumUtils.SpectrumUtils (gwspectrogramWaveData)
 import HasKAL.TimeUtils.Function (diffGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WaveUtils.Data (WaveData(..))
+import qualified Data.Vector.Storable as V
 
 main = do
   args <- getArgs
@@ -27,7 +28,8 @@ main = do
       -- for Plot
       oFile = ch++"-"++year++"-"++month++"-"++day++"_Spectrogram.png"
       title = "Spectrogram: "++ch ++" (dt= "++(show fftLength)++", df="++(showGFloat (Just 3) (1/fftLength) "")++")"
-      xlabel = "Date: "++year++"/"++month
+--      xlabel = "Date: "++year++"/"++month
+      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++" 00:00:00 JST"
 
   {-- read data --}
   mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
@@ -41,8 +43,9 @@ main = do
   {-- main --}
   let hf = map (gwspectrogramWaveData 0 fftLength . downsampleWaveData dsfs) wd
       n0 = nblocks fftLength gps duration wd
-  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", "["++unit++"/rHz]") title oFile ((0,0),(0,0)) gps 
-    $ mapSpectrogram sqrt $ catSpectrogramT0 0 fftLength n0 hf
+--  histgram2dDateM LogYZ COLZ (xlabel, "frequency [Hz]", "[1/rHz]") title oFile ((0,0),(0,0)) gps 
+--    $ mapSpectrogram sqrt $ catSpectrogramT0 0 fftLength n0 hf
+  histgram2dM LogYZ COLZ (xlabel, "frequency [Hz]", "[1/rHz]") title oFile ((0,0),(0,0)) $ mapSpectrogram sqrt $ toHours $ catSpectrogramT0 0 fftLength n0 hf
 
 {-- Internal Functions --}
 show0 :: Int -> String -> String
@@ -57,3 +60,6 @@ nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGP
   where ss = (startGPSTime $ head ws, (gps,0))
              : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
              ++ [((gps+duration, 0), stopGPSTime $ last ws)]
+
+toHours spe = (V.map (1/3600*) t, f, m)
+  where (t,f,m) = spe

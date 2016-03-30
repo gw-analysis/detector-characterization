@@ -9,6 +9,7 @@ import HasKAL.MonitorUtils.RMSMon.RMSMon (rmsMonWaveData)
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGet0)
 --import HasKAL.DataBaseUtils.XEndEnv.Function (kagraWaveDataGet0)
 import HasKAL.WaveUtils.Data (WaveData(..))
+import qualified Data.Vector.Storable as V
 
 {-- memo
     running time (24hour data) : ~2m30s
@@ -54,10 +55,13 @@ main = do
  let color = [BLUE, GREEN, RED, PINK, CYAN]
      title = setTitle f1low f1high f2low f2high f3low f3high channel
      fname = channel ++ "-" ++ year ++ "-" ++ month ++ "-" ++ day ++ "_RMSMon.png"
-     xlabel = "Date: "++year++"/"++month :: String
+--     xlabel = "Date: "++year++"/"++month :: String
+     xlabel = "Time[hours] since "++year++"/"++month++"/"++day++" 00:00:00 JST"
 
 -- oPlotDateV LogY [LinePoint] 1 color (xlabel, "RMS") 0.05 title fname ((0,0),(rms_min*0.8,rms_max*1.2)) (fst $ startGPSTime wd) rms
- oPlotDateV LogY [LinePoint] 1 color (xlabel, "RMS") 0.05 title fname ((0,0),(0,0)) (fst $ startGPSTime wd) rms
+-- oPlotDateV LogY [LinePoint] 1 color (xlabel, "RMS") 0.05 title fname ((0,0),(0,0)) (fst $ startGPSTime wd) rms
+ oPlotV LogY [LinePoint] 1 color (xlabel, "RMS") 0.05 title fname ((0,0),(0,0)) $ map toHours rms
+
  return 0
 
 {-- Internal Functions --}
@@ -71,3 +75,7 @@ setTitle :: String -> String -> String -> String -> String -> String -> String -
 setTitle f1low f1high f2low f2high f3low f3high channel = 
          "RMS Mon BLUE=" ++ f1low ++ "-" ++ f1high ++ "Hz, GREEN=" ++ f2low ++ "-" ++ f2high ++ "Hz, RED=" ++ 
              f3low ++ "-" ++ f3high ++ ":" ++ channel
+
+toHours x = (t,val)
+ where (t',val) = x
+       t = V.map (1/3600*) t'

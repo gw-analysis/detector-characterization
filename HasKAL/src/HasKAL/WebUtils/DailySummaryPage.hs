@@ -87,7 +87,8 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
 --  _ <- recurrentCreateDirectory ([home,"public_html"]++pth) pth
   createDirectoryIfMissing True (home++"/public_html/"++dir)
   let pageTitle = "HasKAL: Daily Summary Page"
-      fname = [c++"-"++date++"_"++m|c<-chs,m<-mons]
+      chmon = filterRule [(x,y)| y<-chs, x<-mons]
+      fname = [snd c++"-"++date++"_"++fst c|c<-chmon]
       fnamepng = ["." </> x++".png"|x<-fname]
       fnamehtmledCh = home </> "public_html" </> dir </> date++"_"++subsystem++".html"
       relativepthCh = "." </> date++"_"++subsystem++".html"
@@ -95,7 +96,7 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
       relativepthMo = "." </> date++"_"++subsystem++"_mon.html"
       nf = length fname
       tables = zipWith (\x y -> addTelement x y) fnamepng fnamepng
-      tagname = [c++":"++m|c<-chs,m<-mons]
+      tagname = [snd c++":"++fst c|c<-chmon]
       titles = map addTableTitle tagname
       contentsCh = startHTML
               ++ addHEAD
