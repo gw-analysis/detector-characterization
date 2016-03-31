@@ -2,7 +2,7 @@
 #set -e
 
 ###  Parameters
-DEBUG_MODE=0
+DEBUG_MODE=1
 
 CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
@@ -11,13 +11,16 @@ CMD_PRINT="./genDailyCmd"
 MAX_CORE=7
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
-MAIN_CH="K1:PSL-PMC_TRANS_DC_OUT_DQ"
+MAIN_CH="K1:LSC-MICH_ERR_CAL_OUT_DQ"
 
 YESTERDAY=`date -d '1 day ago' "+%Y %m %d"`
 DAILY_DIR=`date -d '1 day ago' "+%Y/%m/%d/"`
 LOG_FILE="`date -d '1 day ago' "+%Y-%m-%d"`.log"
 
 MIRROR_SERVER="detchar@seikai.icrr.u-tokyo.ac.jp"
+
+BRUCO_CHLIST="./chBruco.lst"
+
 
 #####  for test
 #YESTERDAY="2016 03 18"
@@ -38,9 +41,21 @@ then
     DEBUG="--dry-run"
     MKDIR_CMD="${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="echo mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
+    SSH_CMD="echo ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
+    SCP_CMD="echo scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
+    BRUCO_CMD="echo ./Bruco"
+    BRUCOMVPNG_CMD="echo mv -f ./*_Bruco.png ${HOME}/public_html/${DAILY_DIR}"
+    BRUCOMVHTML_CMD="echo mv -f ./*_Bruco.html ${HOME}/public_html/${DAILY_DIR}"
+    SCP_BRUCO_CMD="echo scp ${MKDIR_CMD}*_Bruco* ${MIRROR_SERVER}:${MKDIR_CMD}"
 else
     MKDIR_CMD="${HOME}/public_html/${DAILY_DIR}"
     MVPNG_CMD="mv -f ./*.png ${HOME}/public_html/${DAILY_DIR}"
+    SSH_CMD="ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
+    SCP_CMD="scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
+    BRUCO_CMD="./Bruco"
+    BRUCOMVPNG_CMD="mv -f ./*_Bruco.png ${HOME}/public_html/${DAILY_DIR}"
+    BRUCOMVHTML_CMD="mv -f ./*_Bruco.html ${HOME}/public_html/${DAILY_DIR}"
+    SCP_BRUCO_CMD="scp ${MKDIR_CMD}*_Bruco* ${MIRROR_SERVER}:${MKDIR_CMD}"
 fi
 
 if test ${MAX_CORE} -a ${MAX_CORE} -ge 1
@@ -95,13 +110,26 @@ then
     mkdir -p ${MKDIR_CMD}
     ${MVPNG_CMD}
     #### send results to seikai ####
-    SSH_CMD="ssh ${MIRROR_SERVER} \"mkdir\" \"-p\" ${MKDIR_CMD}"
-    SCP_CMD="scp ${MKDIR_CMD}* ${MIRROR_SERVER}:${MKDIR_CMD}"
     ${SSH_CMD}
     ${SCP_CMD}
 else
     echo "empty: \${EXE_CMD}"
 fi
+
+
+### Bruco ###
+#Bruco yyyy mm dd ch.lst
+#BRUCO_CMD="./Bruco"
+#BRUCO_CHLIST="./chBruco.lst"
+### execute Bruco
+#${BRUCO_CMD} ${YESTERDAY} ${BRUCO_CHLIST}
+
+### move production to html directory
+#${BRUCOMVPNG_CMD}
+#${BRUCOMVHTML_CMD}
+
+### scopy production to the mirror server
+#${SCP_BRUCO_CMD}
 
 
 exit 0
