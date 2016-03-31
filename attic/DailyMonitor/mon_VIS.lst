@@ -1,2 +1,7 @@
 ######  '#' is prefix of comment
 TimeSeries  # Time Series Plot
+SensMon     # Sensitivity Monitor
+RMSMon      # RMS Monitor
+Spectrogram # Spectrogram Plot
+RMon
+Spectrum
