@@ -380,3 +380,423 @@ executable showChannels
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
+
+executable showChannelandSamplingRate
+  hs-source-dirs: exe-src
+  main-is:        showChannelandSamplingRate.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable localtime2gps
+  hs-source-dirs: exe-src
+  main-is:        localtime2gps.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,regex-compat==0.95.1
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable kagraDailyDataFind
+  hs-source-dirs: exe-src
+  main-is:        kagraDailyDataFind.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable gps2localtime
+  hs-source-dirs: exe-src
+  main-is:        gps2localtime.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable getCurrentGPS
+  hs-source-dirs: exe-src
+  main-is:        getCurrentGPS.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable showKagraData
+  hs-source-dirs: exe-src
+  main-is:        showKagraData.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+   ,resourcet==1.1.6
+   ,conduit==1.2.5
+   ,process==1.2.0.0
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable updateFrameFullDB
+  hs-source-dirs: exe-src
+  main-is:        updateFrameFullDB.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+   ,resourcet==1.1.6
+   ,conduit==1.2.5
+   ,process==1.2.0.0
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable updateFrameFullDBfromCache
+  hs-source-dirs: exe-src
+  main-is:        updateFrameFullDBfromCache.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+   ,resourcet==1.1.6
+   ,conduit==1.2.5
+   ,process==1.2.0.0
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable runDailySummay
+  hs-source-dirs: exe-src
+  main-is:        runDailySummay.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+   ,process==1.2.0.0
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable runDailyFileTransfer
+  hs-source-dirs: exe-src
+  main-is:        runDailyFileTransfer.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+   ,process==1.2.0.0
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
+executable db2cache
+  hs-source-dirs: exe-src
+  main-is:        db2cache.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,carray
+   ,deepseq
+   ,directory
+   ,filepath
+   ,fft
+   ,HDBC
+   ,HDBC-mysql
+   ,HDBC-session
+   ,hmatrix
+   ,hmatrix-gsl
+   ,matrices
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,old-locale
+   ,old-time
+   ,persistable-record
+   ,relational-query
+   ,relational-query-HDBC
+   ,split
+   ,template-haskell
+   ,time
+   ,transformers
+   ,vector
+
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+  extra-libraries: Frame
+
+
