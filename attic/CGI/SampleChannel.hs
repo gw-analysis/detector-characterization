@@ -60,9 +60,10 @@ xEndEnvCh = ["K1:PEM-EX_ACC_NO2_X_FLOOR"
             ,"K1:PEM-EX_REF"
             ]
 
-sampleChs = sampleIOO ++ sampleVIS ++ sampleMIF ++ sampleGen 
+sampleChs = sampleVIS ++ sampleIOO ++ sampleGen ++ sampleMIF 
 
-sampleGen = ["K1:GRD-MICH_LOCK_STATE_N"
+sampleGen = ["K1:LSC-MICH_ERR_CAL_OUT_DQ"
+            ,"K1:GRD-MICH_LOCK_STATE_N"
             ,"K1:GRD-PSL_STATE_N"
             ,"K1:GRD-IMC_LOCK_STATE_N" 
             ,"K1:GRD-IFO_STATE_N"
