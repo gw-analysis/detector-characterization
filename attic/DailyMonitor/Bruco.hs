@@ -25,7 +25,7 @@ main = do
   let gps = read $ time2gps $ year+-+month+-+day++" 00:00:00 JST"
       duration = 86400 -- seconds
       -- for Bruco
-      ch1 = "K1:PEM-EX_REF" -- <- 後で変える
+      ch1 = "K1:LSC-MICH_ERR_CAL_OUT_DQ" -- <- 後で変える
       fftLength = 1 -- seconds
       -- for Result
       oFile = year+-+month+-+day++"_Bruco.html"
