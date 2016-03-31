@@ -28,7 +28,7 @@ cgiMain = do
 
 fork :: ParamCGI -> IO String
 fork params = do
-  nowGps <- return $ show 1134572417 -- getCurrentGps
+  nowGps <- getCurrentGps
   case (gps params, channel1 params, channel2 params, monitors params) of
    (Nothing, _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
    (Just "", _, _, _) -> return $ inputForm $ updateMsg "" $ updateGps nowGps params
