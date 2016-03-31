@@ -102,16 +102,18 @@ genDailySummaryPage dir date chs mons subsystem ncol = do
               ++ addHEAD
               ++ addStyle
               ++ startBODY
-              ++ addTitle pageTitle 
+--              ++ addTitle pageTitle 
               ++ setDIVa
-              (  addDate date
+              (  
+                 addDate date
               ++ addBR
-              ++ addBR
+--              ++ addBR
+--              ++ addLayout relativepthCh relativepthMo
               ++ addLayout relativepthCh relativepthMo
               )
-              ++ addBR
-              ++ addBR
-              ++ addSubs (setCenter subsystem)
+--              ++ addBR
+--              ++ addBR
+--              ++ addSubs (setCenter subsystem)
               ++ concat (for chs $ \ch -> layoutChannelBase ch titles tables ncol)
               ++ endHTML
       contentsMo = startHTML
