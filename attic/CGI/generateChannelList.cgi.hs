@@ -5,6 +5,7 @@ import Data.Maybe (fromJust)
 
 import HasKAL.WebUtils.CGI.Function
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraChannelList)
+import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import SampleChannel
 
 main :: IO ()
@@ -21,7 +22,7 @@ cgiMain = do
 
 fork :: ParamCGI -> Maybe String -> Maybe String -> Maybe String -> IO String
 fork params flag word oName = do
-  nowGps <- return $ show 1134572417 -- getCurrentGps 
+  nowGps <- getCurrentGps 
   case flag of
    Nothing -> do
      case (gps params, word) of
