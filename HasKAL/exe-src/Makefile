@@ -17,15 +17,14 @@ TAR8= kagraDailyDataFind
 TAR9= updateFrameFullDB
 TAR10= generateCacheFile
 TAR11= updateFrameFullDBfromCache 
-#TAR12= plottimeseries2
-#TAR13= plottimeseries2X
+TAR12= plottimeseries2
+TAR13= plottimeseries2X
 #TAR12= rayleighMon
 #TAR13= studentRayleighMon
 #TAR14= timeseries
 #TAR15= spectrum
 #TAR16= spectrogram
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10}
-# ${TAR12} ${TAR13}
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR12} ${TAR13}
 # ${TAR12} ${TAR13} ${TAR14} ${TAR15} ${TAR16}
 
 # dependency
@@ -78,10 +77,10 @@ ${TAR11}: ${TAR11}.hs  ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
 ${TAR12}: ${TAR12}.hs ${DEPs} ./HasKAL/LineUtils/LineRemoval/rng_median.c
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
 ${TAR13}: ${TAR13}.hs ${DEPs} ./HasKAL/LineUtils/LineRemoval/rng_median.c
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
 
 #${TAR11}: ${TAR11}.hs ${DEPs}
