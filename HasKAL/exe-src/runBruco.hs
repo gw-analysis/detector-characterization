@@ -46,7 +46,7 @@ main = do
    True -> do
      let (wd1:wd2) = map getMaximumChunck (ws1:ws2)
      result <- hBrucoPng (year+-+month+-+day+-+hour+-+minute+-+second++"_"++dur) fftLength (wd1, ch1) $ zip wd2 ch2
-     let body = geneRankTable (year,month,day) ch1 result
+     let body = geneRankTable (year,month,day,hour,minute,second,dur) ch1 result
      writeFile oFile $
        startHTML
        ++ addStyle
@@ -64,7 +64,7 @@ main = do
 hBrucoPng :: String -> Double -> (WaveData, String) -> [(WaveData , String)] -> IO [(Double, [(Double, String)])]
 hBrucoPng date sec (wd1, ch1) wd2 = do
   let cohResults = coherenceMonW' sec wd1 (map fst wd2)
-  zipWithM (\x y -> plotV Linear Line 1 BLUE ("frequency [Hz] at "++date, "|coh(f)|^2") 0.05 (ch1++" vs "++x)
+  zipWithM (\x y -> plotV LogX Line 1 BLUE ("frequency [Hz] at "++date, "|coh(f)|^2") 0.05 (ch1++" vs "++x)
                     (ch1+-+x+-+date++"_Bruco.png") ((0,0),(0,0)) y) (map snd wd2) cohResults
   let cohList = toLists.fromColumns $ map snd cohResults
       fvec = [0, 1/sec..]
@@ -76,8 +76,8 @@ hBrucoPng date sec (wd1, ch1) wd2 = do
 (+-+) x y = x ++ "-" ++ y
 (+:+) x y = x ++ ":" ++ y
 
-geneRankTable :: (String,String,String) -> String -> [(Double, [(Double, String)])] -> String 
-geneRankTable (yyyy,mm,dd) channel1 xs = concat [
+geneRankTable :: (String,String,String,String,String,String,String) -> String -> [(Double, [(Double, String)])] -> String 
+geneRankTable (yyyy,mm,dd,hh,mn,ss,duration) channel1 xs = concat [
   "<h3>Channel: "++channel1++"</h3>",
   expandFont 3 1 "resizable",
   "<table cellspacing=\"10\"><tr>",
@@ -87,7 +87,7 @@ geneRankTable (yyyy,mm,dd) channel1 xs = concat [
                    "<td><table class=\"resizable\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:3px;\">",
                    "<tr bgcolor=\"cccccc\"><th>freq. [Hz]</th>",
                    concat $ map nthLabel [1..numNth],
-                   concat $ map (geneRankTableCore numNth (yyyy,mm,dd) channel1) $ take len $ drop (len*n) xs,
+                   concat $ map (geneRankTableCore numNth (yyyy,mm,dd,hh,mn,ss,duration) channel1) $ take len $ drop (len*n) xs,
                    "</table></td>"]) [0..(numRow-1)],
   "</tr></table>"]
   where len = length xs `div` numRow
@@ -98,8 +98,8 @@ geneRankTable (yyyy,mm,dd) channel1 xs = concat [
         nthLabel 3 =  "<th>3rd ch.</th>"
         nthLabel n = "<th>"++(show n)++"th ch.</th>"
 
-geneRankTableCore :: Int -> (String,String,String) -> String -> (Double, [(Double, String)]) -> String
-geneRankTableCore n (yyyy,mm,dd) ch1 (freq, res) = concat [
+geneRankTableCore :: Int -> (String,String,String,String,String,String,String) -> String -> (Double, [(Double, String)]) -> String
+geneRankTableCore n (yyyy,mm,dd,hour,minute,second,dur) ch1 (freq, res) = concat [
   "<tr><th bgcolor=\"#cccccc\"><nobr>"++(show freq)++" Hz&emsp;</nobr></th>",
   concat.(take n') $ map (\(val, ch) -> "<td bgcolor="++(color val)++"><nobr>"
                                         ++"<a href=\""++url ch++"\" >"
@@ -112,7 +112,7 @@ geneRankTableCore n (yyyy,mm,dd) ch1 (freq, res) = concat [
                   | val > 0.4 = "\"#ffeeee\""
                   | otherwise = "\"#ffffff\""
         n' = min n (length res)
-        url ch2 = "./"++ch1+-+ch2+-+yyyy+-+mm+-+dd++"_Bruco.png"
+        url ch2 = "./"++ch1+-+ch2+-+yyyy+-+mm+-+dd+-+hour+-+minute+-+second++"_"++dur++"_Bruco.png"
 
 
 show0 :: Int -> String -> String
@@ -120,4 +120,5 @@ show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
   | otherwise   = number
   where len = length number
+
 
