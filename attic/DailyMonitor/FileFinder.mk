@@ -26,8 +26,8 @@ sypoliclink:
 	ln -fs ${HASKALPATH} ./
 
 FileFinder:${OBJ1} ${DEP1} ${DEP2}
-	-ghc --make -o $@ RMSMon.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
-	-ghc --make -o $@ RMSMon.hs ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
+	-ghc --make -o $@ FileFinder.hs ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC  -O2
+	-ghc --make -o $@ FileFinder.hs ${DEP1} ${DEP2} -lFrame -fPIC -lm -lgsl -lgslcblas  -O2
 	@echo "*** Making $@ ***"
 
 clean:
