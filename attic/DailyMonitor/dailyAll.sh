@@ -8,7 +8,7 @@ CMD_PARA="/home/yamamoto/apps/parallel/bin/parallel"
 CMD_HTML="./genDailySummaryPage"
 CMD_PRINT="./genDailyCmd"
 
-MAX_CORE=7
+MAX_CORE=8
 LARGE_MEM="dailyCoherenceMon dailyTimeSeriesMon"
 HTML_NCOL=3
 MAIN_CH="K1:LSC-MICH_ERR_CAL_OUT_DQ"
