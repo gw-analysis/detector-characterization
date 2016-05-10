@@ -1,14 +1,19 @@
 
-
+import Data.Int (Int32)
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGPS)
 import HasKAL.FrameUtils.FrameUtils (getChannelList)
 import System.Environment (getArgs)
 import System.IO (stdout, hPutStrLn)
 
 main = do
-  fname <- getArgs >>= \args -> case (length args) of
+  gpsstr <- getArgs >>= \args -> case (length args) of
     1 -> return (head args)
-    _ -> error "Usage: showChannelandSamplingRate filename"
-  getChannelList fname >>= \maybech -> case maybech of
-    Nothing -> error "no channel in the file"
-    Just x -> mapM_ (\(y, z)-> hPutStrLn stdout $ y++" "++show z) x
+    _ -> error "Usage: showChannelandSamplingRate gps"
 
+  kagraDataGPS (read gpsstr ::Int32) >>= \maybefiles -> case maybefiles of
+    Nothing -> error "no file found."
+    Just files -> do
+      let fname = head files
+      getChannelList fname >>= \maybech -> case maybech of
+        Nothing -> error "no channel at present."
+        Just x -> mapM_ (\(y, z)-> hPutStrLn stdout $ y++" "++show z) x
