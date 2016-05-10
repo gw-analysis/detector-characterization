@@ -74,6 +74,61 @@ import HasKAL.WaveUtils.Data (WaveData(..), mkWaveData, dropWaveData, takeWaveDa
 import HasKAL.WaveUtils.Function (catWaveData, catWaveData0)
 import qualified Numeric.LinearAlgebra as NLA
 import System.IO.Unsafe (unsafePerformIO)
+import qualified Data.Vector.Storable as V
+
+
+-- | assign local parameter
+type Channel = String
+type GPSS = Int
+type Duration = Double
+type LOCK = Bool
+type LOCKEDSAMPLE = Int
+
+-- -- | get gps time when a telescope is locked
+-- getLockInfoST :: Channel -- ^ channel name which has lock information
+--               -> GPSS     -- ^ beginning time [s] :: Integer only
+--               -> Duration  -- ^ duration [s] :: Integer only
+--               -> IO (Maybe [(GPSTIME, GPSTIME, Duration)])
+-- getLockInfoST channel gps duration = fo
+--  liftIO $ kagraWaveDataGetC gps duration channal >>= \maybedata ->
+--  case maybedata of
+--    Nothing -> return Nothing
+--    Just wavelist -> return $ checkLock w wavelist
+-- 
+-- 
+-- checkLockCore :: w
+--               -> WaveData -- ^ lock information, output of kagraDaraGetC
+--               -> [(GPSTIME, Duration)] -- ^ 
+-- checkLockCore w wav = evalState $ do
+--  let gps = fst $ startGPSTime wav
+--      fs  = samplingFrequency wav
+--      vlist = V.toList $ gwdata wav
+
+
+-- | give (flag1,flag2,flag3,(gps,duration)
+--   | flag1 : True=lock, False=lock lost
+--   | flag2 : number of samples since locked
+--   | flag3 : sample id starting from 0
+--   | gps : gpstime at lock started, GPSTIME type
+--   | duration : locked duration [s]
+getLockGPS :: (LOCK, LOCKEDSAMPLE, Int, (GPSTIME, Duration))
+           -> GPSTIME
+           -> Double
+           -> [Double]
+           -> [(GPSTIME, Duration)]
+getLockGPS (flg1,flg2,flg3,(flg41,flg42)) gps fs (v:vlist) = 
+ if v==1000 && flg1==False then 
+   getLockGPS (True, 1, flg3+1, (updateGPS gps (fromIntegral flg3/fs), 1/fs)) gps fs vlist
+ else if v==1000 && flg1==True then 
+        getLockGPS (True, flg2+1, flg3+1, (flg41,flg42+1/fs)) gps fs vlist
+      else if v/=1000 && flg2>0 then 
+             (flg41,fromIntegral flg2/fs):getLockGPS (False,0,flg3+1,((0,0),0)) gps fs vlist
+           else getLockGPS (False,0,flg3+1,((0,0),0)) gps fs vlist
+
+
+updateGPS :: GPSTIME -> Duration -> GPSTIME
+updateGPS gps dt  = formatGPS (deformatGPS gps + dt)
+
 
 dailyFileFinder :: Date -> LocalTime -> IO (Spectrum)
 dailyFileFinder day loc = do
