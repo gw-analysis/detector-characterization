@@ -5,6 +5,7 @@ module HasKAL.DataBaseUtils.FrameFull.Function
 , cleanDataFinder
 , db2framelist
 , db2framecache
+, existChannel
 , kagraChannelList
 , kagraDailyFileList
 , kagraDataFind
