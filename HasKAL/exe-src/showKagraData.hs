@@ -27,7 +27,7 @@ main = do
                   Nothing  -> putStrLn "No data found."
                   Just wav -> do let td = concatMap (timendat . method fsfact) wav
                                  mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) td
-        _ -> error "Usage: showKagraData chname downsamplefactor gps duration"
+        _ -> error "Usage: showKagraData [-r(--resampleonly) chname downsamplefactor gps duration"
 
 
 timendat y = let t = deformatGPS $ startGPSTime y
