@@ -7,7 +7,9 @@ module HasKAL.SignalProcessingUtils.Resampling
 , downsampleSV
 , upsample
 , resample
+, resampleSV
 , downsampleWaveData
+, resampleWaveData
 ) where
 
 
@@ -44,6 +46,13 @@ downsampleWaveData :: Double -> WaveData -> WaveData
 downsampleWaveData newfs x = y
   where y = mkWaveData (detector x) (dataType x) newfs (startGPSTime x) stopT v
         v = downsampleSV (samplingFrequency x) newfs (gwdata x)
+        stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
+
+
+resampleWaveData :: Double -> WaveData -> WaveData
+resampleWaveData newfs x = y
+  where y = mkWaveData (detector x) (dataType x) newfs (startGPSTime x) stopT v
+        v = resampleSV (samplingFrequency x) newfs (gwdata x)
         stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
@@ -99,3 +108,22 @@ downsampleSV fs newfs v =
             unsafeWrite vs i (v SV.!(i*p))
             loop v vs (i+1) j
        
+
+resampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
+resampleSV fs newfs v = 
+  if (fs/newfs<1) 
+    then error "new sample rate should be <= original sample rate."
+    else
+      SV.create $ do 
+        vs <- new nvs
+        loop v vs 0 nvs
+        return vs
+        where 
+          n = SV.length v
+          p = truncate $ fs/newfs
+          nvs = n `div` p
+          loop v vs i j = when (i < j) $ do
+            unsafeWrite vs i (v SV.!(i*p))
+            loop v vs (i+1) j
+ 
+
