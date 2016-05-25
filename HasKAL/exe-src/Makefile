@@ -56,14 +56,17 @@ ${TAR3}: ${TAR3}.hs
 ${TAR4}: ${TAR4}.hs
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
 
-${TAR5}: ${TAR5}.hs
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-
-${TAR6}: ${TAR6}.hs
-	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS}
-
-${TAR7}: ${TAR7}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+${TAR5}: ${TAR5}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+
+${TAR6}: ${TAR6}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+
+${TAR7}: ${TAR7}.hs ${DEP2} ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
+
+#${TAR7}: ${TAR7}.hs ${DEP2}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
 ${TAR8}: ${TAR8}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
