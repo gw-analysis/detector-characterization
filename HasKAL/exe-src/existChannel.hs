@@ -1,7 +1,6 @@
 
 import Data.Int (Int32)
-import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataGPS)
-import HasKAL.FrameUtils.FrameUtils (existChannel)
+import HasKAL.DataBaseUtils.FrameFull.Function (existChannel, kagraDataGPS)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import System.Environment (getArgs)
 import System.IO (stdout, hPutStrLn)
@@ -15,7 +14,8 @@ main = do
     Nothing -> error "no file found."
     Just files -> do 
       let fname = head files
-      existChannel channel fname >>= \e -> case e of
-        [] -> False
-        x  -> True
+          e = existChannel channel fname
+      case e of
+        [] -> putStrLn "no"
+        x  -> putStrLn "yes"
 

@@ -21,11 +21,13 @@ TAR12= plottimeseries2
 TAR13= plottimeseries2X
 TAR14= runBruco
 TAR15= runSensMon
+TAR16= showCurrentChannels
+TAR17= existChannel
 #TAR13= studentRayleighMon
 #TAR14= timeseries
 #TAR15= spectrum
 #TAR16= spectrogram
-TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR12} ${TAR13} ${TAR14} ${TAR15}
+TARs= ${TAR1} ${TAR2} ${TAR3} ${TAR4} ${TAR5} ${TAR6} ${TAR7} ${TAR8} ${TAR9} ${TAR10} ${TAR12} ${TAR13} ${TAR14} ${TAR15} ${TAR16} ${TAR17}
 # ${TAR12} ${TAR13} ${TAR14} ${TAR15} ${TAR16}
 
 # dependency
@@ -96,7 +98,14 @@ ${TAR15}: ${TAR15}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
 ${TAR15}: ${TAR15}.hs ${DEPs}
 	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -lFrame -fPIC
 
+${TAR16}: ${TAR16}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+#${TAR16}: ${TAR16}.hs ${DEPs}
+#	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
 
+${TAR17}: ${TAR17}.hs ./HasKAL/LineUtils/LineRemoval/rng_median.c
+	${HC} -o $@ $^ ${CFLAGS} ${LDFLAGS} ${LIBS} -fPIC
+#
 
 
 #${TAR11}: ${TAR11}.hs ${DEPs}
