@@ -214,24 +214,24 @@ library
        Chart-gtk >=1.3,
        Chart-cairo >=1.3,
        colour >=2.3,
-       conduit,
+       conduit==1.2.4.2,
        containers,
        data-default-class >=0.0,
        deepseq,
        directory,
        fficxx-runtime,
-       fft,
+       fft==0.1.8.1,
        filepath,
        fsnotify,
-       gtk >=0.13,
+       gtk ==0.13.7,
        HDBC,
        HDBC-session,
-       HDBC-mysql,
+       HDBC-mysql==0.6.6.2,
 --       hinotify,
-       hmatrix >=0.16,
-       hmatrix-special,
-       hmatrix-gsl,
-       hmatrix-gsl-stats,
+       hmatrix ==0.16.1.5,
+       hmatrix-special==0.3.0.1,
+       hmatrix-gsl==0.16.0.3,
+       hmatrix-gsl-stats==0.4.1.1,
        HROOT==0.8.*,
        lens,
        matrices >= 0.3,
@@ -245,7 +245,7 @@ library
        persistable-record,
        process >=1.1,
        random,
-       resourcet,
+       resourcet==1.1.5,
        relational-query,
        relational-query-HDBC,
        regex-compat >=0.95,
@@ -258,7 +258,8 @@ library
        transformers,
        unix-compat,
        vector,
-       vector-algorithms
+       vector-algorithms,
+       storable-complex==0.2.2
 
 
   -- Directories containing source files.
@@ -282,16 +283,16 @@ executable kagraDataFind
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -318,16 +319,16 @@ executable kagraDataPoint
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -354,16 +355,16 @@ executable showChannels
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -391,16 +392,16 @@ executable showChannelandSamplingRate
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -428,16 +429,16 @@ executable localtime2gps
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -466,16 +467,16 @@ executable kagraDailyDataFind
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -503,16 +504,16 @@ executable gps2localtime
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -540,16 +541,16 @@ executable getCurrentGPS
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -577,16 +578,16 @@ executable showKagraData
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -599,8 +600,8 @@ executable showKagraData
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.6
-   ,conduit==1.2.5
+   ,resourcet==1.1.5
+   ,conduit==1.2.4.2
    ,process==1.2.0.0
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
@@ -617,16 +618,16 @@ executable updateFrameFullDB
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -639,8 +640,8 @@ executable updateFrameFullDB
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.6
-   ,conduit==1.2.5
+   ,resourcet==1.1.5
+   ,conduit==1.2.4.2
    ,process==1.2.0.0
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
@@ -657,16 +658,16 @@ executable updateFrameFullDBfromCache
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -679,8 +680,8 @@ executable updateFrameFullDBfromCache
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.6
-   ,conduit==1.2.5
+   ,resourcet==1.1.5
+   ,conduit==1.2.4.2
    ,process==1.2.0.0
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
@@ -697,16 +698,16 @@ executable runDailySummay
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -735,16 +736,16 @@ executable runDailyFileTransfer
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -773,16 +774,16 @@ executable db2cache
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -810,16 +811,16 @@ executable showKagraSpectrum
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -832,8 +833,8 @@ executable showKagraSpectrum
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.6
-   ,conduit==1.2.5
+   ,resourcet==1.1.5
+   ,conduit==1.2.4.2
    ,process==1.2.0.0
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
@@ -850,16 +851,16 @@ executable showCurrentChannels
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -887,16 +888,16 @@ executable existChannel
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -924,16 +925,16 @@ executable existChannelNow
    ,deepseq
    ,directory
    ,filepath
-   ,fft
+   ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql
+   ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix
-   ,hmatrix-gsl
+   ,hmatrix==0.16.1.5
+   ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats
-   ,hmatrix-special
+   ,hmatrix-gsl-stats==0.4.1.1
+   ,hmatrix-special==0.3.0.1
    ,monad-par
    ,monad-par-extras
    ,old-locale
