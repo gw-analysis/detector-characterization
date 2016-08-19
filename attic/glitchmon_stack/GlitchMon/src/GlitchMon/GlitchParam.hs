@@ -11,7 +11,8 @@ import HasKAL.WaveUtils.Data(WaveData)
 
 
 data GlitchParam = GlitchParam
-  { channel :: String
+  { segmentLength :: Double
+  , channel :: String
   , chunklen :: Int 
   , samplingFrequency :: Double
 -- * whitening
@@ -36,6 +37,8 @@ data GlitchParam = GlitchParam
   , reftime :: Double
   }
 
+updateGlitchParam'segmentLength :: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'segmentLength x a = x {segmentLength = a}
 
 updateGlitchParam'channel :: GlitchParam -> String -> GlitchParam
 updateGlitchParam'channel x n = x {channel = n}

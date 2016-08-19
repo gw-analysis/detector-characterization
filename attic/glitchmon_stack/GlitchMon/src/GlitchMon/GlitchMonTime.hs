@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
-module GlitchMon.GlitchMon
-( runGlitchMon
+module GlitchMon.GlitchMonTime
+( runGlitchMonTime
 , eventDisplay
 , eventDisplayF
 )
@@ -80,115 +80,90 @@ import GlitchMon.RegisterEventtoDB
 {--------------------
 - Main Functions    -
 --------------------}
+type Channel = String
 
 
-runGlitchMon watchdir param chname = do
-  gps <- liftIO getCurrentGps
-  let cdir = getCurrentDir gps
-  source param chname watchdir cdir
-
-source :: GP.GlitchParam
-       -> String
-       -> FilePath
-       -> FilePath
-       -> IO FilePath
-source param chname topDir watchdir = do
-  gps <- liftIO getCurrentGps
-  let ndir = getNextDir gps
-      ndirabs = getAbsPath topDir ndir
---  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
-  x <- doesDirectoryExist (getAbsPath topDir watchdir)
-  case x of
-    False -> do threadDelay 1000000
-                gps2 <- getCurrentGps
-                let cdir2 = getCurrentDir gps2
-                source param chname topDir cdir2    
-    True -> do !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink param chname
-               case maybeT of
-                Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
-                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
-                Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
-                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
+runGlitchMonTime :: GP.GlitchParam
+                 -> Channel
+                 -> FilePath
+                 -> IO()
+--                 -> IO FilePath
+runGlitchMonTime param chname cachefile = source cachefile $$ sink param chname
 
 
-watchFile :: FilePath
-          -> FilePath
-          -> Source IO FilePath
-watchFile topDir watchdir = do
-  let absPath = getAbsPath topDir watchdir
-      predicate event' = case event' of
-        Added path _ -> chekingFile path
-        _            -> False
-      config = WatchConfig
-                 { confDebounce = NoDebounce
-                 , confPollInterval = 1000000 -- 1seconds
-                 , confUsePolling = True
-                 }
-  gwfname <- liftIO $ withManagerConf config $ \manager -> do
-    fname <- newEmptyMVar
-    watchDir manager absPath predicate
-      $ \event -> case event of
-        Added path _ -> putMVar fname path
-    takeMVar fname
-  yield gwfname >> watchFile topDir watchdir
+source :: FilePath
+       -> Source IO (Int,Double)
+source f = do
+  gpslist' <- return $ readFile f >>= \x -> return $ lines x
+  let gpslist = map ((\x->(read (head x) :: Int,read (x!!1) :: Double)).words) (unsafePerformIO gpslist')
+  CL.sourceList gpslist
 
 
 sink :: GP.GlitchParam
-     -> String
-     -> Sink String IO ()
+     -> Channel
+     -> Sink (Int,Double) IO ()
 sink param chname = do
   c <- await
   case c of
     Nothing -> sink param chname
-    Just fname -> do
-      maybegps <- liftIO $ getGPSTime fname
-      case maybegps of
+    Just (gps, dt') -> do
+      let dt = truncate dt'
+          n = 0
+      maybewave <- liftIO $ kagraWaveDataGet gps dt chname
+      case maybewave of
         Nothing -> sink param chname
-        Just (s, n, dt') -> do
-          maybewave <- liftIO $ readFrameWaveData' General chname fname
-          case maybewave of
-            Nothing -> sink param chname
-            Just wave -> do let param' = GP.updateGlitchParam'channel param chname
-                                fs = GP.samplingFrequency param'
-                                fsorig = samplingFrequency wave
-                            if (fs /= fsorig)
-                              then do let wave' = downsampleWaveData fs wave
-                                      go wave' param'
-                              else go wave param'
-  where 
-    go w param' = do
-      let maybegps = GP.cgps param'
-      case maybegps of
-        Nothing -> do
-          currGps' <- liftIO $ getCurrentGps
-          let currGps = formatGPS (read currGps')
-              param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
-              param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (GP.chunklen param'2) w)
-          s <- liftIO $ glitchMon param'3 w
-          sink s chname
-        Just gpsold -> do
-          currGps' <- liftIO $ getCurrentGps
-          let currGps = formatGPS (read currGps')
-              difft = (deformatGPS currGps) - (deformatGPS gpsold)
-              cdfIntvl = GP.cdfInterval param' 
-          case difft >= (fromIntegral cdfIntvl) of  -- ^ clean data update every 10 minutes
-            True -> do
-              let cdfp = GP.cdfparameter param'
-              maybecdlist <- liftIO $ cleanDataFinder cdfp chname (currGps, 600.0)
-              case maybecdlist of
-                Nothing -> error "no clean data in the given gps interval"
-                Just cdlist -> do
-                  let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
-                      cdgps = fst cdgps'
-                      param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                  maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname (WD.detector w)
-                  let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-                  s <- liftIO $ glitchMon param'3 w
-                  sink s chname
-            False -> do
-              s <- liftIO $ glitchMon param' w
-              sink s chname
+        Just wave -> do let param' = GP.updateGlitchParam'channel param chname
+                            fs = GP.samplingFrequency param'
+                            fsorig = samplingFrequency wave
+                        if (fs /= fsorig)
+                          then do let wave' = downsampleWaveData fs wave
+                                      dataGps = (gps, n)
+                                      param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+                                  fileRun' wave' param'2
+                                  let s = unsafePerformIO $ timeRun chname wave' param'2
+                                  sink s chname
+                          else do let dataGps = (gps, n)
+                                      param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
+                                  fileRun' wave param'2
+                                  let s = unsafePerformIO $ timeRun chname wave param'2
+                                  sink s chname
 
+
+fileRun' w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
+   liftIO $ print dataGps
+--   liftIO $ glitchMon param' w
+
+
+fileRun w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
+   liftIO $ glitchMon param' w
+
+
+timeRun :: Channel
+        -> WaveData
+        -> GP.GlitchParam
+        -> IO GP.GlitchParam
+timeRun chname w param' = do
+  let maybegps = GP.cgps param'
+  case maybegps of
+    Nothing -> do
+      error "cgps not found. something wrong. please check it out."
+    Just strtGps -> do
+          let cdfp = GP.cdfparameter param'
+              seglen = GP.segmentLength param'
+          maybecdlist <- liftIO $ cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
+          case maybecdlist of
+            Nothing -> error "no clean data in the given gps interval"
+            Just cdlist -> do
+              let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
+                  cdgps = fst cdgps'
+                  param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
+              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname
+              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
+              glitchMon param'3 w
 
 glitchMon :: GP.GlitchParam
           -> WaveData
@@ -198,8 +173,11 @@ glitchMon param w =
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
-           Just t -> part'RegisterEventtoDB t >> return s''
-           Nothing -> return s''
+--           Just t -> part'RegisterEventtoDB t >> return s''
+           Just t -> do print "finishing glitchmon"
+                        return s''
+           Nothing -> do print "finishing glitchmon"
+                         return s''
 
 
 eventDisplay :: GP.GlitchParam
