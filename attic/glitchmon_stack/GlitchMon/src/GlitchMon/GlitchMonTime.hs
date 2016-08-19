@@ -95,8 +95,13 @@ source :: FilePath
        -> Source IO (Int,Double)
 source f = do
   gpslist' <- return $ readFile f >>= \x -> return $ lines x
-  let gpslist = map ((\x->(read (head x) :: Int,read (x!!1) :: Double)).words) (unsafePerformIO gpslist')
+  let gpslist = unsafePerformIO $ fmap (map (toTuple.words)) gpslist'
   CL.sourceList gpslist
+
+
+toTuple :: [String] 
+        -> (Int,Double)
+toTuple x = (read (head x) :: Int,read (x!!1) :: Double)
 
 
 sink :: GP.GlitchParam
@@ -133,13 +138,6 @@ fileRun' w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
        param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
    liftIO $ print dataGps
---   liftIO $ glitchMon param' w
-
-
-fileRun w param = do
-   let dataGps = deformatGPS $ fromJust $ GP.cgps param
-       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
-   liftIO $ glitchMon param' w
 
 
 timeRun :: Channel
@@ -164,6 +162,7 @@ timeRun chname w param' = do
               maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               glitchMon param'3 w
+
 
 glitchMon :: GP.GlitchParam
           -> WaveData
@@ -209,50 +208,4 @@ eventDisplayF param fname chname = do
 
 
 {- internal functions -}
-
-chekingFile path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
-
-
-getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
-
-
-breakTime margin = unsafePerformIO $ do
-  dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
-  return $ (dt+margin)*1000000
-
-
-getCurrentDir :: String -> String
-getCurrentDir gps = take 5 gps
-
-
-getNextDir :: String -> String
-getNextDir gps =
-  let gpsHead' = take 5 gps
-      gpsHead = read gpsHead' :: Int
-   in take 5 $ show (gpsHead+1)
-
-
-timeToNextDir :: String -> Int
-timeToNextDir gps =
-  let currentGps = read gps :: Int
-      (gpsHead', gpsTail') = (take 5 gps, drop 5 gps)
-      gpsHead = read gpsHead' :: Int
-      gpsTail = replicate (length gpsTail') '0'
-      nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
-   in nextGps - currentGps
-
-
-gowatch dname f g =  do b <- liftIO $ doesDirectoryExist dname
-                        case b of
-                          False -> do gps <- liftIO getCurrentGps
-                                      let cdir' = getCurrentDir gps
-                                          cdir  = drop (length dname -5) dname
-                                      case cdir' > cdir of
-                                        True -> do let dname' = (take (length dname -5) dname)++cdir'
-                                                   liftIO $ threadDelay 1000000
-                                                   gowatch dname' (g cdir') g
-                                        False -> do liftIO $ threadDelay 1000000
-                                                    gowatch dname f g
-                          True  -> f
-
 
