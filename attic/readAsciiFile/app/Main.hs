@@ -45,7 +45,8 @@ awaitDouble = do
        Just t -> go t
        Nothing -> awaitDouble
      where   
-      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
+--      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
+      go t = case readMaybe t of
           Just i -> yield i
           Nothing -> awaitDouble
       -- Textを数値に変換します
