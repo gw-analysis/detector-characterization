@@ -42,9 +42,10 @@ section'TimeFrequencyExpression whnWaveData = do
       nfreq2 = GP.nfrequency param`div`2
       nfreq = GP.nfrequency param
       ntimeSlide = GP.ntimeSlide param
-      ntime = ((NL.dim $ gwdata whnWaveData)-ntimeSlide) `div` ntimeSlide
+      ntime = ((NL.dim $ gwdata whnWaveData) - chunklen) `div` ntimeSlide
+      chunklen = GP.chunklen param
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
-      snrMatT = scale (fromIntegral nfreq/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
+      snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
 --      snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
 --        (

@@ -1,7 +1,7 @@
 
 
 
-import GlitchMon.GlitchMonTime
+import GlitchMon.GlitchMonFile
 import GlitchMon.GlitchParam
 import HasKAL.DataBaseUtils.FrameFull.Data
 
@@ -44,7 +44,7 @@ main = do
               }
 
 
-  runGlitchMonTime param (channel param) "./ikagra_cache_4.txt"
+  runGlitchMonFile param (channel param) "/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 
 
 
