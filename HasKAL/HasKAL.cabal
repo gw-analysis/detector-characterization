@@ -92,6 +92,8 @@ library
     HasKAL.GUI_Utils.GUI_RangeStochMon,
     HasKAL.GUI_Utils.GUI_Supplement,
     HasKAL.GUI_Utils.GUI_Utils,
+    -- IOUtils --
+    HasKAL.IOUtils.Function,
     -- LineUtils --
     HasKAL.LineUtils.LineRemoval.Mblt,
     HasKAL.LineUtils.LineRemoval.RngMedian,
@@ -259,7 +261,11 @@ library
        unix-compat,
        vector,
        vector-algorithms,
-       storable-complex==0.2.2
+       storable-complex==0.2.2,
+       bytestring,
+       conduit-extra,
+       conduit-combinators,
+       text-icu
 
 
   -- Directories containing source files.
