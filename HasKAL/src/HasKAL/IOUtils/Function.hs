@@ -57,12 +57,14 @@ awaitDouble = do
   t' <-  await
   case t' of
     Just t -> go t
-    Nothing -> awaitDouble
+    Nothing -> return ()
   where   
  --      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
-    go t = case readMaybe t of
-      Just i -> yield i
-      Nothing -> awaitDouble
+    go t = case DT.unpack t of
+             "q" -> return ()
+             _   -> case readMaybe t of
+                      Just i -> yield i >> awaitDouble
+                      Nothing -> return ()
     readMaybe t = case (TR.signed TR.rational) t of
       (Right (i, "")) -> Just i
       (Right (_, _)) -> Nothing
