@@ -43,12 +43,14 @@ awaitDouble = do
      t' <-  await
      case t' of
        Just t -> go t
-       Nothing -> awaitDouble
+       Nothing -> return ()
      where   
 --      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
-      go t = case readMaybe t of
-          Just i -> yield i
-          Nothing -> awaitDouble
+      go t = case DT.unpack t of
+               "q" -> return ()
+               _      -> case readMaybe t of
+                           Just i -> yield i >> awaitDouble
+                           Nothing -> return ()
       -- Textを数値に変換します
       readMaybe t = case (TR.signed TR.rational) t of
                      (Right (i, "")) -> Just i
@@ -64,13 +66,15 @@ strip = lstrip . rstrip
 
 
 
-main :: IO (VS.Vector Double)
-main = do runResourceT $
+main :: IO ()
+main = do v <- runResourceT $
             CB.sourceHandle SI.stdin
+--            CB.sourceFile "./mag_z_1.dat"
                 $= decodeByICU enc
                 $= CT.lines
                 $= awaitDouble
                 $$ CC.sinkVector
+          Prelude.print $ Prelude.take 10 $ VS.toList v
   where enc = "ASCII"
 
 
