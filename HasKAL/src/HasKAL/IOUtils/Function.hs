@@ -3,6 +3,7 @@
 
 module HasKAL.IOUtils.Function
     ( stdin2vec
+    , dat2vec
     ) where
 
 
@@ -26,6 +27,16 @@ import System.IO as SI
 stdin2vec :: IO (VS.Vector Double)
 stdin2vec = runResourceT $
               CB.sourceHandle SI.stdin
+                $= decodeByICU enc
+                $= CT.lines
+                $= awaitDouble
+                $$ CC.sinkVector
+  where enc = "ASCII"
+
+
+dat2vec :: FilePath -> IO (VS.Vector Double)
+dat2vec file = runResourceT $
+              CB.sourceFile file
                 $= decodeByICU enc
                 $= CT.lines
                 $= awaitDouble
