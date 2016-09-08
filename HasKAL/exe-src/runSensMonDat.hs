@@ -12,6 +12,7 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Vector.Storable as VS
 import HasKAL.DataBaseUtils.FrameFull.Function(kagraDataGet, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
+import HasKAL.IOUtils.Function (dat2vec)
 import HasKAL.MonitorUtils.SensMon.SensMon
 import HasKAL.MonitorUtils.SensMon.Signature
 import HasKAL.MonitorUtils.SensMon.Data
@@ -31,12 +32,7 @@ main = do
      5 -> return (args!!0, args!!1, args!!2, args!!3, args!!4)
      _ -> error "Usage: SensMon fs dur fftsec ID ColumnAsciiFile"
 
-
-  datstr <- readFile fname >>= \x -> return $ lines x
-  let dat = map s2d datstr
-
-      s2d x = read x :: Double
-
+  dat <- dat2vec fname
   let fs = read fs' :: Double
       duration = read duration' :: Int
       fftsecond= read fftsecond' :: Int
@@ -52,7 +48,7 @@ main = do
             , scale = LogXZ
             , colorbar = COLZ
             }
-  let datv = NL.fromList $ take (duration*floor fs) dat
+  let datv = NL.subVector 0 (duration*floor fs) dat
 
 
   runSensMonCore datv fftsecond (ch, fs) (fl, fu) p
