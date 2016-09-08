@@ -176,6 +176,7 @@ library
     HasKAL.SpectrumUtils.Signature,
     HasKAL.SpectrumUtils.SpectrumUtils,
     -- TimeUtils --
+    HasKAL.TimeUtils
     HasKAL.TimeUtils.Function,
     HasKAL.TimeUtils.GPSfunction,
     HasKAL.TimeUtils.Signature,
@@ -230,10 +231,10 @@ library
        HDBC-session,
        HDBC-mysql==0.6.6.2,
 --       hinotify,
-       hmatrix ==0.16.1.5,
-       hmatrix-special==0.3.0.1,
-       hmatrix-gsl==0.16.0.3,
-       hmatrix-gsl-stats==0.4.1.1,
+       hmatrix,
+       hmatrix-special,
+       hmatrix-gsl,
+       hmatrix-gsl-stats,
        HROOT==0.8.*,
        lens,
        matrices >= 0.3,
@@ -297,8 +298,8 @@ executable kagraDataFind
    ,hmatrix-gsl==0.16.0.3
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -329,12 +330,12 @@ executable kagraDataPoint
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -365,12 +366,12 @@ executable showChannels
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -402,12 +403,12 @@ executable showChannelandSamplingRate
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -439,12 +440,12 @@ executable localtime2gps
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -477,12 +478,12 @@ executable kagraDailyDataFind
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -514,12 +515,12 @@ executable gps2localtime
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -551,12 +552,12 @@ executable getCurrentGPS
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -588,12 +589,12 @@ executable showKagraData
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -628,12 +629,12 @@ executable updateFrameFullDB
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -668,12 +669,12 @@ executable updateFrameFullDBfromCache
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -708,12 +709,12 @@ executable runDailySummay
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -746,12 +747,12 @@ executable runDailyFileTransfer
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -784,12 +785,12 @@ executable db2cache
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -821,12 +822,12 @@ executable showKagraSpectrum
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -861,12 +862,12 @@ executable showCurrentChannels
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -898,12 +899,12 @@ executable existChannel
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -935,12 +936,12 @@ executable existChannelNow
    ,HDBC
    ,HDBC-mysql==0.6.6.2
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
-   ,hmatrix-gsl-stats==0.4.1.1
-   ,hmatrix-special==0.3.0.1
+   ,hmatrix-gsl-stats
+   ,hmatrix-special
    ,monad-par
    ,monad-par-extras
    ,old-locale
@@ -956,5 +957,51 @@ executable existChannelNow
 
   ghc-options: -O2 -threaded -rtsopts -eventlog
   extra-libraries: Frame
+
+
+executable runRayleighMonSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runRayleighMonSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split==0.2.2
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
+
+executable runRayleighMonDat
+  hs-source-dirs: exe-src
+  main-is:        runRayleighMonDat.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split==0.2.2
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
+
+executable runSensMon
+  hs-source-dirs: exe-src
+  main-is:        runSensMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
+
+executable runSensMonDat
+  hs-source-dirs: exe-src
+  main-is:        runSensMonDat.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split==0.2.2
+   ,vector
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
 
 
