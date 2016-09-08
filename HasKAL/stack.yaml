@@ -8,7 +8,6 @@ flags:
 extra-include-dirs:
 - /home/detchar/tools/include
 ghc-options:
-  ! '*': -opta-Wa
 extra-lib-dirs:
 - /home/detchar/tools/lib
 packages:
@@ -34,6 +33,7 @@ extra-deps:
 - fficxx-runtime-0.2.1
 - fft-0.1.8.1
 - hmatrix-special-0.3.0.1
+- hmatrix-gsl-stats-0.4.1.1
 - ix-shapable-0.1.0
 - matrices-0.4.2
 - names-th-0.1.0.1
