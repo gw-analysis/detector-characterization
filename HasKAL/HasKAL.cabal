@@ -1003,5 +1003,16 @@ executable runSensMonDat
    ,vector
   ghc-options: -O2 -threaded -rtsopts -eventlog
 
+executable runSensMonSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runSensMonSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split==0.2.2
+   ,vector
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
 
 
