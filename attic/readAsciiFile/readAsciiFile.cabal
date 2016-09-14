@@ -40,12 +40,14 @@ executable readAsciiFile-exe
                      , conduit
                      , conduit-combinators
                      , conduit-extra
+                     , classy-prelude-conduit
                      , resourcet
                      , text-icu
                      , mtl
                      , text
                      , transformers
                      , vector
+                     , primitive
   default-language:    Haskell2010
 
 test-suite readAsciiFile-test

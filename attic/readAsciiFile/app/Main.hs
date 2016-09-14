@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-
-
+{-# LANGUAGE FlexibleContexts  #-}
+import qualified ClassyPrelude.Conduit as CPC
 import Control.Monad.Trans.Resource (ResourceT,runResourceT)
 import Data.Conduit
 import Data.Conduit.Combinators as CC
@@ -8,17 +8,16 @@ import Data.Conduit.Binary as CB
 import qualified Data.ByteString.Char8 as BS
 import System.IO as SI
 import Data.ByteString
-
 import Data.Text.ICU.Convert
 import Control.Monad.Trans
 import qualified Data.Text as DT
-
-
 import qualified Data.Text.Read as TR
 import qualified Data.Text.Lazy.Builder.RealFloat as TB
 import Control.Monad.Trans.Maybe
 import Data.Conduit.Text as CT
+import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Storable as VS
+import Control.Monad.Primitive (PrimMonad)
 
 convertByICU :: MonadIO m => (Converter -> s -> d) -> String -> Conduit s m d
 convertByICU f name = do
@@ -36,8 +35,6 @@ encodeByICU = convertByICU fromUnicode
 decodeByICU :: MonadIO m => String -> Conduit ByteString m DT.Text
 decodeByICU = convertByICU toUnicode
 
-
--- 数値入力を受け取ります。
 awaitDouble :: Monad m => Conduit DT.Text m Double
 awaitDouble = do
      t' <-  await
@@ -51,7 +48,6 @@ awaitDouble = do
                _      -> case readMaybe t of
                            Just i -> yield i >> awaitDouble
                            Nothing -> return ()
-      -- Textを数値に変換します
       readMaybe t = case (TR.signed TR.rational) t of
                      (Right (i, "")) -> Just i
                      (Right (_, _)) -> Nothing
@@ -65,7 +61,6 @@ rstrip = Prelude.reverse . lstrip . Prelude.reverse
 strip = lstrip . rstrip
 
 
-
 main :: IO ()
 main = do v <- runResourceT $
             CB.sourceHandle SI.stdin
@@ -73,12 +68,10 @@ main = do v <- runResourceT $
                 $= decodeByICU enc
                 $= CT.lines
                 $= awaitDouble
-                $$ CC.sinkVector
-          Prelude.print $ Prelude.take 10 $ VS.toList v
+                $= CC.conduitVector 512
+                $$ CC.sinkList
+          Prelude.print $ Prelude.take 10 $ VS.toList $ Prelude.last v
   where enc = "ASCII"
-
-
-
 
 
 
