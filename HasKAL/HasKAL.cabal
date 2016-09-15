@@ -989,7 +989,7 @@ executable runSensMon
    ,HasKAL
    ,hmatrix
    ,vector
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+   ,HDBC-mysql==0.6.6.2
 
 
 executable runSensMonDat
