@@ -2,8 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module HasKAL.IOUtils.Function
-    ( stdin2vec
+    ( -- output : Vector Storable
+      stdin2vec
     , dat2vec
+      -- output : Conduit
+    , stdin2chunkV
+    , dat2chunkV
     ) where
 
 
@@ -23,6 +27,23 @@ import qualified Data.Text.Read as TR
 import qualified Data.Vector.Storable as VS
 import System.IO as SI
 
+
+--dat2chunkV :: Int -> FilePath -> Conduit Double IO (VS.Vector Double)
+dat2chunkV n fpath = CB.sourceFile fpath
+                       $= decodeByICU enc
+                       $= CT.lines
+                       $= awaitDouble
+                       $= CC.conduitVector n
+  where enc = "ASCII"
+
+
+stdin2chunkV :: Int -> Conduit Double IO (VS.Vector Double)
+stdin2chunkV n = CB.sourceHandle SI.stdin
+                     $= decodeByICU enc
+                     $= CT.lines
+                     $= awaitDouble
+                     $= CC.conduitVector n
+  where enc = "ASCII"
 
 stdin2vec :: IO (VS.Vector Double)
 stdin2vec = runResourceT $
