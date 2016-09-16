@@ -19,6 +19,9 @@ import qualified Data.Vector.Generic as VG
 import qualified Data.Vector.Storable as VS
 import Control.Monad.Primitive (PrimMonad)
 
+import qualified Foreign.Matlab as ML
+
+
 convertByICU :: MonadIO m => (Converter -> s -> d) -> String -> Conduit s m d
 convertByICU f name = do
         conv <- liftIO $ open name (Just False)
@@ -70,7 +73,10 @@ main = do v <- runResourceT $
                 $= awaitDouble
                 $= CC.conduitVector 512
                 $$ CC.sinkList
-          Prelude.print $ Prelude.take 10 $ VS.toList $ Prelude.last v
+          let x = VS.toList $ Prelude.last v
+          matx <- ML.createColVector x
+          ML.matSave "./test.mat" [("magdata",matx)]
+          Prelude.print $ Prelude.take 10 x
   where enc = "ASCII"
 
 
