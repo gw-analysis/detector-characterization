@@ -38,11 +38,16 @@ resolver: lts-2.14
 packages:
 - '.'
 #- location:
+#    git: https://github.com/bmsherman/haskell-matlab.git
+#    commit: be701221f3142d65598c6c05f35655e2a5a8bbf0
+#- './ext/haskell-matlab-master'
+#- location:
 #    git: https://github.com/fujiyan/conduit-text-multiplatform.git
 #    commit: adf98bd53ff526f8bdc0bae622ee1ba0a3c3d37a
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps: 
+- matlab-0.2.0.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -65,5 +70,10 @@ extra-package-dbs: []
 # extra-include-dirs: [/path/to/dir]
 # extra-lib-dirs: [/path/to/dir]
 # 
+extra-include-dirs:
+- /usr/local/MATLAB/MATLAB_Production_Server/R2013a/extern/include/
+extra-lib-dirs:
+- /usr/local/MATLAB/MATLAB_Production_Server/R2013a/bin/glnxa64/
+
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
