@@ -8,7 +8,7 @@ import HasKAL.DataBaseUtils.FrameFull.Data
 main = do
   let fs = 4096
   let param = GlitchParam
-               { segmentLength = 300
+               { segmentLength = 32
                , channel = "H1:LOSC-STRAIN"
                , chunklen = truncate $ 4*fs
                , samplingFrequency = fs
@@ -17,15 +17,15 @@ main = do
                , whtfiltordr = 1000
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = truncate $ fs/5
-               , ntimeSlide = truncate $ 0.02*fs
+               , nfrequency = truncate $ 0.2*fs
+               , ntimeSlide = truncate $ 0.01*fs
              -- * clustering
-               , resolvTime = 0
-               , resolvFreq = 0
+               , resolvTime = 10
+               , resolvFreq = 20
                , cutoffFreq = 10
-               , clusterThres = 5
+               , clusterThres = 0.01
              -- * clean data finder
-               , cdfInterval = 600
+               , cdfInterval = 32
                , cdfparameter = cdfp
                , cgps = Nothing
              -- * temporary data

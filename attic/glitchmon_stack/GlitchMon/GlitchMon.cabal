@@ -20,7 +20,7 @@ library
     GlitchMon.Data,
     GlitchMon.DataConditioning,
     GlitchMon.EventTriggerGeneration,
---    GlitchMon.GlitchMon,
+    GlitchMon.GlitchMonFile,
     GlitchMon.GlitchMonTime,
     GlitchMon.GlitchParam,
     GlitchMon.GlitchPlot,

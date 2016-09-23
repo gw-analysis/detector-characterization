@@ -11,6 +11,7 @@ import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (nub,  foldl',  elemIndices,  maximum,  minimum,  lookup)
 import qualified Data.Set as Set
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
+import HasKAL.SignalProcessingUtils.Interpolation
 import HasKAL.SpectrumUtils.Function (updateMatrixElement,  updateSpectrogramSpec)
 import HasKAL.SpectrumUtils.Signature (Spectrum,  Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
@@ -29,7 +30,7 @@ part'EventTriggerGeneration wave = do
   liftIO $ print "start event trigger generation"
   param <- get
   (a, s) <- liftIO $ runStateT (section'TimeFrequencyExpression wave) param
-  section'Clustering a
+  section'Clustering (basePixel9 ,2) a
 
 
 section'TimeFrequencyExpression :: WaveData
@@ -39,29 +40,17 @@ section'TimeFrequencyExpression whnWaveData = do
   param <- get
   let refpsd = GP.refpsd param
       fs = GP.samplingFrequency param
-      nfreq2 = GP.nfrequency param`div`2
       nfreq = GP.nfrequency param
+      nfreq2 = nfreq `div` 2
       ntimeSlide = GP.ntimeSlide param
       ntime = ((NL.dim $ gwdata whnWaveData) - chunklen) `div` ntimeSlide
       chunklen = GP.chunklen param
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
---      snrMatP = (nfreq2><ntime) $ concatMap (\i -> map ((!! i) . (\i->toList $ zipVectorWith (/)
---        (
---        snd $ gwOnesidedPSDV (subVector (ntimeSlide*i) nfreq (gwdata whnWaveData)) nfreq fs)
---        (snd refpsd)
---        )) [0..ntime-1]) [0..nfreq2-1] :: Matrix Double
-      snrMatP = NL.trans $ (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+      snrMatP = NL.trans $ NL.flipud $ (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
         where 
-          calcSpec tindx = snd $ gwOnesidedPSDV 
-            (NL.subVector (ntimeSlide*tindx) ntimeSlide (gwdata whnWaveData)) ntimeSlide fs
---      snrMatP = NL.fromColumns (map calcSpec [0..ntime-1]) :: Matrix Double
---        where calcSpec tindx = NL.zipVectorWith (/)
---                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
---                (NL.fromList $ replicate nfreq  $ std $ NL.toList $ snd refpsd)
---              calcSpec' tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
-
+          calcSpec tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
       out = (snrMatT', snrMatF, snrMatP)
   liftIO $ H3.spectrogramM H3.LogY
                            H3.COLZ
@@ -73,38 +62,47 @@ section'TimeFrequencyExpression whnWaveData = do
   return out
 
 
-section'Clustering :: Spectrogram
+section'Clustering :: ((Int, Int) -> [(Int, Int)],Int)
+                   -> Spectrogram
                    -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
-section'Clustering (snrMatT, snrMatF, snrMatP') = do
+section'Clustering (cfun,minN) (snrMatT, snrMatF, snrMatP') = do
   liftIO $ print "start seedless clustering"
   param <- get
-  let dcted' = dct2d snrMatP'
+  let l = NL.toList $ NL.flatten snrMatP'
+      l' = (NL.dim snrMatF><NL.dim snrMatT) l
+      dcted' = dct2d l'
       ncol = cols dcted'
       nrow = rows dcted'
       zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-GP.resolvTime param..ncol-1]]
       zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-GP.resolvFreq param..nrow-1]]
       zeroElement = zeroElementr ++ zeroElementc
-      dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
+  liftIO $ print $ ncol
+  liftIO $ print $ nrow
+  let dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
       snrMatP = idct2d dcted
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
       snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows thresIndex snrMatP)
       (tt, ff, mg) = snrMat
+--      thrsed = NL.find (<=GP.clusterThres param) mg
       thrsed = NL.find (>=GP.clusterThres param) mg
-      survivor = thrsed -- nub' $ excludeOnePixelIsland basePixel25 thrsed
+      survivor = nub' $ excludeOnePixelIsland cfun thrsed
   liftIO $ print $ length survivor
-  let survivorwID = taggingIsland survivor
-      excludedIndx = Set.toList $ Set.difference (Set.fromList thrsed) (Set.fromList survivor)
+  liftIO $ print $ survivor
+  let survivorwID = taggingIsland cfun minN survivor
+      zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
+      survivorValues = map (\x->mg@@>x) survivor
       newM = updateSpectrogramSpec snrMat
-       $ updateMatrixElement mg excludedIndx (replicate (length excludedIndx) 0.0)
+       $ updateMatrixElement zeroMatrix survivor survivorValues
   liftIO $ H3.spectrogramM H3.LogY
                            H3.COLZ
                            "mag"
-                           "pixelSNR spectrogram"
+                           "clustered PixelSNR spectrogram"
                            "production/gw150914_cluster_spectrogram.png"
                            ((0, 0), (20, 400))
                            newM              
  
   liftIO $ print "finishing ETG section.."
+  liftIO $ print survivorwID
   return (newM, survivorwID)
 
 

@@ -2,12 +2,18 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration/
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-2.22
+resolver: lts-2.14
+extra-include-dirs:
+- /home/detchar/tools/include
+extra-lib-dirs:
+- /home/detchar/tools/lib
+ghc-options:
+  "*": -fPIC -fobject-code
 
 # Local packages, usually specified by relative directory name
 packages:
-- '.'
-- '../../../HasKAL'
+- .
+- /home/kazu/tools/detector-characterization/HasKAL
 - location:
     git: https://github.com/bos/hdbc-mysql.git
     commit: d43ea057019ff683f278f36af410f4d3cbc731bc
@@ -49,6 +55,8 @@ extra-lib-dirs:
 
 # Override default flag values for local packages and extra-deps
 flags:
+  #  storable-complex:
+  #  instanceinbase: false
   carray:
     bytestringinbase: false
   HDBC:

@@ -38,6 +38,7 @@ import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
+import HasKAL.DataBaseUtils.FrameFull.Function
 import GlitchMon.Table (Glitchtbl(..), insertGlitchtbl)
 import qualified GlitchMon.Table as Glitch
 
@@ -89,16 +90,16 @@ setSqlMode conn = do
 
 
 
--- instance ProductConstructor (a -> b -> c -> (a, b, c)) where
---   productConstructor = (,,)
--- 
--- instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
---          => FromSql SqlValue (a, b, c) where
---   recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
--- 
--- instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
---          => ToSql SqlValue (a, b, c) where
---   recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
+--instance ProductConstructor (a -> b -> c -> (a, b, c)) where
+--  productConstructor = (,,)
+ 
+--instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
+--         => FromSql SqlValue (a, b, c) where
+--  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
+ 
+--instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
+--         => ToSql SqlValue (a, b, c) where
+--  recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
 -- 
 
 
