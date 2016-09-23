@@ -29,16 +29,30 @@ import System.IO.Unsafe (unsafePerformIO)
 import GlitchMon.Signature
 
 
-selectSegment :: Double -> FilePath -> [(Int,Double)]
-selectSegment duration fpath = unsafePerformIO $ do
-  gpslist <- return $ readFile fpath >>= \x -> return $ lines x
-  fmap (map (toTuple.words)) gpslist >>= \l -> return $ filter (\(gps,d) -> d >= duration) l
-  
+dataSegmentation :: FilePath
+                 -> Int
+                 -> [(Int,Int)]
+dataSegmentation f sec = unsafePerformIO $ do
+  gpslist' <- return $ readFile f >>= \x -> return $ lines x
+  let gpslist = unsafePerformIO $ fmap (map (toTuple.words)) gpslist'
+  return $ concat $ (flip map) gpslist $ \(gps,dt) -> 
+    let n = dt `div` sec
+     in [(gps+i*sec,sec)|i<-[0..n-1]]
 
 toTuple :: [String] 
-        -> (Int,Double)
-toTuple x = (read (head x) :: Int,read (x!!1) :: Double)
+        -> (Int,Int)
+toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
 
+
+
+selectSegment :: Int -> FilePath -> [(Int,Int)]
+selectSegment dur_sec fpath = unsafePerformIO $ do
+  gpslist <- return $ readFile fpath >>= \x -> return $ lines x
+  tmplist <- fmap (map (toTuple.words)) gpslist >>= \l -> return $ filter (\(gps,d) -> d >= dur_sec) l
+  return $ concat $ (flip map) tmplist $ \(gps,dt) -> 
+    let n = dt `div` dur_sec
+     in [(gps+i*dur_sec,dur_sec)|i<-[0..n-1]]
+ 
 
 excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> [(Int, Int)] -> [(Int, Int)]
 excludeOnePixelIsland f [] = []

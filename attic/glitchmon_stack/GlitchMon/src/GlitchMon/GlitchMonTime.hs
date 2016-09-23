@@ -92,7 +92,7 @@ runGlitchMonTime param chname cachefile = source cachefile $$ sink param chname
 
 
 source :: FilePath
-       -> Source IO (Int,Double)
+       -> Source IO (Int,Int)
 source f = do
   gpslist' <- return $ readFile f >>= \x -> return $ lines x
   let gpslist = unsafePerformIO $ fmap (map (toTuple.words)) gpslist'
@@ -100,20 +100,19 @@ source f = do
 
 
 toTuple :: [String] 
-        -> (Int,Double)
-toTuple x = (read (head x) :: Int,read (x!!1) :: Double)
+        -> (Int,Int)
+toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
 
 
 sink :: GP.GlitchParam
      -> Channel
-     -> Sink (Int,Double) IO ()
+     -> Sink (Int,Int) IO ()
 sink param chname = do
   c <- await
   case c of
     Nothing -> sink param chname
-    Just (gps, dt') -> do
-      let dt = truncate dt'
-          n = 0
+    Just (gps, dt) -> do
+      let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
       case maybewave of
         Nothing -> sink param chname
