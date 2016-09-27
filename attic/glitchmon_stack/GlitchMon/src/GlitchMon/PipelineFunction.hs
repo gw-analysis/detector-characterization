@@ -18,7 +18,7 @@ where
 
 
 import Control.Monad ((>>=))
-import Control.Monad.State (execState, runState, get, put)
+import Control.Monad.State (execState, evalState, runState, get, put)
 import Data.Int (Int32)
 import Data.List (nub, intersect)
 import qualified Data.Set as Set
@@ -39,11 +39,6 @@ dataSegmentation f sec = unsafePerformIO $ do
     let n = dt `div` sec
      in [(gps+i*sec,sec)|i<-[0..n-1]]
 
-toTuple :: [String] 
-        -> (Int,Int)
-toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
-
-
 
 selectSegment :: Int -> FilePath -> [(Int,Int)]
 selectSegment dur_sec fpath = unsafePerformIO $ do
@@ -63,8 +58,9 @@ excludeOnePixelIsland f y@(x:xs) = case (length (intersect y (f x)) > 2) of
 
 taggingIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int,Int)] -> [[(Tile,ID)]]
 taggingIsland cfun minN x = let ids = mynub . secondIDing 1 . fst . firstIDing cfun minN $ x
+                                --ids = mynub . fst . firstIDing cfun minN $ x
                                 groupIDs = groupingID ids
-                   in (flip map) [1..length groupIDs] $ 
+                   in map mynub $ (flip map) [1..length groupIDs] $ 
                         \i -> [ ((a,b),i)
                               | (a,b,c) <- ids
                               , elem c (groupIDs!!(i-1))
@@ -108,7 +104,25 @@ firstStep x = mynub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b
 
 secondStep :: [[Int]] -> [[Int]]
 secondStep [] = []
-secondStep a = execState (go a) []
+secondStep a = evalState (go a) (length . nub . concat $ a)
+ where
+  go [] = return []
+  go x  = do
+     i <- get
+     case (i > 0) of
+       True -> do
+         let a = mynub . concat $ [ids|ids<-x, Set.member i (Set.fromList ids)] 
+             b = [ids|ids<-x, not (Set.member i (Set.fromList ids))]
+         put (i-1)
+         go (a : b)
+       False -> do 
+         return x
+
+
+-- have bug
+secondStep' :: [[Int]] -> [[Int]]
+secondStep' [] = []
+secondStep' a = execState (go a) []
   where
     go [] = return []
     go (x:xs) = do
@@ -125,7 +139,10 @@ secondStep a = execState (go a) []
             0 -> do put (x:tbl)
                     go xs
             _ -> case newxs of 
-                   [] -> return []
+                   [] -> do let b = mynub . Set.toList . Set.unions 
+                                  $ [Set.fromList a,Set.fromList x]
+                            put (b:tbl)   
+                            return []
                    _  -> do put (a:tbl)
                             go (a:newxs)
 
@@ -154,4 +171,11 @@ mynub l = nub'' l Set.empty
          nub'' (x:xs) s
            | x `Set.member` s = nub'' xs s
            | otherwise    = x : nub'' xs (x `Set.insert` s)
+
+
+toTuple :: [String] 
+        -> (Int,Int)
+toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
+
+
 

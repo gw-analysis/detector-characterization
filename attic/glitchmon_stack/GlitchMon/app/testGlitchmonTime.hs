@@ -1,15 +1,14 @@
 
 
 
-import GlitchMon.GlitchMonFile
+import GlitchMon.GlitchMonTime
 import GlitchMon.GlitchParam
-import GlitchMon.PipelineFunction
 import HasKAL.DataBaseUtils.FrameFull.Data
 
 main = do
   let fs = 4096
   let param = GlitchParam
-               { segmentLength = 32
+               { segmentLength = 300
                , channel = "H1:LOSC-STRAIN"
                , chunklen = truncate $ 4*fs
                , samplingFrequency = fs
@@ -18,26 +17,22 @@ main = do
                , whtfiltordr = 1000
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = truncate $ 0.2*fs
-               , ntimeSlide = truncate $ 0.03*fs
+               , nfrequency = truncate $ fs/5
+               , ntimeSlide = truncate $ 0.02*fs
              -- * clustering
-               , cutoffFractionTFT = 0.5
-               , cutoffFractionTFF = 0.5
+               , resolvTime = 0
+               , resolvFreq = 0
                , cutoffFreq = 10
-               , clusterThres = 0.005
-               , celement = basePixel9
-               , minimumClusterNum = 2
+               , clusterThres = 5
              -- * clean data finder
-               , cdfInterval = 32
+               , cdfInterval = 600
                , cdfparameter = cdfp
                , cgps = Nothing
              -- * temporary data
 --               , refpsd =
 --               , refwave =
                , reftime = 0
-               -- * for debug
-               , debugmode = 1
-                 }
+               }
 
       cdfp = CDFParam
               { cdf'samplingFrequency = fs
@@ -49,7 +44,7 @@ main = do
               }
 
 
-  runGlitchMonFile param (channel param) "/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
+  runGlitchMonTime param (channel param) "./ikagra_cache_4.txt"
 
 
 

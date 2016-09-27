@@ -88,20 +88,15 @@ runGlitchMonTime :: GP.GlitchParam
                  -> FilePath
                  -> IO()
 --                 -> IO FilePath
-runGlitchMonTime param chname cachefile = source cachefile $$ sink param chname
+runGlitchMonTime param chname cachefile = source param cachefile $$ sink param chname
 
 
-source :: FilePath
+source :: GP.GlitchParam
+       -> FilePath
        -> Source IO (Int,Int)
-source f = do
-  gpslist' <- return $ readFile f >>= \x -> return $ lines x
-  let gpslist = unsafePerformIO $ fmap (map (toTuple.words)) gpslist'
-  CL.sourceList gpslist
-
-
-toTuple :: [String] 
-        -> (Int,Int)
-toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
+source param f =
+  let gpslist = selectSegment (GP.segmentLength param) f
+   in CL.sourceList gpslist
 
 
 sink :: GP.GlitchParam
@@ -123,12 +118,12 @@ sink param chname = do
                           then do let wave' = downsampleWaveData fs wave
                                       dataGps = (gps, n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  fileRun' wave' param'2
+                                  --fileRun' wave' param'2
                                   let s = unsafePerformIO $ timeRun chname wave' param'2
                                   sink s chname
                           else do let dataGps = (gps, n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  fileRun' wave param'2
+                                  --fileRun' wave param'2
                                   let s = unsafePerformIO $ timeRun chname wave param'2
                                   sink s chname
 
@@ -150,8 +145,9 @@ timeRun chname w param' = do
       error "cgps not found. something wrong. please check it out."
     Just strtGps -> do
           let cdfp = GP.cdfparameter param'
-              seglen = GP.segmentLength param'
-          maybecdlist <- liftIO $ cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
+              seglen = fromIntegral $ GP.segmentLength param'
+          maybecdlist <- liftIO $ 
+            cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
           case maybecdlist of
             Nothing -> error "no clean data in the given gps interval"
             Just cdlist -> do
@@ -207,4 +203,8 @@ eventDisplayF param fname chname = do
 
 
 {- internal functions -}
+
+toTuple :: [String] 
+        -> (Int,Int)
+toTuple x = (read (head x) :: Int,read (x!!1) :: Int)
 

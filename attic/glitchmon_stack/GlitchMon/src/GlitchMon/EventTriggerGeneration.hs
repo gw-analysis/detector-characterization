@@ -9,6 +9,7 @@ module GlitchMon.EventTriggerGeneration
 
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (nub,  foldl',  elemIndices,  maximum,  minimum,  lookup)
+import Data.Packed.Matrix (buildMatrix)
 import qualified Data.Set as Set
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
 import HasKAL.SignalProcessingUtils.Interpolation
@@ -24,13 +25,14 @@ import GlitchMon.Signature
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 
+
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
 part'EventTriggerGeneration wave = do
   liftIO $ print "start event trigger generation"
   param <- get
   (a, s) <- liftIO $ runStateT (section'TimeFrequencyExpression wave) param
-  section'Clustering (basePixel9 ,2) a
+  section'Clustering a
 
 
 section'TimeFrequencyExpression :: WaveData
@@ -52,20 +54,23 @@ section'TimeFrequencyExpression whnWaveData = do
         where 
           calcSpec tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
       out = (snrMatT', snrMatF, snrMatP)
-  liftIO $ H3.spectrogramM H3.LogY
-                           H3.COLZ
-                           "mag"
-                           "pixelSNR spectrogram"
-                           "production/gw150914_pixelSNR_spectrogram.png"
-                           ((0, 0), (20, 400))
-                           out
+  case GP.debugmode param of
+    1 -> do
+      liftIO $ H3.spectrogramM H3.LogY
+                               H3.COLZ
+                               "mag"
+                               "pixelSNR spectrogram"
+                               "production/gw150914_pixelSNR_spectrogram.png"
+                                   ((0, 0), (20, 400))
+                               out
+    _ -> liftIO $ Prelude.return () 
+
   return out
 
 
-section'Clustering :: ((Int, Int) -> [(Int, Int)],Int)
-                   -> Spectrogram
+section'Clustering :: Spectrogram
                    -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
-section'Clustering (cfun,minN) (snrMatT, snrMatF, snrMatP') = do
+section'Clustering (snrMatT, snrMatF, snrMatP') = do
   liftIO $ print "start seedless clustering"
   param <- get
   let l = NL.toList $ NL.flatten snrMatP'
@@ -73,37 +78,58 @@ section'Clustering (cfun,minN) (snrMatT, snrMatF, snrMatP') = do
       dcted' = dct2d l'
       ncol = cols dcted'
       nrow = rows dcted'
-      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-GP.resolvTime param..ncol-1]]
-      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-GP.resolvFreq param..nrow-1]]
+      cutT = floor $ fromIntegral ncol * GP.cutoffFractionTFT param
+      cutF = floor $ fromIntegral nrow * GP.cutoffFractionTFF param
+      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-cutT..ncol-1]]
+      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-cutF..nrow-1]]
       zeroElement = zeroElementr ++ zeroElementc
-  liftIO $ print $ ncol
-  liftIO $ print $ nrow
-  let dcted = updateMatrixElement dcted' zeroElement $ take (length zeroElement) [0, 0..]
+      cfun = GP.celement param
+      minN = GP.minimumClusterNum param
+  let qM = quantizingMatrix nrow ncol (go zeroElement)
+        where 
+          go ele = \(r,c)-> 
+            case Set.member (r,c) (Set.fromList ele) of
+                True -> 0.0
+                False -> 1.0
+      dcted = NL.mul dcted' qM
       snrMatP = idct2d dcted
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
       snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows thresIndex snrMatP)
       (tt, ff, mg) = snrMat
---      thrsed = NL.find (<=GP.clusterThres param) mg
       thrsed = NL.find (>=GP.clusterThres param) mg
       survivor = nub' $ excludeOnePixelIsland cfun thrsed
-  liftIO $ print $ length survivor
-  liftIO $ print $ survivor
   let survivorwID = taggingIsland cfun minN survivor
       zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
       survivorValues = map (\x->mg@@>x) survivor
       newM = updateSpectrogramSpec snrMat
        $ updateMatrixElement zeroMatrix survivor survivorValues
-  liftIO $ H3.spectrogramM H3.LogY
-                           H3.COLZ
-                           "mag"
-                           "clustered PixelSNR spectrogram"
-                           "production/gw150914_cluster_spectrogram.png"
-                           ((0, 0), (20, 400))
-                           newM              
- 
+
+  case GP.debugmode param of
+    1 -> do
+      liftIO $ print $ ncol
+      liftIO $ print $ nrow
+      liftIO $ print $ length survivor
+      liftIO $ H3.spectrogramM H3.LogY
+                               H3.COLZ
+                               "mag"
+                               "clustered PixelSNR spectrogram"
+                               "production/gw150914_cluster_spectrogram.png"
+                                   ((0, 0), (20, 400))
+                               newM
+--      liftIO $ print $ survivor
+      liftIO $ print survivorwID          
+    _ -> liftIO $ Prelude.return () 
+
   liftIO $ print "finishing ETG section.."
-  liftIO $ print survivorwID
+
   return (newM, survivorwID)
+
+
+quantizingMatrix :: Int 
+                 -> Int 
+                 -> ((Int,Int)->Double) 
+                 -> Matrix Double
+quantizingMatrix r c fun = buildMatrix r c fun
 
 
 

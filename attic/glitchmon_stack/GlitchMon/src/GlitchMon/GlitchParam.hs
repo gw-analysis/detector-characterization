@@ -11,22 +11,24 @@ import HasKAL.WaveUtils.Data(WaveData)
 
 
 data GlitchParam = GlitchParam
-  { segmentLength :: Double
+  { segmentLength :: Int
   , channel :: String
   , chunklen :: Int 
   , samplingFrequency :: Double
 -- * whitening
-  , refpsdlen       :: Int
+  , refpsdlen    :: Int
   , whtfiltordr  :: Int
   , whtCoeff :: [([Double],  Double)]
 -- * t-f expression
   , nfrequency :: Int
   , ntimeSlide :: Int
 -- * clustering
-  , resolvTime :: Int
-  , resolvFreq :: Int
+  , cutoffFractionTFT :: Double
+  , cutoffFractionTFF :: Double
   , cutoffFreq :: Double
   , clusterThres :: Double
+  , celement :: (Int, Int) -> [(Int, Int)]
+  , minimumClusterNum ::Int
 -- * clean data finder
   , cdfInterval :: Int -- ^ interval[s] to run clean data finder (default 600[s])
   , cdfparameter :: CDFParam
@@ -35,9 +37,11 @@ data GlitchParam = GlitchParam
   , refpsd :: Spectrum
   , refwave :: WaveData
   , reftime :: Double
+-- * for debug
+  , debugmode :: Int
   }
 
-updateGlitchParam'segmentLength :: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'segmentLength :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'segmentLength x a = x {segmentLength = a}
 
 updateGlitchParam'channel :: GlitchParam -> String -> GlitchParam
@@ -64,11 +68,11 @@ updateGlitchParam'nfrequency x n = x {nfrequency = n}
 updateGlitchParam'ntimeSlide :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'ntimeSlide x n = x {ntimeSlide = n}
 
-updateGlitchParam'resolvTime :: GlitchParam -> Int -> GlitchParam
-updateGlitchParam'resolvTime x n = x {resolvTime = n}
+updateGlitchParam'cutoffFractionTFT:: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'cutoffFractionTFT x n = x {cutoffFractionTFT = n}
 
-updateGlitchParam'resolvFreq :: GlitchParam -> Int -> GlitchParam
-updateGlitchParam'resolvFreq x n = x {resolvFreq = n}
+updateGlitchParam'cutoffFractionTFF :: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'cutoffFractionTFF x n = x {cutoffFractionTFF = n}
 
 updateGlitchParam'cutoffFreq :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'cutoffFreq x f = x {cutoffFreq = f}
