@@ -89,7 +89,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
         where 
           go ele = \(r,c)-> 
             case Set.member (r,c) (Set.fromList ele) of
-                True -> 0.0
+                True  -> 0.0
                 False -> 1.0
       dcted = NL.mul dcted' qM
       snrMatP = idct2d dcted
@@ -106,8 +106,8 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 
   case GP.debugmode param of
     1 -> do
-      liftIO $ print $ ncol
-      liftIO $ print $ nrow
+      liftIO $ print ncol
+      liftIO $ print nrow
       liftIO $ print $ length survivor
       liftIO $ H3.spectrogramM H3.LogY
                                H3.COLZ

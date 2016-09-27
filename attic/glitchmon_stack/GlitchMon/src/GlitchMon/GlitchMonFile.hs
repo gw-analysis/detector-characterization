@@ -177,10 +177,9 @@ glitchMon param w =
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
---           Just t -> part'RegisterEventtoDB t >> return s''
-           Just t -> do print "finishing glitchmon"
-                        return s''
-           Nothing -> do print "finishing glitchmon"
+           Just t -> do part'RegisterEventtoDB t 
+                        print "finishing glitchmon" >> return s''
+           Nothing -> do print "No event from glitchmon"
                          return s''
 
 

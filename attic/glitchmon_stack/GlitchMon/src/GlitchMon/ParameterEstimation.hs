@@ -41,27 +41,31 @@ part'ParameterEstimation (m,ids) = do
         False-> return $ Just $ (flip map) ids $
           \island-> do
             let (tile,tag) = unzip island
-                tmin = formatGPS $ trigT @> (minimum . fst . unzip $ tile)
-                tmax' = trigT @> (maximum . fst . unzip $ tile)
+                nsize = fromIntegral $ length island :: Int32
+                tmin = formatGPS $ trigT @> (minimum . snd . unzip $ tile)
+                tmax' = trigT @> (maximum . snd . unzip $ tile)
                 tmax = formatGPS $ tmax' + fromIntegral nfreq/fs
-                fmin = trigF @> (minimum . snd . unzip $ tile)
-                fmax' = trigF @> (maximum . snd . unzip $ tile)
+                fmin = trigF @> (minimum . fst . unzip $ tile)
+                fmax' = trigF @> (maximum . fst . unzip $ tile)
                 fmax = fmax' + fs/fromIntegral nfreq
                 xx = map (\i->trigM @@> i) tile :: [Double]
                 (blackpower,maxid) = maximum' xx :: (Double,Int)
-                blackt = formatGPS $ trigT @> (fst $ tile!!maxid)
-                blackf = trigF @> (snd $ tile!!maxid)
+                blackt = formatGPS $ trigT @> (snd $ tile!!maxid)
+                blackf = trigF @> (fst $ tile!!maxid)
                 tfs = fromIntegral $ (floor fs::Int) :: Int32
              in (TrigParam { detector = Just "General"
                                     , event_gpsstarts = Just (fromIntegral . fst $ tmin)
                                     , event_gpsstartn = Just (fromIntegral . snd $ tmin)
                                     , event_gpsstops  = Just (fromIntegral . fst $ tmax)
                                     , event_gpsstopn  = Just (fromIntegral . snd $ tmax)
+                                    , event_fmin = Just fmin
+                                    , event_fmax = Just fmax
                                     , event_cgpss = Just (fromIntegral . fst $ blackt)
                                     , event_cgpsn = Just (fromIntegral . snd $ blackt)
                                     , duration = Just $ deformatGPS tmax - deformatGPS tmin
                                     , energy = Nothing
-                                    , central_frequency = Just fs
+                                    , island_size = Just nsize
+                                    , central_frequency = Just blackf
                                     , snr = Just blackpower
                                     , significance = Nothing
                                     , latitude = Nothing
@@ -78,50 +82,6 @@ part'ParameterEstimation (m,ids) = do
                 , head tag)
             where
               maximum' x = let maxx = maximum x :: Double
-                            in (maxx, fromJust $ lookup maxx (zip x [1..]))
-
-
-part'ParameterEstimation' :: Spectrogram
-                          -> StateT GP.GlitchParam IO (Maybe TrigParam)
-part'ParameterEstimation' m = do
-  param <- get
-  let fs = GP.samplingFrequency param
-  let (trigT, trigF, trigM) = m
-      mrow = NL.rows trigM
-      mcol = NL.cols trigM
-      zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
-  case (trigM == zerom) of
-    False -> do
-      let indxBlack = maxIndex trigM
-          tsnr = trigM @@> indxBlack
-          gps = formatGPS $ trigT @> fst indxBlack
-          gpss = fromIntegral $ fst gps :: Int32
-          gpsn = fromIntegral $ snd gps :: Int32
-          fc = trigF @> snd indxBlack
-          tfs = fromIntegral $ truncate fs :: Int32
-      return $ Just TrigParam { detector = Just "General"
-                              , event_gpsstarts = Nothing
-                              , event_gpsstartn = Nothing
-                              , event_gpsstops  = Nothing
-                              , event_gpsstopn  = Nothing
-                              , event_cgpss = Just gpss
-                              , event_cgpsn = Just gpsn
-                              , duration = Nothing
-                              , energy = Nothing
-                              , central_frequency = Just fc
-                              , snr = Just tsnr
-                              , significance = Nothing
-                              , latitude = Nothing
-                              , longitude = Nothing
-                              , channel = Nothing
-                              , sampling_rate = Just tfs
-                              , segment_gpsstarts = Nothing
-                              , segment_gpsstartn = Nothing
-                              , segment_gpsstops = Nothing
-                              , segment_gpsstopn = Nothing
-                              , dq_flag = Nothing
-                              , pipeline = Just "iKAGRA Glitch pipeline"
-                              }
-    True -> return Nothing
+                            in (maxx, fromJust $ lookup maxx (zip x [0..]))
 
 

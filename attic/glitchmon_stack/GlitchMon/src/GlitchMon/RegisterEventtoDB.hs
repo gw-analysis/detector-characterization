@@ -14,7 +14,7 @@ import GlitchMon.Signature
 
 
 part'RegisterEventtoDB :: [(TrigParam,ID)] -> IO()
-part'RegisterEventtoDB x = mapM_ registGlitchEvent2DB (fst . unzip $ x)
-
+part'RegisterEventtoDB x = do print "registering triggered events"
+                              mapM_ registGlitchEvent2DB (fst . unzip $ x)
 
 

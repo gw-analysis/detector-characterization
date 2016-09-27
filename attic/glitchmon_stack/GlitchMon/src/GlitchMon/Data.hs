@@ -5,15 +5,19 @@ where
 
 import Data.Int (Int32)
 
-data TrigParam = TrigParam { detector :: Maybe String
+data TrigParam = TrigParam { glitch_ID :: Maybe Int
+                           , detector :: Maybe String
                            , event_gpsstarts :: Maybe Int32
                            , event_gpsstartn :: Maybe Int32
                            , event_gpsstops :: Maybe Int32
                            , event_gpsstopn :: Maybe Int32
+                           , event_fmin :: Maybe Double
+                           , event_fmax :: Maybe Double
                            , event_cgpss :: Maybe Int32
                            , event_cgpsn :: Maybe Int32
                            , duration :: Maybe Double
                            , energy :: Maybe Double
+                           , island_size :: Maybe Int32
                            , central_frequency :: Maybe Double
                            , snr :: Maybe Double
                            , significance :: Maybe Double
