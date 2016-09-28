@@ -595,6 +595,16 @@ instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
          => ToSql SqlValue (a, b, c) where
   recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
 
+instance ProductConstructor (a -> b -> c -> d -> (a, b, c, d)) where
+  productConstructor = (,,,)
+
+instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c, FromSql SqlValue d)
+         => FromSql SqlValue (a, b, c, d) where
+  recordFromSql = (,,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql <*> recordFromSql
+
+instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c, ToSql SqlValue d)
+         => ToSql SqlValue (a, b, c, d) where
+  recordToSql = createRecordToSql (\(a, b, c, d) -> fromRecord a ++ fromRecord b ++ fromRecord c ++ fromRecord d)
 
 
 

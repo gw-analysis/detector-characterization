@@ -3,7 +3,9 @@
 
 module GlitchMon.GlitchPlot
 ( scatterplot
+, scatterplot'
 , scatterplot'png
+, scatterplot'png'
 ) where
 
 
@@ -28,6 +30,16 @@ scatterplot str_title str_legend windowSize dat =
     renderableToWindow (scatterplot_internal str_title str_legend dat) (fst windowSize) (snd windowSize)
 
 
+scatterplot'png' :: String -> String -> FilePath -> [(Double,Double,Double,Int)] -> IO (PickFn ())
+scatterplot'png' str_title str_legend plotfname dat =
+    renderableToFile def plotfname (scatterplot_internal' str_title str_legend dat)
+
+
+scatterplot' :: String -> String -> (Int,Int) -> [(Double,Double,Double,Int)] -> IO ()
+scatterplot' str_title str_legend windowSize dat =
+    renderableToWindow (scatterplot_internal' str_title str_legend dat) (fst windowSize) (snd windowSize)
+
+
 scatterplot_internal :: String -> String -> [(Double,Double,Double)] -> Renderable ()
 scatterplot_internal str_title str_legend dat = toRenderable layout
   where
@@ -50,12 +62,47 @@ scatterplot_internal str_title str_legend dat = toRenderable layout
     spots = area_spots_4d_title .~ str_legend
           $ area_spots_4d_max_radius .~ 20
           $ area_spots_4d_values .~ values
-          $ area_spots_4d_palette .~ brewerSet YlOrRd 10
+          $ area_spots_4d_palette .~ brewerSet RdYlBu 11
           $ def
 
     values = [ (d, v, setColor (t*z), 5*sqrt t) | ((d,v,t),z) <- zip dat zs ]
     zs :: [Double]
     zs     = repeat $ 1
+
+
+scatterplot_internal' :: String 
+                      -> String 
+                      -> [(Double,Double,Double,Int)] 
+                      -> Renderable ()
+scatterplot_internal' str_title str_legend dat = toRenderable layout
+  where
+    layout = layout_plots .~ [toPlot spots]
+           $ layout_title .~ str_title
+           $ layout_title_style . font_size .~ 20
+           $ layout_background .~ solidFillStyle (opaque white)
+           $ layout_left_axis_visibility . axis_show_ticks .~ False
+           $ layout_foreground .~ (opaque black)
+           $ layout_x_axis . laxis_title .~ "time"
+           $ layout_x_axis . laxis_style . axis_label_style . font_size .~ 20
+           $ layout_x_axis . laxis_title_style . font_size .~ 20
+           $ layout_y_axis . laxis_title .~ "frequency [Hz]"
+           $ layout_y_axis . laxis_title_style . font_size .~ 20
+           $ layout_y_axis . laxis_style . axis_label_style . font_size .~ 20
+--           $ layout_y_axis . laxis_generate .~ autoScaledLogAxis logPSDAxis
+           $ layout_legend .~ Just (legend_label_style . font_size .~ 20 $ def)
+           $ def
+
+    spots = area_spots_4d_title .~ str_legend
+          $ area_spots_4d_max_radius .~ 30
+          $ area_spots_4d_values .~ values
+          $ area_spots_4d_palette .~ brewerSet YlOrRd 9 -- RdYlBu 11
+          $ def
+
+    values = [ (d, v, sqrt (fromIntegral n :: Double), setColor (t*z)) | ((d,v,t,n),z) <- zip dat zs ]
+    zs :: [Double]
+    zs = repeat $ 1
+
+
 
 
 setColor :: Double -> Int
@@ -68,7 +115,8 @@ setColor x
   | x < 13 = 5
   | x < 15 = 6
   | x < 17 = 7
-  | x < 19 = 8
-  | x < 50 = 9
-  | otherwise = 10
+ -- | x < 19 = 8
+  | x < 30 = 8
+ -- | x < 60 = 10
+  | otherwise = 9
 

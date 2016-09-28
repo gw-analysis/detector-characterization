@@ -2,6 +2,7 @@
 
 module GlitchMon.DBFunction
 ( extractTrigInfoTFSNR
+, extractTrigInfoTFSNRSize
 )
 where
 
@@ -57,6 +58,25 @@ extractTrigInfoTFSNR gpsstart gpsstop snrlow snrhigh = runMaybeT $ MaybeT $ do
     x  -> return (Just x)
 
 
+extractTrigInfoTFSNRSize :: Int 
+                         -> Int 
+                         -> Double 
+                         -> Double 
+                         -> Double 
+                         -> Double 
+                         -> IO (Maybe [(Double, Double, Double, Int)])
+extractTrigInfoTFSNRSize gpsstart gpsstop snrlow snrhigh flow fhigh = runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigInfoTFSNRSizeCore gpsstart' gpsstop' snrlow snrhigh flow fhigh
+  let out = [(fromIntegral t :: Double, f::Double, snr::Double, fromIntegral nsize :: Int)
+            | (Just t, Just f, Just snr, Just nsize) <- items
+            ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
 extractTrigInfoTFSNRCore :: Int32 -> Int32 -> Double -> Double -> IO [(Maybe Int32, Maybe Double, Maybe Double)]
 extractTrigInfoTFSNRCore gpsstart gpsstop snrlow snrhigh =
   handleSqlError' $ withConnectionIO connect $ \conn ->
@@ -73,6 +93,28 @@ extractTrigInfoTFSNRCore gpsstart gpsstop snrlow snrhigh =
       return $ (,,) |$| db ! Glitch.eventGpsstarts' |*| db ! Glitch.centralFrequency' |*| db ! Glitch.snr'
 
 
+extractTrigInfoTFSNRSizeCore :: Int32 
+                             -> Int32 
+                             -> Double 
+                             -> Double 
+                             -> Double 
+                             -> Double 
+                             -> IO [(Maybe Int32, Maybe Double, Maybe Double, Maybe Int32)]
+extractTrigInfoTFSNRSizeCore gpsstart gpsstop snrlow snrhigh flow fhigh=
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () ((Maybe Int32, Maybe Double, Maybe Double, Maybe Int32))
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+        `and'` db ! Glitch.snr' .>=. value (Just snrlow)
+        `and'` db ! Glitch.snr' .<=. value (Just snrhigh)
+        `and'` db ! Glitch.centralFrequency' .>=. value (Just flow)
+        `and'` db ! Glitch.centralFrequency' .<=. value (Just fhigh)
+      return $ (,,,) |$| db ! Glitch.eventGpsstarts' |*| db ! Glitch.centralFrequency' |*| db ! Glitch.snr' |*| db ! Glitch.islandSize'
 
 
 

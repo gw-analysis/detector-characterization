@@ -49,7 +49,7 @@ main = do
               }
 
 
-  runGlitchMonFile param (channel param) "/data/ligo/er8/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
+  runGlitchMonFile param (channel param) "/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 
 
 
