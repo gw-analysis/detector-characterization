@@ -24,7 +24,7 @@ main = do
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 10
-               , clusterThres = 0.005
+               , clusterThres = 10.0
                , celement = basePixel9
                , minimumClusterNum = 2
              -- * clean data finder

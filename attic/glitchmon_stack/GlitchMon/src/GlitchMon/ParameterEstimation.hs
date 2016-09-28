@@ -54,31 +54,31 @@ part'ParameterEstimation (m,ids) = do
                 blackf = trigF @> (fst $ tile!!maxid)
                 tfs = fromIntegral $ (floor fs::Int) :: Int32
              in (TrigParam { detector = Just "General"
-                                    , event_gpsstarts = Just (fromIntegral . fst $ tmin)
-                                    , event_gpsstartn = Just (fromIntegral . snd $ tmin)
-                                    , event_gpsstops  = Just (fromIntegral . fst $ tmax)
-                                    , event_gpsstopn  = Just (fromIntegral . snd $ tmax)
-                                    , event_fmin = Just fmin
-                                    , event_fmax = Just fmax
-                                    , event_cgpss = Just (fromIntegral . fst $ blackt)
-                                    , event_cgpsn = Just (fromIntegral . snd $ blackt)
-                                    , duration = Just $ deformatGPS tmax - deformatGPS tmin
-                                    , energy = Nothing
-                                    , island_size = Just nsize
-                                    , central_frequency = Just blackf
-                                    , snr = Just blackpower
-                                    , significance = Nothing
-                                    , latitude = Nothing
-                                    , longitude = Nothing
-                                    , channel = Just (GP.channel param)
-                                    , sampling_rate = Just tfs
-                                    , segment_gpsstarts = Nothing
-                                    , segment_gpsstartn = Nothing
-                                    , segment_gpsstops = Nothing
-                                    , segment_gpsstopn = Nothing
-                                    , dq_flag = Nothing
-                                    , pipeline = Just "iKAGRA Glitch pipeline"
-                                    }
+                           , event_gpsstarts = Just (fromIntegral . fst $ tmin)
+                           , event_gpsstartn = Just (fromIntegral . snd $ tmin)
+                           , event_gpsstops  = Just (fromIntegral . fst $ tmax)
+                           , event_gpsstopn  = Just (fromIntegral . snd $ tmax)
+                           , event_fmin = Just fmin
+                           , event_fmax = Just fmax
+                           , event_cgpss = Just (fromIntegral . fst $ blackt)
+                           , event_cgpsn = Just (fromIntegral . snd $ blackt)
+                           , duration = Just $ deformatGPS tmax - deformatGPS tmin
+                           , energy = Nothing
+                           , island_size = Just nsize
+                           , central_frequency = Just blackf
+                           , snr = Just blackpower
+                           , significance = Nothing
+                           , latitude = Nothing
+                           , longitude = Nothing
+                           , channel = Just (GP.channel param)
+                           , sampling_rate = Just tfs
+                           , segment_gpsstarts = Nothing
+                           , segment_gpsstartn = Nothing
+                           , segment_gpsstops = Nothing
+                           , segment_gpsstopn = Nothing
+                           , dq_flag = Nothing
+                           , pipeline = Just "iKAGRA Glitch pipeline"
+                           }
                 , head tag)
             where
               maximum' x = let maxx = maximum x :: Double

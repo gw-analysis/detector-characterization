@@ -52,7 +52,10 @@ section'TimeFrequencyExpression whnWaveData = do
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
       snrMatP = NL.trans $ NL.flipud $ (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
         where 
-          calcSpec tindx = snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
+          calcSpec tindx = NL.zipVectorWith (/) 
+            (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
+            (snd $ refpsd)
+
       out = (snrMatT', snrMatF, snrMatP)
   case GP.debugmode param of
     1 -> do
@@ -106,8 +109,8 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 
   case GP.debugmode param of
     1 -> do
-      liftIO $ print ncol
-      liftIO $ print nrow
+--      liftIO $ print ncol
+      liftIO $ print "# of survived pixels is"
       liftIO $ print $ length survivor
       liftIO $ H3.spectrogramM H3.LogY
                                H3.COLZ
@@ -116,7 +119,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
                                "production/gw150914_cluster_spectrogram.png"
                                    ((0, 0), (20, 400))
                                newM
---      liftIO $ print $ survivor
+      liftIO $ print "clustered pixels :"
       liftIO $ print survivorwID          
     _ -> liftIO $ Prelude.return () 
 

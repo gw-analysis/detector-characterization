@@ -76,17 +76,18 @@ section'Whitening opt wave = case opt of
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-          put $ GP.updateGlitchParam'refpsd param 
-            (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
-          return $ applyWhitening TimeDomain whtCoeffList wave
+          let whned = applyWhitening TimeDomain whtCoeffList wave
+          put $ GP.updateGlitchParam'refpsd param
+            (gwOnesidedPSDV (gwdata whned) (GP.nfrequency param) (GP.samplingFrequency param))
+          return whned
   FrequencyDomain
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+          let whned = applyWhitening FrequencyDomain whtCoeffList wave
           put $ GP.updateGlitchParam'refpsd param
-            (gwOnesidedPSDV (gwdata rfwave) (GP.refpsdlen param) (GP.samplingFrequency param))
-          return $ applyWhitening FrequencyDomain whtCoeffList wave      
-
+            (gwOnesidedPSDV (gwdata whned) (GP.nfrequency param) (GP.samplingFrequency param))
+          return whned
 
 
 calcWhiteningCoeff :: GP.GlitchParam
