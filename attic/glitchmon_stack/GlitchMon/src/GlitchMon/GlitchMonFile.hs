@@ -96,7 +96,7 @@ sink :: GP.GlitchParam
 sink param chname = do
   c <- await
   case c of
-    Nothing -> sink param chname
+    Nothing -> return ()
     Just fname -> do
       maybegps <- liftIO $ getGPSTime fname
       case maybegps of

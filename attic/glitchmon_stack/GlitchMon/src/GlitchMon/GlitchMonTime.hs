@@ -105,7 +105,7 @@ sink :: GP.GlitchParam
 sink param chname = do
   c <- await
   case c of
-    Nothing -> sink param chname
+    Nothing -> return ()
     Just (gps, dt) -> do
       let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
@@ -118,20 +118,12 @@ sink param chname = do
                           then do let wave' = downsampleWaveData fs wave
                                       dataGps = (gps, n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  --fileRun' wave' param'2
                                   let s = unsafePerformIO $ timeRun chname wave' param'2
                                   sink s chname
                           else do let dataGps = (gps, n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  --fileRun' wave param'2
                                   let s = unsafePerformIO $ timeRun chname wave param'2
                                   sink s chname
-
-
-fileRun' w param = do
-   let dataGps = deformatGPS $ fromJust $ GP.cgps param
-       param' = GP.updateGlitchParam'refwave param (takeWaveData (GP.chunklen param) w)
-   liftIO $ print dataGps
 
 
 timeRun :: Channel
@@ -149,7 +141,14 @@ timeRun chname w param' = do
           maybecdlist <- liftIO $ 
             cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
           case maybecdlist of
-            Nothing -> error "no clean data in the given gps interval"
+            Nothing -> do 
+              liftIO $ print "Warning: no clean data in the given gps interval.Instead,last part of the segment will be used."
+              let startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
+                    + seglen - fromIntegral (GP.chunklen param'2)
+                  param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
+              maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (GP.chunklen param'2) chname
+              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
+              glitchMon param'3 w
             Just cdlist -> do
               let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                   cdgps = fst cdgps'
@@ -167,10 +166,9 @@ glitchMon param w =
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
---           Just t -> part'RegisterEventtoDB t >> return s''
-           Just t -> do print "finishing glitchmon"
-                        return s''
-           Nothing -> do print "finishing glitchmon"
+           Just t -> do part'RegisterEventtoDB t 
+                        print "finishing glitchmon" >> return s''
+           Nothing -> do print "No event from glitchmon"
                          return s''
 
 
