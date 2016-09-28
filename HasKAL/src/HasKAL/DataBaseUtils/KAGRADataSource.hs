@@ -18,7 +18,7 @@ import Language.Haskell.TH (Q, Dec, TypeQ)
 
 
 connect :: IO Connection
-connect = connectMySQL defaultMySQLConnectInfo { mysqlDatabase = "INFORMATION_SCHEMA" }
+connect = connectMySQL defaultMySQLConnectInfo {mysqlDatabase = "KAGRA"}
 
 convTypes :: [(String, TypeQ)]
 convTypes = [ ("CHAR",       [t| String |])
