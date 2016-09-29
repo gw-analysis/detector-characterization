@@ -106,6 +106,7 @@ sink param chname = do
   case c of
     Nothing -> return ()
     Just (gps, dt) -> do
+      liftIO $ print $ "analyzing data of GPS"++show gps++"-"++show dt++"."
       let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
       case maybewave of

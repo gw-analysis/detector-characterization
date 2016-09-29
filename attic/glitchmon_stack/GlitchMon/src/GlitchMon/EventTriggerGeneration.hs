@@ -97,7 +97,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       dcted = NL.mul dcted' qM
       snrMatP = idct2d dcted
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
-      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows thresIndex snrMatP)
+      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows (thresIndex+1) snrMatP)
       (tt, ff, mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
       survivor = nub' $ excludeOnePixelIsland cfun thrsed
@@ -110,8 +110,6 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   case GP.debugmode param of
     1 -> do
 --      liftIO $ print ncol
-      liftIO $ print "# of survived pixels is"
-      liftIO $ print $ length survivor
       liftIO $ H3.spectrogramM H3.LogY
                                H3.COLZ
                                "mag"
@@ -123,7 +121,9 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       liftIO $ print survivorwID          
     _ -> liftIO $ Prelude.return () 
 
-  liftIO $ print "finishing ETG section.."
+
+  liftIO $ print "# of survived pixels is"
+  liftIO $ print $ length survivor
 
   return (newM, survivorwID)
 

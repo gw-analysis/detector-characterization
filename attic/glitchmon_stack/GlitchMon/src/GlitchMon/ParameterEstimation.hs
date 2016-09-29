@@ -1,4 +1,4 @@
-
+{-# LANGUAGE BangPatterns #-}
 
 
 
@@ -79,7 +79,7 @@ part'ParameterEstimation (m,ids) = do
                            , dq_flag = Nothing
                            , pipeline = Just "iKAGRA Glitch pipeline"
                            }
-                , head tag)
+                 , head tag)
             where
               maximum' x = let maxx = maximum x :: Double
                             in (maxx, fromJust $ lookup maxx (zip x [0..]))
