@@ -141,6 +141,7 @@ timeRun chname w param' = do
               seglen = fromIntegral $ GP.segmentLength param'
           maybecdlist <- liftIO $ 
             cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
+          liftIO print "processing clean data finder"
           case maybecdlist of
             Nothing -> do 
               liftIO $ print "Warning: no clean data in the given gps interval.Instead,last part of the segment will be used."
