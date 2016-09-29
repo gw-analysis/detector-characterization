@@ -110,7 +110,8 @@ sink param chname = do
       let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
       case maybewave of
-        Nothing -> sink param chname
+        Nothing -> do liftIO $ appendFile "./missingData.lst" $ show gps ++ " " ++ show dt
+                      sink param chname
         Just wave -> do let param' = GP.updateGlitchParam'channel param chname
                             fs = GP.samplingFrequency param'
                             fsorig = samplingFrequency wave

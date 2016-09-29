@@ -49,7 +49,7 @@ main = do
               }
 
 
-  runGlitchMonTime param (channel param) "./app/duration_April_run2.txt"
+  runGlitchMonTime param (channel param) "./dat/test.lst"
 
 
 

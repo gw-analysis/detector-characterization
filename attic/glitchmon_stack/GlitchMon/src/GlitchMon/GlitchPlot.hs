@@ -95,13 +95,12 @@ scatterplot_internal' str_title str_legend dat = toRenderable layout
     spots = area_spots_4d_title .~ str_legend
           $ area_spots_4d_max_radius .~ 30
           $ area_spots_4d_values .~ values
-          $ area_spots_4d_palette .~ brewerSet YlOrRd 9 -- RdYlBu 11
+          $ area_spots_4d_palette .~ brewerSet YlOrRd 9
           $ def
 
-    values = [ (d, v, sqrt (fromIntegral n :: Double), setColor (t*z)) | ((d,v,t,n),z) <- zip dat zs ]
+    values = [ (d, v, sqrt (fromIntegral n :: Double), setColor' (t*z)) | ((d,v,t,n),z) <- zip dat zs ]
     zs :: [Double]
     zs = repeat $ 1
-
 
 
 
@@ -115,8 +114,22 @@ setColor x
   | x < 13 = 5
   | x < 15 = 6
   | x < 17 = 7
- -- | x < 19 = 8
-  | x < 30 = 8
- -- | x < 60 = 10
+  | x < 19 = 8
+  | x < 30 = 9
+  | x < 60 = 10
+  | otherwise = 11
+
+
+setColor' :: Double -> Int
+setColor' x
+  | x < 3 = 0
+  | x < 5 = 1
+  | x < 8 = 2
+  | x < 10 = 3
+  | x < 15 = 4
+  | x < 20 = 5
+  | x < 25 = 6
+  | x < 30 = 7
+  | x < 50 = 8
   | otherwise = 9
 
