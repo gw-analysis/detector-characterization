@@ -87,7 +87,6 @@ runGlitchMonTime :: GP.GlitchParam
                  -> Channel
                  -> FilePath
                  -> IO()
---                 -> IO FilePath
 runGlitchMonTime param chname cachefile = source param cachefile $$ sink param chname
 
 
@@ -96,8 +95,7 @@ source :: GP.GlitchParam
        -> Source IO (Int,Int)
 source param f =
   let gpslist = selectSegment (GP.segmentLength param) f
-   in do liftIO $ print $ take 3 gpslist
-         CL.sourceList gpslist
+   in CL.sourceList gpslist
 
 
 sink :: GP.GlitchParam
@@ -140,17 +138,15 @@ timeRun chname w param' = do
     Just strtGps -> do
           let cdfp = GP.cdfparameter param'
               seglen = fromIntegral $ GP.segmentLength param'
---          !maybecdlist <- liftIO $ 
---            cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps + seglen-1), seglen-1)
-              maybecdlist = Nothing
+          !maybecdlist <- liftIO $ 
+            cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps + seglen), seglen)
           case maybecdlist of
             Nothing -> do 
-              liftIO $ print "Warning: no clean data in the given gps interval.Instead,last part of the segment will be used."
+              liftIO $ print "Warning: no clean data in the given gps interval. Instead,last part of the segment will be used."
               let chunklen = GP.chunklen param'2
                   startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
                     + seglen - chunklen
                   param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
-              liftIO $ print $ deformatGPS strtGps
               maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               glitchMon param'3 w

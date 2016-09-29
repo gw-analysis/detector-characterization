@@ -83,15 +83,15 @@ findCutoffInd :: V.Vector Double
 findCutoffInd input x0 cuttype =
   case cuttype of
     Low -> ascend 0
-    High-> descend (V.length input)
+    High-> descend (V.length input -1)
   where ascend m = if x0 <= input!m
                      then Just (m, input!m)
-                     else if m+1 > V.length input
+                     else if m+1 >= V.length input-1
                             then Nothing
                             else ascend (m+1)
         descend m = if x0 >= input!m
                       then Just (m, input!m)
-                      else if m-1 < 1
+                      else if m-1 <= 0
                              then Nothing
                              else descend (m-1)
 
