@@ -13,15 +13,15 @@ import HasKAL.WaveUtils.Data(WaveData)
 data GlitchParam = GlitchParam
   { segmentLength :: Int
   , channel :: String
-  , chunklen :: Int 
+  , chunklen :: Double -- [s]
   , samplingFrequency :: Double
 -- * whitening
-  , refpsdlen    :: Int
+  , refpsdlen    :: Double -- [s]
   , whtfiltordr  :: Int
   , whtCoeff :: [([Double],  Double)]
 -- * t-f expression
-  , nfrequency :: Int
-  , ntimeSlide :: Int
+  , nfrequency :: Double -- 0.2*fs
+  , ntimeSlide :: Double --0.03*fs
 -- * clustering
   , cutoffFractionTFT :: Double
   , cutoffFractionTFF :: Double
@@ -47,13 +47,13 @@ updateGlitchParam'segmentLength x a = x {segmentLength = a}
 updateGlitchParam'channel :: GlitchParam -> String -> GlitchParam
 updateGlitchParam'channel x n = x {channel = n}
 
-updateGlitchParam'chunklen :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'chunklen :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'chunklen x n = x {chunklen = n}
 
 updateGlitchParam'samplingFrequency :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'samplingFrequency x fs = x {samplingFrequency = fs}
 
-updateGlitchParam'refpsdlen :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'refpsdlen :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'refpsdlen x n = x {refpsdlen = n}
 
 updateGlitchParam'whtfiltordr :: GlitchParam -> Int -> GlitchParam
@@ -62,10 +62,10 @@ updateGlitchParam'whtfiltordr x n = x {whtfiltordr = n}
 updateGlitchParam'whtCoeff :: GlitchParam -> [([Double],  Double)] -> GlitchParam
 updateGlitchParam'whtCoeff x p = x {whtCoeff = p}
 
-updateGlitchParam'nfrequency :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'nfrequency :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'nfrequency x n = x {nfrequency = n}
 
-updateGlitchParam'ntimeSlide :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'ntimeSlide :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'ntimeSlide x n = x {ntimeSlide = n}
 
 updateGlitchParam'cutoffFractionTFT:: GlitchParam -> Double -> GlitchParam

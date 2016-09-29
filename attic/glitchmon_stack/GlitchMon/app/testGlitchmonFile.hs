@@ -7,19 +7,19 @@ import GlitchMon.PipelineFunction
 import HasKAL.DataBaseUtils.FrameFull.Data
 
 main = do
-  let fs = 4096
+  let fs = 4096 :: Double
   let param = GlitchParam
                { segmentLength = 32
                , channel = "H1:LOSC-STRAIN"
-               , chunklen = truncate $ 4*fs
+               , chunklen = 4 :: Double -- [s]
                , samplingFrequency = fs
              -- * whitening
-               , refpsdlen = truncate $ fs
+               , refpsdlen = 1 :: Double -- [s]
                , whtfiltordr = 1000
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = truncate $ 0.2*fs
-               , ntimeSlide = truncate $ 0.03*fs
+               , nfrequency = 0.2
+               , ntimeSlide = 0.03
              -- * clustering
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
@@ -44,12 +44,12 @@ main = do
               , cdf'cutoffFrequencyLow = 10
               , cdf'cutoffFrequencyHigh = 500
               , cdf'blockSize = 50
-              , cdf'fftSize = truncate $ fs/10
-              , cdf'chunkSize = truncate $ 4*fs
+              , cdf'fftSize = nfrequency param
+              , cdf'chunkSize = chunklen param
               }
 
 
-  runGlitchMonFile param (channel param) "/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
+  runGlitchMonFile param (channel param) "/data/ligo/er8/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 
 
 

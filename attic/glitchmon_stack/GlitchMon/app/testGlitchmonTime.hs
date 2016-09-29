@@ -10,16 +10,16 @@ main = do
   let fs = 4096
   let param = GlitchParam
                { segmentLength = 32
-               , channel = "H1:LOSC-STRAIN"
-               , chunklen = truncate $ 4*fs
+               , channel = "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
+               , chunklen = 4.0 :: Double --[s]
                , samplingFrequency = fs
              -- * whitening
-               , refpsdlen = truncate $ fs
+               , refpsdlen = 1.0 :: Double --[s]
                , whtfiltordr = 1000
                , whtCoeff = []
              -- * t-f expression
-               , nfrequency = truncate $ 0.2*fs
-               , ntimeSlide = truncate $ 0.03*fs
+               , nfrequency = 0.2
+               , ntimeSlide = 0.03
              -- * clustering
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5

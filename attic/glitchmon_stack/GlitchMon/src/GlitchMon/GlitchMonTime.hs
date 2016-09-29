@@ -96,7 +96,8 @@ source :: GP.GlitchParam
        -> Source IO (Int,Int)
 source param f =
   let gpslist = selectSegment (GP.segmentLength param) f
-   in CL.sourceList gpslist
+   in do liftIO $ print $ take 3 gpslist
+         CL.sourceList gpslist
 
 
 sink :: GP.GlitchParam
@@ -117,11 +118,11 @@ sink param chname = do
                             fsorig = samplingFrequency wave
                         if (fs /= fsorig)
                           then do let wave' = downsampleWaveData fs wave
-                                      dataGps = (gps, n)
+                                      dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  let s = unsafePerformIO $ timeRun chname wave' param'2
+                                  let !s = unsafePerformIO $ timeRun chname wave' param'2
                                   sink s chname
-                          else do let dataGps = (gps, n)
+                          else do let dataGps = (fst (startGPSTime wave),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                   let s = unsafePerformIO $ timeRun chname wave param'2
                                   sink s chname
@@ -139,23 +140,26 @@ timeRun chname w param' = do
     Just strtGps -> do
           let cdfp = GP.cdfparameter param'
               seglen = fromIntegral $ GP.segmentLength param'
-          maybecdlist <- liftIO $ 
-            cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps +seglen), seglen)
-          liftIO print "processing clean data finder"
+--          !maybecdlist <- liftIO $ 
+--            cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps + seglen-1), seglen-1)
+              maybecdlist = Nothing
           case maybecdlist of
             Nothing -> do 
               liftIO $ print "Warning: no clean data in the given gps interval.Instead,last part of the segment will be used."
-              let startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
-                    + seglen - fromIntegral (GP.chunklen param'2)
+              let chunklen = GP.chunklen param'2
+                  startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
+                    + seglen - chunklen
                   param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
-              maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (GP.chunklen param'2) chname
+              liftIO $ print $ deformatGPS strtGps
+              maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               glitchMon param'3 w
             Just cdlist -> do
               let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                   cdgps = fst cdgps'
                   param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-              maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname
+                  chunklen = GP.chunklen param'2
+              maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
               let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
               glitchMon param'3 w
 

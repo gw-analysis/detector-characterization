@@ -42,11 +42,11 @@ section'TimeFrequencyExpression whnWaveData = do
   param <- get
   let refpsd = GP.refpsd param
       fs = GP.samplingFrequency param
-      nfreq = GP.nfrequency param
+      nfreq = floor $ GP.nfrequency param * fs
       nfreq2 = nfreq `div` 2
-      ntimeSlide = GP.ntimeSlide param
-      ntime = ((NL.dim $ gwdata whnWaveData) - chunklen) `div` ntimeSlide
+      ntimeSlide = floor $ GP.ntimeSlide param * fs
       chunklen = GP.chunklen param
+      ntime = ((NL.dim $ gwdata whnWaveData) - floor (chunklen*fs)) `div` ntimeSlide
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT

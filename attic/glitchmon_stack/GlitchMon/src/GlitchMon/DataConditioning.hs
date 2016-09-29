@@ -77,16 +77,18 @@ section'Whitening opt wave = case opt of
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
           let whned = applyWhitening TimeDomain whtCoeffList wave
+              nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
-            (gwOnesidedPSDV (gwdata whned) (GP.nfrequency param) (GP.samplingFrequency param))
+            (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
           return whned
   FrequencyDomain
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
           let whned = applyWhitening FrequencyDomain whtCoeffList wave
+              nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
-            (gwOnesidedPSDV (gwdata whned) (GP.nfrequency param) (GP.samplingFrequency param))
+            (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
           return whned
 
 
@@ -106,8 +108,8 @@ calcWhiteningCoeffCore :: GP.GlitchParam
               -> IO ([([Double], Double)], WaveData)
 calcWhiteningCoeffCore param (whtCoeffList, train) =
   let nC = GP.whtfiltordr param
-      nfft = GP.refpsdlen param
       fs = GP.samplingFrequency param
+      nfft = floor $ GP.refpsdlen param * fs
       refpsd = gwpsdV (gwdata train) nfft fs
       whtCoeff' = lpefCoeffV nC refpsd
    in return ( whtCoeff':whtCoeffList

@@ -163,7 +163,9 @@ sink param chname = do
           currGps' <- liftIO $ getCurrentGps
           let currGps = formatGPS (read currGps')
               param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
-              param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (GP.chunklen param'2) w)
+              chunklen = GP.chunklen param'2
+              fs = GP.samplingFrequency param'2
+              param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (floor (chunklen*fs)) w)
           s <- liftIO $ glitchMon param'3 w
           sink s chname
         Just gpsold -> do
@@ -181,7 +183,9 @@ sink param chname = do
                   let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                       cdgps = fst cdgps'
                       param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                  maybew <- liftIO $ kagraWaveDataGet cdgps (GP.chunklen param'2) chname (WD.detector w)
+                      chunklen = GP.chunklen param'2
+                      fs = GP.samplingFrequency param'2
+                  maybew <- liftIO $ kagraWaveDataGet cdgps (floor (chunklen*fs)) chname (WD.detector w)
                   let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
                   s <- liftIO $ glitchMon param'3 w
                   sink s chname

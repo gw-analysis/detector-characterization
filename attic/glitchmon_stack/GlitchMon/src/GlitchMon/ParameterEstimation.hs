@@ -33,8 +33,8 @@ part'ParameterEstimation (m,ids) = do
           mrow = NL.rows trigM
           mcol = NL.cols trigM
           zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
-          nfreq = GP.nfrequency param
-          ntime = GP.ntimeSlide param
+          nfreq = floor $ GP.nfrequency param * fs
+          ntime = floor $ GP.ntimeSlide param * fs
           fs = GP.samplingFrequency param
       case (trigM == zerom) of
         True -> return Nothing
