@@ -81,6 +81,17 @@ executable runGlitchMonTime
   default-language:    Haskell2010
 
 
+executable plotGlitchEvent
+  hs-source-dirs:      app
+  main-is:             plotGlitchEvent.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,GlitchMon==0.1.0.0
+   ,HasKAL==0.1.0.0
+  default-language:    Haskell2010
+
+
 source-repository head
   type:     git
   location: https://github.com/gw-analysis/detector-characterization/tree/master/attic/glitchMon

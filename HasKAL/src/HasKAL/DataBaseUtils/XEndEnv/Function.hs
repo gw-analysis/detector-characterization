@@ -66,6 +66,7 @@ import qualified HasKAL.DataBaseUtils.XEndEnv.Table as XEndEnv
 import qualified HasKAL.DetectorUtils.Detector as D
 import HasKAL.FrameUtils.FrameUtils
 import HasKAL.SearchUtils.Common.CleanDataFinder (cleanDataFinderCore)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (time2gps)
@@ -101,11 +102,18 @@ cleanDataFinder param ch (gps', dt') = do
       nchunk = floor $ cdf'chunkSize param * fs
       gpsstrt = floor $ deformatGPS gps' - dt'
       dt = floor dt' :: Int
-  kagraDataGetC gpsstrt dt ch >>= \maybedat ->
-    case maybedat of
+  kagraWaveDataGetC gpsstrt dt ch >>= \maybew ->
+    case maybew of
       Nothing -> return Nothing
-      Just timendat -> return $ Just $ flip concatMap timendat $ \x ->
-        cleanDataFinderCore blcksz nfft nchunk (fl, fu) fs x
+      Just w -> do
+        let fs = cdf'samplingFrequency param
+            fsorig = samplingFrequency (head w)
+        if (fs /= fsorig)
+          then do let w' = map (downsampleWaveData fs) w
+                  return $ Just $ flip concatMap w' $ \x ->
+                    cleanDataFinderCore blcksz nfft nchunk (fl, fu) fs x
+          else return $ Just $ flip concatMap w $ \x ->
+                 cleanDataFinderCore blcksz nfft nchunk (fl, fu) fs x
 
 
 kagraChannelList :: Int32 -> IO (Maybe [String])

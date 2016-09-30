@@ -149,17 +149,38 @@ timeRun chname w param' = do
                     + seglen - chunklen
                   param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
               maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
-              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-              glitchMon param'3 w
+              case maybew of
+                Just x -> do 
+                  let fs = GP.samplingFrequency param'2
+                      fsorig = samplingFrequency x
+                  if (fs /= fsorig)
+                    then do
+                      let x' = downsampleWaveData fs x
+                          param'3 = GP.updateGlitchParam'refwave param'2 x
+                      glitchMon param'3 w
+                    else do 
+                      let param'3 = GP.updateGlitchParam'refwave param'2 x
+                      glitchMon param'3 w
+                Nothing -> error "something wrong in clean data finder"
             Just cdlist -> do
               let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                   cdgps = fst cdgps'
                   param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
                   chunklen = GP.chunklen param'2
               maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
-              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-              glitchMon param'3 w
-
+              case maybew of 
+                Just x -> do
+                  let fs = GP.samplingFrequency param'2
+                      fsorig = samplingFrequency x
+                  if (fs /= fsorig)
+                    then do
+                      let x' = downsampleWaveData fs x
+                          param'3 = GP.updateGlitchParam'refwave param'2 x
+                      glitchMon param'3 w
+                    else do
+                      let param'3 = GP.updateGlitchParam'refwave param'2 x
+                      glitchMon param'3 w
+                Nothing -> error "no data found!"
 
 glitchMon :: GP.GlitchParam
           -> WaveData

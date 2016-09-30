@@ -15,6 +15,7 @@ import HasKAL.LineUtils.LineRemoval.RngMedian (rngMedV)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
 import HasKAL.TimeUtils.Function (deformatGPS, formatGPS)
 import HasKAL.TimeUtils.Signature
+import HasKAL.WaveUtils.Data (WaveData (..))
 import Numeric.GSL.Statistics (stddev)
 
 data CutoffType = Low | High deriving (Show)
@@ -25,10 +26,12 @@ cleanDataFinderCore :: Int                        -- ^ block size for noise floo
                     -> Int                        -- ^ chunk size
                     -> (Double, Double)          -- ^ (f_L, f_U)
                     -> Double                     -- ^ sample rate
-                    -> (GPSTIME, V.Vector Double) -- ^ (startGPS, data vector)
+                    -> WaveData 
                     -> [(GPSTIME, Bool)]        -- ^ [(gps,True or Fase)]
-cleanDataFinderCore blcksz nfft chunk flu fs (gps, v) = do
-  let chunks = mkChunks v chunk
+cleanDataFinderCore blcksz nfft chunk flu fs wave = do
+  let v = gwdata wave
+      gps = startGPSTime wave
+      chunks = mkChunks v chunk
       psdtrain = flip map chunks $ \x-> gwOnesidedPSDV x nfft fs
       nf = flip map psdtrain $ nfEstimate blcksz flu
       (_, refpsd, refstd) = takeMedian nf
@@ -101,7 +104,7 @@ vecSelect :: Int -> V.Vector Double -> Double
 vecSelect k vec = V.head $ V.modify (flip select (k+1)) vec
 
 
--- | divide a vector into n vectors
+-- | divide a vector into vectors with n-length
 mkChunks :: V.Vector Double -> Int -> [V.Vector Double]
 mkChunks vIn n = mkChunksCore vIn n (V.length vIn `div` n)
   where

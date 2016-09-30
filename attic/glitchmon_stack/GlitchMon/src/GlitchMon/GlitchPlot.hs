@@ -93,12 +93,12 @@ scatterplot_internal' str_title str_legend dat = toRenderable layout
            $ def
 
     spots = area_spots_4d_title .~ str_legend
-          $ area_spots_4d_max_radius .~ 30
+          $ area_spots_4d_max_radius .~ 10
           $ area_spots_4d_values .~ values
           $ area_spots_4d_palette .~ brewerSet YlOrRd 9
           $ def
 
-    values = [ (d, v, sqrt (fromIntegral n :: Double), setColor' (t*z)) | ((d,v,t,n),z) <- zip dat zs ]
+    values = [ (d, v, (fromIntegral n :: Double)/10, setColor' (t*z)) | ((d,v,t,n),z) <- zip dat zs ]
     zs :: [Double]
     zs = repeat $ 1
 
