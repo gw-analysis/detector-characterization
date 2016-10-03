@@ -163,24 +163,49 @@ timeRun chname w param' = do
                       glitchMon param'3 w
                 Nothing -> error "something wrong in clean data finder"
             Just cdlist -> do
-              let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
-                  cdgps = fst cdgps'
-                  param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                  chunklen = GP.chunklen param'2
-              maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
-              case maybew of 
-                Just x -> do
-                  let fs = GP.samplingFrequency param'2
-                      fsorig = samplingFrequency x
-                  if (fs /= fsorig)
-                    then do
-                      let x' = downsampleWaveData fs x
-                          param'3 = GP.updateGlitchParam'refwave param'2 x
-                      glitchMon param'3 w
-                    else do
-                      let param'3 = GP.updateGlitchParam'refwave param'2 x
-                      glitchMon param'3 w
-                Nothing -> error "no data found!"
+             let cleandata = [(t,b)|(t,b)<-cdlist,b==True]
+             case cleandata of
+              [] -> do
+                liftIO $ print "Warning: all data is not clean in the given gps interval. Instead,last part of the segment will be used."
+                let chunklen = GP.chunklen param'2
+                    startcgps = fromIntegral $ truncate $(deformatGPS strtGps)
+                      + seglen - chunklen
+                    param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
+                maybew <- liftIO $ 
+                  kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
+                case maybew of
+                  Just x -> do
+                    let fs = GP.samplingFrequency param'2
+                        fsorig = samplingFrequency x
+                    if (fs /= fsorig)
+                      then do
+                        let x' = downsampleWaveData fs x
+                            param'3 = GP.updateGlitchParam'refwave param'2 x
+                        glitchMon param'3 w
+                      else do
+                        let param'3 = GP.updateGlitchParam'refwave param'2 x
+                        glitchMon param'3 w
+                  Nothing -> error "something wrong in clean data finder"
+              _ -> do
+                let cdgps' = fst . last $ cleandata
+                    cdgps = fst cdgps'
+                    param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
+                    chunklen = GP.chunklen param'2
+                maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
+                case maybew of 
+                  Just x -> do
+                    let fs = GP.samplingFrequency param'2
+                        fsorig = samplingFrequency x
+                    if (fs /= fsorig)
+                      then do
+                        let x' = downsampleWaveData fs x
+                            param'3 = GP.updateGlitchParam'refwave param'2 x
+                        glitchMon param'3 w
+                      else do
+                        let param'3 = GP.updateGlitchParam'refwave param'2 x
+                        glitchMon param'3 w
+                  Nothing -> error "no data found!"
+
 
 glitchMon :: GP.GlitchParam
           -> WaveData

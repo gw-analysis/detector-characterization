@@ -27,7 +27,7 @@ main = do
                fromDB <- extractTrigInfoTFSNRSize startgps stopgps snrlow snrhigh flow fhigh
                case fromDB of
                  Just x  -> do 
-                   let str_title = "iKAGRA glitch"
+                   let str_title = "triggered during iKAGRA"
                        str_legend = "events"
                        plotfname = "glitch_GPS-"++startgps'++"_"++stopgps'++".png"
                     in scatterplot'png' str_title str_legend plotfname x 
@@ -44,13 +44,13 @@ main = do
                fromDB <- extractTrigInfoTFSNRSize gpsstart gpsstop snrlow snrhigh flow fhigh
                case fromDB of
                  Just x  -> do 
-                   let str_title = "iKAGRA glitch"
+                   let str_title = "triggered during iKAGRA"
                        str_legend = "events"
                        plotfname = "glitch_GPS-"++show gpsstart++"_"++show gpsstop++".png"
                     in scatterplot'png' str_title str_legend plotfname x 
                  Nothing -> error "no glitch events found"
  
-      _ -> error "Usage: plotGlitchEvent [-l] startGPS[2010-11-11 00:00:00 JST] stopGPS[2010-11-11 00:00:00 JST] lowerSNR higherSNR"
+      _ -> error "Usage: plotGlitchEvent [-l] startGPS[2010-11-11 00:00:00 JST] stopGPS[2010-11-11 00:00:00 JST] SNRlow SNRhigh flow fhigh"
 
 
 
