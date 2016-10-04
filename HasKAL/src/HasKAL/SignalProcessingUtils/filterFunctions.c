@@ -10,6 +10,12 @@
 #endif
 
 
+void downsample(unsigned n, unsigned xs, double* x, unsigned rs, double* r){
+  int i;
+  for (i = 0; i < rs; i++)
+    r[i] = x[i*n];
+}
+
 
 int iir_filter (double *input, unsigned inputlen, double num_coeff[], double denom_coeff[], unsigned filterlen, double *output){
 

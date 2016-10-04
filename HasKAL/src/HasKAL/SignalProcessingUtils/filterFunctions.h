@@ -34,3 +34,5 @@ double sosform1 (int,  double,  double*,  double*,  double*,  double*,  double*,
 void sosstatespace (double*, unsigned, double*, double*, double*, double, double, double, double*);
 
 void sosfiltfiltss (double*, unsigned, double*, double*, double*, double, double, double, double*);
+
+void downsample (unsigned, unsigned, double*, unsigned, double*);

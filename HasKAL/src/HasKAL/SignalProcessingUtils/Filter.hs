@@ -37,7 +37,9 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLists, toRows, (><), (<\>))
 import System.IO.Unsafe
-import Unsafe.Coerce (unsafeCoerce)
+-- import Unsafe.Coerce (unsafeCoerce)
+
+
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do
@@ -581,6 +583,7 @@ d2cdV = VS.map realToFrac
 
 cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
+
 
 foreign import ccall "filterFunctions.h iir_filter" c_iir_filter :: Ptr CDouble -> CUInt ->  Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> IO()
 

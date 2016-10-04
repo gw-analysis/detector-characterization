@@ -48,7 +48,7 @@ levinson p r = do
 
 
 whitening :: ([Double],Double) -> [Double]-> [Double]
-whitening (whnb,rho) x = map (/sqrt rho) $ toList $ fir whnb $ fromList x
+whitening (whnb,rho) x = map (/sqrt rho) $ toList $ firFiltfiltV whnb $ fromList x
 
 
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]

@@ -9,6 +9,12 @@ module GlitchMon.DataConditioning
 
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
+import Data.Maybe (fromJust)
+import HasKAL.SignalProcessingUtils.Cascade
+import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
+import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.FilterType
+import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData, whiteningWaveData')
 import HasKAL.SignalProcessingUtils.Interpolation (interpV)
 import HasKAL.SignalProcessingUtils.InterpolationType
@@ -30,10 +36,21 @@ part'DataConditioning :: WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning"
   param <- get
+  let highpassed = filtfilt lpf (gwdata wave)
+--      wave' = sosfiltfilt cascade wave
+--      initCond = map calcInitCond cascade
+--      cascade = tf2cascade lpf
+--      lpf = butter 4 fs newfs2 High
+      lpf = chebyshev1 6 0.4 fs newfs2 High
+      newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
+      newfs = GP.cutoffFreq param
+      fs = GP.samplingFrequency param
+      wave' = fromJust $ updateWaveDatagwdata wave highpassed 
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
-    False -> do out <- section'Whitening TimeDomain wave
-                case GP.debugmode param of 
+    False -> do 
+            out <- section'Whitening TimeDomain wave'
+            case GP.debugmode param of 
                  1 -> do
                   liftIO $ H3.spectrogramM H3.LogY
                                            H3.COLZ
@@ -63,8 +80,8 @@ part'DataConditioning wave = do
                                        ((0,0),(0,0))
                                    $ gwOnesidedPSDWaveData 0.2 out
                  _ -> liftIO $ Prelude.return ()
-                return out
-    True  -> section'Whitening TimeDomain wave
+            return out
+    True  -> section'Whitening TimeDomain wave'	
 
 
 section'LineRemoval = id

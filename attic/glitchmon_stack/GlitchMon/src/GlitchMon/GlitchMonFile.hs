@@ -45,7 +45,7 @@ import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
-import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData',downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.TimeUtils.Signature (GPSTIME)
@@ -76,6 +76,9 @@ import GlitchMon.EventTriggerGeneration
 import GlitchMon.ParameterEstimation
 import GlitchMon.RegisterEventtoDB
 
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
 
 {--------------------
 - Main Functions    -
@@ -112,23 +115,43 @@ sink param chname = do
                               then do let wave' = downsampleWaveData fs wave
                                           dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
---                                      fileRun' wave' param'2
+                                      case GP.debugmode param of 
+                                         1 -> do
+                                           liftIO $ H3.spectrogramM H3.LogY
+                                            H3.COLZ
+                                            "mag"
+                                            "whitened data"
+                                            "production/gw150914_ds_sprcgram.png"
+                                                  ((0, 0), (20, 400))
+                                            $ gwspectrogramWaveData 0.19 0.2 wave'
+                                           liftIO $ H.plot H.Linear
+                                            H.Line
+                                                  1
+                                            H.RED
+                                            ("time","amplitude")
+                                                  0.05
+                                            "whitened data"
+                                            "production/gw150914_ds_timeseries.png"
+                                                  ((16.05,16.2),(0,0))
+                                            $ zip [0,1/fs..] (NL.toList $ gwdata wave')
+                                           liftIO $ H.plotV H.LogXY
+                                            H.Line
+                                                  1
+                                            H.RED
+                                            ("frequency [Hz]","ASD [Hz^-1/2]")
+                                                  0.05
+                                            "whitened data spectrum"
+                                            "production/gw150914_ds_whitened_spectrum.png"
+                                                  ((0,0),(0,0))
+                                            $ gwOnesidedPSDWaveData 1 wave'
+                                         _ -> liftIO $ Prelude.return ()
                                       s <- fileRun wave' param'2
                                       sink s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
---                                      fileRun' wave param'2
                                       s <- fileRun wave param'2
                                       sink s chname
 
-
-fileRun' w param = do
-   let dataGps = deformatGPS $ fromJust $ GP.cgps param
-       chunklen = GP.chunklen param ::Double
-       fs = GP.samplingFrequency param ::Double
-       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (chunklen*fs)) w)
-   liftIO $ print dataGps
---   liftIO $ glitchMon param' w
 
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
@@ -136,45 +159,6 @@ fileRun w param = do
        fs = GP.samplingFrequency param ::Double
        param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (chunklen*fs)) w)
    liftIO $ glitchMon param' w
-
-
-
-streamingRun chname w param' = do
-  let maybegps = GP.cgps param'
-  case maybegps of
-    Nothing -> do
-      currGps' <- liftIO $ getCurrentGps
-      let currGps = formatGPS (read currGps')
-          param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
-          chunklen = GP.chunklen param'2 ::Double
-          fs = GP.samplingFrequency param'2 ::Double
-          param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (floor (chunklen*fs)) w)
-      s <- liftIO $ glitchMon param'3 w
-      sink s chname
-    Just gpsold -> do
-      currGps' <- liftIO $ getCurrentGps
-      let currGps = formatGPS (read currGps')
-          difft = (deformatGPS currGps) - (deformatGPS gpsold)
-          cdfIntvl = GP.cdfInterval param'
-      case difft >= (fromIntegral cdfIntvl) of  -- ^ clean data update every 10 minutes
-        True -> do
-          let cdfp = GP.cdfparameter param'
-          maybecdlist <- liftIO $ cleanDataFinder cdfp chname (currGps, 600.0)
-          case maybecdlist of
-            Nothing -> error "no clean data in the given gps interval"
-            Just cdlist -> do
-              let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
-                  cdgps = fst cdgps'
-                  param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                  chunklen = GP.chunklen param'2 ::Double
-                  fs = GP.samplingFrequency param'2 ::Double
-              maybew <- liftIO $ kagraWaveDataGet cdgps (floor (chunklen*fs)) chname
-              let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-              s <- liftIO $ glitchMon param'3 w
-              sink s chname
-        False -> do
-          s <- liftIO $ glitchMon param' w
-          sink s chname
 
 
 glitchMon :: GP.GlitchParam
