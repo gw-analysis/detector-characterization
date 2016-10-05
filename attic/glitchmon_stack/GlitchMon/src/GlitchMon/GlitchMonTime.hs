@@ -76,6 +76,13 @@ import GlitchMon.EventTriggerGeneration
 import GlitchMon.ParameterEstimation
 import GlitchMon.RegisterEventtoDB
 
+import System.IO (hFlush, stdout)
+
+-- for debug --
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
+
 
 {--------------------
 - Main Functions    -
@@ -106,7 +113,8 @@ sink param chname = do
   case c of
     Nothing -> return ()
     Just (gps, dt) -> do
-      liftIO $ print $ "analyzing data of GPS"++show gps++"-"++show dt++"."
+      liftIO $ print "============================================================" >> hFlush stdout
+      liftIO $ print ["analyzing data of GPS"++show gps++"-"++show dt++"."] >> hFlush stdout
       let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
       case maybewave of
@@ -119,11 +127,11 @@ sink param chname = do
                           then do let wave' = downsampleWaveData fs wave
                                       dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  let !s = unsafePerformIO $ timeRun chname wave' param'2
+                                  s <- liftIO $ timeRun chname wave' param'2
                                   sink s chname
                           else do let dataGps = (fst (startGPSTime wave),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  let s = unsafePerformIO $ timeRun chname wave param'2
+                                  s <- liftIO $ timeRun chname wave param'2
                                   sink s chname
 
 
@@ -131,32 +139,32 @@ timeRun :: Channel
         -> WaveData
         -> GP.GlitchParam
         -> IO GP.GlitchParam
-timeRun chname w param' = do
-  let maybegps = GP.cgps param'
+timeRun chname w param = do
+  let maybegps = GP.cgps param
   case maybegps of
     Nothing -> do
       error "cgps not found. something wrong. please check it out."
     Just strtGps -> do
-          let cdfp = GP.cdfparameter param'
-              seglen = fromIntegral $ GP.segmentLength param'
+          let cdfp = GP.cdfparameter param
+              seglen = fromIntegral $ GP.segmentLength param
           !maybecdlist <- liftIO $ 
             cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps + seglen), seglen)
           case maybecdlist of
             Nothing -> do 
               liftIO $ print "Warning: no clean data in the given gps interval. Instead,last part of the segment will be used."
-              let chunklen = GP.chunklen param'2
+              let chunklen = GP.chunklen param
                   startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
                     + seglen - chunklen
-                  param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
+                  param'2 = GP.updateGlitchParam'cgps param (Just (formatGPS startcgps))
               maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
               case maybew of
                 Just x -> do 
-                  let fs = GP.samplingFrequency param'2
+                  let fs = samplingFrequency w
                       fsorig = samplingFrequency x
                   if (fs /= fsorig)
                     then do
                       let x' = downsampleWaveData fs x
-                          param'3 = GP.updateGlitchParam'refwave param'2 x
+                          param'3 = GP.updateGlitchParam'refwave param'2 x'
                       glitchMon param'3 w
                     else do 
                       let param'3 = GP.updateGlitchParam'refwave param'2 x
@@ -167,20 +175,19 @@ timeRun chname w param' = do
              case cleandata of
               [] -> do
                 liftIO $ print "Warning: all data is not clean in the given gps interval. Instead,last part of the segment will be used."
-                let chunklen = GP.chunklen param'2
+                let chunklen = GP.chunklen param
                     startcgps = fromIntegral $ truncate $(deformatGPS strtGps)
                       + seglen - chunklen
-                    param'2 = GP.updateGlitchParam'cgps param' (Just (formatGPS startcgps))
-                maybew <- liftIO $ 
-                  kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
+                    param'2 = GP.updateGlitchParam'cgps param (Just (formatGPS startcgps))
+                maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
                 case maybew of
                   Just x -> do
-                    let fs = GP.samplingFrequency param'2
+                    let fs = samplingFrequency w
                         fsorig = samplingFrequency x
                     if (fs /= fsorig)
                       then do
                         let x' = downsampleWaveData fs x
-                            param'3 = GP.updateGlitchParam'refwave param'2 x
+                            param'3 = GP.updateGlitchParam'refwave param'2 x'
                         glitchMon param'3 w
                       else do
                         let param'3 = GP.updateGlitchParam'refwave param'2 x
@@ -189,17 +196,17 @@ timeRun chname w param' = do
               _ -> do
                 let cdgps' = fst . last $ cleandata
                     cdgps = fst cdgps'
-                    param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                    chunklen = GP.chunklen param'2
+                    param'2 = GP.updateGlitchParam'cgps param (Just cdgps')
+                    chunklen = GP.chunklen param
                 maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
                 case maybew of 
                   Just x -> do
-                    let fs = GP.samplingFrequency param'2
+                    let fs = samplingFrequency w
                         fsorig = samplingFrequency x
                     if (fs /= fsorig)
                       then do
                         let x' = downsampleWaveData fs x
-                            param'3 = GP.updateGlitchParam'refwave param'2 x
+                            param'3 = GP.updateGlitchParam'refwave param'2 x'
                         glitchMon param'3 w
                       else do
                         let param'3 = GP.updateGlitchParam'refwave param'2 x

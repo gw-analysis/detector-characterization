@@ -26,7 +26,7 @@ import qualified GlitchMon.GlitchParam as GP
 
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
-
+import System.IO (hFlush, stdout)
 
 data WhnMethod = TimeDomain | FrequencyDomain
 
@@ -34,14 +34,14 @@ data WhnMethod = TimeDomain | FrequencyDomain
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
 part'DataConditioning wave = do
-  liftIO $ print "start data conditioning"
+  liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
   let highpassed = filtfilt lpf (gwdata wave)
 --      wave' = sosfiltfilt cascade wave
 --      initCond = map calcInitCond cascade
 --      cascade = tf2cascade lpf
 --      lpf = butter 4 fs newfs2 High
-      lpf = chebyshev1 6 0.4 fs newfs2 High
+      lpf = chebyshev1 4 0.1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
@@ -56,7 +56,7 @@ part'DataConditioning wave = do
                                            H3.COLZ
                                            "mag"
                                            "whitened data"
-                                           "production/gw150914_whitened_spectrogram.png"
+                                           "production/whitened_spectrogram.png"
                                                 ((0, 0), (20, 400))
                                            $ gwspectrogramWaveData 0.19 0.2 out
                   liftIO $ H.plot H.Linear
@@ -66,7 +66,7 @@ part'DataConditioning wave = do
                                   ("time","amplitude")
                                       0.05
                                   "whitened data"
-                                  "production/gw150914_whitened_timeseries.png"
+                                  "production/whitened_timeseries.png"
                                       ((16.05,16.2),(0,0))
                                   $ zip [0,1/4096..] (NL.toList $ gwdata out)
                   liftIO $ H.plotV H.LogXY
@@ -76,7 +76,7 @@ part'DataConditioning wave = do
                                    ("frequency [Hz]","ASD [Hz^-1/2]")
                                         0.05
                                    "whitened data spectrum"
-                                   "production/gw150914_whitened_spectrum.png"
+                                   "production/whitened_spectrum.png"
                                        ((0,0),(0,0))
                                    $ gwOnesidedPSDWaveData 0.2 out
                  _ -> liftIO $ Prelude.return ()

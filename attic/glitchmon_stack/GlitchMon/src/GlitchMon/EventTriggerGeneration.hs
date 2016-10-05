@@ -24,12 +24,12 @@ import GlitchMon.PipelineFunction
 import GlitchMon.Signature
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
-
+import System.IO (hFlush, stdout)
 
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
 part'EventTriggerGeneration wave = do
-  liftIO $ print "start event trigger generation"
+  liftIO $ print "start event trigger generation" >> hFlush stdout
   param <- get
   (a, s) <- liftIO $ runStateT (section'TimeFrequencyExpression wave) param
   section'Clustering a
@@ -38,7 +38,7 @@ part'EventTriggerGeneration wave = do
 section'TimeFrequencyExpression :: WaveData
                                 -> StateT GP.GlitchParam IO Spectrogram
 section'TimeFrequencyExpression whnWaveData = do
-  liftIO $ print "start time-frequency expansion"
+  liftIO $ print "start time-frequency expansion" >> hFlush stdout
   param <- get
   let refpsd = GP.refpsd param
       fs = GP.samplingFrequency param
@@ -74,7 +74,7 @@ section'TimeFrequencyExpression whnWaveData = do
 section'Clustering :: Spectrogram
                    -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
 section'Clustering (snrMatT, snrMatF, snrMatP') = do
-  liftIO $ print "start seedless clustering"
+  liftIO $ print "start seedless clustering" >> hFlush stdout
   param <- get
   let l = NL.toList $ NL.flatten snrMatP'
       l' = (NL.dim snrMatF><NL.dim snrMatT) l
@@ -122,7 +122,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
     _ -> liftIO $ Prelude.return () 
 
 
-  liftIO $ print "# of survived pixels is"
+  liftIO $ print "# of survived pixels is" >> hFlush stdout
   liftIO $ print $ length survivor
 
   return (newM, survivorwID)

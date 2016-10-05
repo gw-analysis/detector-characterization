@@ -135,7 +135,7 @@ downsampleSV fs newfs v =
     else 
       let v' = filtfilt lpf v
           --lpf = butter 4 fs newfs2 Low
-          lpf = chebyshev1 6 0.4 fs newfs2 Low
+          lpf = chebyshev1 6 1 fs newfs2 Low
 --          newfs2 = 2*fs*tan (pi*newfs/2/fs)
           newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'

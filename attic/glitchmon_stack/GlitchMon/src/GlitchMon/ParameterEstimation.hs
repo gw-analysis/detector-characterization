@@ -18,12 +18,12 @@ import Numeric.LinearAlgebra as NL
 import GlitchMon.Data (TrigParam (..))
 import qualified GlitchMon.GlitchParam as GP
 import GlitchMon.Signature
-
+import System.IO (hFlush, stdout)
 
 part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
                          -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID)])
 part'ParameterEstimation (m,ids) = do
-  liftIO $ print "start parameter estimation."
+  liftIO $ print "start parameter estimation." >> hFlush stdout
   param <- get
   let fs = GP.samplingFrequency param
    in getParam param (m,ids)
