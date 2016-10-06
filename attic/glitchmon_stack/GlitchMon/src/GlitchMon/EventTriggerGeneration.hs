@@ -114,7 +114,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   let snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows (thresIndex+1) snrMatP)
 --  liftIO $ print "evaluating snrMat" >> hFlush stdout
   snrMat `deepseq` Prelude.return ()
-      (tt,ff,mg) = snrMat
+  let (tt,ff,mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
   let survivor = nub' $ excludeOnePixelIsland cfun thrsed
 --  liftIO $ print "evaluating survivor" >> hFlush stdout
