@@ -104,7 +104,7 @@ firstStep x = mynub $ (flip map) x $ \(a,b,c) -> [y3|(y1,y2,y3)<-x, y1==a, y2==b
 
 secondStep :: [[Int]] -> [[Int]]
 secondStep [] = []
-secondStep a = evalState (go a) (length . nub . concat $ a)
+secondStep a = evalState (go a) (length . mynub . concat $ a)
  where
   go [] = return []
   go x  = do

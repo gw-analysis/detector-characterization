@@ -26,6 +26,8 @@ import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 import System.IO (hFlush, stdout)
 
+import Control.DeepSeq (deepseq)
+
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
 part'EventTriggerGeneration wave = do
@@ -79,33 +81,57 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   let l = NL.toList $ NL.flatten snrMatP'
       l' = (NL.dim snrMatF><NL.dim snrMatT) l
       dcted' = dct2d l'
-      ncol = cols dcted'
-      nrow = rows dcted'
+      ncol = cols l'
+      nrow = rows l'
       cutT = floor $ fromIntegral ncol * GP.cutoffFractionTFT param
       cutF = floor $ fromIntegral nrow * GP.cutoffFractionTFF param
-      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-cutT..ncol-1]]
-      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-cutF..nrow-1]]
-      zeroElement = zeroElementr ++ zeroElementc
+--      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-cutT..ncol-1]]
+--      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-cutF..nrow-1]]
+--      zeroElement = zeroElementr ++ zeroElementc
       cfun = GP.celement param
       minN = GP.minimumClusterNum param
-  let qM = quantizingMatrix nrow ncol (go zeroElement)
-        where 
-          go ele = \(r,c)-> 
-            case Set.member (r,c) (Set.fromList ele) of
-                True  -> 0.0
-                False -> 1.0
-      dcted = NL.mul dcted' qM
-      snrMatP = idct2d dcted
+      m1 = ((nrow-cutF)><(ncol-cutT)) $ replicate ((nrow-cutF)*(ncol-cutT)) 1.0
+      mc0 = (nrow><cutT) $ replicate (nrow*cutT) 0.0
+      mr0 = (cutF><(ncol-cutT)) $ replicate (cutF*(ncol-cutT)) 0.0
+      qM = NL.fromBlocks [[NL.fromBlocks [[m1],[mr0]],mc0]]
+--  let qM = quantizingMatrix nrow ncol (go zeroElement)
+--        where 
+--          go ele = \(r,c)-> 
+--            case Set.member (r,c) (Set.fromList ele) of
+--                True  -> 0.0
+--                False -> 1.0
+--  liftIO $ print "evaluating qM"  >> hFlush stdout
+--  qM `deepseq` Prelude.return ()
+  let dcted = NL.mul dcted' qM
+--  liftIO $ print "evaluating dcted"  >> hFlush stdout
+  dcted `deepseq` Prelude.return ()
+  let snrMatP = idct2d dcted
+--  liftIO $ print "evaluating snrMatP" >> hFlush stdout
+  snrMatP `deepseq` Prelude.return ()
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
-      snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows (thresIndex+1) snrMatP)
-      (tt, ff, mg) = snrMat
+--  liftIO $ print "evaluating thresIndex" >> hFlush stdout
+  thresIndex `deepseq` Prelude.return ()
+  let snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows (thresIndex+1) snrMatP)
+--  liftIO $ print "evaluating snrMat" >> hFlush stdout
+  snrMat `deepseq` Prelude.return ()
+      (tt,ff,mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
-      survivor = nub' $ excludeOnePixelIsland cfun thrsed
+  let survivor = nub' $ excludeOnePixelIsland cfun thrsed
+--  liftIO $ print "evaluating survivor" >> hFlush stdout
+  survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
-      zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
-      survivorValues = map (\x->mg@@>x) survivor
-      newM = updateSpectrogramSpec snrMat
+--  liftIO $ print "evaluating survivorwID" >> hFlush stdout
+  survivorwID `deepseq` Prelude.return ()
+  let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
+--  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
+  survivor `deepseq` Prelude.return ()
+  let survivorValues = map (\x->mg@@>x) survivor
+--  liftIO $ print "evaluating survivorValues" >> hFlush stdout
+  survivorValues `deepseq` Prelude.return ()
+  let newM = updateSpectrogramSpec snrMat
        $ updateMatrixElement zeroMatrix survivor survivorValues
+--  liftIO $ print "evaluating newM" >> hFlush stdout
+  newM `deepseq` Prelude.return ()
 
   case GP.debugmode param of
     1 -> do
@@ -121,9 +147,11 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       liftIO $ print survivorwID          
     _ -> liftIO $ Prelude.return () 
 
-
-  liftIO $ print "# of survived pixels is" >> hFlush stdout
-  liftIO $ print $ length survivor
+  case length survivor of 
+    0 -> do liftIO $ print "# of detected islands is" >> hFlush stdout
+            liftIO $ print "0" >> hFlush stdout
+    _ -> do liftIO $ print "# of detected islands is" >> hFlush stdout
+            liftIO $ print $ (snd . last . last $ survivorwID)
 
   return (newM, survivorwID)
 
