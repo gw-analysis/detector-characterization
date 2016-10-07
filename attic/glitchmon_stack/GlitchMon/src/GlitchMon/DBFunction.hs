@@ -3,6 +3,17 @@
 module GlitchMon.DBFunction
 ( extractTrigInfoTFSNR
 , extractTrigInfoTFSNRSize
+, extractTrigDQFlag
+, extractTrigLocation
+, extractTrigSignificance
+, extractTrigSNR
+, extractTrigCentralFrequency
+, extractTrigSize
+, extractTrigEnergyCore
+, extractTrigDuration
+, extractTrigCGPS
+, extractTrigFrequencyBand
+, extractTrigGPS
 )
 where
 
@@ -40,6 +51,7 @@ import qualified Data.Traversable as DT
 
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)
 import HasKAL.DataBaseUtils.FrameFull.Function
+import HasKAL.TimeUtils.Function
 import GlitchMon.Table (Glitchtbl(..), insertGlitchtbl)
 import qualified GlitchMon.Table as Glitch
 
@@ -115,6 +127,304 @@ extractTrigInfoTFSNRSizeCore gpsstart gpsstop snrlow snrhigh flow fhigh=
         `and'` db ! Glitch.centralFrequency' .>=. value (Just flow)
         `and'` db ! Glitch.centralFrequency' .<=. value (Just fhigh)
       return $ (,,,) |$| db ! Glitch.eventGpsstarts' |*| db ! Glitch.centralFrequency' |*| db ! Glitch.snr' |*| db ! Glitch.islandSize'
+
+
+
+extractTrigGPS :: Int -> Int -> IO (Maybe [(Double,Double)])
+extractTrigGPS gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigGPSCore gpsstart' gpsstop'
+  let out = [(deformatGPS (fromIntegral bs,fromIntegral bn),deformatGPS (fromIntegral es,fromIntegral en))
+            | (Just bs, Just bn, Just es, Just en) <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigGPSCore :: Int32 -> Int32 -> IO [(Maybe Int32, Maybe Int32, Maybe Int32, Maybe Int32)]
+extractTrigGPSCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Int32, Maybe Int32, Maybe Int32, Maybe Int32)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ (,,,) |$| db ! Glitch.eventGpsstarts' |*| db ! Glitch.eventGpsstartn' |*| db ! Glitch.eventGpsstops' |*| db ! Glitch.eventGpsstopn'
+
+
+extractTrigFrequencyBand :: Int -> Int -> IO (Maybe [(Double,Double)])
+extractTrigFrequencyBand gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigFrequencyBandCore gpsstart' gpsstop'
+  let out = [(a,b)
+            | (Just a, Just b) <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigFrequencyBandCore :: Int32 -> Int32 -> IO [(Maybe Double, Maybe Double)]
+extractTrigFrequencyBandCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double, Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ (,) |$| db ! Glitch.eventFmin' |*| db ! Glitch.eventFmax'
+
+
+extractTrigCGPS :: Int -> Int -> IO (Maybe [Double])
+extractTrigCGPS gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigCGPSCore gpsstart' gpsstop'
+  let out = [deformatGPS (fromIntegral a,fromIntegral b)
+            | (Just a, Just b) <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigCGPSCore :: Int32 -> Int32 -> IO [(Maybe Int32, Maybe Int32)]
+extractTrigCGPSCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Int32, Maybe Int32)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ (,) |$| db ! Glitch.eventCgpss' |*| db ! Glitch.eventCgpsn'
+
+
+extractTrigDuration :: Int -> Int -> IO (Maybe [Double])
+extractTrigDuration gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigDurationCore gpsstart' gpsstop'
+  let out = [a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigDurationCore :: Int32 -> Int32 -> IO [Maybe Double]
+extractTrigDurationCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.duration'
+
+
+extractTrigEnergy :: Int -> Int -> IO (Maybe [Double])
+extractTrigEnergy gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigEnergyCore gpsstart' gpsstop'
+  let out = [a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigEnergyCore :: Int32 -> Int32 -> IO [Maybe Double]
+extractTrigEnergyCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.energy'
+
+
+extractTrigSize :: Int -> Int -> IO (Maybe [Double])
+extractTrigSize gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigSizeCore gpsstart' gpsstop'
+  let out = [fromIntegral a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigSizeCore :: Int32 -> Int32 -> IO [Maybe Int32]
+extractTrigSizeCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Int32)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.islandSize'
+
+
+extractTrigCentralFrequency :: Int -> Int -> IO (Maybe [Double])
+extractTrigCentralFrequency gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigCentralFrequencyCore gpsstart' gpsstop'
+  let out = [a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigCentralFrequencyCore :: Int32 -> Int32 -> IO [Maybe Double]
+extractTrigCentralFrequencyCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.centralFrequency'
+
+
+extractTrigSNR :: Int -> Int -> IO (Maybe [Double])
+extractTrigSNR gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigSNRCore gpsstart' gpsstop'
+  let out = [a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigSNRCore :: Int32 -> Int32 -> IO [Maybe Double]
+extractTrigSNRCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.snr'
+
+
+extractTrigSignificance :: Int -> Int -> IO (Maybe [Double])
+extractTrigSignificance gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigSignificanceCore gpsstart' gpsstop'
+  let out = [a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigSignificanceCore :: Int32 -> Int32 -> IO [Maybe Double]
+extractTrigSignificanceCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.significance'
+
+
+extractTrigLocation :: Int -> Int -> IO (Maybe [(Double, Double)])
+extractTrigLocation gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigLocationCore gpsstart' gpsstop'
+  let out = [(a,b)
+            | (Just a, Just b) <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigLocationCore :: Int32 -> Int32 -> IO [(Maybe Double, Maybe Double)]
+extractTrigLocationCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Double, Maybe Double)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ (,) |$| db ! Glitch.longitude' |*| db ! Glitch.latitude'
+
+
+extractTrigDQFlag :: Int -> Int -> IO (Maybe [Double])
+extractTrigDQFlag gpsstart gpsstop= runMaybeT $ MaybeT $ do
+  let gpsstart' = fromIntegral gpsstart :: Int32
+      gpsstop'  = fromIntegral gpsstop :: Int32
+  items <- extractTrigDQFlagCore gpsstart' gpsstop'
+  let out = [fromIntegral a
+            | Just a <- items
+              ]
+  case out of
+    [] -> return Nothing
+    x  -> return (Just x)
+
+
+extractTrigDQFlagCore :: Int32 -> Int32 -> IO [Maybe Int32]
+extractTrigDQFlagCore gpsstart gpsstop =
+  handleSqlError' $ withConnectionIO connect $ \conn ->
+  outputResults conn core
+  where
+    outputResults c q = runQuery' c (relationalQuery q) ()
+    core :: Relation () (Maybe Int32)
+    core = relation $ do
+      db <- query Glitch.glitchtbl
+      wheres $ db ! Glitch.eventGpsstarts' .>=. value (Just gpsstart)
+        `and'` db ! Glitch.eventGpsstarts' .<=. value (Just gpsstop)
+      return $ db ! Glitch.dqFlag'
 
 
 
