@@ -1015,4 +1015,18 @@ executable runSensMonSTDIN
   ghc-options: -O2 -threaded -rtsopts -eventlog
 
 
+executable plotHistgram
+  hs-source-dirs: exe-src
+  main-is:        plotHistgram.hs
+  build-depends:
+    base > 4.7
+    ,Chart==1.5.3
+    ,Chart-cairo==1.5.1
+    ,colour==2.3.3
+    ,data-default-class==0.0.1
+    ,lens==4.7.0.1
+    ,HasKAL
+    ,vector
+  ghc-options: -O2 -threaded -rtsopts -eventlog
+
 
