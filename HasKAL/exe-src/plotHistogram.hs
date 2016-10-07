@@ -24,7 +24,7 @@ plotHistCore title xmin xmax nbin fun dat = toRenderable layout
   bars2 = plot_bars_titles .~ [title]
       $ plot_bars_values .~ addIndexes vals
       $ plot_bars_style .~ BarsClustered
-      $ plot_bars_spacing .~ BarsFixGap 0 5
+      $ plot_bars_spacing .~ BarsFixGap 1 5
       $ plot_bars_item_styles .~ map mkstyle (cycle defaultColorSeq)
       $ def
 
@@ -55,7 +55,7 @@ main =  do
       xmin = read xmin' :: Double
       xmax = read xmax' :: Double
       nbin = read nbin' :: Int
-      plotfname = "histgram"++"-"++xmin'++"_"++xmax'++"_"++nbin'++".png"
+      plotfname = "histogram"++"-"++xmin'++"_"++xmax'++"_"++nbin'++".png"
   renderableToFile def plotfname (plotHistCore title xmin xmax nbin histogram1d dat)
 
 

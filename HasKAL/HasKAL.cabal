@@ -1015,9 +1015,9 @@ executable runSensMonSTDIN
   ghc-options: -O2 -threaded -rtsopts -eventlog
 
 
-executable plotHistgram
+executable plotHistogram
   hs-source-dirs: exe-src
-  main-is:        plotHistgram.hs
+  main-is:        plotHistogram.hs
   build-depends:
     base > 4.7
     ,Chart==1.5.3
