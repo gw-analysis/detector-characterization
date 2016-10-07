@@ -1,6 +1,7 @@
 
 module GlitchMon.Data
-( TrigParam (..))
+( TrigParam (..)
+ , PlotOPT (..))
 where
 
 import Data.Int (Int32)
@@ -33,3 +34,4 @@ data TrigParam = TrigParam { glitch_ID :: Maybe Int
                            , pipeline :: Maybe String
                            }
 
+data PlotOPT = GPS | CentralFrequency | SNR | DQFlag | Significance | Size | Energy | Duration | CentralGPS deriving (Show,Read,Eq)

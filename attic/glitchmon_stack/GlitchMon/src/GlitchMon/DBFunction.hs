@@ -9,7 +9,7 @@ module GlitchMon.DBFunction
 , extractTrigSNR
 , extractTrigCentralFrequency
 , extractTrigSize
-, extractTrigEnergyCore
+, extractTrigEnergy
 , extractTrigDuration
 , extractTrigCGPS
 , extractTrigFrequencyBand
