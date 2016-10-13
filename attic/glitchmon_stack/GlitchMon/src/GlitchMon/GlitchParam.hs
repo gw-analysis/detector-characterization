@@ -13,11 +13,10 @@ import HasKAL.WaveUtils.Data(WaveData)
 data GlitchParam = GlitchParam
   { segmentLength :: Int
   , channel :: String
-  , chunklen :: Double -- [s]
   , samplingFrequency :: Double
 -- * whitening
-  , refpsdlen    :: Double -- [s]
-  , whtfiltordr  :: Int
+  , traindatlen :: Double -- [s]
+  , whnFrequencyResolution    :: Double -- [s]
   , whtCoeff :: [([Double],  Double)]
 -- * t-f expression
   , nfrequency :: Double -- 0.2*fs
@@ -47,17 +46,14 @@ updateGlitchParam'segmentLength x a = x {segmentLength = a}
 updateGlitchParam'channel :: GlitchParam -> String -> GlitchParam
 updateGlitchParam'channel x n = x {channel = n}
 
-updateGlitchParam'chunklen :: GlitchParam -> Double -> GlitchParam
-updateGlitchParam'chunklen x n = x {chunklen = n}
+updateGlitchParam'traindatlen :: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'traindatlen x n = x {traindatlen = n}
 
 updateGlitchParam'samplingFrequency :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'samplingFrequency x fs = x {samplingFrequency = fs}
 
-updateGlitchParam'refpsdlen :: GlitchParam -> Double -> GlitchParam
-updateGlitchParam'refpsdlen x n = x {refpsdlen = n}
-
-updateGlitchParam'whtfiltordr :: GlitchParam -> Int -> GlitchParam
-updateGlitchParam'whtfiltordr x n = x {whtfiltordr = n}
+updateGlitchParam'whnFrequencyResolution :: GlitchParam -> Double -> GlitchParam
+updateGlitchParam'whnFrequencyResolution x n = x {whnFrequencyResolution = n}
 
 updateGlitchParam'whtCoeff :: GlitchParam -> [([Double],  Double)] -> GlitchParam
 updateGlitchParam'whtCoeff x p = x {whtCoeff = p}

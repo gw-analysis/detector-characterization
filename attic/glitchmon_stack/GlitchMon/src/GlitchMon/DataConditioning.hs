@@ -37,19 +37,15 @@ part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
   let highpassed = filtfilt lpf (gwdata wave)
---      wave' = sosfiltfilt cascade wave
---      initCond = map calcInitCond cascade
---      cascade = tf2cascade lpf
---      lpf = butter 4 fs newfs2 High
-      lpf = chebyshev1 4 0.1 fs newfs2 High
+      lpf = chebyshev1 2 0.1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
-      wave' = fromJust $ updateWaveDatagwdata wave highpassed 
+      out' = fromJust $ updateWaveDatagwdata wave highpassed   
   let whtcoeff = GP.whtCoeff param
   case (whtcoeff /= []) of
     False -> do 
-            out <- section'Whitening TimeDomain wave'
+            out <- section'Whitening TimeDomain out'
             case GP.debugmode param of 
                  1 -> do
                   liftIO $ H3.spectrogramM H3.LogY
@@ -58,7 +54,7 @@ part'DataConditioning wave = do
                                            "whitened data"
                                            "production/whitened_spectrogram.png"
                                                 ((0, 0), (20, 400))
-                                           $ gwspectrogramWaveData 0.19 0.2 out
+                                           $ gwspectrogramWaveData 0.1 0.2 out
                   liftIO $ H.plot H.Linear
                                   H.Line
                                       1
@@ -81,7 +77,7 @@ part'DataConditioning wave = do
                                    $ gwOnesidedPSDWaveData 0.2 out
                  _ -> liftIO $ Prelude.return ()
             return out
-    True  -> section'Whitening TimeDomain wave'	
+    True  -> section'Whitening TimeDomain wave
 
 
 section'LineRemoval = id
@@ -102,7 +98,7 @@ section'Whitening opt wave = case opt of
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-          let whned = applyWhitening FrequencyDomain whtCoeffList wave
+          let whned = applyWhitening TimeDomain whtCoeffList wave
               nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
@@ -124,9 +120,9 @@ calcWhiteningCoeffCore :: GP.GlitchParam
               -> ([([Double], Double)], WaveData)
               -> IO ([([Double], Double)], WaveData)
 calcWhiteningCoeffCore param (whtCoeffList, train) =
-  let nC = GP.whtfiltordr param
-      fs = GP.samplingFrequency param
-      nfft = floor $ GP.refpsdlen param * fs
+  let nC = floor $ 2 * fs / GP.whnFrequencyResolution param
+      fs = samplingFrequency train
+      nfft = floor $ fs * GP.traindatlen param
       refpsd = gwpsdV (gwdata train) nfft fs
       whtCoeff' = lpefCoeffV nC refpsd
    in return ( whtCoeff':whtCoeffList

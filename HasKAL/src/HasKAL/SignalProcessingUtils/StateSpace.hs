@@ -8,6 +8,7 @@ module HasKAL.SignalProcessingUtils.StateSpace
 ) where
 
 
+import Control.Monad (when)
 import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
 import Data.List (unzip4)
 import Data.Word
@@ -46,12 +47,13 @@ tf2NthStateSpace (num, denom) =
 
 barnes :: ([Double], [Double])
        -> [(Matrix Double, Matrix Double, Matrix Double, Double)]
-barnes (num, denom) =
+barnes (num, denom) = unsafePerformIO $ do
+  when ((length num/=3) || (length denom/=3)) $ do error "filter dimension must be 2nd."
   let (x, y, z) = tf2cparallel (num, denom)
       (a, b) = tf2rparallel (num, denom) 
       d = map head $ fst $ unzip b
       e = map calcSS [(b, ar:+ai) | (b, ar:+ai) <- (zip y z), ai>0]
-   in [(e1,e2,e3,d1)| (e1,e2,e3)<-e,d1<-d]
+   in return $ [(e1,e2,e3,d1)| (e1,e2,e3)<-e,d1<-d]
 
 
 sosstatespace :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double

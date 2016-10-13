@@ -152,11 +152,11 @@ timeRun chname w param = do
           case maybecdlist of
             Nothing -> do 
               liftIO $ print "Warning: no clean data in the given gps interval. Instead,last part of the segment will be used."
-              let chunklen = GP.chunklen param
+              let traindatlen = GP.traindatlen param
                   startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
-                    + seglen - chunklen
+                    + seglen - traindatlen
                   param'2 = GP.updateGlitchParam'cgps param (Just (formatGPS startcgps))
-              maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
+              maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor traindatlen) chname
               case maybew of
                 Just x -> do 
                   let fs = samplingFrequency w
@@ -175,11 +175,11 @@ timeRun chname w param = do
              case cleandata of
               [] -> do
                 liftIO $ print "Warning: all data is not clean in the given gps interval. Instead,last part of the segment will be used."
-                let chunklen = GP.chunklen param
+                let traindatlen = GP.traindatlen param
                     startcgps = fromIntegral $ truncate $(deformatGPS strtGps)
-                      + seglen - chunklen
+                      + seglen - traindatlen
                     param'2 = GP.updateGlitchParam'cgps param (Just (formatGPS startcgps))
-                maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor chunklen) chname
+                maybew <- liftIO $ kagraWaveDataGet (truncate startcgps) (floor traindatlen) chname
                 case maybew of
                   Just x -> do
                     let fs = samplingFrequency w
@@ -197,8 +197,8 @@ timeRun chname w param = do
                 let cdgps' = fst . last $ cleandata
                     cdgps = fst cdgps'
                     param'2 = GP.updateGlitchParam'cgps param (Just cdgps')
-                    chunklen = GP.chunklen param
-                maybew <- liftIO $ kagraWaveDataGet cdgps (floor chunklen) chname
+                    traindatlen = GP.traindatlen param
+                maybew <- liftIO $ kagraWaveDataGet cdgps (floor traindatlen) chname
                 case maybew of 
                   Just x -> do
                     let fs = samplingFrequency w

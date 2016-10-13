@@ -155,9 +155,9 @@ sink param chname = do
 
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
-       chunklen = GP.chunklen param ::Double
+       traindatlen = GP.traindatlen param ::Double
        fs = GP.samplingFrequency param ::Double
-       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (chunklen*fs)) w)
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
    liftIO $ glitchMon param' w
 
 

@@ -43,21 +43,22 @@ section'TimeFrequencyExpression whnWaveData = do
   liftIO $ print "start time-frequency expansion" >> hFlush stdout
   param <- get
   let refpsd = GP.refpsd param
-      fs = GP.samplingFrequency param
+      fs = samplingFrequency whnWaveData
       nfreq = floor $ GP.nfrequency param * fs
       nfreq2 = nfreq `div` 2
       ntimeSlide = floor $ GP.ntimeSlide param * fs
-      chunklen = GP.chunklen param
-      ntime = ((NL.dim $ gwdata whnWaveData) - floor (chunklen*fs)) `div` ntimeSlide
+      ntime = ((NL.dim $ gwdata whnWaveData) - nfreq) `div` ntimeSlide
       snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
       snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
       snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      snrMatP = NL.trans $ NL.flipud $ (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+      snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
+                  (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
         where 
           calcSpec tindx = NL.zipVectorWith (/) 
             (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
             (snd $ refpsd)
-
+--          calcSpec tindx = 
+--            snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
       out = (snrMatT', snrMatF, snrMatP)
   case GP.debugmode param of
     1 -> do
@@ -65,7 +66,7 @@ section'TimeFrequencyExpression whnWaveData = do
                                H3.COLZ
                                "mag"
                                "pixelSNR spectrogram"
-                               "production/gw150914_pixelSNR_spectrogram.png"
+                               "production/pixelSNR_spectrogram.png"
                                    ((0, 0), (20, 400))
                                out
     _ -> liftIO $ Prelude.return () 
@@ -85,23 +86,12 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       nrow = rows l'
       cutT = floor $ fromIntegral ncol * GP.cutoffFractionTFT param
       cutF = floor $ fromIntegral nrow * GP.cutoffFractionTFF param
---      zeroElementc = [(x, y) | x<-[0..nrow-1], y<-[ncol-cutT..ncol-1]]
---      zeroElementr = [(x, y) | y<-[0..ncol-1], x<-[nrow-cutF..nrow-1]]
---      zeroElement = zeroElementr ++ zeroElementc
       cfun = GP.celement param
       minN = GP.minimumClusterNum param
       m1 = ((nrow-cutF)><(ncol-cutT)) $ replicate ((nrow-cutF)*(ncol-cutT)) 1.0
       mc0 = (nrow><cutT) $ replicate (nrow*cutT) 0.0
       mr0 = (cutF><(ncol-cutT)) $ replicate (cutF*(ncol-cutT)) 0.0
       qM = NL.fromBlocks [[NL.fromBlocks [[m1],[mr0]],mc0]]
---  let qM = quantizingMatrix nrow ncol (go zeroElement)
---        where 
---          go ele = \(r,c)-> 
---            case Set.member (r,c) (Set.fromList ele) of
---                True  -> 0.0
---                False -> 1.0
---  liftIO $ print "evaluating qM"  >> hFlush stdout
---  qM `deepseq` Prelude.return ()
   let dcted = NL.mul dcted' qM
 --  liftIO $ print "evaluating dcted"  >> hFlush stdout
   dcted `deepseq` Prelude.return ()
@@ -140,7 +130,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
                                H3.COLZ
                                "mag"
                                "clustered PixelSNR spectrogram"
-                               "production/gw150914_cluster_spectrogram.png"
+                               "production/cluster_spectrogram.png"
                                    ((0, 0), (20, 400))
                                newM
       liftIO $ print "clustered pixels :"

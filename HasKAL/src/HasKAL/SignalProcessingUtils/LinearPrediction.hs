@@ -48,7 +48,9 @@ levinson p r = do
 
 
 whitening :: ([Double],Double) -> [Double]-> [Double]
-whitening (whnb,rho) x = map (/sqrt rho) $ toList $ firFiltfiltV whnb $ fromList x
+whitening (whnb,rho) x = 
+  let whnb' = map mysqrt whnb   
+   in map (/sqrt rho) $ toList $ firFiltfiltV whnb' $ fromList x
 
 
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]
@@ -56,9 +58,10 @@ whitening (whnb,rho) x = map (/sqrt rho) $ toList $ firFiltfiltV whnb $ fromList
 
 
 whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
-whiteningWaveData (whnb,rho) x = do
-  let y = G.map (/sqrt rho) $ fir whnb (gwdata x)
-  fromJust $ updateWaveDatagwdata x y
+whiteningWaveData (whnb,rho) x =
+  let whnb' = map mysqrt whnb    
+      y = G.map (/sqrt rho) $ fir whnb (gwdata x)
+   in fromJust $ updateWaveDatagwdata x y
 
 
 whiteningWaveData' :: ([Double],Double) -> WaveData -> WaveData
@@ -127,6 +130,10 @@ levinsonDC r p = (CA.array (1,p) [ (k, a CA.!(p,k)) | k <- [1..p] ], rho CA.!p)
     rhok 1 = (1 - (abs (a CA.!(1,1)))^(2::Int)) * r CA.!0
     rhok k = (1 - (abs (a CA.!(k, k)))^(2::Int)) * rho CA.!(k-1)
 
+
+mysqrt x
+  | x < 0 = (-1)*sqrt ((-1)*x)
+  | x >= 0 =  sqrt x 
 
 
 
