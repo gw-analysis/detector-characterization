@@ -101,7 +101,10 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   let thresIndex = head $ NL.find (>=GP.cutoffFreq param) snrMatF
 --  liftIO $ print "evaluating thresIndex" >> hFlush stdout
   thresIndex `deepseq` Prelude.return ()
-  let snrMat = (snrMatT, NL.subVector thresIndex (nrow-thresIndex-1) snrMatF, NL.dropRows (thresIndex+1) snrMatP)
+  let snrMat = ( snrMatT
+               , NL.subVector thresIndex (nrow-thresIndex-1) snrMatF
+               , NL.dropRows (thresIndex+1) snrMatP
+                 )
 --  liftIO $ print "evaluating snrMat" >> hFlush stdout
   snrMat `deepseq` Prelude.return ()
   let (tt,ff,mg) = snrMat
