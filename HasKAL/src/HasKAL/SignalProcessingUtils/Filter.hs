@@ -29,7 +29,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , filterX
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map)
+import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, toList)
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
@@ -37,7 +37,7 @@ import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
-import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLists, toRows, (><), (<\>))
+import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow)
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
 
@@ -561,6 +561,30 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
             wnsec = itow32 nsec
+
+
+filtfiltX :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
+filtfiltX (num, denom) inputV = 
+  let nb = length denom
+      na = length num
+      order = max nb na
+      nEdge = 3 * (order - 1)
+      inputM = fromColumns inputV
+      x1_2 = VS.map (*2) $ head . toRows $ inputM
+      xf_2 = VS.map (*2) $ last . toRows $ inputM
+      xi''   = fromRows (replicate nEdge x1_2) - (flipud . takeRows nEdge . dropRows 1 $ inputM)
+      xi'    = toColumns xi''
+      xi    = map VS.toList xi'
+      xf''   = fromRows (replicate nEdge xf_2)
+               - (flipud . takeRows nEdge . dropRows (rows inputM-nEdge) $ inputM)
+      xf'   = toColumns xf''
+      xf    = map VS.toList xf'
+      ic = ((order-1)><1) $ calcInitCond (num,denom)
+      (dum,zi) = filterX (denom,num) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "foward" xi'
+      (ys,zs) = filterX (denom,num) zi "foward" inputV
+      (yf,zdum) = filterX (denom,num) zs "foward" xf'
+      (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * asRow (yf!!(nEdge-1))))) "reverse" yf
+   in fst $ filterX (denom,num) zf "reverse" ys
 
 
 filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
