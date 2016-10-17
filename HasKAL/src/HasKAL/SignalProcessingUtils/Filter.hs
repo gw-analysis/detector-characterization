@@ -27,6 +27,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , sos1filtfiltInit
   , calcInitCond
   , filterX
+  , filtfiltX
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, toList)
@@ -580,9 +581,9 @@ filtfiltX (num, denom) inputV =
       xf'   = toColumns xf''
       xf    = map VS.toList xf'
       ic = ((order-1)><1) $ calcInitCond (num,denom)
-      (dum,zi) = filterX (denom,num) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "foward" xi'
-      (ys,zs) = filterX (denom,num) zi "foward" inputV
-      (yf,zdum) = filterX (denom,num) zs "foward" xf'
+      (dum,zi) = filterX (denom,num) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
+      (ys,zs) = filterX (denom,num) zi "forward" inputV
+      (yf,zdum) = filterX (denom,num) zs "forward" xf'
       (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * asRow (yf!!(nEdge-1))))) "reverse" yf
    in fst $ filterX (denom,num) zf "reverse" ys
 
