@@ -36,7 +36,7 @@ import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
-import HasKAL.Misc.Function (mkChunks)
+import HasKAL.Misc.Function (mkChunksV,mkChunksL)
 import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLists, toRows, (><), (<\>))
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
@@ -563,7 +563,7 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
             wnsec = itow32 nsec
 
 
-filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> [VS.Vector Double]
+filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
 filterX (num, denom) z dir inputV =
   let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
       m = length inputV
@@ -574,26 +574,30 @@ filterX (num, denom) z dir inputV =
       alen = length num'
       z' = d2cd . concat $ z
       dir' = unsafePerformIO $ newCString dir
-   in flip mkChunks n $ cd2dV $ filterXCore denom' blen num' alen z' dir' m n inputV' 
+      (vv,zz) = filterXCore denom' blen num' alen z' dir' m n inputV' 
+   in (flip mkChunksV n $ cd2dV vv, flip mkChunksL n $ cd2d zz)
 
 
-filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> VS.Vector CDouble
+filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
 filterXCore b blen a alen z dir m n input
   = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
    withArray b $ \ptrb ->
    withArray a $ \ptra ->
    withArray z $ \ptrZin ->
    allocaArray ilen $ \ptrOutput ->
-   allocaArray ilen $ \ptrZout ->
+   allocaArray zlen $ \ptrZout ->
    do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
-        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+        return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+                 , unsafePerformIO $ peekArray zlen ptrZout
+                   )
       where ilen = m * n
             wilen = itow32 ilen
             walen = itow32 alen
             wblen = itow32 blen
             wm    = itow32 m
             wn    = itow32 n
+            zlen = (max blen alen)-1 
 
 
 calcInitCond :: ([Double],[Double]) -> [Double]
