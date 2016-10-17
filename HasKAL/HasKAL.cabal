@@ -106,6 +106,7 @@ library
     HasKAL.Misc.CoastData,
     HasKAL.Misc.Environment,
     HasKAL.Misc.Flip3param,
+    HasKAL.Misc.Function,
     HasKAL.Misc.SMatrixMapping,
     HasKAL.Misc.StrictMapping,
     HasKAL.Misc.UMatrixMapping,
@@ -203,6 +204,7 @@ library
     src/HasKAL/LineUtils/LineRemoval/rng_median.c
     src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
     src/HasKAL/SignalProcessingUtils/filterFunctions.c
+    src/HasKAL/SignalProcessingUtils/filterX.c
     -- "extern C" しているのでCとして扱っておそらく大丈夫
 
   -- Other library packages from which modules are imported.

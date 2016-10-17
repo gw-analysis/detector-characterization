@@ -26,15 +26,17 @@ module HasKAL.SignalProcessingUtils.Filter
   , sos1filtfilt
   , sos1filtfiltInit
   , calcInitCond
+  , filterX
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, length, unsafeWith, unsafeFromForeignPtr0,map)
+import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map)
 import Data.Word
 import Foreign.C.Types
--- import Foreign.C.String
+import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
+import HasKAL.Misc.Function (mkChunks)
 import Numeric.LinearAlgebra (fromBlocks, fromList, fromRows, ident, scale, toLists, toRows, (><), (<\>))
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
@@ -561,11 +563,44 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
             wnsec = itow32 nsec
 
 
+filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> [VS.Vector Double]
+filterX (num, denom) z dir inputV =
+  let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
+      m = length inputV
+      n = VS.length . head $ inputV
+      num' = d2cd num
+      denom' = d2cd denom
+      blen = length denom'
+      alen = length num'
+      z' = d2cd . concat $ z
+      dir' = unsafePerformIO $ newCString dir
+   in flip mkChunks n $ cd2dV $ filterXCore denom' blen num' alen z' dir' m n inputV' 
+
+
+filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> VS.Vector CDouble
+filterXCore b blen a alen z dir m n input
+  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+   withArray b $ \ptrb ->
+   withArray a $ \ptra ->
+   withArray z $ \ptrZin ->
+   allocaArray ilen $ \ptrOutput ->
+   allocaArray ilen $ \ptrZout ->
+   do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+        return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+      where ilen = m * n
+            wilen = itow32 ilen
+            walen = itow32 alen
+            wblen = itow32 blen
+            wm    = itow32 m
+            wn    = itow32 n
+
+
 calcInitCond :: ([Double],[Double]) -> [Double]
 calcInitCond (num,denom) =
   let n = length num
-   in head $ toLists $
-       (ident (n-1) - fromBlocks [[-(1><(n-1)) (tail denom)], [fromBlocks [[ident (n-2), (1><(n-2)) $ replicate (n-2) 0]]]])
+   in concat $ toLists $
+       (ident (n-1) - fromBlocks [[-((n-1)><1) (tail denom), fromBlocks [[ident (n-2)], [(1><(n-2)) $ replicate (n-2) 0]]]])
         <\> ((((n-1)><1) (tail num)) - scale (head num) (((n-1)><1) (tail denom)))
 
 
@@ -610,3 +645,9 @@ foreign import ccall "filterFunctions.h sosfiltfilt" c'sosfiltfilt :: Ptr CDoubl
 foreign import ccall "filterFunctions.h sosfilter_init" c'sosfilter_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
 
 foreign import ccall "filterFunctions.h sosfiltfilt_init" c'sosfiltfilt_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
+
+foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> CUInt -> Ptr CDouble -> CString -> IO()
+
+
+
+
