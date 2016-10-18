@@ -564,13 +564,15 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
             wnsec = itow32 nsec
 
 
+-- | filtfiltX (num, denom) inputV 
 filtfiltX :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
 filtfiltX (num, denom) inputV = 
   let nb = length denom
       na = length num
       order = max nb na
-      nEdge = 3 * (order - 1)
       inputM = fromColumns inputV
+      -- Use a reflection to extrapolate signal at beginning and end to reduce edge effects
+      nEdge = 3 * (order - 1)
       x1_2 = VS.map (*2) $ head . toRows $ inputM
       xf_2 = VS.map (*2) $ last . toRows $ inputM
       xi''   = fromRows (replicate nEdge x1_2) - (flipud . takeRows nEdge . dropRows 1 $ inputM)
@@ -580,14 +582,18 @@ filtfiltX (num, denom) inputV =
                - (flipud . takeRows nEdge . dropRows (rows inputM-nEdge) $ inputM)
       xf'   = toColumns xf''
       xf    = map VS.toList xf'
+      -- Filter initial reflected signal:
       ic = ((order-1)><1) $ calcInitCond (num,denom)
       (dum,zi) = filterX (denom,num) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
-      (ys,zs) = filterX (denom,num) zi "forward" inputV
-      (yf,zdum) = filterX (denom,num) zs "forward" xf'
+      -- Use the final conditions of the initial part for the actual signal:
+      (ys,zs) = filterX (denom,num) zi "forward" inputV -- "s"teady state
+      (yf,zdum) = filterX (denom,num) zs "forward" xf'  -- "f"inal conditions
+      -- Filter signal again in reverse order:
       (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * asRow (yf!!(nEdge-1))))) "reverse" yf
    in fst $ filterX (denom,num) zf "reverse" ys
 
 
+-- | filterX (num, denom) z dir inputV
 filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
 filterX (num, denom) z dir inputV =
   let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble

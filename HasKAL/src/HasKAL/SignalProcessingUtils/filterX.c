@@ -1,27 +1,20 @@
-// filter.c
-// filter - Fast C-Mex filter
-// [Y, Z] = FilterX(b, a, X, Z, Reverse)
+// filterX.c
 // INPUT:
 //   b, a: Filter parameters as DOUBLE vectors. If the vectors have different
 //      lengths, the shorter one is padded with zeros.
-//   X: Signal as DOUBLE or SINGLE vector or array. The signal is filtered along
+//   X: Signal as DOUBLE vector. The signal is filtered along
 //      the first dimension (!even if X is a row vector!).
-//   Z: Initial conditions as DOUBLE or SINGLE array. The size must be:
+//   Z: Initial conditions as DOUBLE array. The size must be:
 //        [(Order) - 1, SIZE(X,2), ..., SIZE(X, NDIMS(X))]
-//      Optional, default: Zeros.
 //   Reverse: The signal is processed in reverse order, if this is TRUE or
 //      'reverse'. b, a and Z are not affected - see examples.
-//      This is supports a faster FILTFILT operation.
-//      Optional, default: FALSE.
 //
 // OUTPUT:
 //   Y: Filtered signal with the same size and type as X.
-//   Z: Final conditions as DOUBLE (!) array.
+//   Z: Final conditions as DOUBLE array.
 //
 // NOTES:
 //   - The output equals the output of FILTER exactly for DOUBLEs.
-//   - For signals in SINGLE format, all intermediate values are DOUBLEs to
-//     increase the accuracy. Therefore the output Z is a DOUBLE also.
 //   - The parameters [a] and [b] are normalized to the 1st element of a, if
 //     a(1) differs from 1.0.
 //   - This function filters along the 1st dimension only. Use FilterM as
@@ -31,7 +24,7 @@
 //   gcc -O filter.c
 // Consider C99 comments on Linux with GCC:
 //   gcc -O CFLAGS="\$CFLAGS -std=c99" filter.c
-
+// this function is imported from http://jp.mathworks.com/matlabcentral/fileexchange/32261-filterm
 
 
 // Headers: --------------------------------------------------------------------
@@ -66,15 +59,6 @@
 // #pragma fenv_access(off)           // disable fpu environment sensitivity
 #endif
 
-
-// Some macros to reduce the confusion:
-//#define b_in   prhs[0]
-//#define a_in   prhs[1]
-//#define X_in   prhs[2]
-//#define Z_in   prhs[3]
-//#define Rev_in prhs[4]
-//#define Y_out  plhs[0]
-//#define Z_out  plhs[1]
 
 // Prototypes: -----------------------------------------------------------------
 void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
@@ -133,7 +117,7 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
 {
   double *a, *b, a0;
   float  *Xf, *Yf;
-  int order, nParam, MX, NX, Zdims[MAX_NDIMS];
+  int order, nParam, MX, NX;
   bool allocate_ba = FALSE, forward = TRUE;
   int *Xdims;
   
@@ -141,7 +125,7 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   // Get dimensions of inputs:
   MX = mX_in;    // First dimension (はじめのデータのサンプル数)関数 mxGetM は、指定された配列内の行数を返します。"行" という用語は、配列内にいくつの次元が存在しても、配列の最初の次元を常に意味します。たとえば、8 x 9 x 5 x 3 の次元をもつ 4 次元配列を pm が指している場合、関数 mxGetM は 8 を返します。
   NX = nX_in;
-//  NX = mX_in * (nX_in-1);    // 関数 mxGetN を呼び出して、指定された mxArray 内の列数を判断します。pm が N 次元の mxArray である場合、関数 mxGetN は 2 から N の次元の積になります。たとえば、13 x 5 x 4 x 6 の次元をもつ 4 次元の mxArray を pm が指し示している場合、関数 mxGetN は値 120 (5 x 4 x 6) を返します。ここではすべての時系列データ（合計列数nX_in）が同じ長さmX_inを持っているとする。
+//  NX = mX_in * (nX_in-1);    // 関数 mxGetN を呼び出して、指定された mxArray 内の列数を判断します。pm が N 次元の mxArray である場合、関数 mxGetN は 2 から N の次元の積になります。たとえば、13 x 5 x 4 x 6 の次元をもつ 4 次元の mxArray を pm が指し示している場合、関数 mxGetN は値 120 (5 x 4 x 6) を返します。ここではすべての時系列データ（合計列数nX_in）が同じ長さmX_inを持っているとする。通常はN=2の行列のため、mxGetNは行列の列数を表す。
   
   // Get a and b as vectors of the same length:
   if (na == nb) {       // Use input vectors directly, if possible:
@@ -179,12 +163,8 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   for (int i=0;i<nX_in;i++) {
     Xdims[i] = mX_in; // それぞれの時系列データのサンプル数(次元数)が入った配列
   }
-  
-  // Z has dimensions [order, DIMS(X, 2:end)]:
-  memcpy(Zdims, Xdims, nX_in * sizeof(int));
-  Zdims[0] = order;
-  
-//matlabの配列は下のようになっている。こうするのが理想であるが、このコードではとりあえずすべての次元は同じ散布する数持っているとする。
+    
+//matlabの配列は下のようになっている。こうするのが理想であるが、このコードではとりあえずすべての次元は同じサンプル数持っているとする。
 //int D0[Xdims[0]];
 //int D1[Xdims[1]];
 //.....
@@ -193,7 +173,6 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
 //D[5][5] = 55;
 
   Z_out = calloc(order * nX_in, sizeof(double));
-     
   // Copy value from input with a conversion to DOUBLE on demand:
   memcpy(Z_out, Z_in, order * nX_in * sizeof(double));
      
@@ -206,12 +185,10 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
 
   // Call the calulator: -------------------------------------------------------
   // Create the output array:
-  //  double Y_out[MX][nX_in];
   Y_out = calloc(MX * nX_in, sizeof(double));
 
      
   if (forward) {
-     CoreDoubleN(X_in, MX, NX, a, b, order, Z_out, Y_out);
      // Unrolled loops for common filter lengths:
      switch (order) {
         case 1:   CoreDouble2(X_in, MX, NX, a, b, Z_out, Y_out);  break;
