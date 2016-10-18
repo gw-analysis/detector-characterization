@@ -67,28 +67,8 @@ void CoreDouble6(double *X, int MX, int NX, double *a, double *b,
         double *Z, double *Y);
 void CoreDouble7(double *X, int MX, int NX, double *a, double *b,
         double *Z, double *Y);
-
-void CoreSingleN(float *X, int MX, int NX, double *a, double *b,
-        int order, double *Z, float *Y);
-void CoreSingle2(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-void CoreSingle3(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-void CoreSingle4(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-void CoreSingle5(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-void CoreSingle6(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-void CoreSingle7(float *X, int MX, int NX, double *a, double *b,
-        double *Z, float *Y);
-
 void CoreDoubleNR(double *X, int MX, int NX, double *a, double *b,
         int order, double *Z, double *Y);
-void CoreSingleNR(float *X, int MX, int NX, double *a, double *b,
-        int order, double *Z, float *Y);
-
-void CopySingleToDouble(double *Z, float *Zf, int N);
 void NormalizeBA(double *ab, int nParam);
         
 // Main function ===============================================================
@@ -199,9 +179,6 @@ void NormalizeBA(double *ba, int nParam)
   return;
 }
 
-//  ****************************************************************************
-//  ***                               DOUBLE                                 ***
-//  ****************************************************************************
 
 void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
                  int order, double *Z, double *Y)
@@ -424,10 +401,6 @@ void CoreDouble7(double *X, int MX, int NX, double *a, double *b,
   
   return;
 }
-
-// *****************************************************************************
-// ***                             DOUBLE REVERSE                            ***
-// *****************************************************************************
 
 void CoreDoubleNR(double *X, int MX, int NX, double *a, double *b,
                   int order, double *Z, double *Y)
