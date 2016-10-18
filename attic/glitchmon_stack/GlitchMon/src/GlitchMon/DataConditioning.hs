@@ -126,7 +126,8 @@ calcWhiteningCoeffCore param (whtCoeffList, train) =
       refpsd = gwpsdV (gwdata train) nfft fs
       whtCoeff' = lpefCoeffV nC refpsd
    in return ( whtCoeff':whtCoeffList
-      , dropWaveData (2*nC) $ whiteningWaveData whtCoeff' train
+      , whiteningWaveData whtCoeff' train
+--      , dropWaveData (2*nC) $ whiteningWaveData whtCoeff' train
       )
 
 
@@ -140,7 +141,8 @@ applyWhitening :: WhnMethod
 applyWhitening opt [] wave = wave
 applyWhitening opt (x:xs) wave = case opt of
   TimeDomain -> 
-    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+--    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
+    applyWhitening TimeDomain xs $ whiteningWaveData x wave
   FrequencyDomain -> 
     applyWhitening FrequencyDomain xs $ whiteningWaveData' x wave
 
