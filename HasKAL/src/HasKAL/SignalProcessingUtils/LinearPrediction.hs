@@ -59,10 +59,10 @@ whitening (whnb,rho) x =
 
 whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
 whiteningWaveData (whnb,rho) x =
-  let --whnb' = map mysqrt whnb    
+  let whnb' = map mysqrt whnb    
 --      initcoeff = calcInitCond (whnb',(1.0:replicate (length whnb'-1) 0.0))
 --      y = G.map (/sqrt rho) $ firFiltfiltVInit whnb' initcoeff (gwdata x)
-      y = G.map (/sqrt rho) $ fir whnb (gwdata x)
+      y = G.map (/sqrt rho) $ filtfiltX1d (whnb',(1.0:replicate (length whnb'-1) 0.0)) (gwdata x)
    in fromJust $ updateWaveDatagwdata x y
 
 

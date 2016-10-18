@@ -28,6 +28,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , calcInitCond
   , filterX
   , filtfiltX
+  , filtfiltX1d
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, toList)
@@ -591,6 +592,10 @@ filtfiltX (num, denom) inputV =
       -- Filter signal again in reverse order:
       (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * asRow (yf!!(nEdge-1))))) "reverse" yf
    in fst $ filterX (denom,num) zf "reverse" ys
+
+
+filtfiltX1d :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
+filtfiltX1d (num, denom) inputV = head $ filtfiltX (num, denom) [inputV]
 
 
 -- | filterX (num, denom) z dir inputV
