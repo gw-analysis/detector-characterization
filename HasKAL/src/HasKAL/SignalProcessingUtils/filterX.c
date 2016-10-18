@@ -51,14 +51,6 @@
 // the signal is tiny (e.g. [16 x 1]):
 #define MAX_NDIMS 32
 
-// Disable the /fp:precise flag to increase the speed on MSVC compiler:
-#ifdef _MSC_VER
-#pragma float_control(except, off)    // disable exception semantics
-#pragma float_control(precise, off)   // disable precise semantics
-#pragma fp_contract(on)               // enable contractions
-// #pragma fenv_access(off)           // disable fpu environment sensitivity
-#endif
-
 
 // Prototypes: -----------------------------------------------------------------
 void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
@@ -100,19 +92,6 @@ void CopySingleToDouble(double *Z, float *Zf, int N);
 void NormalizeBA(double *ab, int nParam);
         
 // Main function ===============================================================
-// Y_out
-// Z_out
-// b_in：フィルタの分母係数
-// nb：フィルタの数
-// a_in：フィルタの分子係数
-// na：フィルタの数
-// X_in：時系列データ（mxn行列。n個の時系列データ。各時系列データはmサンプル）
-// mX_in：時系列データのサンプル数（元のmatlabバージョンは各時系列ごとにサンプル数を変えられたがここではすべて同じ長さにしている。）
-// nX_in：時系列データの数
-// Xdims_in：それぞれの時系列データのサンプル数(次元数)が入った配列。このコードでは各要素（nX_in個）に同じ値が入る。
-// Z_in
-// Rev_in : Reverseかどうかの
-
 void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, int na, double *X_in, int mX_in, int nX_in, double *Z_in, const char *Rev_in)
 {
   double *a, *b, a0;
@@ -123,10 +102,9 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   
   
   // Get dimensions of inputs:
-  MX = mX_in;    // First dimension (はじめのデータのサンプル数)関数 mxGetM は、指定された配列内の行数を返します。"行" という用語は、配列内にいくつの次元が存在しても、配列の最初の次元を常に意味します。たとえば、8 x 9 x 5 x 3 の次元をもつ 4 次元配列を pm が指している場合、関数 mxGetM は 8 を返します。
+  MX = mX_in;    
   NX = nX_in;
-//  NX = mX_in * (nX_in-1);    // 関数 mxGetN を呼び出して、指定された mxArray 内の列数を判断します。pm が N 次元の mxArray である場合、関数 mxGetN は 2 から N の次元の積になります。たとえば、13 x 5 x 4 x 6 の次元をもつ 4 次元の mxArray を pm が指し示している場合、関数 mxGetN は値 120 (5 x 4 x 6) を返します。ここではすべての時系列データ（合計列数nX_in）が同じ長さmX_inを持っているとする。通常はN=2の行列のため、mxGetNは行列の列数を表す。
-  
+ 
   // Get a and b as vectors of the same length:
   if (na == nb) {       // Use input vectors directly, if possible:
      b      = b_in;
@@ -164,20 +142,10 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
     Xdims[i] = mX_in; // それぞれの時系列データのサンプル数(次元数)が入った配列
   }
     
-//matlabの配列は下のようになっている。こうするのが理想であるが、このコードではとりあえずすべての次元は同じサンプル数持っているとする。
-//int D0[Xdims[0]];
-//int D1[Xdims[1]];
-//.....
-//int D(nX_in-1)[Xdims[nX_in-1];
-//int *D[nX_in] = { D0, D1, ...., D(nX_in-1)};
-//D[5][5] = 55;
-
+  // Create the output array:
   Z_out = calloc(order * nX_in, sizeof(double));
   // Copy value from input with a conversion to DOUBLE on demand:
   memcpy(Z_out, Z_in, order * nX_in * sizeof(double));
-     
-
-
 
   // Flag for forward processing: ----------------------------------------------
   // 'Reverse', TRUE: Process signal in reverse order:
@@ -186,7 +154,6 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   // Call the calulator: -------------------------------------------------------
   // Create the output array:
   Y_out = calloc(MX * nX_in, sizeof(double));
-
      
   if (forward) {
      // Unrolled loops for common filter lengths:
