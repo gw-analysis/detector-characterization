@@ -80,11 +80,11 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   bool allocate_ba = FALSE, forward = TRUE;
   int *Xdims;
   
-  
   // Get dimensions of inputs:
   MX = mX_in;    
   NX = nX_in;
- 
+
+
   // Get a and b as vectors of the same length:
   if (na == nb) {       // Use input vectors directly, if possible:
      b      = b_in;
@@ -98,7 +98,8 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
      allocate_ba = TRUE;
   }
   order = nParam - 1;
-  
+
+
   if (allocate_ba) {    // Create local copy of expanded [b] and [a]:
      // It is slightly cheaper to allocate one array only:
      if ((b = calloc(2 * nParam, sizeof(double))) == NULL) {
@@ -118,14 +119,16 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   if (nX_in > MAX_NDIMS) {
      fprintf(stderr, "Signal cannot have more than %d dimensions.", MAX_NDIMS);
   }
+  // memory allocation for Xdims
+  Xdims = calloc (NX, sizeof(int));
   for (int i=0;i<nX_in;i++) {
-    Xdims[i] = mX_in; // それぞれの時系列データのサンプル数(次元数)が入った配列
+    Xdims[i] = MX; // それぞれの時系列データのサンプル数(次元数)が入った配列
   }
     
   // Create the output array:
-  Z_out = calloc(order * nX_in, sizeof(double));
+  //Z_out = calloc(order * NX, sizeof(double));
   // Copy value from input with a conversion to DOUBLE on demand:
-  memcpy(Z_out, Z_in, order * nX_in * sizeof(double));
+  memcpy(Z_out, Z_in, order * NX * sizeof(double));
 
   // Flag for forward processing: ----------------------------------------------
   // 'Reverse', TRUE: Process signal in reverse order:
@@ -133,7 +136,7 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
 
   // Call the calulator: -------------------------------------------------------
   // Create the output array:
-  Y_out = calloc(MX * nX_in, sizeof(double));
+  //Y_out = calloc(MX * NX, sizeof(double));
      
   if (forward) {
      // Unrolled loops for common filter lengths:
@@ -151,6 +154,7 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   }
 
   // Cleanup:
+  free(Xdims);
   if (allocate_ba) {
      free(b);       // Frees [a] implicitely!
   }

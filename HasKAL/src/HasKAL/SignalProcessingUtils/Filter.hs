@@ -27,6 +27,7 @@ module HasKAL.SignalProcessingUtils.Filter
   , sos1filtfiltInit
   , calcInitCond
   , filterX
+  , filterX1d
   , filtfiltX
   , filtfiltX1d
   ) where
@@ -598,12 +599,18 @@ filtfiltX1d :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
 filtfiltX1d (num, denom) inputV = head $ filtfiltX (num, denom) [inputV]
 
 
+filterX1d :: ([Double], [Double]) -> [Double] -> String -> VS.Vector Double -> (VS.Vector Double,[Double])
+filterX1d (num, denom) z dir inputV = let a = filterX (num, denom) [z] dir [inputV]
+                                       in (head . fst $ a, head . snd $ a)      
+
+
 -- | filterX (num, denom) z dir inputV
 filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
 filterX (num, denom) z dir inputV =
   let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
-      m = length inputV
-      n = VS.length . head $ inputV
+      n = length inputV
+      m = VS.length . head $ inputV
+      mz= length . head $ z
       num' = d2cd num
       denom' = d2cd denom
       blen = length denom'
@@ -611,7 +618,7 @@ filterX (num, denom) z dir inputV =
       z' = d2cd . concat $ z
       dir' = unsafePerformIO $ newCString dir
       (vv,zz) = filterXCore denom' blen num' alen z' dir' m n inputV' 
-   in (flip mkChunksV n $ cd2dV vv, flip mkChunksL n $ cd2d zz)
+   in (flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
 
 
 filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
@@ -633,7 +640,10 @@ filterXCore b blen a alen z dir m n input
             wblen = itow32 blen
             wm    = itow32 m
             wn    = itow32 n
-            zlen = (max blen alen)-1 
+            zlen = ((max blen alen)-1) * n
+
+
+foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> CUInt -> Ptr CDouble -> CString -> IO()
 
 
 calcInitCond :: ([Double],[Double]) -> [Double]
@@ -686,7 +696,6 @@ foreign import ccall "filterFunctions.h sosfilter_init" c'sosfilter_init :: Ptr 
 
 foreign import ccall "filterFunctions.h sosfiltfilt_init" c'sosfiltfilt_init :: Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> IO()
 
-foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> CUInt -> Ptr CDouble -> CString -> IO()
 
 
 
