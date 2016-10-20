@@ -41,6 +41,7 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
 import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow)
+import qualified Numeric.LinearAlgebra.Data as ND
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
 
@@ -591,7 +592,8 @@ filtfiltX (num, denom) inputV =
       (ys,zs) = filterX (denom,num) zi "forward" inputV -- "s"teady state
       (yf,zdum) = filterX (denom,num) zs "forward" xf'  -- "f"inal conditions
       -- Filter signal again in reverse order:
-      (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * asRow (yf!!(nEdge-1))))) "reverse" yf
+      yEdge = asRow $ (fromColumns yf) ND.! (nEdge-1)
+      (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * yEdge))) "reverse" yf
    in fst $ filterX (denom,num) zf "reverse" ys
 
 

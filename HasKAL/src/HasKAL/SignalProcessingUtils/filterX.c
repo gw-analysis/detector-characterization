@@ -121,7 +121,8 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
   }
   // memory allocation for Xdims
   Xdims = calloc (NX, sizeof(int));
-  for (int i=0;i<nX_in;i++) {
+  int i;
+  for (i=0;i<nX_in;i++) {
     Xdims[i] = MX; // それぞれの時系列データのサンプル数(次元数)が入った配列
   }
     
