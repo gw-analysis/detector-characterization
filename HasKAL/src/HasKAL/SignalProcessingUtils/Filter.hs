@@ -40,7 +40,7 @@ import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
-import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow)
+import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, trans)
 import qualified Numeric.LinearAlgebra.Data as ND
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
@@ -587,14 +587,14 @@ filtfiltX (num, denom) inputV =
       xf    = map VS.toList xf'
       -- Filter initial reflected signal:
       ic = ((order-1)><1) $ calcInitCond (num,denom)
-      (dum,zi) = filterX (denom,num) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
+      (dum,zi) = filterX (num, denom) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
       -- Use the final conditions of the initial part for the actual signal:
-      (ys,zs) = filterX (denom,num) zi "forward" inputV -- "s"teady state
-      (yf,zdum) = filterX (denom,num) zs "forward" xf'  -- "f"inal conditions
+      (ys,zs) = filterX (num, denom) zi "forward" inputV -- "s"teady state
+      (yf,zdum) = filterX (num, denom) zs "forward" xf'  -- "f"inal conditions
       -- Filter signal again in reverse order:
       yEdge = asRow $ (fromColumns yf) ND.! (nEdge-1)
-      (dum',zf) = filterX (denom,num) (map VS.toList (toColumns (ic * yEdge))) "reverse" yf
-   in fst $ filterX (denom,num) zf "reverse" ys
+      (dum',zf) = filterX (num, denom) (map VS.toList (toColumns (ic * yEdge))) "reverse" yf
+   in fst $ filterX (num, denom) zf "reverse" ys
 
 
 filtfiltX1d :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
@@ -651,10 +651,19 @@ foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -
 calcInitCond :: ([Double],[Double]) -> [Double]
 calcInitCond (num,denom) =
   let n = length num
-   in concat $ toLists $
-       (ident (n-1) - fromBlocks [[-((n-1)><1) (tail denom), fromBlocks [[ident (n-2)], [(1><(n-2)) $ replicate (n-2) 0]]]])
-        <\> ((((n-1)><1) (tail num)) - scale (head num) (((n-1)><1) (tail denom)))
-
+--   in concat $ toLists $
+--       (ident (n-1) - fromBlocks [[-((n-1)><1) (tail denom), fromBlocks [[ident (n-2)], [(1><(n-2)) $ replicate (n-2) 0]]]])
+--        <\> ((((n-1)><1) (tail num)) - scale (head num) (((n-1)><1) (tail denom)))
+      k = ident (n-1)
+      kcv= toColumns k
+      a = fromList (tail num)
+      k' = fromColumns (a:(tail kcv))
+      k0 = ((n-1)><(n-1)) (1:replicate ((n-1)*(n-1)-1) 0)
+      k''= k' + k0
+      y = zip (VS.toList (ND.flatten . trans $ k'')) [0,1..]
+      y'= [if i `elem` [(n-1),2*n-1..(n-1)*(n-1)] then -1.0 else x |(x,i)<-y]
+   in concat $ toLists $ trans $(trans $ ((n-1)><(n-1)) y') 
+        <\> ((((n-1)><1) (tail denom)) - scale (head denom) (((n-1)><1) (tail num))) 
 
 itow32 :: Int -> CUInt
 itow32 = fromIntegral
