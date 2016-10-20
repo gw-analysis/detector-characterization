@@ -114,7 +114,7 @@ downsampleUV fs newfs v =
     else
       UV.create $ do 
         vs <- new nvs
-        let v' =  UV.convert $ filtfilt lpf $ UV.convert v
+        let v' =  UV.convert $ filtfiltX1d lpf $ UV.convert v
             lpf = butter 4 fs newfs2 Low
             newfs2 = 2*fs*tan (pi*newfs/2/fs)
         loop v' vs 0 nvs
@@ -133,7 +133,7 @@ downsampleSV fs newfs v =
   if (fs/newfs<1) 
     then error "new sample rate should be <= original sample rate."
     else 
-      let v' = filtfilt lpf v
+      let v' = filtfiltX1d lpf v
           --lpf = butter 4 fs newfs2 Low
           lpf = chebyshev1 6 1 fs newfs2 Low
 --          newfs2 = 2*fs*tan (pi*newfs/2/fs)
