@@ -49,11 +49,11 @@ selectSegment dur_sec fpath = unsafePerformIO $ do
      in [(gps+i*dur_sec,dur_sec)|i<-[0..n-1]]
  
 
-excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> [(Int, Int)] -> [(Int, Int)]
-excludeOnePixelIsland f [] = []
-excludeOnePixelIsland f y@(x:xs) = case (length (intersect y (f x)) > 2) of
-  True -> intersect y (f x) ++ excludeOnePixelIsland f xs
-  False-> excludeOnePixelIsland f xs
+excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int, Int)] -> [(Int, Int)]
+excludeOnePixelIsland f n [] = []
+excludeOnePixelIsland f n y@(x:xs) = case (length (intersect y (f x)) >= n) of
+  True -> intersect y (f x) ++ excludeOnePixelIsland f n xs
+  False-> excludeOnePixelIsland f n xs
 
 
 taggingIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int,Int)] -> [[(Tile,ID)]]

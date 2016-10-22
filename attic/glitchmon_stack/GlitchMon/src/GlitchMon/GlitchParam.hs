@@ -18,6 +18,7 @@ data GlitchParam = GlitchParam
   , traindatlen :: Double -- [s]
   , whnFrequencyResolution    :: Double -- [s]
   , whtCoeff :: [([Double],  Double)]
+  , whnMethod :: WhnMethod
 -- * t-f expression
   , nfrequency :: Double -- 0.2*fs
   , ntimeSlide :: Double --0.03*fs
@@ -28,6 +29,7 @@ data GlitchParam = GlitchParam
   , clusterThres :: Double
   , celement :: (Int, Int) -> [(Int, Int)]
   , minimumClusterNum ::Int
+  , nNeighbor :: Int -- least number of neighbors of a pixcel
 -- * clean data finder
   , cdfInterval :: Int -- ^ interval[s] to run clean data finder (default 600[s])
   , cdfparameter :: CDFParam
@@ -39,6 +41,9 @@ data GlitchParam = GlitchParam
 -- * for debug
   , debugmode :: Int
   }
+
+data WhnMethod = TimeDomain | FrequencyDomain
+
 
 updateGlitchParam'segmentLength :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'segmentLength x a = x {segmentLength = a}
@@ -57,6 +62,9 @@ updateGlitchParam'whnFrequencyResolution x n = x {whnFrequencyResolution = n}
 
 updateGlitchParam'whtCoeff :: GlitchParam -> [([Double],  Double)] -> GlitchParam
 updateGlitchParam'whtCoeff x p = x {whtCoeff = p}
+
+updateGlitchParam'whnMethod :: GlitchParam -> WhnMethod -> GlitchParam
+updateGlitchParam'whnMethod x method = x {whnMethod = method}
 
 updateGlitchParam'nfrequency :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'nfrequency x n = x {nfrequency = n}
@@ -93,5 +101,8 @@ updateGlitchParam'refwave x w = x {refwave = w}
 
 updateGlitchParam'reftime :: GlitchParam -> Double -> GlitchParam
 updateGlitchParam'reftime x t = x {reftime = t}
+
+updateGlitchParam'nNeighbor :: GlitchParam -> Int -> GlitchParam
+updateGlitchParam'nNeighbor x param = x {nNeighbor = param}
 
 

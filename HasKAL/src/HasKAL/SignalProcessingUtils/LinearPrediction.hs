@@ -50,7 +50,7 @@ levinson p r = do
 whitening :: ([Double],Double) -> [Double]-> [Double]
 whitening (whnb,rho) x = 
   let whnb' = map mysqrt whnb   
-   in map (/sqrt rho) $ toList $ firFiltfiltV whnb' $ fromList x
+   in map (/sqrt rho) $ toList $ filtfiltX1d (whnb',(1.0:replicate (length whnb'-1) 0.0)) $ fromList x
 
 
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]

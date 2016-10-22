@@ -28,7 +28,6 @@ import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 import System.IO (hFlush, stdout)
 
-data WhnMethod = TimeDomain | FrequencyDomain
 
 
 part'DataConditioning :: WaveData
@@ -36,16 +35,17 @@ part'DataConditioning :: WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
-  let highpassed = filtfilt lpf (gwdata wave)
-      lpf = chebyshev1 2 0.1 fs newfs2 High
+  let highpassed = filtfiltX1d lpf (gwdata wave)
+      lpf = chebyshev1 4 1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
       out' = fromJust $ updateWaveDatagwdata wave highpassed   
   let whtcoeff = GP.whtCoeff param
+      wmethod   = GP.whnMethod param
   case (whtcoeff /= []) of
     False -> do 
-            out <- section'Whitening TimeDomain out'
+            out <- section'Whitening wmethod out'
             case GP.debugmode param of 
                  1 -> do
                   liftIO $ H3.spectrogramM H3.LogY
@@ -77,32 +77,33 @@ part'DataConditioning wave = do
                                    $ gwOnesidedPSDWaveData 0.2 out
                  _ -> liftIO $ Prelude.return ()
             return out
-    True  -> section'Whitening TimeDomain wave
+    True  -> section'Whitening wmethod wave
 
 
 section'LineRemoval = id
 
 
-section'Whitening :: WhnMethod -> WaveData -> StateT GP.GlitchParam IO WaveData
+section'Whitening :: GP.WhnMethod -> WaveData -> StateT GP.GlitchParam IO WaveData
 section'Whitening opt wave = case opt of
-  TimeDomain 
+  GP.TimeDomain 
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-          let whned = applyWhitening TimeDomain whtCoeffList wave
+          let whned = applyWhitening GP.TimeDomain whtCoeffList wave
               nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
           return whned
-  FrequencyDomain
-    -> do param <- get
-          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
-          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
-          let whned = applyWhitening TimeDomain whtCoeffList wave
-              nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
-          put $ GP.updateGlitchParam'refpsd param
-            (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
-          return whned
+  GP.FrequencyDomain
+    -> return wave
+--    -> do param <- get
+--          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
+--          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
+--          let whned = applyWhitening GP.TimeDomain whtCoeffList wave
+--              nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
+--          put $ GP.updateGlitchParam'refpsd param
+--            (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
+--          return whned
 
 
 calcWhiteningCoeff :: GP.GlitchParam
@@ -134,17 +135,17 @@ calcWhiteningCoeffCore param (whtCoeffList, train) =
 checkingWhitening wave = std (NL.toList (gwdata wave))  < 2.0
 
 
-applyWhitening :: WhnMethod
+applyWhitening :: GP.WhnMethod
                -> [([Double],  Double)]
                -> WaveData
                -> WaveData
 applyWhitening opt [] wave = wave
 applyWhitening opt (x:xs) wave = case opt of
-  TimeDomain -> 
+  GP.TimeDomain -> 
 --    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
-    applyWhitening TimeDomain xs $ whiteningWaveData x wave
-  FrequencyDomain -> 
-    applyWhitening FrequencyDomain xs $ whiteningWaveData' x wave
+    applyWhitening GP.TimeDomain xs $ whiteningWaveData x wave
+  GP.FrequencyDomain -> 
+    applyWhitening GP.FrequencyDomain xs $ whiteningWaveData' x wave
 
 
 {--------------------

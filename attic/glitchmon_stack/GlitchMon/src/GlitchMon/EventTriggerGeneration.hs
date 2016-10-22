@@ -42,36 +42,64 @@ section'TimeFrequencyExpression :: WaveData
 section'TimeFrequencyExpression whnWaveData = do
   liftIO $ print "start time-frequency expansion" >> hFlush stdout
   param <- get
-  let refpsd = GP.refpsd param
-      fs = samplingFrequency whnWaveData
-      nfreq = floor $ GP.nfrequency param * fs
-      nfreq2 = nfreq `div` 2
-      ntimeSlide = floor $ GP.ntimeSlide param * fs
-      ntime = ((NL.dim $ gwdata whnWaveData) - nfreq) `div` ntimeSlide
-      snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
-      snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
-      snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
-                  (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
-        where 
-          calcSpec tindx = NL.zipVectorWith (/) 
-            (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
-            (snd $ refpsd)
---          calcSpec tindx = 
---            snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs
-      out = (snrMatT', snrMatF, snrMatP)
-  case GP.debugmode param of
-    1 -> do
-      liftIO $ H3.spectrogramM H3.LogY
-                               H3.COLZ
-                               "mag"
-                               "pixelSNR spectrogram"
-                               "production/pixelSNR_spectrogram.png"
-                                   ((0, 0), (20, 400))
-                               out
-    _ -> liftIO $ Prelude.return () 
-
-  return out
+  let wmethod   = GP.whnMethod param
+  case wmethod of
+    GP.TimeDomain -> do
+      let refpsd = GP.refpsd param
+          fs = samplingFrequency whnWaveData
+          nfreq = floor $ GP.nfrequency param * fs
+          nfreq2 = nfreq `div` 2
+          ntimeSlide = floor $ GP.ntimeSlide param * fs
+          ntime = ((NL.dim $ gwdata whnWaveData) - nfreq) `div` ntimeSlide
+          snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
+          snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
+          snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
+          snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
+                      (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+            where 
+              calcSpec tindx = NL.zipVectorWith (/) 
+                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
+                (snd $ refpsd)
+          out = (snrMatT', snrMatF, snrMatP)
+      case GP.debugmode param of
+        1 -> do
+          liftIO $ H3.spectrogramM H3.LogY
+                                   H3.COLZ
+                                   "mag"
+                                   "pixelSNR spectrogram"
+                                   "production/pixelSNR_spectrogram_WhnTD.png"
+                                       ((0, 0), (20, 400))
+                                   out
+        _ -> liftIO $ Prelude.return () 
+      return out
+    GP.FrequencyDomain -> do
+      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
+          fs = samplingFrequency whnWaveData
+          nfreq = floor $ GP.nfrequency param * fs
+          nfreq2 = nfreq `div` 2
+          ntimeSlide = floor $ GP.ntimeSlide param * fs
+          ntime = ((NL.dim $ gwdata whnWaveData) - nfreq) `div` ntimeSlide
+          snrMatF = scale (fs/fromIntegral nfreq) $ fromList [0.0, 1.0..fromIntegral nfreq2-1]
+          snrMatT = scale (fromIntegral ntimeSlide/fs) $ fromList [0.0, 1.0..fromIntegral ntime -1]
+          snrMatT' = mapVector (+deformatGPS (startGPSTime whnWaveData)) snrMatT
+          snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
+                      (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
+            where 
+              calcSpec tindx = NL.zipVectorWith (/) 
+                (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
+                (snd $ refpsd)
+          out = (snrMatT', snrMatF, snrMatP)
+      case GP.debugmode param of
+        1 -> do
+          liftIO $ H3.spectrogramM H3.LogY
+                                   H3.COLZ
+                                   "mag"
+                                   "pixelSNR spectrogram"
+                                   "production/pixelSNR_spectrogram_WhnFD.png"
+                                       ((0, 0), (20, 400))
+                                   out
+        _ -> liftIO $ Prelude.return () 
+      return out
 
 
 section'Clustering :: Spectrogram
@@ -79,7 +107,8 @@ section'Clustering :: Spectrogram
 section'Clustering (snrMatT, snrMatF, snrMatP') = do
   liftIO $ print "start seedless clustering" >> hFlush stdout
   param <- get
-  let l = NL.toList $ NL.flatten snrMatP'
+  let n = GP.nNeighbor param
+      l = NL.toList $ NL.flatten snrMatP'
       l' = (NL.dim snrMatF><NL.dim snrMatT) l
       dcted' = dct2d l'
       ncol = cols l'
@@ -109,7 +138,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   snrMat `deepseq` Prelude.return ()
   let (tt,ff,mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
-  let survivor = nub' $ excludeOnePixelIsland cfun thrsed
+  let survivor = nub' $ excludeOnePixelIsland cfun n thrsed
 --  liftIO $ print "evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor

@@ -112,7 +112,8 @@ sink param chname = do
                                 fs = GP.samplingFrequency param'
                                 fsorig = samplingFrequency wave
                             if (fs /= fsorig)
-                              then do let wave' = downsampleWaveData fs wave
+                              then do liftIO $ print "start downsampling" >> hFlush stdout
+                                      let wave' = downsampleWaveData fs wave
                                           dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                       case GP.debugmode param of 
@@ -121,7 +122,7 @@ sink param chname = do
                                             H3.COLZ
                                             "mag"
                                             "whitened data"
-                                            "production/gw150914_ds_sprcgram.png"
+                                            "production/ds_sprcgram.png"
                                                   ((0, 0), (20, 400))
                                             $ gwspectrogramWaveData 0.19 0.2 wave'
                                            liftIO $ H.plot H.Linear
@@ -131,7 +132,7 @@ sink param chname = do
                                             ("time","amplitude")
                                                   0.05
                                             "whitened data"
-                                            "production/gw150914_ds_timeseries.png"
+                                            "production/ds_timeseries.png"
                                                   ((16.05,16.2),(0,0))
                                             $ zip [0,1/fs..] (NL.toList $ gwdata wave')
                                            liftIO $ H.plotV H.LogXY
@@ -141,7 +142,7 @@ sink param chname = do
                                             ("frequency [Hz]","ASD [Hz^-1/2]")
                                                   0.05
                                             "whitened data spectrum"
-                                            "production/gw150914_ds_whitened_spectrum.png"
+                                            "production/ds_spectrum.png"
                                                   ((0,0),(0,0))
                                             $ gwOnesidedPSDWaveData 1 wave'
                                          _ -> liftIO $ Prelude.return ()

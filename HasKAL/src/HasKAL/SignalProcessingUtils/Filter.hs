@@ -570,8 +570,8 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
 -- | filtfiltX (num, denom) inputV 
 filtfiltX :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
 filtfiltX (num, denom) inputV = 
-  let nb = length denom
-      na = length num
+  let nb = length num
+      na = length denom
       order = max nb na
       inputM = fromColumns inputV
       -- Use a reflection to extrapolate signal at beginning and end to reduce edge effects
@@ -615,11 +615,11 @@ filterX (num, denom) z dir inputV =
       mz= length . head $ z
       num' = d2cd num
       denom' = d2cd denom
-      blen = length denom'
-      alen = length num'
+      blen = length num'
+      alen = length denom'
       z' = d2cd . concat $ z
       dir' = unsafePerformIO $ newCString dir
-      (vv,zz) = filterXCore denom' blen num' alen z' dir' m n inputV' 
+      (vv,zz) = filterXCore num' blen denom' alen z' dir' m n inputV' 
    in (flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
 
 
