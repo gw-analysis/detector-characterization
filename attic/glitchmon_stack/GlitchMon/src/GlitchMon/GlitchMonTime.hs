@@ -118,13 +118,15 @@ sink param chname = do
       let n = 0
       maybewave <- liftIO $ kagraWaveDataGet gps dt chname
       case maybewave of
-        Nothing -> do liftIO $ appendFile "./missingData.lst" $ show gps ++ " " ++ show dt
+        Nothing -> do liftIO $ print "Missing data found. writing GPS info in missingData.lst."
+                      liftIO $ appendFile "./missingData.lst" $ show gps ++ " " ++ show dt
                       sink param chname
         Just wave -> do let param' = GP.updateGlitchParam'channel param chname
                             fs = GP.samplingFrequency param'
                             fsorig = samplingFrequency wave
                         if (fs /= fsorig)
-                          then do let wave' = downsampleWaveData fs wave
+                          then do liftIO $ print "start downsampling" >> hFlush stdout
+                                  let wave' = downsampleWaveData fs wave
                                       dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                   s <- liftIO $ timeRun chname wave' param'2
@@ -151,7 +153,8 @@ timeRun chname w param = do
             cleanDataFinder cdfp chname (formatGPS (deformatGPS strtGps + seglen), seglen)
           case maybecdlist of
             Nothing -> do 
-              liftIO $ print "Warning: no clean data in the given gps interval. Instead,last part of the segment will be used."
+              liftIO $ print "Warning: no clean data in the given gps interval."
+              liftIO $ print " Instead,last part of the segment will be used."
               let traindatlen = GP.traindatlen param
                   startcgps = fromIntegral $ truncate $(deformatGPS strtGps) 
                     + seglen - traindatlen
@@ -174,7 +177,8 @@ timeRun chname w param = do
              let cleandata = [(t,b)|(t,b)<-cdlist,b==True]
              case cleandata of
               [] -> do
-                liftIO $ print "Warning: all data is not clean in the given gps interval. Instead,last part of the segment will be used."
+                liftIO $ print "Warning: all data is not clean in the given gps interval." 
+                liftIO $ print "Instead,last part of the segment will be used."
                 let traindatlen = GP.traindatlen param
                     startcgps = fromIntegral $ truncate $(deformatGPS strtGps)
                       + seglen - traindatlen
