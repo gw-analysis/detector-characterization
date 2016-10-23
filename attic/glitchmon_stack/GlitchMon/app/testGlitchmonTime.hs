@@ -8,14 +8,14 @@ import HasKAL.DataBaseUtils.FrameFull.Data
 import System.Environment (getArgs)
 
 main = do
-  fname <- getArgs >>= \args -> case (length args) of
-    1 -> return (head args)
-    _ -> error "Usage runGlitchMonTime fname"
+  (chname, fname) <- getArgs >>= \args -> case (length args) of
+    2 -> return (head args, args!!1)
+    _ -> error "Usage: runGlitchMonTime chname fname"
   let dfactor = 4 ::Int
   let fs = fromIntegral (16384 `div` dfactor) :: Double
   let param = GlitchParam
                { segmentLength = 32
-               , channel = "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
+               , channel = chname -- "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
                , samplingFrequency = fs
              -- * whitening
                , traindatlen = 30.0 :: Double --[s]

@@ -8,16 +8,16 @@ import HasKAL.DataBaseUtils.FrameFull.Data
 import System.Environment ( getArgs)
 
 main = do
-  fname <- getArgs >>= \args -> case (length args) of
-    1 -> return (head args)
-    _ -> error "Usage runGlitchMonFile fname"
+  (chname, fname) <- getArgs >>= \args -> case (length args) of
+    2 -> return (head args, args!!1)
+    _ -> error "Usage runGlitchMonFile chname fname"
 
   let dfactor = 4
   let fs = fromIntegral (16384 `div` dfactor) :: Double
   let param = GlitchParam
                { segmentLength = 32
 --               , channel = "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
-               , channel = "H1:LOSC-STRAIN"
+               , channel = chname --"H1:LOSC-STRAIN"
                , samplingFrequency = fs
              -- * whitening
                , traindatlen = 30 :: Double -- [s] must be > 2 * fs/whnFrequencyResolution
@@ -53,7 +53,8 @@ main = do
               }
 
 
-  runGlitchMonFile param (channel param) "/data/ligo/er8/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
+  runGlitchMonFile param (channel param) fname
+--"/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 --  runGlitchMonFile param (channel param) "/data/kagra/raw/full/K-K1_C-1144374208-32.gwf"
 
 
