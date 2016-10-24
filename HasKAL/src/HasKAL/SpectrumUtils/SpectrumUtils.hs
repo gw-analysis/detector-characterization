@@ -33,6 +33,9 @@ import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 import HasKAL.WaveUtils (WaveData(..))
 
+
+psdMethod = MedianAverage
+
 {- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
 gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
@@ -44,7 +47,7 @@ gwspectrogram noverlap nfft fs x = genTFData tV freqV spec
 
 
 gwpsd :: [Double]-> Int -> Double -> [(Double, Double)]
-gwpsd dat nfft fs = gwpsdCore Welch dat nfft fs Hann
+gwpsd dat nfft fs = gwpsdCore psdMethod dat nfft fs Hann
 
 
 gwpsdCore :: PSDMETHOD -> [Double] -> Int -> Double -> WindowType -> [(Double, Double)]
@@ -80,7 +83,7 @@ gwspectrogramV' noverlap nfft fs x = (tV, freqV, specgram)
 
 
 gwpsdV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
-gwpsdV dat nfft fs = gwpsdCoreV Welch dat nfft fs Hann
+gwpsdV dat nfft fs = gwpsdCoreV psdMethod dat nfft fs Hann
 
 
 gwpsdCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
@@ -115,16 +118,12 @@ gwpsdWelchV dat nfft fs w = do
 
 gwpsdMedianAverageCoreV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwpsdMedianAverageCoreV dat nfft fs w = do
-  let --ns = 2*(length dat) `div` nfft - 1 :: Int
-      -- number of sample for overwrapping
-      --delta = div (length dat) 2 :: Int
-      -- calculate median of power spectrum at each frequency bin
-      distatFreqOdd = toColumns . fromRows $ (psdOdd dat nfft w) :: [Vector Double]
+  let distatFreqOdd = toColumns . fromRows $ (psdOdd' dat nfft w) :: [Vector Double]
       nsodd = length distatFreqOdd
       medianListOdd' = map median $ map (sort . toList) distatFreqOdd
       medianListOdd = map (/medianBiasFactor nsodd) medianListOdd'
 
-      distatFreqEven= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
+      distatFreqEven= toColumns . fromRows $ (psdEven' dat nfft w) :: [Vector Double]
       nseven = length distatFreqEven
       medianListEven' =  map median $ map (sort . toList) distatFreqEven
       medianListEven= map (/medianBiasFactor nseven) medianListEven'
@@ -145,12 +144,13 @@ gwOnesidedPSDWaveData fftSec w = gwOnesidedPSDV (gwdata w) (truncate $ fs * fftS
   where fs = samplingFrequency w
 
 gwOnesidedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
-gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV Welch dat nfft fs Hann
+gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV psdMethod dat nfft fs Hann
 
 
 gwOnesidedPSDCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwOnesidedPSDCoreV method dat nfft fs w
   | method==Welch = gwOnesidedPSDWelch dat nfft fs w
+  | method==MedianAverage = gwOnesidedPSDMedianAverage dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
 
@@ -168,6 +168,39 @@ gwOnesidedPSDWelch dat nfft fs w =
      mapApplyWindowFunction windowtype
        | windowtype==Hann = map (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
+
+
+gwOnesidedPSDMedianAverage :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDMedianAverage dat nfft fs w = do
+  let distatFreqOdd' = toColumns . fromRows $ (psdOdd dat nfft w) :: [Vector Double]
+      nsodd' = length distatFreqOdd
+      distatFreqOdd | nsodd' `mod` 2 == 0 = tail distatFreqOdd'
+                    | nsodd' `mod` 2 == 1 = distatFreqOdd'
+                    | otherwise = error "something wrong"
+      nsodd | nsodd' `mod` 2 == 0 = nsodd'-1
+            | nsodd' `mod` 2 == 1 = nsodd'
+            | otherwise = error "something wrong"
+      medianListOdd' = map median $ map (sort . toList) distatFreqOdd
+      medianListOdd = map (/medianBiasFactor nsodd) medianListOdd'
+
+      distatFreqEven'= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
+      nseven' = length distatFreqEven
+      distatFreqEven | nseven `mod` 2 == 0 = tail distatFreqEven'
+                     | nseven `mod` 2 == 1 = distatFreqEven'
+                     | otherwise = error "something wrong" 
+      nseven | nseven' `mod` 2 == 0 = nseven'-1
+             | nseven' `mod` 2 == 1 = nseven'
+             | otherwise = error "something wrong"
+      medianListEven' =  map median $ map (sort . toList) distatFreqEven
+      medianListEven= map (/medianBiasFactor nseven) medianListEven'
+      psdgain = 2.0/(fromIntegral nfft * fs)
+
+      medianAverageSpectrum = scale (psdgain/fromIntegral (nsodd+nseven)) $ fromList
+        $ zipWith (+) (map (*(fromIntegral nsodd)) medianListOdd) (map (*(fromIntegral nseven)) medianListEven)
+
+      -- set corresponding frequency
+      fvec = linspace (VS.length medianAverageSpectrum) (0, fs/2) :: Vector Double
+   in (fvec, medianAverageSpectrum)
 
 
 gwOnesidedPSDVP :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
@@ -228,29 +261,42 @@ mkChunks vIn n = mkChunksCore vIn n (VS.length vIn `div` n)
     mkChunksCore vIn n m = VS.slice 0 n vIn :  mkChunksCore (VS.drop n vIn) n (m-1)
 
 
---psdOdd:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
 psdOdd:: Vector Double -> Int -> WindowType -> [Vector Double]
 psdOdd dat nfft w = do
-  let ndat = dim dat :: Int
-      maxitr =  ndat `div` nfft
-      datlist = takesV (replicate maxitr nfft) dat :: [Vector Double]
---      power = forM datlist $ \x -> calcPower x fs w
---  forM power $ \x -> zipVector (linspace nfft (0, fs)) x
-  map (`calcPower` w) datlist
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      ffted = mapFFT . mapApplyWindowFunction w $ datlist
+   in map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+   where
+     mapFFT = map dftRC1d
+     mapApplyWindowFunction windowtype
+       | windowtype==Hann = map (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
 
 
---psdEven:: [Double] -> Int -> Double -> WindowType -> [Vector (Double, Double)]
 psdEven:: Vector Double -> Int -> WindowType -> [Vector Double]
 psdEven dat' nfft w = do
   let dat = subVector nfft2 (dim dat' - nfft2) dat'
       nfft2 = div nfft 2
-  psdOdd dat nfft w
+   in psdOdd dat nfft w
+
+
+psdOdd' :: Vector Double -> Int -> WindowType -> [Vector Double]
+psdOdd' dat nfft w = do
+  let datlist = mkChunks dat nfft :: [Vector Double]
+   in map (`calcPower` w) datlist
+
+psdEven' :: Vector Double -> Int -> WindowType -> [Vector Double]
+psdEven' dat' nfft w = do
+  let dat = subVector nfft2 (dim dat' - nfft2) dat'
+      nfft2 = div nfft 2
+   in psdOdd dat nfft w
 
 
 calcPower :: Vector Double -> WindowType -> Vector Double
 calcPower dat w = abs . fst . fromComplex $ fftVal * conj fftVal
   where
     fftVal = dft1d . applyRealtoComplex . applyWindowFunction w $ dat :: Vector (Complex Double)
+
 
 applyRealtoComplex :: Vector Double -> Vector (Complex Double)
 applyRealtoComplex x = toComplex $ tuplify2 (constant 0 nfft) x
