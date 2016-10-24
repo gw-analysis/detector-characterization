@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module HasKAL.SignalProcessingUtils.WindowFunction
 
 ( module HasKAL.SignalProcessingUtils.WindowType
@@ -10,6 +12,8 @@ module HasKAL.SignalProcessingUtils.WindowFunction
 )
 where
 
+
+import Data.List (foldl')
 import Prelude hiding (cos)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Special
@@ -17,7 +21,9 @@ import HasKAL.SignalProcessingUtils.WindowType
 
 
 windowed :: Vector Double -> Vector Double -> Vector Double
-windowed w x = w * x
+windowed w x = scale (1/g) $ w * x
+  where
+    g = sqrt . mean $ toList (mapVector (**2) w)
 
 hanning :: Int -> Vector Double
 hanning = makeWindow hanning'
@@ -67,5 +73,7 @@ kaiser' :: Double -> Double -> Double -> Double
 kaiser' a m n = bessel_J0(pi * a * sqrt(1-(2*x-1)**2))/bessel_J0(pi*a)
   where x = n/m
 
+mean :: Floating a => [a] -> a
+mean x = fst $ foldl' (\(!m, !n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
 
 
