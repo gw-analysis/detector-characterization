@@ -43,6 +43,7 @@ section'TimeFrequencyExpression whnWaveData = do
   liftIO $ print "start time-frequency expansion" >> hFlush stdout
   param <- get
   let wmethod   = GP.whnMethod param
+      dir = GP.debugDir param
   case wmethod of
     GP.TimeDomain -> do
       let refpsd = GP.refpsd param
@@ -67,7 +68,7 @@ section'TimeFrequencyExpression whnWaveData = do
                                    H3.COLZ
                                    "mag"
                                    "pixelSNR spectrogram"
-                                   "production/pixelSNR_spectrogram_WhnTD.png"
+                                   (dir++"/pixelSNR_spectrogram_WhnTD.png")
                                        ((0, 0), (20, 400))
                                    out
         _ -> liftIO $ Prelude.return () 
@@ -95,7 +96,7 @@ section'TimeFrequencyExpression whnWaveData = do
                                    H3.COLZ
                                    "mag"
                                    "pixelSNR spectrogram"
-                                   "production/pixelSNR_spectrogram_WhnFD.png"
+                                   (dir++"/pixelSNR_spectrogram_WhnFD.png")
                                        ((0, 0), (20, 400))
                                    out
         _ -> liftIO $ Prelude.return () 
@@ -146,30 +147,29 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
 --  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
-  survivor `deepseq` Prelude.return ()
   let survivorValues = map (\x->mg@@>x) survivor
 --  liftIO $ print "evaluating survivorValues" >> hFlush stdout
   survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
-       $ updateMatrixElement zeroMatrix survivor survivorValues
+        $ updateMatrixElement zeroMatrix survivor survivorValues
 --  liftIO $ print "evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
-  case GP.debugmode param of
-    1 -> do
---      liftIO $ print ncol
-      liftIO $ H3.spectrogramM H3.LogY
-                               H3.COLZ
-                               "mag"
-                               "clustered PixelSNR spectrogram"
-                               "production/cluster_spectrogram.png"
-                                   ((0, 0), (20, 400))
-                               newM
-      liftIO $ print "clustered pixels :"
-      liftIO $ print survivorwID          
-    _ -> liftIO $ Prelude.return () 
+--  case GP.debugmode param of
+--    1 -> do
+----      liftIO $ print ncol
+--      liftIO $ H3.spectrogramM H3.LogY
+--                               H3.COLZ
+--                               "mag"
+--                               "clustered PixelSNR spectrogram"
+--                               "production/cluster_spectrogram.png"
+--                                   ((0, 0), (20, 400))
+--                               newM
+--      liftIO $ print "clustered pixels :"
+--      liftIO $ print survivorwID          
+--    _ -> liftIO $ Prelude.return () 
 
-  case length survivor of 
+  case length survivorwID of 
     0 -> do liftIO $ print "# of detected islands is" >> hFlush stdout
             liftIO $ print "0" >> hFlush stdout
     _ -> do liftIO $ print "# of detected islands is" >> hFlush stdout

@@ -129,12 +129,45 @@ sink param chname = do
                                   let wave' = downsampleWaveData fs wave
                                       dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  s <- liftIO $ timeRun chname wave' param'2
+                                  case GP.debugmode param of 
+                                       1 -> do
+                                        let dir = GP.debugDir param 
+--                                        liftIO $ H.plot H.Linear
+--                                                        H.Line
+--                                                            1
+--                                                        H.RED
+--                                                       ("time","amplitude")
+--                                                            0.05
+--                                                        "whitened data"
+--                                                        "production/timeseries_DS.png"
+--                                                            ((16.05,16.2),(0,0))
+--                                                        $ zip [0,1/4096..] (NL.toList $ gwdata wave')
+                                        liftIO $ H.plotV H.LogXY
+                                                         H.Line
+                                                             1
+                                                         H.RED
+                                                         ("frequency [Hz]","ASD [Hz^-1/2]")
+                                                              0.05
+                                                         "whitened data spectrum"
+                                                         (dir++"/spectrum_DS.png")
+                                                             ((0,0),(0,0))
+                                                         $ gwOnesidedPSDWaveData 0.2 wave'
+                                       _ -> liftIO $ Prelude.return ()
+--                                  s <- liftIO $ timeRun chname wave' param'2
+                                  s <- liftIO $ fileRun wave' param'2
                                   sink s chname
                           else do let dataGps = (fst (startGPSTime wave),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                  s <- liftIO $ timeRun chname wave param'2
+                                  s <- liftIO $ fileRun wave param'2
                                   sink s chname
+
+
+fileRun w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       traindatlen = GP.traindatlen param ::Double
+       fs = GP.samplingFrequency param ::Double
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
+   liftIO $ glitchMon param' w
 
 
 timeRun :: Channel

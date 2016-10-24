@@ -9,7 +9,7 @@ extra-lib-dirs:
 - /home/detchar/tools/lib
 ghc-options:
   "*": -fPIC -fobject-code
-
+cc-options: -Wall -O2 -fPIC
 # Local packages, usually specified by relative directory name
 packages:
 - .

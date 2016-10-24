@@ -40,6 +40,7 @@ data GlitchParam = GlitchParam
   , reftime :: Double
 -- * for debug
   , debugmode :: Int
+  , debugDir :: String
   }
 
 data WhnMethod = TimeDomain | FrequencyDomain
@@ -104,5 +105,8 @@ updateGlitchParam'reftime x t = x {reftime = t}
 
 updateGlitchParam'nNeighbor :: GlitchParam -> Int -> GlitchParam
 updateGlitchParam'nNeighbor x param = x {nNeighbor = param}
+
+updateGlitchParam'debugDir :: GlitchParam -> String -> GlitchParam
+updateGlitchParam'debugDir x param = x {debugDir = param}
 
 

@@ -9,6 +9,7 @@ extra-include-dirs:
 - /home/detchar/tools/include
 ghc-options:
   "*": -fPIC -fobject-code
+cc-options: -Wall -O2 -fPIC
 extra-lib-dirs:
 - /home/detchar/tools/lib
 packages:

@@ -64,7 +64,8 @@ library
 executable runGlitchMonFile
   hs-source-dirs:      app
   main-is:             testGlitchmonFile.hs
---  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
   build-depends:       
     base >= 4.7 && < 5
    ,GlitchMon==0.1.0.0
@@ -74,7 +75,8 @@ executable runGlitchMonFile
 executable runGlitchMonTime
   hs-source-dirs:      app
   main-is:             testGlitchmonTime.hs
---  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
    ,GlitchMon==0.1.0.0
@@ -85,7 +87,8 @@ executable runGlitchMonTime
 executable plotGlitchEvent
   hs-source-dirs:      app
   main-is:             plotGlitchEvent.hs
---  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
    ,GlitchMon==0.1.0.0
@@ -96,7 +99,8 @@ executable plotGlitchEvent
 executable plot2DGlitchParameters
   hs-source-dirs:      app
   main-is:             plot2DGlitchParameters.hs
---  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
    ,GlitchMon==0.1.0.0

@@ -40,42 +40,43 @@ part'DataConditioning wave = do
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
-      out' = fromJust $ updateWaveDatagwdata wave highpassed   
+      out' = fromJust $ updateWaveDatagwdata wave highpassed
+      dir = GP.debugDir param  
   let whtcoeff = GP.whtCoeff param
       wmethod   = GP.whnMethod param
   case (whtcoeff /= []) of
     False -> do 
             out <- section'Whitening wmethod out'
-            case GP.debugmode param of 
-                 1 -> do
-                  liftIO $ H3.spectrogramM H3.LogY
-                                           H3.COLZ
-                                           "mag"
-                                           "whitened data"
-                                           "production/whitened_spectrogram.png"
-                                                ((0, 0), (20, 400))
-                                           $ gwspectrogramWaveData 0.1 0.2 out
-                  liftIO $ H.plot H.Linear
-                                  H.Line
-                                      1
-                                  H.RED
-                                  ("time","amplitude")
-                                      0.05
-                                  "whitened data"
-                                  "production/whitened_timeseries.png"
-                                      ((16.05,16.2),(0,0))
-                                  $ zip [0,1/4096..] (NL.toList $ gwdata out)
-                  liftIO $ H.plotV H.LogXY
-                                   H.Line
-                                       1
-                                   H.RED
-                                   ("frequency [Hz]","ASD [Hz^-1/2]")
-                                        0.05
-                                   "whitened data spectrum"
-                                   "production/whitened_spectrum.png"
-                                       ((0,0),(0,0))
-                                   $ gwOnesidedPSDWaveData 0.2 out
-                 _ -> liftIO $ Prelude.return ()
+--            case GP.debugmode param of 
+--                 1 -> do
+--                  liftIO $ H3.spectrogramM H3.LogY
+--                                           H3.COLZ
+--                                           "mag"
+--                                           "whitened data"
+--                                           "production/whitened_spectrogram.png"
+--                                                ((0, 0), (20, 400))
+--                                           $ gwspectrogramWaveData 0.1 0.2 out
+--                  liftIO $ H.plot H.Linear
+--                                  H.Line
+--                                      1
+--                                  H.RED
+--                                  ("time","amplitude")
+--                                      0.05
+--                                  "whitened data"
+--                                  "production/whitened_timeseries.png"
+--                                      ((16.05,16.2),(0,0))
+--                                  $ zip [0,1/4096..] (NL.toList $ gwdata out)
+--                  liftIO $ H.plotV H.LogXY
+--                                   H.Line
+--                                       1
+--                                   H.RED
+--                                   ("frequency [Hz]","ASD [Hz^-1/2]")
+--                                        0.05
+--                                   "whitened data spectrum"
+--                                   (dir++"/whitened_spectrum.png")
+--                                       ((0,0),(0,0))
+--                                   $ gwOnesidedPSDWaveData 0.2 out
+--                 _ -> liftIO $ Prelude.return ()
             return out
     True  -> section'Whitening wmethod wave
 

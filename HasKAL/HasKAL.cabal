@@ -206,6 +206,7 @@ library
     src/HasKAL/SignalProcessingUtils/filterFunctions.c
     src/HasKAL/SignalProcessingUtils/filterX.c
     -- "extern C" しているのでCとして扱っておそらく大丈夫
+  cc-options: -Wall -O2 -fPIC
 
   -- Other library packages from which modules are imported.
   build-depends:
@@ -315,7 +316,8 @@ executable kagraDataFind
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -Wall -O2 -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 executable kagraDataPoint
@@ -351,7 +353,9 @@ executable kagraDataPoint
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -Wall -O2  -fPIC -fobject-code
+
+---threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 executable showChannels
@@ -387,7 +391,9 @@ executable showChannels
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+---threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -424,7 +430,9 @@ executable showChannelandSamplingRate
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+---threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -462,7 +470,8 @@ executable localtime2gps
    ,regex-compat==0.95.1
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2  -Wall -fPIC -fobject-code
+---threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -499,7 +508,8 @@ executable kagraDailyDataFind
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -536,7 +546,8 @@ executable gps2localtime
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -573,7 +584,8 @@ executable getCurrentGPS
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -613,7 +625,8 @@ executable showKagraData
    ,conduit==1.2.4.2
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -653,7 +666,8 @@ executable updateFrameFullDB
    ,conduit==1.2.4.2
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -693,7 +707,8 @@ executable updateFrameFullDBfromCache
    ,conduit==1.2.4.2
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -731,7 +746,8 @@ executable runDailySummay
    ,vector
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -769,7 +785,8 @@ executable runDailyFileTransfer
    ,vector
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -806,7 +823,8 @@ executable db2cache
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -846,7 +864,8 @@ executable showKagraSpectrum
    ,conduit==1.2.4.2
    ,process==1.2.0.0
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -883,7 +902,8 @@ executable showCurrentChannels
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -920,7 +940,8 @@ executable existChannel
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -957,7 +978,8 @@ executable existChannelNow
    ,transformers
    ,vector
 
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
   extra-libraries: Frame
 
 
@@ -969,7 +991,8 @@ executable runRayleighMonSTDIN
    ,HasKAL
    ,hmatrix
    ,split==0.2.2
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 
 executable runRayleighMonDat
@@ -980,7 +1003,8 @@ executable runRayleighMonDat
    ,HasKAL
    ,hmatrix
    ,split==0.2.2
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 
 executable runSensMon
@@ -992,7 +1016,7 @@ executable runSensMon
    ,hmatrix
    ,vector
    ,HDBC-mysql==0.6.6.2
-
+  ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runSensMonDat
   hs-source-dirs: exe-src
@@ -1003,7 +1027,8 @@ executable runSensMonDat
    ,hmatrix
    ,split==0.2.2
    ,vector
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 executable runSensMonSTDIN
   hs-source-dirs: exe-src
@@ -1014,7 +1039,8 @@ executable runSensMonSTDIN
    ,hmatrix
    ,split==0.2.2
    ,vector
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 
 executable plotHistogram
@@ -1029,6 +1055,7 @@ executable plotHistogram
     ,lens==4.7.0.1
     ,HasKAL
     ,vector
-  ghc-options: -O2 -threaded -rtsopts -eventlog
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 

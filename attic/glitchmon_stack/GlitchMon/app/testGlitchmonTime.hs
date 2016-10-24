@@ -42,7 +42,8 @@ main = do
 --               , refwave =
                , reftime = 0
                -- * for debug
-               , debugmode = 0
+               , debugmode = 1
+               , debugDir = "debug"
                  }
 
       cdfp = CDFParam

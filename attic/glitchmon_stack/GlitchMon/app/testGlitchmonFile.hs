@@ -42,6 +42,7 @@ main = do
                , reftime = 0
              -- * for debug
                , debugmode = 1
+               , debugDir = "debug"
                }                                 
       cdfp = CDFParam
               { cdf'samplingFrequency = fs
