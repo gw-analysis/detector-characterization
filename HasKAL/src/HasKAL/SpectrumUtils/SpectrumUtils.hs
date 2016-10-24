@@ -118,13 +118,25 @@ gwpsdWelchV dat nfft fs w = do
 
 gwpsdMedianAverageCoreV :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwpsdMedianAverageCoreV dat nfft fs w = do
-  let distatFreqOdd = toColumns . fromRows $ (psdOdd' dat nfft w) :: [Vector Double]
-      nsodd = length distatFreqOdd
+  let distatFreqOdd' = toColumns . fromRows $ (psdOdd dat nfft w) :: [Vector Double]
+      nsodd' = length distatFreqOdd
+      distatFreqOdd | nsodd' `mod` 2 == 0 = tail distatFreqOdd'
+                    | nsodd' `mod` 2 == 1 = distatFreqOdd'
+                    | otherwise = error "something wrong"
+      nsodd | nsodd' `mod` 2 == 0 = nsodd'-1
+            | nsodd' `mod` 2 == 1 = nsodd'
+            | otherwise = error "something wrong"
       medianListOdd' = map median $ map (sort . toList) distatFreqOdd
       medianListOdd = map (/medianBiasFactor nsodd) medianListOdd'
 
-      distatFreqEven= toColumns . fromRows $ (psdEven' dat nfft w) :: [Vector Double]
-      nseven = length distatFreqEven
+      distatFreqEven'= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
+      nseven' = length distatFreqEven
+      distatFreqEven | nseven `mod` 2 == 0 = tail distatFreqEven'
+                     | nseven `mod` 2 == 1 = distatFreqEven'
+                     | otherwise = error "something wrong" 
+      nseven | nseven' `mod` 2 == 0 = nseven'-1
+             | nseven' `mod` 2 == 1 = nseven'
+             | otherwise = error "something wrong"
       medianListEven' =  map median $ map (sort . toList) distatFreqEven
       medianListEven= map (/medianBiasFactor nseven) medianListEven'
 
