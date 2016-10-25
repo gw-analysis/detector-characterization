@@ -12,8 +12,8 @@ main = do
     2 -> return (head args, args!!1)
     _ -> error "Usage runGlitchMonFile chname fname"
 
-  let dfactor = 4
-  let fs = fromIntegral (16384 `div` dfactor) :: Double
+  let dfactor = 1
+  let fs = fromIntegral (4096 `div` dfactor) :: Double
   let param = GlitchParam
                { segmentLength = 32
 --               , channel = "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
