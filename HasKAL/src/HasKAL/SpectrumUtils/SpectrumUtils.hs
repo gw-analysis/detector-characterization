@@ -34,7 +34,10 @@ import Numeric.LinearAlgebra
 import HasKAL.WaveUtils (WaveData(..))
 
 
+
 psdMethod = MedianAverage
+
+
 
 {- in case of List data type -}
 gwspectrogram :: Int -> Int -> Double -> [Double] -> [(Double, Double, Double)]
@@ -129,7 +132,8 @@ gwpsdMedianAverageCoreV dat nfft fs w = do
       medianListOdd' = map median $ map (sort . toList) distatFreqOdd
       medianListOdd = map (/medianBiasFactor nsodd) medianListOdd'
 
-      distatFreqEven'= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
+
+  let distatFreqEven'= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
       nseven' = length distatFreqEven
       distatFreqEven | nseven `mod` 2 == 0 = tail distatFreqEven'
                      | nseven `mod` 2 == 1 = distatFreqEven'
@@ -185,7 +189,7 @@ gwOnesidedPSDWelch dat nfft fs w =
 gwOnesidedPSDMedianAverage :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwOnesidedPSDMedianAverage dat nfft fs w = do
   let distatFreqOdd' = toColumns . fromRows $ (psdOdd dat nfft w) :: [Vector Double]
-      nsodd' = length distatFreqOdd
+      nsodd' = length distatFreqOdd'
       distatFreqOdd | nsodd' `mod` 2 == 0 = tail distatFreqOdd'
                     | nsodd' `mod` 2 == 1 = distatFreqOdd'
                     | otherwise = error "something wrong"
@@ -196,7 +200,7 @@ gwOnesidedPSDMedianAverage dat nfft fs w = do
       medianListOdd = map (/medianBiasFactor nsodd) medianListOdd'
 
       distatFreqEven'= toColumns . fromRows $ (psdEven dat nfft w) :: [Vector Double]
-      nseven' = length distatFreqEven
+      nseven' = length distatFreqEven'
       distatFreqEven | nseven `mod` 2 == 0 = tail distatFreqEven'
                      | nseven `mod` 2 == 1 = distatFreqEven'
                      | otherwise = error "something wrong" 
