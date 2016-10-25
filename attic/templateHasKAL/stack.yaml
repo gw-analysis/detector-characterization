@@ -14,8 +14,9 @@ packages:
 - '.'
 - /home/kazu/tools/detector-characterization/HasKAL
 extra-deps:
-- Chart-cairo-1.4
-- Chart-gtk-1.4
+- Chart-1.5.3
+- Chart-cairo-1.5.1
+- Chart-gtk-1.5.1
 - HDBC-2.4.0.1
 - HDBC-mysql-0.6.6.2
 - HDBC-session-0.1.1.0
