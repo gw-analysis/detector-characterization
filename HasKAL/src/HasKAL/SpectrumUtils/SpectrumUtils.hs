@@ -14,6 +14,8 @@ module HasKAL.SpectrumUtils.SpectrumUtils
 , gwOnesidedPSDVP
 , gwspectrogramV
 , gwspectrogramVP1
+, gwOnesidedMedianAveragedPSDV
+, gwOnesidedMedianAveragedPSDWaveData
 )
 where
 
@@ -35,7 +37,7 @@ import HasKAL.WaveUtils (WaveData(..))
 
 
 
-psdMethod = MedianAverage
+psdMethod = Welch
 
 
 
@@ -159,8 +161,18 @@ gwOnesidedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
 gwOnesidedPSDWaveData fftSec w = gwOnesidedPSDV (gwdata w) (truncate $ fs * fftSec) fs
   where fs = samplingFrequency w
 
+
 gwOnesidedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
 gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV psdMethod dat nfft fs Hann
+
+
+gwOnesidedMedianAveragedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
+gwOnesidedMedianAveragedPSDWaveData fftSec w = gwOnesidedMedianAveragedPSDV (gwdata w) (truncate $ fs * fftSec) fs
+  where fs = samplingFrequency w
+
+
+gwOnesidedMedianAveragedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwOnesidedMedianAveragedPSDV dat nfft fs = gwOnesidedPSDCoreV MedianAverage dat nfft fs Hann
 
 
 gwOnesidedPSDCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)

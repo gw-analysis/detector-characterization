@@ -15,7 +15,7 @@ import HasKAL.MathUtils.FFTW (dct2d, idct2d)
 import HasKAL.SignalProcessingUtils.Interpolation
 import HasKAL.SpectrumUtils.Function (updateMatrixElement,  updateSpectrogramSpec)
 import HasKAL.SpectrumUtils.Signature (Spectrum,  Spectrogram)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedMedianAveragedPSDV)
 import HasKAL.TimeUtils.Function (formatGPS,  deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
@@ -74,7 +74,7 @@ section'TimeFrequencyExpression whnWaveData = do
         _ -> liftIO $ Prelude.return () 
       return out
     GP.FrequencyDomain -> do
-      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
+      let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
           fs = samplingFrequency whnWaveData
           nfreq = floor $ GP.nfrequency param * fs
           nfreq2 = nfreq `div` 2
