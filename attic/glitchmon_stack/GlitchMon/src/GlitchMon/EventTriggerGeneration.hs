@@ -167,7 +167,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
                                newM
 --      liftIO $ print "clustered pixels :"
 --      liftIO $ print survivorwID          
---    _ -> liftIO $ Prelude.return () 
+    _ -> liftIO $ Prelude.return () 
 
   case length survivorwID of 
     0 -> do liftIO $ print "# of detected islands is" >> hFlush stdout

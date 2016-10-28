@@ -77,6 +77,8 @@ import GlitchMon.ParameterEstimation
 import GlitchMon.RegisterEventtoDB
 
 import System.IO (hFlush, stdout)
+import Control.DeepSeq (deepseq, NFData)
+
 
 -- for debug --
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
@@ -127,7 +129,8 @@ sink param chname = do
                         if (fs /= fsorig)
                           then do liftIO $ print "start downsampling" >> hFlush stdout
                                   let wave' = downsampleWaveData fs wave
-                                      dataGps = (fst (startGPSTime wave'),n)
+                                  wave' `deepseq` return wave
+                                  let dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                   case GP.DS `elem` GP.debugmode param of 
                                        True -> do

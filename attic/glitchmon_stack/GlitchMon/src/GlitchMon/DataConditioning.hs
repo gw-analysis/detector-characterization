@@ -43,7 +43,8 @@ part'DataConditioning wave = do
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
-      highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
+  highpassed `deepseq` return highpassed
+  let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
       dir = GP.debugDir param  
   let whtcoeff = GP.whtCoeff param
       wmethod   = GP.whnMethod param
