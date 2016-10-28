@@ -154,6 +154,7 @@ library
     HasKAL.SignalProcessingUtils.Chebyshev,
     HasKAL.SignalProcessingUtils.Filter,
     HasKAL.SignalProcessingUtils.FilterType,
+    HasKAL.SignalProcessingUtils.FilterX,
     HasKAL.SignalProcessingUtils.Interpolation,
     HasKAL.SignalProcessingUtils.InterpolationType,
     HasKAL.SignalProcessingUtils.Kaiser,

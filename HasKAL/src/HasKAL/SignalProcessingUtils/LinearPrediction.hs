@@ -19,7 +19,7 @@ import Foreign.Storable (pokeElemOff)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import HasKAL.MathUtils.FFTW (dftRC1d,dftCR1d)
-import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.FilterX
 import HasKAL.SignalProcessingUtils.WindowType
 import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SignalProcessingUtils.Interpolation

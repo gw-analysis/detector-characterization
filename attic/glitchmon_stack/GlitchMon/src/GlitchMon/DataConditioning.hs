@@ -12,7 +12,7 @@ import Data.List (foldl')
 import Data.Maybe (fromJust)
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
-import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.FilterX
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData, whiteningWaveData')
@@ -43,6 +43,7 @@ part'DataConditioning wave = do
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
+  liftIO $ print "-- high-pass filtering" >> hFlush stdout
   highpassed `deepseq` return highpassed
   let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
       dir = GP.debugDir param  
@@ -100,9 +101,11 @@ section'Whitening opt wave = case opt of
               nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
+          liftIO $ print "-- Time-domain whitening..." >> hFlush stdout
           whned `deepseq` return whned
   GP.FrequencyDomain
-    -> wave `deepseq` return wave
+    -> do liftIO $ print "-- Frequency-domain whitening..." >> hFlush stdout
+          wave `deepseq` return wave
 --    -> do param <- get
 --          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
 --          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList

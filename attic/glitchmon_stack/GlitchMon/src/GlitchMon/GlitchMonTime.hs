@@ -158,11 +158,13 @@ sink param chname = do
                                        _ -> liftIO $ Prelude.return ()
 --                                  s <- liftIO $ timeRun chname wave' param'2
                                   s <- liftIO $ fileRun wave' param'2
-                                  sink s chname
+                                  -- [TEST] parameter reseted
+                                  sink param chname
                           else do let dataGps = (fst (startGPSTime wave),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                   s <- liftIO $ fileRun wave param'2
-                                  sink s chname
+                                  -- [TEST] parameter reseted
+                                  sink param chname
 
 
 fileRun w param = do

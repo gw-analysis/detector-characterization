@@ -23,7 +23,8 @@ import qualified Data.Vector.Storable as SV
 import qualified Data.Vector.Unboxed as UV
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
-import HasKAL.SignalProcessingUtils.Filter
+import HasKAL.SignalProcessingUtils.FilterX
+import HasKAL.SignalProcessingUtils.Filter(iir,sosfiltfilt,filtfilt)
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.TimeUtils.Function

@@ -26,10 +26,6 @@ module HasKAL.SignalProcessingUtils.Filter
   , sos1filtfilt
   , sos1filtfiltInit
   , calcInitCond
-  , filterX
-  , filterX1d
-  , filtfiltX
-  , filtfiltX1d
   ) where
 
 import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, toList)
@@ -565,87 +561,6 @@ sosfiltfilt_initCore input ilen num0 num1 num2 denom0 denom1 denom2 nsec init1 i
         return $ VS.unsafeFromForeignPtr0 foreignptrOutput ilen
       where wilen = itow32 ilen
             wnsec = itow32 nsec
-
-
--- | filtfiltX (num, denom) inputV 
-filtfiltX :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
-filtfiltX (num, denom) inputV = 
-  let nb = length num
-      na = length denom
-      order = max nb na
-      inputM = fromColumns inputV
-      -- Use a reflection to extrapolate signal at beginning and end to reduce edge effects
-      nEdge = 3 * (order - 1)
-      x1_2 = VS.map (*2) $ head . toRows $ inputM
-      xf_2 = VS.map (*2) $ last . toRows $ inputM
-      xi''   = fromRows (replicate nEdge x1_2) - (flipud . takeRows nEdge . dropRows 1 $ inputM)
-      xi'    = toColumns xi''
-      xi    = map VS.toList xi'
-      xf''   = fromRows (replicate nEdge xf_2)
-               - (flipud . takeRows nEdge . dropRows (rows inputM-nEdge) $ inputM)
-      xf'   = toColumns xf''
-      xf    = map VS.toList xf'
-      -- Filter initial reflected signal:
-      ic = ((order-1)><1) $ calcInitCond (num,denom)
-      (dum,zi) = filterX (num, denom) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
-      -- Use the final conditions of the initial part for the actual signal:
-      (ys,zs) = filterX (num, denom) zi "forward" inputV -- "s"teady state
-      (yf,zdum) = filterX (num, denom) zs "forward" xf'  -- "f"inal conditions
-      -- Filter signal again in reverse order:
-      yEdge = asRow $ (fromColumns yf) ND.! (nEdge-1)
-      (dum',zf) = filterX (num, denom) (map VS.toList (toColumns (ic * yEdge))) "reverse" yf
-   in fst $ filterX (num, denom) zf "reverse" ys
-
-
-filtfiltX1d :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
-filtfiltX1d (num, denom) inputV = head $ filtfiltX (num, denom) [inputV]
-
-
-filterX1d :: ([Double], [Double]) -> [Double] -> String -> VS.Vector Double -> (VS.Vector Double,[Double])
-filterX1d (num, denom) z dir inputV = let a = filterX (num, denom) [z] dir [inputV]
-                                       in (head . fst $ a, head . snd $ a)      
-
-
--- | filterX (num, denom) z dir inputV
-filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
-filterX (num, denom) z dir inputV =
-  let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
-      n = length inputV
-      m = VS.length . head $ inputV
-      mz= length . head $ z
-      num' = d2cd num
-      denom' = d2cd denom
-      blen = length num'
-      alen = length denom'
-      z' = d2cd . concat $ z
-      dir' = unsafePerformIO $ newCString dir
-      (vv,zz) = filterXCore num' blen denom' alen z' dir' m n inputV' 
-   in (flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
-
-
-filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
-filterXCore b blen a alen z dir m n input
-  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
-   withArray b $ \ptrb ->
-   withArray a $ \ptra ->
-   withArray z $ \ptrZin ->
-   allocaArray ilen $ \ptrOutput ->
-   allocaArray zlen $ \ptrZout ->
-   do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
-      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
-        return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
-                 , unsafePerformIO $ peekArray zlen ptrZout
-                   )
-      where ilen = m * n
-            wilen = itow32 ilen
-            walen = itow32 alen
-            wblen = itow32 blen
-            wm    = itow32 m
-            wn    = itow32 n
-            zlen = ((max blen alen)-1) * n
-
-
-foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> CUInt -> Ptr CDouble -> CString -> IO()
 
 
 calcInitCond :: ([Double],[Double]) -> [Double]

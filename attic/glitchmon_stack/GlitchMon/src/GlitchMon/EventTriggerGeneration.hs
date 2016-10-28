@@ -28,6 +28,7 @@ import System.IO (hFlush, stdout)
 
 import Control.DeepSeq (deepseq)
 
+
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
 part'EventTriggerGeneration wave = do
@@ -72,7 +73,7 @@ section'TimeFrequencyExpression whnWaveData = do
                                        ((0, 0), (20, 400))
                                    out
         _ -> liftIO $ Prelude.return () 
-      return out
+      out `deepseq` return out
     GP.FrequencyDomain -> do
       let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
           fs = samplingFrequency whnWaveData
@@ -100,7 +101,7 @@ section'TimeFrequencyExpression whnWaveData = do
                                        ((0, 0), (20, 400))
                                    out
         _ -> liftIO $ Prelude.return () 
-      return out
+      out `deepseq` return out
 
 
 section'Clustering :: Spectrogram
@@ -140,10 +141,10 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   let (tt,ff,mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
   let survivor = nub' $ excludeOnePixelIsland cfun n thrsed
---  liftIO $ print "evaluating survivor" >> hFlush stdout
+  liftIO $ print "evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
---  liftIO $ print "evaluating survivorwID" >> hFlush stdout
+  liftIO $ print "evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
 --  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
@@ -152,7 +153,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
---  liftIO $ print "evaluating newM" >> hFlush stdout
+  liftIO $ print "evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
   case GP.CL `elem` GP.debugmode param of
@@ -174,8 +175,8 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
             liftIO $ print "0" >> hFlush stdout
     _ -> do liftIO $ print "# of detected islands is" >> hFlush stdout
             liftIO $ print $ (snd . last . last $ survivorwID)
-
-  return (newM, survivorwID)
+  let out_clustering = (newM, survivorwID)
+  out_clustering `deepseq` return out_clustering
 
 
 quantizingMatrix :: Int 
