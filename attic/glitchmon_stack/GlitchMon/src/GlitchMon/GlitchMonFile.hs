@@ -116,8 +116,8 @@ sink param chname = do
                                       let wave' = downsampleWaveData fs wave
                                           dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                      case GP.debugmode param of 
-                                         1 -> do
+                                      case GP.DS `elem` GP.debugmode param of 
+                                         True -> do
                                            liftIO $ H3.spectrogramM H3.LogY
                                             H3.COLZ
                                             "mag"

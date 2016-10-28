@@ -27,7 +27,10 @@ import qualified GlitchMon.GlitchParam as GP
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 import System.IO (hFlush, stdout)
+import Control.DeepSeq (deepseq, NFData)
 
+
+instance NFData WaveData
 
 
 part'DataConditioning :: WaveData
@@ -40,51 +43,53 @@ part'DataConditioning wave = do
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
-      out' = fromJust $ updateWaveDatagwdata wave highpassed
+      highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
       dir = GP.debugDir param  
   let whtcoeff = GP.whtCoeff param
       wmethod   = GP.whnMethod param
   case (whtcoeff /= []) of
-    False -> do 
-            out <- section'Whitening wmethod out'
---            case GP.debugmode param of 
---                 1 -> do
---                  liftIO $ H3.spectrogramM H3.LogY
---                                           H3.COLZ
---                                           "mag"
---                                           "whitened data"
---                                           "production/whitened_spectrogram.png"
---                                                ((0, 0), (20, 400))
---                                           $ gwspectrogramWaveData 0.1 0.2 out
---                  liftIO $ H.plot H.Linear
---                                  H.Line
---                                      1
---                                  H.RED
---                                  ("time","amplitude")
---                                      0.05
---                                  "whitened data"
---                                  "production/whitened_timeseries.png"
---                                      ((16.05,16.2),(0,0))
---                                  $ zip [0,1/4096..] (NL.toList $ gwdata out)
---                  liftIO $ H.plotV H.LogXY
---                                   H.Line
---                                       1
---                                   H.RED
---                                   ("frequency [Hz]","ASD [Hz^-1/2]")
---                                        0.05
---                                   "whitened data spectrum"
---                                   (dir++"/whitened_spectrum.png")
---                                       ((0,0),(0,0))
---                                   $ gwOnesidedPSDWaveData 0.2 out
---                 _ -> liftIO $ Prelude.return ()
-            return out
-    True  -> section'Whitening wmethod wave
+   -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough. 
+    _     -> case GP.WH `elem` GP.debugmode param of
+               True -> do 
+                 out <- section'Whitening wmethod highpassedw
+                 liftIO $ H3.spectrogramM H3.LogY
+                                          H3.COLZ
+                                          "mag"
+                                          "whitened data"
+                                          "production/whitened_spectrogram.png"
+                                          ((0, 0), (20, 400))
+                                          $ gwspectrogramWaveData 0.1 0.2 out
+                 liftIO $ H.plot H.Linear
+                                 H.Line
+                                 1
+                                 H.RED
+                                 ("time","amplitude")
+                                 0.05
+                                 "whitened data"
+                                 "production/whitened_timeseries.png"
+                                 ((16.05,16.2),(0,0))
+                                 $ zip [0,1/4096..] (NL.toList $ gwdata out)
+                 liftIO $ H.plotV H.LogXY
+                                 H.Line
+                                 1
+                                 H.RED
+                                 ("frequency [Hz]","ASD [Hz^-1/2]")
+                                 0.05
+                                 "whitened data spectrum"
+                                 (dir++"/whitened_spectrum.png")
+                                 ((0,0),(0,0))
+                                 $ gwOnesidedPSDWaveData 0.2 out
+                 return out
+               _ -> section'Whitening wmethod highpassedw
+--    True  -> section'Whitening wmethod wave
 
 
 section'LineRemoval = id
 
 
-section'Whitening :: GP.WhnMethod -> WaveData -> StateT GP.GlitchParam IO WaveData
+section'Whitening :: GP.WhnMethod 
+                  -> WaveData 
+                  -> StateT GP.GlitchParam IO WaveData
 section'Whitening opt wave = case opt of
   GP.TimeDomain 
     -> do param <- get
@@ -94,9 +99,9 @@ section'Whitening opt wave = case opt of
               nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
-          return whned
+          whned `deepseq` return whned
   GP.FrequencyDomain
-    -> return wave
+    -> wave `deepseq` return wave
 --    -> do param <- get
 --          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
 --          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
@@ -107,8 +112,10 @@ section'Whitening opt wave = case opt of
 --          return whned
 
 
+
+
 calcWhiteningCoeff :: GP.GlitchParam
-              -> IO ([([Double], Double)], WaveData)
+                   -> IO ([([Double], Double)], WaveData)
 calcWhiteningCoeff param = do
   let refwave = GP.refwave param
   calcWhiteningCoeffCore param ([], refwave) >>=
@@ -119,8 +126,8 @@ calcWhiteningCoeff param = do
 
 
 calcWhiteningCoeffCore :: GP.GlitchParam
-              -> ([([Double], Double)], WaveData)
-              -> IO ([([Double], Double)], WaveData)
+                       -> ([([Double], Double)], WaveData)
+                       -> IO ([([Double], Double)], WaveData)
 calcWhiteningCoeffCore param (whtCoeffList, train) =
   let nC = floor $ 2 * fs / GP.whnFrequencyResolution param
       fs = samplingFrequency train

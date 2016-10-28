@@ -39,11 +39,15 @@ data GlitchParam = GlitchParam
   , refwave :: WaveData
   , reftime :: Double
 -- * for debug
-  , debugmode :: Int
+  , debugmode :: [FlagDebug]
   , debugDir :: String
   }
 
-data WhnMethod = TimeDomain | FrequencyDomain
+
+data WhnMethod = TimeDomain | FrequencyDomain deriving (Show)
+
+
+data FlagDebug = DS | WH | TF | ETG | CL | PE | REG deriving (Show, Eq)
 
 
 updateGlitchParam'segmentLength :: GlitchParam -> Int -> GlitchParam

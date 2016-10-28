@@ -62,8 +62,8 @@ section'TimeFrequencyExpression whnWaveData = do
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
           out = (snrMatT', snrMatF, snrMatP)
-      case GP.debugmode param of
-        1 -> do
+      case GP.TF `elem` GP.debugmode param of
+        True -> do
           liftIO $ H3.spectrogramM H3.LogY
                                    H3.COLZ
                                    "mag"
@@ -90,8 +90,8 @@ section'TimeFrequencyExpression whnWaveData = do
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
           out = (snrMatT', snrMatF, snrMatP)
-      case GP.debugmode param of
-        1 -> do
+      case GP.ETG `elem` GP.debugmode param of
+        True -> do
           liftIO $ H3.spectrogramM H3.LogY
                                    H3.COLZ
                                    "mag"
@@ -155,16 +155,16 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 --  liftIO $ print "evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
---  case GP.debugmode param of
---    1 -> do
-----      liftIO $ print ncol
---      liftIO $ H3.spectrogramM H3.LogY
---                               H3.COLZ
---                               "mag"
---                               "clustered PixelSNR spectrogram"
---                               "production/cluster_spectrogram.png"
---                                   ((0, 0), (20, 400))
---                               newM
+  case GP.CL `elem` GP.debugmode param of
+    True -> do
+--      liftIO $ print ncol
+      liftIO $ H3.spectrogramM H3.LogY
+                               H3.COLZ
+                               "mag"
+                               "clustered PixelSNR spectrogram"
+                               "production/cluster_spectrogram.png"
+                               ((0, 0), (20, 400))
+                               newM
 --      liftIO $ print "clustered pixels :"
 --      liftIO $ print survivorwID          
 --    _ -> liftIO $ Prelude.return () 
