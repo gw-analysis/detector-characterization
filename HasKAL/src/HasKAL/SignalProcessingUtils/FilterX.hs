@@ -13,8 +13,9 @@ import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
-import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr)
 import Foreign.Ptr
+import Foreign.Marshal.Alloc(finalizerFree)
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
 import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, trans)
@@ -87,7 +88,7 @@ filterXCore b blen a alen z dir m n input
    withArray (replicate ilen 0.0) $ \ptrOutput ->
    withArray (replicate zlen 0.0) $ \ptrZout ->
    do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
-      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+      newForeignPtr finalizerFree ptrOutput >>= \foreignptrOutput ->
         return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
                  , unsafePerformIO $ peekArray zlen ptrZout
                  )
