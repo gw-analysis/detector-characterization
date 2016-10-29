@@ -88,7 +88,7 @@ filterXCore b blen a alen z dir m n input
    withArray (replicate ilen 0.0) $ \ptrOutput ->
    withArray (replicate zlen 0.0) $ \ptrZout ->
    do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
-      newForeignPtr finalizerFree ptrOutput >>= \foreignptrOutput ->
+      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
         return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
                  , unsafePerformIO $ peekArray zlen ptrZout
                  )

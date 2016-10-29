@@ -41,7 +41,7 @@ part'EventTriggerGeneration wave = do
 section'TimeFrequencyExpression :: WaveData
                                 -> StateT GP.GlitchParam IO Spectrogram
 section'TimeFrequencyExpression whnWaveData = do
-  liftIO $ print "start time-frequency expansion" >> hFlush stdout
+  liftIO $ print "-- start time-frequency expansion" >> hFlush stdout
   param <- get
   let wmethod   = GP.whnMethod param
       dir = GP.debugDir param
@@ -75,7 +75,8 @@ section'TimeFrequencyExpression whnWaveData = do
         _ -> liftIO $ Prelude.return () 
       out `deepseq` return out
     GP.FrequencyDomain -> do
-      let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
+      --let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
+      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
           fs = samplingFrequency whnWaveData
           nfreq = floor $ GP.nfrequency param * fs
           nfreq2 = nfreq `div` 2
@@ -91,7 +92,7 @@ section'TimeFrequencyExpression whnWaveData = do
                 (snd $ gwOnesidedPSDV (NL.subVector (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
           out = (snrMatT', snrMatF, snrMatP)
-      case GP.ETG `elem` GP.debugmode param of
+      case GP.TF `elem` GP.debugmode param of
         True -> do
           liftIO $ H3.spectrogramM H3.LogY
                                    H3.COLZ
@@ -107,7 +108,7 @@ section'TimeFrequencyExpression whnWaveData = do
 section'Clustering :: Spectrogram
                    -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
 section'Clustering (snrMatT, snrMatF, snrMatP') = do
-  liftIO $ print "start seedless clustering" >> hFlush stdout
+  liftIO $ print "-- start seedless clustering" >> hFlush stdout
   param <- get
   let n = GP.nNeighbor param
       l = NL.toList $ NL.flatten snrMatP'
@@ -141,10 +142,10 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   let (tt,ff,mg) = snrMat
       thrsed = NL.find (>=GP.clusterThres param) mg
   let survivor = nub' $ excludeOnePixelIsland cfun n thrsed
-  liftIO $ print "evaluating survivor" >> hFlush stdout
+--  liftIO $ print "---- evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
-  liftIO $ print "evaluating survivorwID" >> hFlush stdout
+--  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
 --  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
@@ -153,7 +154,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
-  liftIO $ print "evaluating newM" >> hFlush stdout
+--  liftIO $ print "---- evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
   case GP.CL `elem` GP.debugmode param of

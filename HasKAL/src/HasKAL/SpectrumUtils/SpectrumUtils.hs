@@ -157,6 +157,8 @@ gwpsdMedianAverageCoreV dat nfft fs w = do
   (fvec, fromList medianAverageSpectrum)
 
 
+-- | One-sided power spectrum density
+
 gwOnesidedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
 gwOnesidedPSDWaveData fftSec w = gwOnesidedPSDV (gwdata w) (truncate $ fs * fftSec) fs
   where fs = samplingFrequency w
@@ -166,15 +168,6 @@ gwOnesidedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Doubl
 gwOnesidedPSDV dat nfft fs = gwOnesidedPSDCoreV psdMethod dat nfft fs Hann
 
 
-gwOnesidedMedianAveragedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
-gwOnesidedMedianAveragedPSDWaveData fftSec w = gwOnesidedMedianAveragedPSDV (gwdata w) (truncate $ fs * fftSec) fs
-  where fs = samplingFrequency w
-
-
-gwOnesidedMedianAveragedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
-gwOnesidedMedianAveragedPSDV dat nfft fs = gwOnesidedPSDCoreV MedianAverage dat nfft fs Hann
-
-
 gwOnesidedPSDCoreV :: PSDMETHOD -> Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
 gwOnesidedPSDCoreV method dat nfft fs w
   | method==Welch = gwOnesidedPSDWelch dat nfft fs w
@@ -182,20 +175,13 @@ gwOnesidedPSDCoreV method dat nfft fs w
   | otherwise =  error "No such method implemented. Check GwPsdMethod.hs"
 
 
-gwOnesidedPSDWelch :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
-gwOnesidedPSDWelch dat nfft fs w =
-  let datlist = mkChunks dat nfft :: [Vector Double]
-      maxitr = length datlist
-      psdgain = 2.0/(fromIntegral nfft * fs)
-      ffted = mapFFT . mapApplyWindowFunction w $ datlist
-      power = map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
-      outs = scale (psdgain/fromIntegral maxitr) $ sum power
-   in (fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]], outs)
-   where
-     mapFFT = map dftRC1d
-     mapApplyWindowFunction windowtype
-       | windowtype==Hann = map (windowed (hanning nfft))
-       | otherwise = error "No such window implemented. Check WindowType.hs"
+gwOnesidedMedianAveragedPSDWaveData :: Double -> WaveData -> (Vector Double, Vector Double)
+gwOnesidedMedianAveragedPSDWaveData fftSec w = gwOnesidedMedianAveragedPSDV (gwdata w) (truncate $ fs * fftSec) fs
+  where fs = samplingFrequency w
+
+
+gwOnesidedMedianAveragedPSDV :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
+gwOnesidedMedianAveragedPSDV dat nfft fs = gwOnesidedPSDCoreV MedianAverage dat nfft fs Hann
 
 
 gwOnesidedPSDMedianAverage :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
@@ -226,9 +212,26 @@ gwOnesidedPSDMedianAverage dat nfft fs w = do
       medianAverageSpectrum = scale (psdgain/fromIntegral (nsodd+nseven)) $ fromList
         $ zipWith (+) (map (*(fromIntegral nsodd)) medianListOdd) (map (*(fromIntegral nseven)) medianListEven)
 
+
       -- set corresponding frequency
       fvec = linspace (VS.length medianAverageSpectrum) (0, fs/2) :: Vector Double
    in (fvec, medianAverageSpectrum)
+
+
+gwOnesidedPSDWelch :: Vector Double -> Int -> Double -> WindowType -> (Vector Double, Vector Double)
+gwOnesidedPSDWelch dat nfft fs w =
+  let datlist = mkChunks dat nfft :: [Vector Double]
+      maxitr = length datlist
+      psdgain = 2.0/(fromIntegral nfft * fs)
+      ffted = mapFFT . mapApplyWindowFunction w $ datlist
+      power = map (fst . fromComplex) $ zipWith (*) ffted (map conj ffted)
+      outs = scale (psdgain/fromIntegral maxitr) $ sum power
+   in (fromList [fs*fromIntegral i/fromIntegral nfft|i<-[0..nfft`div`2]], outs)
+   where
+     mapFFT = map dftRC1d
+     mapApplyWindowFunction windowtype
+       | windowtype==Hann = map (windowed (hanning nfft))
+       | otherwise = error "No such window implemented. Check WindowType.hs"
 
 
 gwOnesidedPSDVP :: Vector Double -> Int -> Double -> (Vector Double, Vector Double)
@@ -256,9 +259,11 @@ gwOnesidedPSDWelchP dat nfft fs w = Par.runPar $ do
        | windowtype==Hann = Par.parMap (windowed (hanning nfft))
        | otherwise = error "No such window implemented. Check WindowType.hs"
 
+
 gwspectrogramWaveData :: Double -> Double -> WaveData -> Spectrogram
 gwspectrogramWaveData overlapSec fftSec w = gwspectrogramV (truncate $ overlapSec * fs) (truncate $ fftSec * fs) fs (gwdata w)
   where fs = samplingFrequency w
+
 
 gwspectrogramV :: Int -> Int -> Double -> Vector Double -> Spectrogram
 gwspectrogramV noverlap nfft fs x = (tV, freqV, specgram)
@@ -313,6 +318,7 @@ psdOdd' dat nfft w = do
   let datlist = mkChunks dat nfft :: [Vector Double]
    in map (`calcPower` w) datlist
 
+
 psdEven' :: Vector Double -> Int -> WindowType -> [Vector Double]
 psdEven' dat' nfft w = do
   let dat = subVector nfft2 (dim dat' - nfft2) dat'
@@ -329,6 +335,7 @@ calcPower dat w = abs . fst . fromComplex $ fftVal * conj fftVal
 applyRealtoComplex :: Vector Double -> Vector (Complex Double)
 applyRealtoComplex x = toComplex $ tuplify2 (constant 0 nfft) x
   where nfft = dim x
+
 
 applyWindowFunction :: WindowType -> Vector Double -> Vector Double
 applyWindowFunction windowtype x

@@ -83,7 +83,7 @@ import Control.DeepSeq (deepseq, NFData)
 -- for debug --
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwOnesidedMedianAveragedPSDWaveData, gwspectrogramWaveData)
 
 
 {--------------------
@@ -151,10 +151,21 @@ sink param chname = do
                                                          H.RED
                                                          ("frequency [Hz]","ASD [Hz^-1/2]")
                                                               0.05
-                                                         "whitened data spectrum"
+                                                         "downsampled data spectrum"
                                                          (dir++"/spectrum_DS.png")
                                                              ((0,0),(0,0))
                                                          $ gwOnesidedPSDWaveData 0.2 wave'
+                                        liftIO $ H.plotV H.LogXY
+                                                         H.Line
+                                                             1
+                                                         H.RED
+                                                         ("frequency [Hz]","ASD [Hz^-1/2]")
+                                                              0.05
+                                                         "downsampeld data median averaged spectrum"
+                                                         (dir++"/spectrumMA_DS.png")
+                                                             ((0,0),(0,0))
+                                                         $ gwOnesidedMedianAveragedPSDWaveData 0.2 wave'
+
                                        _ -> liftIO $ Prelude.return ()
 --                                  s <- liftIO $ timeRun chname wave' param'2
                                   s <- liftIO $ fileRun wave' param'2
