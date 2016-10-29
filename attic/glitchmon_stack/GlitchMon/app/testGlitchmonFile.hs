@@ -41,7 +41,7 @@ main = do
                , cgps = Nothing
                , reftime = 0
              -- * for debug
-               , debugmode = 1
+               , debugmode = [TF]
                , debugDir = "debug"
                }                                 
       cdfp = CDFParam

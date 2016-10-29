@@ -29,7 +29,7 @@ main = do
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 30
-               , clusterThres = 6.0
+               , clusterThres = 10.0
                , celement = basePixel9
                , minimumClusterNum = 6
                , nNeighbor = 3
@@ -42,7 +42,7 @@ main = do
 --               , refwave =
                , reftime = 0
                -- * for debug
-               , debugmode = 1
+               , debugmode =[DS,TF] 
                , debugDir = "debug"
                  }
 
