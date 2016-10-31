@@ -1,18 +1,24 @@
 
-
-
+import Data.Int (Int32)
+import Data.Maybe (fromMaybe)
 import GlitchMon.GlitchMonTime
 import GlitchMon.GlitchParam
 import GlitchMon.PipelineFunction
 import HasKAL.DataBaseUtils.FrameFull.Data
+import HasKAL.DataBaseUtils.FrameFull.Function (kagraDataPoint)
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import System.Environment (getArgs)
 
 main = do
   (chname, fname) <- getArgs >>= \args -> case (length args) of
     2 -> return (head args, args!!1)
     _ -> error "Usage: runGlitchMonTime chname fname"
-  let dfactor = 4 ::Int
-  let fs = fromIntegral (16384 `div` dfactor) :: Double
+  let gpslist = selectSegment 32 fname
+      gps = fromIntegral $ fst . head $ gpslist :: Int32
+  tmpfnames <- fmap (fromMaybe (error "fs not found.")) $ kagraDataPoint gps chname
+  fsorig <- fmap (fromMaybe (error "fs not found.")) $ getSamplingFrequency (head tmpfnames) chname
+  let dfactor = 4.0
+  let fs =  fromIntegral $ floor (fsorig / dfactor)
   let param = GlitchParam
                { segmentLength = 32
                , channel = chname -- "K1:LSC-MICH_CTRL_CAL_OUT_DQ"

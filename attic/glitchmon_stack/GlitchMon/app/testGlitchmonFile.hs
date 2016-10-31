@@ -1,19 +1,20 @@
 
 
-
+import Data.Maybe (fromMaybe)
 import GlitchMon.GlitchMonFile
 import GlitchMon.GlitchParam
 import GlitchMon.PipelineFunction
 import HasKAL.DataBaseUtils.FrameFull.Data
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import System.Environment ( getArgs)
 
 main = do
   (chname, fname) <- getArgs >>= \args -> case (length args) of
     2 -> return (head args, args!!1)
     _ -> error "Usage runGlitchMonFile chname fname"
-
+  fsorig <- fmap (fromMaybe (error "fs not found.")) $ getSamplingFrequency fname chname
   let dfactor = 1
-  let fs = fromIntegral (4096 `div` dfactor) :: Double
+  let fs = fromIntegral $ floor (fsorig / dfactor)
   let param = GlitchParam
                { segmentLength = 32
 --               , channel = "K1:LSC-MICH_CTRL_CAL_OUT_DQ"
@@ -31,7 +32,7 @@ main = do
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 30
-               , clusterThres = 2.0
+               , clusterThres = 6.0
                , celement = basePixel9
                , minimumClusterNum = 6
                , nNeighbor = 3
