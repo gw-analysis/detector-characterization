@@ -31,17 +31,18 @@ main = do
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 30
-               , clusterThres = 6.0
+               , clusterThres = 2.0
                , celement = basePixel9
                , minimumClusterNum = 6
                , nNeighbor = 3
+               , maxNtrigg = 50
              -- * clean data finder
                , cdfInterval = 32
                , cdfparameter = cdfp
                , cgps = Nothing
                , reftime = 0
              -- * for debug
-               , debugmode = [TF]
+               , debugmode = []
                , debugDir = "debug"
                }                                 
       cdfp = CDFParam

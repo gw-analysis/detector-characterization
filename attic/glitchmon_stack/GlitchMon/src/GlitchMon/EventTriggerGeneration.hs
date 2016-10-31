@@ -8,7 +8,7 @@ module GlitchMon.EventTriggerGeneration
 
 
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
-import Data.List (nub,  foldl',  elemIndices,  maximum,  minimum,  lookup)
+import Data.List (nub,  foldl',  elemIndices,  maximum,  minimum,  lookup, sortBy)
 import Data.Packed.Matrix (buildMatrix)
 import qualified Data.Set as Set
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
@@ -140,12 +140,23 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 --  liftIO $ print "evaluating snrMat" >> hFlush stdout
   snrMat `deepseq` Prelude.return ()
   let (tt,ff,mg) = snrMat
-      thrsed = NL.find (>=GP.clusterThres param) mg
+      thrsed' = NL.find (>=GP.clusterThres param) mg
+      cmg = cols mg
+      rmg = rows mg
+  thrsed <- liftIO $ case length thrsed' >= GP.maxNtrigg param of
+    True -> do 
+      print "---- too many islands detected. top maxNtrigg islands will be selected."
+      let mg' = zip (NL.toList . NL.flatten $ mg) [0,1..]
+          ind = snd . unzip . take (GP.maxNtrigg param) . reverse . sortBy (\ x y -> compare (fst x) (fst y)) $ mg'
+      return $ map (vectorInd2MatrixInd_row rmg cmg) ind
+    False-> 
+      return thrsed'
+
   let survivor = nub' $ excludeOnePixelIsland cfun n thrsed
---  liftIO $ print "---- evaluating survivor" >> hFlush stdout
+  liftIO $ print "---- evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
---  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
+  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
 --  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
@@ -154,7 +165,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
---  liftIO $ print "---- evaluating newM" >> hFlush stdout
+  liftIO $ print "---- evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
   case GP.CL `elem` GP.debugmode param of
@@ -187,6 +198,12 @@ quantizingMatrix :: Int
 quantizingMatrix r c fun = buildMatrix r c fun
 
 
+vectorInd2MatrixInd_row r c m = (a, b)
+  where
+    a | m `mod` c == 0 = m `div` c -1
+      | otherwise      = m `div` c
+    b | m `mod` c == 0 = c-1
+      | otherwise      = m `mod` c - 1
 
 -- | O (nlog n) nub 
 -- | lent from http://d.hatena.ne.jp/jeneshicc/20090908/1252413541

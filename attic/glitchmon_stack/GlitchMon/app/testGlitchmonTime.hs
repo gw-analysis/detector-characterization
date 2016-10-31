@@ -33,6 +33,7 @@ main = do
                , celement = basePixel9
                , minimumClusterNum = 6
                , nNeighbor = 3
+               , maxNtrigg = 50
              -- * clean data finder
                , cdfInterval = 32
                , cdfparameter = cdfp

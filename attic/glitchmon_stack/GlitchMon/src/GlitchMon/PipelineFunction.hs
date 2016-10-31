@@ -49,11 +49,25 @@ selectSegment dur_sec fpath = unsafePerformIO $ do
      in [(gps+i*dur_sec,dur_sec)|i<-[0..n-1]]
  
 
+--excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int, Int)] -> [(Int, Int)]
+--excludeOnePixelIsland f n [] = []
+--excludeOnePixelIsland f n y'@(x':xs') = do
+--  let x = Set.singleton x'
+--      y = Set.fromList y'
+--      xs= Set.fromList xs' 
+--      fx= Set.fromList (f x')
+--      iy= Set.intersection y fx
+--   in case (Set.size iy >= n) of
+--        True -> Set.toList iy ++ excludeOnePixelIsland f n xs'
+--        False-> excludeOnePixelIsland f n xs'
+
+
 excludeOnePixelIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int, Int)] -> [(Int, Int)]
 excludeOnePixelIsland f n [] = []
 excludeOnePixelIsland f n y@(x:xs) = case (length (intersect y (f x)) >= n) of
   True -> intersect y (f x) ++ excludeOnePixelIsland f n xs
   False-> excludeOnePixelIsland f n xs
+
 
 
 taggingIsland :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int,Int)] -> [[(Tile,ID)]]
@@ -64,7 +78,7 @@ taggingIsland cfun minN x = let ids = mynub . secondIDing 1 . fst . firstIDing c
                         \i -> [ ((a,b),i)
                               | (a,b,c) <- ids
                               , elem c (groupIDs!!(i-1))
-                              ]
+                                  ]
 
 
 firstIDing :: ((Int, Int) -> [(Int, Int)]) -> Int -> [(Int, Int)] -> ([(Int, Int, Int)],Int)

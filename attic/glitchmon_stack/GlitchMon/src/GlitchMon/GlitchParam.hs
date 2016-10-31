@@ -30,6 +30,7 @@ data GlitchParam = GlitchParam
   , celement :: (Int, Int) -> [(Int, Int)]
   , minimumClusterNum ::Int
   , nNeighbor :: Int -- least number of neighbors of a pixcel
+  , maxNtrigg :: Int -- maximum number of triggeres in one segments event rate should be ~1Hz (32s -> set 32)
 -- * clean data finder
   , cdfInterval :: Int -- ^ interval[s] to run clean data finder (default 600[s])
   , cdfparameter :: CDFParam
