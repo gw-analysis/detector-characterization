@@ -22,10 +22,13 @@ main = do
       nfft = truncate fs
   t1 <- getCurrentTime
   let psd = gwOnesidedPSDV dat nfft fs
+      psdma= gwOnesidedMedianAveragedPSDV dat nfft fs
   psd `deepseq` return ()
+  psdma `deepseq` return ()
   t2 <- getCurrentTime
 
   plotV LogXY Line 1 RED ("[Hz]",  "[1/Hz^1/2]") 0.05 ch "gwpsd.png" ((0, 0), (0, 0)) psd
+  plotV LogXY Line 1 RED ("[Hz]",  "[1/Hz^1/2]") 0.05 ch "gwpsdma.png" ((0, 0), (0, 0)) psdma
   print $ diffUTCTime t2 t1
 
 
