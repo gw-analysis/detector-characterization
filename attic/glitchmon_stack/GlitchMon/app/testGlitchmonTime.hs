@@ -17,6 +17,7 @@ main = do
       gps = fromIntegral $ fst . head $ gpslist :: Int32
   tmpfnames <- fmap (fromMaybe (error "fs not found.")) $ kagraDataPoint gps chname
   fsorig <- fmap (fromMaybe (error "fs not found.")) $ getSamplingFrequency (head tmpfnames) chname
+--  print fsorig
   let dfactor = 4.0
   let fs =  fromIntegral $ floor (fsorig / dfactor)
   let param = GlitchParam
@@ -49,7 +50,7 @@ main = do
 --               , refwave =
                , reftime = 0
                -- * for debug
-               , debugmode =[DS,TF] 
+               , debugmode =[] 
                , debugDir = "debug"
                  }
 

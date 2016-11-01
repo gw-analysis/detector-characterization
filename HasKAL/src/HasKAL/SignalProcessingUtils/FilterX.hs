@@ -9,13 +9,13 @@ module HasKAL.SignalProcessingUtils.FilterX
   , filtfiltX1d
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, toList)
+import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, fromList, toList)
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr)
 import Foreign.Ptr
-import Foreign.Marshal.Alloc(finalizerFree)
+import Foreign.Marshal.Alloc(finalizerFree, free)
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
 import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, trans)
@@ -64,7 +64,7 @@ filterX1d (num, denom) z dir inputV = let a = filterX (num, denom) [z] dir [inpu
 
 -- | filterX (num, denom) z dir inputV
 filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
-filterX (num, denom) z dir inputV =
+filterX (num, denom) z dir inputV = unsafePerformIO $ do
   let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
       n = length inputV
       m = VS.length . head $ inputV
@@ -74,24 +74,28 @@ filterX (num, denom) z dir inputV =
       blen = length num'
       alen = length denom'
       z' = d2cd . concat $ z
-      dir' = unsafePerformIO $ newCString dir
-      (vv,zz) = filterXCore num' blen denom' alen z' dir' m n inputV' 
-   in (flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
+  dir' <- newCString dir
+  let(vv,zz) = filterXCore num' blen denom' alen z' dir' m n inputV'
+  free dir' 
+  return $(flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
 
 
 filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
 filterXCore b blen a alen z dir m n input
-  = unsafePerformIO $ VS.unsafeWith input $ \ptrInput ->
+  = unsafePerformIO $ 
+   withArray (VS.toList input) $ \ptrInput ->
    withArray b $ \ptrb ->
    withArray a $ \ptra ->
    withArray z $ \ptrZin ->
    withArray (replicate ilen 0.0) $ \ptrOutput ->
-   withArray (replicate zlen 0.0) $ \ptrZout ->
-   do c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
-      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
-        return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
-                 , unsafePerformIO $ peekArray zlen ptrZout
-                 )
+   withArray (replicate zlen 0.0) $ \ptrZout -> do
+     c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
+     peekArray ilen ptrOutput >>= \out1 ->
+       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
+--       newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
+--         return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
+--                  , unsafePerformIO $ peekArray zlen ptrZout
+--                  )
       where ilen = m * n
             wilen = itow32 ilen
             walen = itow32 alen
