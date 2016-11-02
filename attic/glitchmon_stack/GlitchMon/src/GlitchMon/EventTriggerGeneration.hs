@@ -152,20 +152,21 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
     False-> 
       return thrsed'
 
-  let survivor = nub' $ excludeOnePixelIsland cfun n thrsed
+  let survivor' = nub' $ excludeOnePixelIsland cfun n thrsed
+      survivor = [(a,b)| (a,b)<-survivor', a>=0&&a<rmg, b>=0&&b<cmg]
 --  liftIO $ print "---- evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
 --  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
-  let zeroMatrix = (nrow><ncol) $ replicate (ncol*nrow) 0.0
---  liftIO $ print "evaluating zeroMatrix" >> hFlush stdout
+  let zeroMatrix = (rmg><cmg) $ replicate (rmg*cmg) 0.0
+--  liftIO $ print "---- evaluating zeroMatrix" >> hFlush stdout
   let survivorValues = map (\x->mg@@>x) survivor
---  liftIO $ print "evaluating survivorValues" >> hFlush stdout
+  liftIO $ print "---- evaluating survivorValues" >> hFlush stdout
   survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
---  liftIO $ print "---- evaluating newM" >> hFlush stdout
+  liftIO $ print "---- evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
   case GP.CL `elem` GP.debugmode param of
