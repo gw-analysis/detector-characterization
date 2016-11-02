@@ -54,6 +54,7 @@ part'DataConditioning wave = do
    -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough. 
     _     -> case GP.WH `elem` GP.debugmode param of
                True -> do 
+                 liftIO $ print "-- whitening... "
                  out <- section'Whitening wmethod highpassedw
                  liftIO $ H3.spectrogramM H3.LogY
                                           H3.COLZ
@@ -82,8 +83,11 @@ part'DataConditioning wave = do
                                  (dir++"/whitened_spectrum.png")
                                  ((0,0),(0,0))
                                  $ gwOnesidedPSDWaveData 0.2 out
-                 return out
-               _ -> section'Whitening wmethod highpassedw
+                 out `deepseq` return out
+               _ -> do
+                       liftIO $ print "-- whitening... "
+                       out <- section'Whitening wmethod highpassedw
+                       out `deepseq` return out
 --    True  -> section'Whitening wmethod wave
 
 
@@ -102,10 +106,10 @@ section'Whitening opt wave = case opt of
               nfft = floor $ GP.nfrequency param * GP.samplingFrequency param
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
-          liftIO $ print "-- Time-domain whitening..." >> hFlush stdout
+          liftIO $ print "---- Time-domain whitening..." >> hFlush stdout
           whned `deepseq` return whned
   GP.FrequencyDomain
-    -> do liftIO $ print "-- Frequency-domain whitening..." >> hFlush stdout
+    -> do liftIO $ print "---- Frequency-domain whitening..." >> hFlush stdout
           wave `deepseq` return wave
 --    -> do param <- get
 --          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param

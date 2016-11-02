@@ -9,7 +9,7 @@ module HasKAL.SignalProcessingUtils.FilterX
   , filtfiltX1d
   ) where
 
-import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, fromList, toList)
+import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice, unsafeWith, unsafeFromForeignPtr0,map, fromList, toList, unsafeToForeignPtr0)
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
@@ -21,6 +21,7 @@ import HasKAL.Misc.Function (mkChunksV,mkChunksL)
 import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, trans)
 import qualified Numeric.LinearAlgebra.Data as ND
 import System.IO.Unsafe
+import Control.DeepSeq (deepseq, NFData)
 
 
 -- | filtfiltX (num, denom) inputV 
@@ -82,30 +83,36 @@ filterX (num, denom) z dir inputV = unsafePerformIO $ do
 
 filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
 filterXCore b blen a alen z dir m n input
-  = unsafePerformIO $ 
-   VS.unsafeWith input $ \ptrInput ->
-   withArray b $ \ptrb ->
-   withArray a $ \ptra ->
-   withArray z $ \ptrZin ->
---   withArray (replicate ilen 0.0) $ \ptrOutput ->
-   mallocForeignPtrArray0 ilen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
-   mallocForeignPtrArray0 zlen >>= \fptrZout -> withForeignPtr fptrZout $ \ptrZout -> do
-     c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
---     peekArray ilen ptrOutput >>= \out1 ->
---       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
-     touchForeignPtr fptrOutput
-     touchForeignPtr fptrZout
-     return $ ( VS.unsafeFromForeignPtr0 fptrOutput ilen
-              , unsafePerformIO $ peekArray zlen ptrZout
-              )
-      where ilen = m * n
-            wilen = itow32 ilen
-            walen = itow32 alen
-            wblen = itow32 blen
-            wm    = itow32 m
-            wn    = itow32 n
-            zlen = ((max blen alen)-1) * n
+ = unsafePerformIO $ do
+   let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input 
+   withForeignPtr fptrInput $ \ptrInput ->
+    withArray b $ \ptrb ->
+    withArray a $ \ptra ->
+    withArray z $ \ptrZin -> do
+ --   withArray (replicate ilen 0.0) $ \ptrOutput ->
+    mallocForeignPtrArray0 ilen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
+     mallocForeignPtrArray0 zlen >>= \fptrZout -> withForeignPtr fptrZout $ \ptrZout -> do
+      touchForeignPtr fptrInput
+      touchForeignPtr fptrOutput
+      touchForeignPtr fptrZout
+      c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
+ --     peekArray ilen ptrOutput >>= \out1 ->
+ --       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
+      a <- return $ VS.unsafeFromForeignPtr0 fptrOutput ilen
+      a `deepseq` return ()
+      b <- peekArray zlen ptrZout
+      b `deepseq` return ()
+      return $ (a, b)
+       where ilen = m * n
+             wilen = itow32 ilen
+             walen = itow32 alen
+             wblen = itow32 blen
+             wm    = itow32 m
+             wn    = itow32 n
+             zlen = ((max blen alen)-1) * n
 
+
+instance NFData CDouble
 
 calcInitCond :: ([Double],[Double]) -> [Double]
 calcInitCond (num,denom) =
