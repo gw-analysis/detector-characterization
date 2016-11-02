@@ -13,7 +13,7 @@ import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
-import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr, withForeignPtr, mallocForeignPtrArray0)
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr, withForeignPtr, mallocForeignPtrArray0, touchForeignPtr)
 import Foreign.Ptr
 import Foreign.Marshal.Alloc(finalizerFree, free)
 import Foreign.Marshal.Array
@@ -87,15 +87,17 @@ filterXCore b blen a alen z dir m n input
    withArray b $ \ptrb ->
    withArray a $ \ptra ->
    withArray z $ \ptrZin ->
-   withArray (replicate ilen 0.0) $ \ptrOutput ->
-   withArray (replicate zlen 0.0) $ \ptrZout -> do
+--   withArray (replicate ilen 0.0) $ \ptrOutput ->
+   mallocForeignPtrArray0 ilen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
+   mallocForeignPtrArray0 zlen >>= \fptrZout -> withForeignPtr fptrZout $ \ptrZout -> do
      c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
 --     peekArray ilen ptrOutput >>= \out1 ->
 --       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
-     newForeignPtr_  ptrOutput >>= \foreignptrOutput ->
-       return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput ilen
-                , unsafePerformIO $ peekArray zlen ptrZout
-                )
+     touchForeignPtr fptrOutput
+     touchForeignPtr fptrZout
+     return $ ( VS.unsafeFromForeignPtr0 fptrOutput ilen
+              , unsafePerformIO $ peekArray zlen ptrZout
+              )
       where ilen = m * n
             wilen = itow32 ilen
             walen = itow32 alen
