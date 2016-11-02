@@ -31,12 +31,14 @@ import HasKAL.TimeUtils.Function
 import HasKAL.WaveUtils.Data (WaveData(..),mkWaveData)
 import Numeric.LinearAlgebra
 
-import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_)
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, withForeignPtr, mallocForeignPtrArray0, touchForeignPtr)
 import Foreign.Ptr
 import Foreign.Marshal.Array
 import System.IO.Unsafe
 import Data.Word
 import Foreign.C.Types
+import Control.DeepSeq (deepseq, NFData)
+
 
 
 downsampling :: Int -> Int -> SV.Vector Double -> SV.Vector Double
@@ -50,14 +52,20 @@ downsampling fs newfs inputV = do
 
 downsampleCore :: Int -> Int -> SV.Vector CDouble -> Int -> SV.Vector CDouble
 downsampleCore sfactor ilen input olen
-  = unsafePerformIO $ SV.unsafeWith input $ \ptrInput ->
-   allocaArray olen $ \ptrOutput ->
-   do c'downsample wsfactor wilen ptrInput wolen ptrOutput
-      newForeignPtr_ ptrOutput >>= \foreignptrOutput ->
-        return $ SV.unsafeFromForeignPtr0 foreignptrOutput olen
-      where wsfactor = itow32 sfactor
-            wilen = itow32 ilen
-            wolen = itow32 olen
+  = unsafePerformIO $ do
+   let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input     
+   withForeignPtr fptrInput $ \ptrInput ->
+     mallocForeignPtrArray0 olen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
+      do touchForeignPtr fptrInput
+         touchForeignPtr fptrOutput
+         c'downsample wsfactor wilen ptrInput wolen ptrOutput
+         touchForeignPtr fptrInput
+         touchForeignPtr fptrOutput
+         let out =  SV.unsafeFromForeignPtr0 fptrOutput olen
+         out `deepseq` return out
+         where wsfactor = itow32 sfactor
+               wilen = itow32 ilen
+               wolen = itow32 olen
 
 
 downsample :: Double -> Double -> [Double] -> [Double]
