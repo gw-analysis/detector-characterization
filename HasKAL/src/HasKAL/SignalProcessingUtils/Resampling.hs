@@ -190,7 +190,7 @@ cd2dV = SV.map realToFrac
 
 
 
-foreign import ccall "filterFunctions.h downsample" c'downsample :: CUInt -> CUInt -> Ptr CDouble -> CUInt ->  Ptr CDouble -> IO()
+foreign import ccall "resampling.h downsample" c'downsample :: CUInt -> CUInt -> Ptr CDouble -> CUInt ->  Ptr CDouble -> IO()
 
 
 

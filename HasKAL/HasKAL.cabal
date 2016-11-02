@@ -206,6 +206,7 @@ library
     src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
     src/HasKAL/SignalProcessingUtils/filterFunctions.c
     src/HasKAL/SignalProcessingUtils/filterX.c
+    src/HasKAL/SignalProcessingUtils/resampling.c
     -- "extern C" しているのでCとして扱っておそらく大丈夫
   cc-options: -Wall -O2 -fPIC
 
