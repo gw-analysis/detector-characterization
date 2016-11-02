@@ -13,7 +13,7 @@ import qualified Data.Vector.Storable as VS (Vector, concat, drop, length, slice
 import Data.Word
 import Foreign.C.Types
 import Foreign.C.String
-import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr, withForeighPtri, mallocForeignPtrArray0)
+import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr, withForeignPtr, mallocForeignPtrArray0)
 import Foreign.Ptr
 import Foreign.Marshal.Alloc(finalizerFree, free)
 import Foreign.Marshal.Array
