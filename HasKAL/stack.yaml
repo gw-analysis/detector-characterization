@@ -9,7 +9,6 @@ extra-include-dirs:
 - /home/kazu/tools/include
 ghc-options:
   "*": -fPIC -fobject-code
-cc-options: -Wall -O2 -fPIC
 extra-lib-dirs:
 - /home/kazu/tools/lib
 packages:

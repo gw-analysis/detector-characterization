@@ -10,6 +10,7 @@ module GlitchMon.DataConditioning
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (foldl')
 import Data.Maybe (fromJust)
+import qualified Data.Vector.Storable as V
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
 import HasKAL.SignalProcessingUtils.FilterX
@@ -31,7 +32,7 @@ import System.IO (hFlush, stdout)
 import Control.DeepSeq (deepseq, NFData)
 
 
-instance NFData WaveData
+--instance NFData WaveData
 
 
 part'DataConditioning :: WaveData
@@ -39,13 +40,14 @@ part'DataConditioning :: WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
-  let highpassed = filtfiltX1d lpf (gwdata wave)
+  let highpassed = gwdata wave --filtfiltX1d lpf (gwdata wave)
       lpf = chebyshev1 4 1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
   liftIO $ print "-- high-pass filtering" >> hFlush stdout
-  highpassed `deepseq` return highpassed
+  liftIO $ print $ "["++show (highpassed V.!0)++", "++show (highpassed V.!1)++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"  
+  highpassed `deepseq` return ()
   let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
       dir = GP.debugDir param  
   let whtcoeff = GP.whtCoeff param
@@ -83,11 +85,11 @@ part'DataConditioning wave = do
                                  (dir++"/whitened_spectrum.png")
                                  ((0,0),(0,0))
                                  $ gwOnesidedPSDWaveData 0.2 out
-                 out `deepseq` return out
+                 return out
                _ -> do
                        liftIO $ print "-- whitening... "
-                       out <- section'Whitening wmethod highpassedw
-                       out `deepseq` return out
+                       section'Whitening wmethod highpassedw
+--                       out `deepseq` return out
 --    True  -> section'Whitening wmethod wave
 
 
@@ -107,10 +109,10 @@ section'Whitening opt wave = case opt of
           put $ GP.updateGlitchParam'refpsd param
             (gwOnesidedPSDV (gwdata whned) nfft (GP.samplingFrequency param))
           liftIO $ print "---- Time-domain whitening..." >> hFlush stdout
-          whned `deepseq` return whned
+          return whned
   GP.FrequencyDomain
     -> do liftIO $ print "---- Frequency-domain whitening..." >> hFlush stdout
-          wave `deepseq` return wave
+          return wave
 --    -> do param <- get
 --          (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
 --          put $ GP.updateGlitchParam'whtCoeff param whtCoeffList

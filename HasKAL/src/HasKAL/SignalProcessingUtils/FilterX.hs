@@ -96,6 +96,9 @@ filterXCore b blen a alen z dir m n input
       touchForeignPtr fptrOutput
       touchForeignPtr fptrZout
       c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
+      touchForeignPtr fptrInput
+      touchForeignPtr fptrOutput
+      touchForeignPtr fptrZout
  --     peekArray ilen ptrOutput >>= \out1 ->
  --       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
       a <- return $ VS.unsafeFromForeignPtr0 fptrOutput ilen

@@ -33,6 +33,7 @@ import Data.List (nub, foldl', elemIndices, maximum, minimum, lookup)
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Text ( pack )
+import qualified Data.Vector.Storable as V
 import Filesystem.Path (extension, (</>))
 import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import HasKAL.DataBaseUtils.FrameFull.Data
@@ -77,14 +78,13 @@ import GlitchMon.ParameterEstimation
 import GlitchMon.RegisterEventtoDB
 
 import System.IO (hFlush, stdout)
-import Control.DeepSeq (deepseq, NFData)
 
 
 -- for debug --
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwOnesidedMedianAveragedPSDWaveData, gwspectrogramWaveData)
-
+import Control.DeepSeq (deepseq) 
 
 {--------------------
 - Main Functions    -
@@ -129,7 +129,9 @@ sink param chname = do
                         if (fs /= fsorig)
                           then do liftIO $ print "start downsampling" >> hFlush stdout
                                   let wave' = downsampleWaveData fs wave
-                                  wave' `deepseq` return wave
+                                      wv = gwdata wave'
+                                  liftIO $ print $ "["++show (wv V.!0)++", "++show (wv V.!1)++", "++show (wv V.!2)++", "++show (wv V.!3)++"...]"
+                                  liftIO $ wv `deepseq` return ()
                                   let dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                   case GP.DS `elem` GP.debugmode param of 
@@ -271,14 +273,14 @@ glitchMon :: GP.GlitchParam
           -> WaveData
           -> IO GP.GlitchParam
 glitchMon param w =
-  runStateT (part'DataConditioning w) param >>= \(a, s) ->
-    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
-      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
-         case a'' of
-           Just t -> do part'RegisterEventtoDB t 
-                        print "finishing glitchmon" >> return s''
-           Nothing -> do print "No event from glitchmon"
-                         return s''
+  runStateT (part'DataConditioning w) param >>= \(a, s) -> 
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') -> return s'
+--      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
+--         case a'' of
+--           Just t -> do part'RegisterEventtoDB t 
+--                        print "finishing glitchmon" >> return s''
+--           Nothing -> do print "No event from glitchmon"
+--                         return s''
 
 
 eventDisplay :: GP.GlitchParam
