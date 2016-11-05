@@ -120,7 +120,7 @@ estimateThreshold np lcsz = do
 
 getNoiseFloorStatusV :: Vector Double->Double->GPSTIME->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
 getNoiseFloorStatusV tsV tsSF gpst np = do
-  let dsts = downsampleV tsSF (tsreSF np) tsV
+  let dsts = downsampleSV tsSF (tsreSF np) tsV
       nfmFltDelay = nfmCalcFltDelay (whitenFltOrder np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
   let psdmedian = gwpsdV whitendatsample (whitenFltStride np) (tsreSF np)
@@ -144,7 +144,7 @@ getNoiseFloorStatusV tsV tsSF gpst np = do
 
 getNoiseFloorStatusWaveData :: WaveData->NFMParam->IO[(GPSTIME, GPSTIME, Double)]
 getNoiseFloorStatusWaveData tsWD np = do
-  let dsts = downsampleV (samplingFrequency tsWD) (tsreSF np) (gwdata tsWD)
+  let dsts = downsampleSV (samplingFrequency tsWD) (tsreSF np) (gwdata tsWD)
       nfmFltDelay = nfmCalcFltDelay (whitenFltStride np) (tsreSF np) (lpfOrder np) (hpfOrder np) (minfreq np) (maxfreq np) ::Int
   whitendatsample <- getWhitensample dsts np
   let psdmedian = gwpsdV whitendatsample (whitenFltOrder np) (tsreSF np)

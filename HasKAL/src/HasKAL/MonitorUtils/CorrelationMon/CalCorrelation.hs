@@ -18,7 +18,7 @@ import qualified Data.Vector.Unboxed as U
 
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
-import HasKAL.SignalProcessingUtils.Resampling (downsampleV, downsampleUV)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleSV, downsampleUV)
 
 {-- ToDo :
     ・CGIだけのためにデータのサンプリングレートを揃えるLPFをかける関数を用意する

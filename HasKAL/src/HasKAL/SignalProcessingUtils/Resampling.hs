@@ -2,15 +2,12 @@
 
 module HasKAL.SignalProcessingUtils.Resampling
 ( downsample
-, downsampleV
 , downsampleUV
 , downsampleSV
-, downsampleSV'
 , upsample
 , resample
 , resampleSV
 , downsampleWaveData
-, downsampleWaveData'
 , resampleWaveData
 , downsampling
 ) where
@@ -45,7 +42,7 @@ downsampling :: Int -> Int -> SV.Vector Double -> SV.Vector Double
 downsampling fs newfs inputV = do
   let ilen = SV.length inputV
       sfactor = fs `div` newfs
-      olen = ilen `div` sfactor
+      olen = ilen `div` sfactor + 1
       inputV' = d2cdV inputV :: SV.Vector CDouble
    in cd2dV $ downsampleCore sfactor ilen inputV' olen
 
@@ -56,13 +53,8 @@ downsampleCore sfactor ilen input olen
    let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input     
    withForeignPtr fptrInput $ \ptrInput ->
      mallocForeignPtrArray0 olen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
-      do touchForeignPtr fptrInput
-         touchForeignPtr fptrOutput
-         c'downsample wsfactor wilen ptrInput wolen ptrOutput
-         touchForeignPtr fptrInput
-         touchForeignPtr fptrOutput
-         let out =  SV.unsafeFromForeignPtr0 fptrOutput olen
-         out `deepseq` return out
+      do c'downsample wsfactor wilen ptrInput wolen ptrOutput
+         return $ SV.unsafeFromForeignPtr0 fptrOutput olen
          where wsfactor = itow32 sfactor
                wilen = itow32 ilen
                wolen = itow32 olen
@@ -70,10 +62,10 @@ downsampleCore sfactor ilen input olen
 
 downsample :: Double -> Double -> [Double] -> [Double]
 downsample fs newfs x = y
-  where y = snd.unzip $ filter (\(n, _) -> n `mod` p==1) $ zip [1..] x'
-        p = truncate (fs/newfs)
-        x' = toList $ iir lpf $ fromList x
-        lpf = butter 4 fs (newfs/2) Low
+  where y = toList $ downsampling (floor fs) (floor newfs) x'
+        x' = filtfiltX1d lpf $ fromList x
+        lpf = chebyshev1 6 1 fs newfs2 Low
+        newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
 
 
 upsample :: Double -> Double -> [Double] -> [Double]
@@ -91,10 +83,10 @@ downsampleWaveData newfs x = y
         stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
-downsampleWaveData' :: Double -> WaveData -> WaveData
-downsampleWaveData' newfs x = y
+sosDownsampleWaveData :: Double -> WaveData -> WaveData
+sosDownsampleWaveData newfs x = y
   where y = mkWaveData (detector x) (dataType x) newfs (startGPSTime x) stopT v
-        v = downsampleSV' (samplingFrequency x) newfs (gwdata x)
+        v = sosDownsampleSV (samplingFrequency x) newfs (gwdata x)
         stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
@@ -105,17 +97,6 @@ resampleWaveData newfs x = y
         stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 
-downsampleV :: Double -> Double -> Vector Double -> Vector Double
-downsampleV fs newfs x = y
-  where y = if (p>=1) 
-             then fromList $ snd.unzip $ filter (\(n, _) -> n `mod` p == 1) $ zip [1..] $ toList x'
-             else error "new sample rate should be <= original sample rate."
-        p = truncate (fs/newfs)
-        x' = filtfilt lpf x
-        lpf = butter 4 fs newfs2 Low
-        newfs2 = 2*fs*tan (pi*newfs/2/fs)
-
-
 downsampleUV :: Double -> Double -> UV.Vector Double -> UV.Vector Double
 downsampleUV fs newfs v = 
   if (fs/newfs<1) 
@@ -124,7 +105,7 @@ downsampleUV fs newfs v =
       UV.create $ do 
         vs <- new nvs
         let v' =  UV.convert $ filtfiltX1d lpf $ UV.convert v
-            lpf = butter 4 fs newfs2 Low
+            lpf = chebyshev1 6 1 fs newfs2 Low
             newfs2 = 2*fs*tan (pi*newfs/2/fs)
         loop v' vs 0 nvs
         return vs
@@ -143,15 +124,13 @@ downsampleSV fs newfs v =
     then error "new sample rate should be <= original sample rate."
     else 
       let v' = filtfiltX1d lpf v
-          --lpf = butter 4 fs newfs2 Low
           lpf = chebyshev1 6 1 fs newfs2 Low
---          newfs2 = 2*fs*tan (pi*newfs/2/fs)
           newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'
        
 
-downsampleSV' :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-downsampleSV' fs newfs v = 
+sosDownsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
+sosDownsampleSV fs newfs v = 
   if (fs/newfs<1) 
     then error "new sample rate should be <= original sample rate."
     else
@@ -162,23 +141,9 @@ downsampleSV' fs newfs v =
           newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'
 
+
 resampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-resampleSV fs newfs v = 
-  if (fs/newfs<1) 
-    then error "new sample rate should be <= original sample rate."
-    else
-      SV.create $ do 
-        vs <- new nvs
-        loop v vs 0 nvs
-        return vs
-        where 
-          n = SV.length v
-          p = truncate $ fs/newfs
-          nvs = n `div` p
-          loop v vs i j = when (i < j) $ do
-            unsafeWrite vs i (v SV.!(i*p))
-            loop v vs (i+1) j
- 
+resampleSV fs newfs v = undefined
 
 
 itow32 :: Int -> CUInt
