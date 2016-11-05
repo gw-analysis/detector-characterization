@@ -45,7 +45,7 @@ import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
-import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData',downsampleWaveData)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import HasKAL.TimeUtils.GPSfunction (getCurrentGps)
 import HasKAL.TimeUtils.Signature (GPSTIME)

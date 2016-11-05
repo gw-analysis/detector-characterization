@@ -65,6 +65,7 @@ section'TimeFrequencyExpression whnWaveData = do
                 (snd $ gwOnesidedPSDV (V.slice (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
           out = (snrMatT', snrMatF, snrMatP)
+      liftIO $ out `deepseq` Prelude.return ()
       case GP.TF `elem` GP.debugmode param of
         True -> do
           liftIO $ H3.spectrogramM H3.LogY
@@ -79,35 +80,24 @@ section'TimeFrequencyExpression whnWaveData = do
     GP.FrequencyDomain -> do
       --let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
       let fs = samplingFrequency whnWaveData
-      liftIO $ print "evaluating fs" >> hFlush stdout
-      liftIO $ fs `deepseq` return()
       let nfreq = floor $ GP.nfrequency param * fs
-      liftIO $ print "evaluating nfreq" >> hFlush stdout
-      liftIO $ nfreq `deepseq` return()
-
       let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
-      liftIO $ print "evaluating refpsd" >> hFlush stdout
-      liftIO $ refpsd `deepseq` return()
+      liftIO $ refpsd `deepseq` Prelude.return()
 
       let nfreq2 = nfreq `div` 2
           ntimeSlide = floor $ GP.ntimeSlide param * fs
           ntime = ((V.length (gwdata whnWaveData)) - nfreq) `div` ntimeSlide
           snrMatF = V.map (*(fs/fromIntegral nfreq)) $ V.fromList [0.0, 1.0..fromIntegral nfreq2-1]
-      liftIO $ print "evaluating sntMatF" >> hFlush stdout
-      liftIO $ snrMatF `deepseq` return()
       let snrMatT = V.map (*(fromIntegral ntimeSlide/fs)) $ V.fromList [0.0, 1.0..fromIntegral ntime -1]
           snrMatT' = V.map (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      liftIO $ print "evaluating sntMatT" >> hFlush stdout
-      liftIO $ snrMatT' `deepseq` return()
       let snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
                       (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
             where 
               calcSpec tindx = V.zipWith (/) 
                 (snd $ gwOnesidedPSDV (V.slice (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
-      liftIO $ print "evaluating sntMatP" >> hFlush stdout
-      liftIO $ snrMatP `deepseq` return()
       let out = (snrMatT', snrMatF, snrMatP)
+      liftIO $ out `deepseq` return ()
       case GP.TF `elem` GP.debugmode param of
         True -> do
           liftIO $ H3.spectrogramM H3.LogY
@@ -123,71 +113,65 @@ section'TimeFrequencyExpression whnWaveData = do
 
 section'Clustering :: Spectrogram
                    -> StateT GP.GlitchParam IO (Spectrogram,[[(Tile,ID)]])
-section'Clustering (snrMatT, snrMatF, snrMatP) = do
+section'Clustering (snrMatT, snrMatF, snrMatP') = do
   liftIO $ print "-- start seedless clustering" >> hFlush stdout
   param <- get
   let n = GP.nNeighbor param
--- it seems Data.Packed.Matrix is broken in memory allocation.
---      l = concat . toLists $ snrMatP'
---  liftIO $ print "---- evaluating..." >> hFlush stdout
---  l `deepseq` return ()
-  let ncol = cols snrMatP
-      nrow = rows snrMatP
---  let l' = (nrow><ncol) l
---      dcted' = dct2d l'
---      cutT = floor $ fromIntegral ncol * GP.cutoffFractionTFT param
---      cutF = floor $ fromIntegral nrow * GP.cutoffFractionTFF param
+      l = concat . toLists $ snrMatP'
+      l' = (nrow><ncol) l
+      ncol = cols snrMatP'
+      nrow = rows snrMatP'
+      dcted' = dct2d l'
+      cutT = floor $ fromIntegral ncol * GP.cutoffFractionTFT param
+      cutF = floor $ fromIntegral nrow * GP.cutoffFractionTFF param
       cfun = GP.celement param
       minN = GP.minimumClusterNum param
---      m1 = ((nrow-cutF)><(ncol-cutT)) $ replicate ((nrow-cutF)*(ncol-cutT)) 1.0
---      mc0 = (nrow><cutT) $ replicate (nrow*cutT) 0.0
---      mr0 = (cutF><(ncol-cutT)) $ replicate (cutF*(ncol-cutT)) 0.0
---      qM = NL.fromBlocks [[NL.fromBlocks [[m1],[mr0]],mc0]]
---  let dcted = NL.mul dcted' qM
+      m1 = ((nrow-cutF)><(ncol-cutT)) $ replicate ((nrow-cutF)*(ncol-cutT)) 1.0
+      mc0 = (nrow><cutT) $ replicate (nrow*cutT) 0.0
+      mr0 = (cutF><(ncol-cutT)) $ replicate (cutF*(ncol-cutT)) 0.0
+      qM = NL.fromBlocks [[NL.fromBlocks [[m1],[mr0]],mc0]]
+  let dcted = NL.mul dcted' qM
 --  liftIO $ print "evaluating dcted"  >> hFlush stdout
---  dcted `deepseq` Prelude.return ()
---  let snrMatP = idct2d dcted
---  let snrMatP = l'
+  let snrMatP = idct2d dcted
 --  liftIO $ print "evaluating snrMatP" >> hFlush stdout
---  snrMatP `deepseq` Prelude.return ()
+  snrMatP `deepseq` Prelude.return ()
   let thresIndex = V.head $ V.findIndices (>=GP.cutoffFreq param) snrMatF
-  liftIO $ print "evaluating thresIndex" >> hFlush stdout
-  thresIndex `deepseq` Prelude.return ()
+--  liftIO $ print "evaluating thresIndex" >> hFlush stdout
+--  thresIndex `deepseq` Prelude.return ()
   let snrMat = ( snrMatT
                , V.fromList (drop (thresIndex+1) (V.toList snrMatF))
                , NL.fromRows (drop (thresIndex+1) (NL.toRows snrMatP))
                  )
-  liftIO $ print "evaluating snrMat" >> hFlush stdout
+--  liftIO $ print "evaluating snrMat" >> hFlush stdout
   snrMat `deepseq` Prelude.return ()
   let (tt,ff,mg) = snrMat
-      mg' = zip (concat . NL.toLists $ mg) [0,1..]
-      thrsed'' = [i | (v,i)<-zip (V.toList snrMatF) [0,1..], v>=GP.clusterThres param]
-      thrsed' = map (vectorInd2MatrixInd_row rmg cmg) thrsed''
+      mg' = zip (NL.toList . NL.flatten $ mg) [0,1..]
+--      thrsed'' = [i | (v,i)<-zip (V.toList snrMatF) [0,1..], v>=GP.clusterThres param]
+--      thrsed' = map (vectorInd2MatrixInd_row rmg cmg) thrsed''
+      thrsed' = NL.find (>=GP.clusterThres param) mg
       cmg = cols mg
       rmg = rows mg
   thrsed <- liftIO $ case length thrsed' >= GP.maxNtrigg param of
     True -> do 
       print "---- too many islands detected. top maxNtrigg islands will be selected." >> hFlush stdout
-      let ind = snd . unzip . take (GP.maxNtrigg param) . reverse . sortBy (\ x y -> compare (fst x) (fst y)) $ mg'
+      let ind = snd . unzip . take (GP.maxNtrigg param) . reverse . 
+            sortBy (\ x y -> compare (fst x) (fst y)) $ mg'
       return $ map (vectorInd2MatrixInd_row rmg cmg) ind
     False-> 
       return thrsed'
 
   let survivor' = nub' $ excludeOnePixelIsland cfun n thrsed
       survivor = [(a,b)| (a,b)<-survivor', a>=0&&a<rmg, b>=0&&b<cmg]
-  liftIO $ print "---- evaluating survivor" >> hFlush stdout
+--  liftIO $ print "---- evaluating survivor" >> hFlush stdout
   survivor `deepseq` Prelude.return ()
   let survivorwID = taggingIsland cfun minN survivor
-  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
+--  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (rmg><cmg) $ replicate (rmg*cmg) 0.0
-  liftIO $ print "---- evaluating zeroMatrix" >> hFlush stdout
   let survivorValues = map (\x->mg@@>x) survivor
-  liftIO $ print "---- evaluating survivorValues" >> hFlush stdout
-  survivorValues `deepseq` Prelude.return ()
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
-  liftIO $ print "---- evaluating newM" >> hFlush stdout
+--  liftIO $ print "---- evaluating newM" >> hFlush stdout
   newM `deepseq` Prelude.return ()
 
   case GP.CL `elem` GP.debugmode param of
