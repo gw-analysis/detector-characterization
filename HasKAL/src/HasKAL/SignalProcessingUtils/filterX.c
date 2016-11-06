@@ -29,116 +29,34 @@
 
 // Headers: --------------------------------------------------------------------
 #include <stdlib.h>
-#include <float.h>
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "filterX.h"
 
-// Definitions: ----------------------------------------------------------------
-#ifndef bool         
-#define bool int
-#endif
-#ifndef TRUE            
-#define TRUE 1
-#endif
-#ifndef FALSE           
-#define FALSE 0
-#endif
 
 // Limit number of dimensions of the input - this saves 2% computing time if
 // the signal is tiny (e.g. [16 x 1]):
 #define MAX_NDIMS 32
 
 
-// Prototypes: -----------------------------------------------------------------
-void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
-        int order, double *Z, double *Y);
-void CoreDouble2(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDouble3(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDouble4(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDouble5(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDouble6(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDouble7(double *X, int MX, int NX, double *a, double *b,
-        double *Z, double *Y);
-void CoreDoubleNR(double *X, int MX, int NX, double *a, double *b,
-        int order, double *Z, double *Y);
-void NormalizeBA(double *ab, int nParam);
-        
 // Main function ===============================================================
-void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, int na, double *X_in, int mX_in, int nX_in, double *Z_in, const char *Rev_in)
+void filter(double *Y_out, double* Z_out, double *b, int nb, double *a, int na, double *X_in, int MX, int NX, double *Z_in, int forward)
 {
-  double *a, *b, a0;
-  float  *Xf, *Yf;
-  int order, nParam, MX, NX;
-  bool allocate_ba = FALSE, forward = TRUE;
-  int *Xdims;
-  
-  // Get dimensions of inputs:
-  MX = mX_in;    
-  NX = nX_in;
-
-
-  // Get a and b as vectors of the same length:
-  if (na == nb) {       // Use input vectors directly, if possible:
-     b      = b_in;
-     a      = a_in;
-     nParam = nb;
-     
-     allocate_ba = (bool) (a[0] != 1.0);  // Normalization is needed
-     
-  } else {              // na differs from nb:
-     nParam      = na > nb ? na : nb;
-     allocate_ba = TRUE;
-  }
+  int order, nParam;
+  nParam = nb;
   order = nParam - 1;
 
-
-  if (allocate_ba) {    // Create local copy of expanded [b] and [a]:
-     // It is slightly cheaper to allocate one array only:
-     if ((b = calloc(2 * nParam, sizeof(double))) == NULL) {
-        fprintf(stderr,"Cannot get memory for parameters.");
-     }
-     a = b + nParam;    // Use 2nd half of vector [b] as [a]
-     memcpy(b, b_in, nb * sizeof(double));
-     memcpy(a, a_in, na * sizeof(double));
-     
-     // Normalize if 1st element of [a] does not equal 1.0:
-     if (a[0] != 1.0) {
-        NormalizeBA(b, nParam);
-     }
-  }
   
   // Create array for final conditions, insert value of initial conditions:
-  if (nX_in > MAX_NDIMS) {
+  if (NX > MAX_NDIMS) {
      fprintf(stderr, "Signal cannot have more than %d dimensions.", MAX_NDIMS);
-  }
-  // memory allocation for Xdims
-  Xdims = calloc (NX, sizeof(int));
-  int i;
-  for (i=0;i<nX_in;i++) {
-    Xdims[i] = MX; // それぞれの時系列データのサンプル数(次元数)が入った配列
   }
     
   // Create the output array:
-  //Z_out = calloc(order * NX, sizeof(double));
-  // Copy value from input with a conversion to DOUBLE on demand:
   memcpy(Z_out, Z_in, order * NX * sizeof(double));
-
-  // Flag for forward processing: ----------------------------------------------
-  // 'Reverse', TRUE: Process signal in reverse order:
-  forward = (bool) (strcmp(Rev_in,"reverse")!=0 && strcmp(Rev_in,"Reverse")!=0);
-
   // Call the calulator: -------------------------------------------------------
-  // Create the output array:
-  //Y_out = calloc(MX * NX, sizeof(double));
-     
   if (forward) {
      // Unrolled loops for common filter lengths:
      switch (order) {
@@ -152,13 +70,7 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
      }
   } else {  // Reverse order:
      CoreDoubleNR(X_in, MX, NX, a, b, order, Z_out, Y_out);
-  }
-
-  // Cleanup:
-  free(Xdims);
-  if (allocate_ba) {
-     free(b);       // Frees [a] implicitely!
-  }
+}
   
   return;
 }
@@ -166,25 +78,6 @@ void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, in
 
 
 // =============================================================================
-void NormalizeBA(double *ba, int nParam)
-{
-  // Normalize filter parameters such that a[0] is 1.0.
-  double a0 = ba[nParam];
-  int i = 0, f = 2 * nParam;
-  
-  // Catch division by zero as error:
-  if (a0 == 0.0) {
-     fprintf(stderr,"1st element of A cannot be 0.");
-  }
-        
-  while (i < f) {
-     ba[i++] /= a0;
-  }
-  
-  return;
-}
-
-
 void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
                  int order, double *Z, double *Y)
 {

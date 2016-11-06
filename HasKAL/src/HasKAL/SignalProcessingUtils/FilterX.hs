@@ -24,6 +24,8 @@ import System.IO.Unsafe
 import Control.DeepSeq (deepseq, NFData)
 
 
+data FilterDirection = Reverse | Forward deriving (Show, Eq, Ord)
+
 -- | filtfiltX (num, denom) inputV 
 filtfiltX :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
 filtfiltX (num, denom) inputV = 
@@ -44,27 +46,27 @@ filtfiltX (num, denom) inputV =
       xf    = map VS.toList xf'
       -- Filter initial reflected signal:
       ic = ((order-1)><1) $ calcInitCond (num,denom)
-      (dum,zi) = filterX (num, denom) (map VS.toList (toColumns (ic * takeRows 1 xi''))) "forward" xi'
+      (dum,zi) = filterX (num, denom) (map VS.toList (toColumns (ic * takeRows 1 xi''))) Forward xi'
       -- Use the final conditions of the initial part for the actual signal:
-      (ys,zs) = filterX (num, denom) zi "forward" inputV -- "s"teady state
-      (yf,zdum) = filterX (num, denom) zs "forward" xf'  -- "f"inal conditions
+      (ys,zs) = filterX (num, denom) zi Forward inputV -- "s"teady state
+      (yf,zdum) = filterX (num, denom) zs Forward xf'  -- "f"inal conditions
       -- Filter signal again in reverse order:
       yEdge = asRow $ (fromColumns yf) ND.! (nEdge-1)
-      (dum',zf) = filterX (num, denom) (map VS.toList (toColumns (ic * yEdge))) "reverse" yf
-   in fst $ filterX (num, denom) zf "reverse" ys
+      (dum',zf) = filterX (num, denom) (map VS.toList (toColumns (ic * yEdge))) Reverse yf
+   in fst $ filterX (num, denom) zf Reverse ys
 
 
 filtfiltX1d :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
 filtfiltX1d (num, denom) inputV = head $ filtfiltX (num, denom) [inputV]
 
 
-filterX1d :: ([Double], [Double]) -> [Double] -> String -> VS.Vector Double -> (VS.Vector Double,[Double])
+filterX1d :: ([Double], [Double]) -> [Double] -> FilterDirection -> VS.Vector Double -> (VS.Vector Double,[Double])
 filterX1d (num, denom) z dir inputV = let a = filterX (num, denom) [z] dir [inputV]
                                        in (head . fst $ a, head . snd $ a)      
 
 
 -- | filterX (num, denom) z dir inputV
-filterX :: ([Double], [Double]) -> [[Double]] -> String -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
+filterX :: ([Double], [Double]) -> [[Double]] -> FilterDirection -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
 filterX (num, denom) z dir inputV = unsafePerformIO $ do
   let inputV' = VS.concat $ map d2cdV inputV :: VS.Vector CDouble
       n = length inputV
@@ -75,44 +77,35 @@ filterX (num, denom) z dir inputV = unsafePerformIO $ do
       blen = length num'
       alen = length denom'
       z' = d2cd . concat $ z
-  dir' <- newCString dir
+      dir' | dir==Forward = 1 :: Int
+           | dir==Reverse = 0 :: Int
   let(vv,zz) = filterXCore num' blen denom' alen z' dir' m n inputV'
-  free dir' 
   return $(flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
 
 
-filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  CString -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
-filterXCore b blen a alen z dir m n input
+filterXCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  Int -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
+filterXCore b blen a alen z d m n input
  = unsafePerformIO $ do
    let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input 
    withForeignPtr fptrInput $ \ptrInput ->
     withArray b $ \ptrb ->
     withArray a $ \ptra ->
     withArray z $ \ptrZin -> do
- --   withArray (replicate ilen 0.0) $ \ptrOutput ->
     mallocForeignPtrArray0 ilen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
      mallocForeignPtrArray0 zlen >>= \fptrZout -> withForeignPtr fptrZout $ \ptrZout -> do
-      touchForeignPtr fptrInput
-      touchForeignPtr fptrOutput
-      touchForeignPtr fptrZout
-      c'filter ptrOutput ptrZout ptrb wblen ptra walen ptrInput wm wn ptrZin dir
-      touchForeignPtr fptrInput
-      touchForeignPtr fptrOutput
-      touchForeignPtr fptrZout
- --     peekArray ilen ptrOutput >>= \out1 ->
- --       peekArray zlen ptrZout >>= \out2 -> return (VS.fromList out1, out2)
+      c'filter ptrOutput ptrZout ptrb cblen ptra calen ptrInput cm cn ptrZin cd
       a <- return $ VS.unsafeFromForeignPtr0 fptrOutput ilen
       a `deepseq` return ()
       b <- peekArray zlen ptrZout
       b `deepseq` return ()
       return $ (a, b)
        where ilen = m * n
-             wilen = itow32 ilen
-             walen = itow32 alen
-             wblen = itow32 blen
-             wm    = itow32 m
-             wn    = itow32 n
-             zlen = ((max blen alen)-1) * n
+             calen = fromIntegral alen :: CInt
+             cblen = fromIntegral blen :: CInt
+             cd    = fromIntegral d    :: CInt
+             cm    = fromIntegral m    :: CInt
+             cn    = fromIntegral n    :: CInt
+             zlen  = ((max blen alen)-1) * n
 
 
 instance NFData CDouble
@@ -132,9 +125,6 @@ calcInitCond (num,denom) =
         <\> ((((n-1)><1) (tail denom)) - scale (head denom) (((n-1)><1) (tail num))) 
 
 
-itow32 :: Int -> CUInt
-itow32 = fromIntegral
-
 d2cd :: [Double] -> [CDouble]
 d2cd = map realToFrac
 
@@ -148,5 +138,5 @@ cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
 
 
-foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> Ptr CDouble -> CUInt -> CUInt -> Ptr CDouble -> CString -> IO()
+foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CInt -> Ptr CDouble -> CInt -> Ptr CDouble -> CInt -> CInt -> Ptr CDouble -> CInt -> IO()
 

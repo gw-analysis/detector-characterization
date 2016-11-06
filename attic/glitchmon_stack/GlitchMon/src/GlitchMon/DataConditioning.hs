@@ -40,13 +40,14 @@ part'DataConditioning :: WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
-  let highpassed = gwdata wave --filtfiltX1d lpf (gwdata wave)
+  let highpassed = filtfiltX1d lpf (gwdata wave)
       lpf = chebyshev1 4 1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
   liftIO $ print "-- high-pass filtering" >> hFlush stdout
-  liftIO $ print $ "["++show (highpassed V.!0)++", "++show (highpassed V.!1)++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"  
+--  liftIO $ print $ "["++show (highpassed V.!0)++", "++show (highpassed V.!1)
+--    ++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"  
   highpassed `deepseq` return ()
   let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
       dir = GP.debugDir param  

@@ -18,7 +18,7 @@ main = do
   tmpfnames <- fmap (fromMaybe (error "fs not found.")) $ kagraDataPoint gps chname
   fsorig <- fmap (fromMaybe (error "fs not found.")) $ getSamplingFrequency (head tmpfnames) chname
 --  print fsorig
-  let dfactor = 1.0
+  let dfactor = 4.0
   let fs =  fromIntegral $ floor (fsorig / dfactor)
   let param = GlitchParam
                { segmentLength = 32
@@ -36,11 +36,11 @@ main = do
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 30
-               , clusterThres = 6.0
+               , clusterThres = 8.0
                , celement = basePixel9
                , minimumClusterNum = 4
                , nNeighbor = 3
-               , maxNtrigg = 200
+               , maxNtrigg = 100
              -- * clean data finder
                , cdfInterval = 32
                , cdfparameter = cdfp

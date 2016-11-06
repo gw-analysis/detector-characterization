@@ -130,7 +130,8 @@ sink param chname = do
                           then do liftIO $ print "start downsampling" >> hFlush stdout
                                   let wave' = downsampleWaveData fs wave
                                       wv = gwdata wave'
-                                  liftIO $ print $ "["++show (wv V.!0)++", "++show (wv V.!1)++", "++show (wv V.!2)++", "++show (wv V.!3)++"...]"
+                                  --liftIO $ print $ "["++show (wv V.!0)++", "++show (wv V.!1)++", "
+                                  --  ++show (wv V.!2)++", "++show (wv V.!3)++"...]"
                                   liftIO $ wv `deepseq` return ()
                                   let dataGps = (fst (startGPSTime wave'),n)
                                       param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
@@ -169,7 +170,6 @@ sink param chname = do
                                                          $ gwOnesidedMedianAveragedPSDWaveData 0.2 wave'
 
                                        _ -> liftIO $ Prelude.return ()
---                                  s <- liftIO $ timeRun chname wave' param'2
                                   s <- liftIO $ fileRun wave' param'2
                                   -- [TEST] parameter reseted
                                   sink param chname
@@ -274,13 +274,13 @@ glitchMon :: GP.GlitchParam
           -> IO GP.GlitchParam
 glitchMon param w =
   runStateT (part'DataConditioning w) param >>= \(a, s) -> 
-    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') -> return s'
---      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
---         case a'' of
---           Just t -> do part'RegisterEventtoDB t 
---                        print "finishing glitchmon" >> return s''
---           Nothing -> do print "No event from glitchmon"
---                         return s''
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
+        case a'' of
+          Just t -> do part'RegisterEventtoDB t 
+                       print "finishing glitchmon" >> return s''
+          Nothing -> do print "No event from glitchmon"
+                        return s''
 
 
 eventDisplay :: GP.GlitchParam
