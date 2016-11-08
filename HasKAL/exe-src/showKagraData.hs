@@ -1,7 +1,7 @@
 
 import qualified Data.Vector.Storable as V
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
-import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData, resampleWaveData)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData, resampleonlyWaveData)
 import HasKAL.TimeUtils.Function (deformatGPS)
 import HasKAL.TimeUtils.Signature
 import HasKAL.WaveUtils.Data (WaveData(..))
@@ -46,7 +46,7 @@ doDownSample fsfact w = do let fs = samplingFrequency w
 doReSample fsfact w = do let fs = samplingFrequency w
                          case fsfact > 1 of
                            False -> w
-                           True  -> resampleWaveData (fs/fromIntegral fsfact) w
+                           True  -> resampleonlyWaveData (fs/fromIntegral fsfact) w
 
 
 data Flag = ResampleOnly deriving Show
