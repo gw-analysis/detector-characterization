@@ -20,8 +20,8 @@ import qualified Data.Vector.Storable as SV
 import qualified Data.Vector.Unboxed as UV
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
-import HasKAL.SignalProcessingUtils.FilterX
-import HasKAL.SignalProcessingUtils.Filter(iir,sosfiltfilt,filtfilt)
+import HasKAL.SignalProcessingUtils.FilterX(filtfilt0,calcInitCond)
+import HasKAL.SignalProcessingUtils.Filter(sosfiltfilt)
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.TimeUtils.Function
@@ -63,7 +63,7 @@ downsampleCore sfactor ilen input olen
 downsample :: Double -> Double -> [Double] -> [Double]
 downsample fs newfs x = y
   where y = toList $ downsampling (floor fs) (floor newfs) x'
-        x' = filtfiltX1d lpf $ fromList x
+        x' = filtfilt0 lpf $ fromList x
         lpf = chebyshev1 6 1 fs newfs2 Low
         newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
 
@@ -104,7 +104,7 @@ downsampleUV fs newfs v =
     else
       UV.create $ do 
         vs <- new nvs
-        let v' =  UV.convert $ filtfiltX1d lpf $ UV.convert v
+        let v' =  UV.convert $ filtfilt0 lpf $ UV.convert v
             lpf = chebyshev1 6 1 fs newfs2 Low
             newfs2 = 2*fs*tan (pi*newfs/2/fs)
         loop v' vs 0 nvs
@@ -123,7 +123,7 @@ downsampleSV fs newfs v =
   if (fs/newfs<1) 
     then error "new sample rate should be <= original sample rate."
     else 
-      let v' = filtfiltX1d lpf v
+      let v' = filtfilt0 lpf v
           lpf = chebyshev1 6 1 fs newfs2 Low
           newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'

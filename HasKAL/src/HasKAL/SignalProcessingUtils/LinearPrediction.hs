@@ -19,7 +19,7 @@ import Foreign.Storable (pokeElemOff)
 import Numeric.LinearAlgebra
 import Numeric.GSL.Fourier
 import HasKAL.MathUtils.FFTW (dftRC1d,dftCR1d)
-import HasKAL.SignalProcessingUtils.FilterX
+import HasKAL.SignalProcessingUtils.FilterX(filtfilt0)
 import HasKAL.SignalProcessingUtils.WindowType
 import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SignalProcessingUtils.Interpolation
@@ -50,7 +50,7 @@ levinson p r = do
 whitening :: ([Double],Double) -> [Double]-> [Double]
 whitening (whnb,rho) x = 
   let whnb' = map mysqrt whnb   
-   in map (/sqrt rho) $ toList $ filtfiltX1d (whnb',(1.0:replicate (length whnb'-1) 0.0)) $ fromList x
+   in map (/sqrt rho) $ toList $ filtfilt0 (whnb',(1.0:replicate (length whnb'-1) 0.0)) $ fromList x
 
 
 --whiteningC :: ([Double],Double) -> [Double]-> [Double]
@@ -62,7 +62,7 @@ whiteningWaveData (whnb,rho) x =
   let whnb' = map mysqrt whnb    
 --      initcoeff = calcInitCond (whnb',(1.0:replicate (length whnb'-1) 0.0))
 --      y = G.map (/sqrt rho) $ firFiltfiltVInit whnb' initcoeff (gwdata x)
-      y = G.map (/sqrt rho) $ filtfiltX1d (whnb',(1.0:replicate (length whnb'-1) 0.0)) (gwdata x)
+      y = G.map (/sqrt rho) $ filtfilt0 (whnb',(1.0:replicate (length whnb'-1) 0.0)) (gwdata x)
    in fromJust $ updateWaveDatagwdata x y
 
 
