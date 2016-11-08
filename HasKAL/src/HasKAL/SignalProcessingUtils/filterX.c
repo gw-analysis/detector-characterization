@@ -35,6 +35,16 @@
 #include <stdio.h>
 #include "filterX.h"
 
+// Definitions: ----------------------------------------------------------------
+#ifndef bool         
+#define bool int
+#endif
+#ifndef TRUE            
+#define TRUE 1
+#endif
+#ifndef FALSE           
+#define FALSE 0
+#endif
 
 // Limit number of dimensions of the input - this saves 2% computing time if
 // the signal is tiny (e.g. [16 x 1]):
@@ -42,13 +52,39 @@
 
 
 // Main function ===============================================================
-void filter(double *Y_out, double* Z_out, double *b, int nb, double *a, int na, double *X_in, int MX, int NX, double *Z_in, int forward)
+void filter(double *Y_out, double* Z_out, double *b_in, int nb, double *a_in, int na, double *X_in, int MX, int NX, double *Z_in, int forward)
 {
+  double *a, *b;
   int order, nParam;
-  nParam = nb;
+  bool allocate_ba = FALSE;
+
+  // Get a and b as vectors of the same length:
+  if (na == nb) {       // Use input vectors directly, if possible:
+     b = b_in;
+     a = a_in;
+     nParam = nb;
+     allocate_ba = (bool) (a[0] != 1.0);  // Normalization is needed
+  } else {
+     nParam      = na > nb ? na : nb;
+     allocate_ba = TRUE;
+  }
   order = nParam - 1;
 
-  
+  if (allocate_ba) {    // Create local copy of expanded [b] and [a]:
+     // It is slightly cheaper to allocate one array only:
+     if ((b = calloc(2 * nParam, sizeof(double))) == NULL) {
+       fprintf(stderr,"Cannot get memory for parameters.");
+     }
+     a = b + nParam;    // Use 2nd half of vector [b] as [a]
+     memcpy(b, b_in, nb * sizeof(double));
+     memcpy(a, a_in, na * sizeof(double));
+   
+     // Normalize if 1st element of [a] does not equal 1.0:
+     if (a[0] != 1.0) {
+       NormalizeBA(b, nParam);
+     }
+   }
+
   // Create array for final conditions, insert value of initial conditions:
   if (NX > MAX_NDIMS) {
      fprintf(stderr, "Signal cannot have more than %d dimensions.", MAX_NDIMS);
@@ -78,6 +114,26 @@ void filter(double *Y_out, double* Z_out, double *b, int nb, double *a, int na, 
 
 
 // =============================================================================
+
+
+void NormalizeBA(double *ba, int nParam)
+{
+  // Normalize filter parameters such that a[0] is 1.0.
+    double a0 = ba[nParam];
+    int i = 0, f = 2 * nParam;
+        
+  // Catch division by zero as error:
+    if (a0 == 0.0) {
+       fprintf(stderr,"1st element of A cannot be 0.");
+    }
+                           
+    while (i < f) {
+       ba[i++] /= a0;
+    }
+                   
+    return;
+}
+
 void CoreDoubleN(double *X, int MX, int NX, double *a, double *b,
                  int order, double *Z, double *Y)
 {
