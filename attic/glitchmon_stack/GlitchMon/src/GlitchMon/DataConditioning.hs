@@ -13,8 +13,7 @@ import Data.Maybe (fromJust)
 import qualified Data.Vector.Storable as V
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
-import HasKAL.SignalProcessingUtils.FilterX
-import HasKAL.SignalProcessingUtils.Filter(filtfilt)
+import HasKAL.SignalProcessingUtils.FilterX(filtfilt0)
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData, whiteningWaveData')
@@ -40,7 +39,7 @@ part'DataConditioning :: WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
-  let highpassed = filtfiltX1d lpf (gwdata wave)
+  let highpassed = filtfilt0 lpf (gwdata wave)
       lpf = chebyshev1 4 1 fs newfs2 High
       newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
