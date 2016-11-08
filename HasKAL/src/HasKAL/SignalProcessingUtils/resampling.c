@@ -12,3 +12,12 @@ void downsample(unsigned n, unsigned xs, double* x, unsigned rs, double* r){
 }
 
 
+void upsample(unsigned n, unsigned xs, double* x, unsigned rs, double* r){
+  int i;
+  for (i = 0; i < rs; i++)
+    r[i] = 0;
+  for (i = 0; i < rs; i=i+n)
+    r[i] = x[i];
+}
+
+
