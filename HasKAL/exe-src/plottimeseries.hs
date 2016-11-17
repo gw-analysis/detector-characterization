@@ -17,39 +17,43 @@ main = do
   (varOpt, varArgs) <- getArgs >>= \optargs -> 
     case getOpt Permute options optargs of
       (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
+  print varOpt
+  print varArgs
   let ch = head varArgs
       fs = read (varArgs !! 1) :: Double
       t0 = read (varArgs !! 2) :: Double
-      fname = varArgs !! 3
   let resamplePart x | optResample varOpt == "1/1" = x
                      | otherwise = let (p,q) = getPQ (optResample varOpt) 
                                        fs = read (varArgs !! 1) :: Double
                                     in resampleSV (p,q) fs x
-      inputPart x = case optInput varOpt of
+      inputPart = case optInput varOpt of
                     Just "stdin" -> unsafePerformIO $ stdin2vec
                     Just f -> let ch = Prelude.head varArgs
                                in fromMaybe (error "cannot read data.") (unsafePerformIO $ readFrameV ch f)
                     Nothing -> error "cannot read data."
-      outputPart x = unsafePerformIO $ case optOutput varOpt of
+      outputPart x = case optOutput varOpt of
                        Just "stdout" -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x) 
                        Just f -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x)
                        Nothing -> error "cannot output."
-      xplotPart x = unsafePerformIO $ case optXPlot varOpt of
+      xplotPart x = case optXPlot varOpt of
                       False -> return x
                       True -> do
                         let title = ch
-                            tv = (V.fromList [t0,t0+1/fs..], x)
+                            tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
                         plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
                         return x 
-      plotPart x = unsafePerformIO $ case optPlot varOpt of
+      plotPart x = case optPlot varOpt of
                      [] -> return x
                      f  -> do 
                        let title = ch
-                           tv = (V.fromList [t0,t0+1/fs..], x)
+                           tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
                        plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv 
                        return x
-  return $ outputPart . plotPart . xplotPart . resamplePart . inputPart $ fname
+  x1 <- xplotPart . resamplePart $ inputPart
+  x2 <- plotPart x1
+  outputPart x2
 
+--  outputPart $ inputPart
 
 getPQ x = let a = take 2 $ map (\y-> read y :: Int) $ splitOn "/" x
            in (head a,a!!1)
@@ -64,7 +68,7 @@ data Options = Options
  , optInput    :: Maybe FilePath
  , optXPlot    :: Bool
  , optPlot     :: FilePath
- } 
+ } deriving (Show)
 
 
 defaultOptions  = Options
@@ -88,7 +92,7 @@ options =
       ( OptArg ((\ f opts -> opts {optInput = Just f}) . fromMaybe "stdin") "FILE" )
       "input FILE"
   , Option ['X'] ["Xplot"]
-      ( NoArg (\ opts -> opts {optXPlot = False}))
+      ( NoArg (\ opts -> opts {optXPlot = True}))
       "X plot"
   , Option ['p'] ["plot"]
       ( ReqArg (\p opts -> opts {optPlot = p}) "FILE")
