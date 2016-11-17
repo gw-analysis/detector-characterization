@@ -1,37 +1,99 @@
 
-import Data.List (delete, elemIndex, intersect)
-import Data.Maybe (catMaybes)
-import System.Environment (getArgs)
-
-import HasKAL.DetectorUtils.Detector (Detector(..))
-import HasKAL.FrameUtils.Function (readFrameWaveData')
+import Data.List.Split
+import Data.Maybe (fromMaybe)
+import qualified Data.Vector.Storable as V
+import HasKAL.FrameUtils.Function (readFrameV)
+import HasKAL.IOUtils.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph
-import HasKAL.WaveUtils.Data (WaveData(..))
-import HasKAL.WaveUtils.Function (waveData2TimeSeries, mergeOverlapWaveDataC)
+import HasKAL.SignalProcessingUtils.Resampling (resampleSV)
+import System.Console.GetOpt
+import System.Environment (getArgs)
+import System.IO (stdout, hPutStrLn)
+import System.IO.Unsafe (unsafePerformIO)
+
 
 main = do
   {-- parameters --}
-  args <- getArgs
-  (ch, fname, oFile) <- case (length args, elemIndex "-o" args) of
-                         (4, Just n) -> do
-                           let arg' = delete "-o" $ delete (args!!(n+1)) args
-                           return (arg'!!0, arg'!!1, args!!(n+1))
-                         (2, Nothing) -> return (args!!0, args!!1, "X11")
-                         (_, _) -> error "Usage: plottimeseries [-o output] channel filename"
+  (varOpt, varArgs) <- getArgs >>= \optargs -> 
+    case getOpt Permute options optargs of
+      (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
+  let ch = head varArgs
+      fs = read (varArgs !! 1) :: Double
+      t0 = read (varArgs !! 2) :: Double
+      fname = varArgs !! 3
+  let resamplePart x | optResample varOpt == "1/1" = x
+                     | otherwise = let (p,q) = getPQ (optResample varOpt) 
+                                       fs = read (varArgs !! 1) :: Double
+                                    in resampleSV (p,q) fs x
+      inputPart x = case optInput varOpt of
+                    Just "stdin" -> unsafePerformIO $ stdin2vec
+                    Just f -> let ch = Prelude.head varArgs
+                               in fromMaybe (error "cannot read data.") (unsafePerformIO $ readFrameV ch f)
+                    Nothing -> error "cannot read data."
+      outputPart x = unsafePerformIO $ case optOutput varOpt of
+                       Just "stdout" -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x) 
+                       Just f -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x)
+                       Nothing -> error "cannot output."
+      xplotPart x = unsafePerformIO $ case optXPlot varOpt of
+                      False -> return x
+                      True -> do
+                        let title = ch
+                            tv = (V.fromList [t0,t0+1/fs..], x)
+                        plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
+                        return x 
+      plotPart x = unsafePerformIO $ case optPlot varOpt of
+                     [] -> return x
+                     f  -> do 
+                       let title = ch
+                           tv = (V.fromList [t0,t0+1/fs..], x)
+                       plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv 
+                       return x
+  return $ outputPart . plotPart . xplotPart . resamplePart . inputPart $ fname
 
-  {-- read data --}
-  mbWd <- readFrameWaveData' KAGRA ch fname
-  let wd = case mbWd of
-            Nothing -> error "Can't find data."
-            Just x  -> x
 
-  {-- plot paramter --}
-  let sGPS = startGPSTime wd
-      eGPS = startGPSTime wd
-      title = "Time Series: "++ch
-      xlabel = "time since GPS="++(show . fst $ sGPS)++" [s]"
+getPQ x = let a = take 2 $ map (\y-> read y :: Int) $ splitOn "/" x
+           in (head a,a!!1)
 
-  {-- main --}
-  let dat = waveData2TimeSeries (fst sGPS, 0) wd
-  plotV Linear Line 1 BLUE (xlabel, "amplitude") 0.05 title oFile ((0,0),(0,0)) dat
+
+type RSfactor = String
+
+
+data Options = Options
+ { optResample :: RSfactor
+ , optOutput   :: Maybe FilePath
+ , optInput    :: Maybe FilePath
+ , optXPlot    :: Bool
+ , optPlot     :: FilePath
+ } 
+
+
+defaultOptions  = Options
+  { optResample = []
+  , optOutput   = Nothing
+  , optInput    = Nothing
+  , optXPlot    = False
+  , optPlot     = []
+  }
+
+
+options :: [OptDescr (Options -> Options)]
+options = 
+  [ Option ['r'] ["resample"]
+      ( ReqArg (\ pq opts -> opts { optResample = pq}) "P/Q" )
+      "resampling factor P/Q"
+  , Option ['o'] ["output"]
+      ( OptArg ((\ f opts -> opts {optOutput = Just f}) . fromMaybe "stdout") "FILE" )
+      "output FILE"
+  , Option ['i'] ["input"]
+      ( OptArg ((\ f opts -> opts {optInput = Just f}) . fromMaybe "stdin") "FILE" )
+      "input FILE"
+  , Option ['X'] ["Xplot"]
+      ( NoArg (\ opts -> opts {optXPlot = False}))
+      "X plot"
+  , Option ['p'] ["plot"]
+      ( ReqArg (\p opts -> opts {optPlot = p}) "FILE")
+      "plot file"
+  ]
+
+
 

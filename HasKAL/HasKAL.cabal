@@ -1061,3 +1061,16 @@ executable plotHistogram
 -- -threaded -rtsopts -eventlog
 
 
+executable plottimeseries
+  hs-source-dirs: exe-src
+  main-is:        plottimeseries.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
