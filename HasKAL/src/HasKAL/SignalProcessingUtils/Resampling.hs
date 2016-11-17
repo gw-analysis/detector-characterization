@@ -191,14 +191,17 @@ upsampleSV fs newfs v =
 
 -- | fs -> p/q x fs
 resampleSV :: (Int,Int) -> Double -> SV.Vector Double -> SV.Vector Double
-resampleSV (p,q) fs v = do
-  let up = upsampling (floor fs) (floor (fs*(fromIntegral p))) v
+resampleSV (p,q) fs v =
+  let up |p==1 = v
+         |otherwise = upsampling (floor fs) (floor (fs*(fromIntegral p))) v
       lfs |fromIntegral p/fromIntegral q >=1 = fs/2
           |fromIntegral p/fromIntegral q <1  = (fromIntegral p)/(fromIntegral q)*fs/2
       lfsa = 2*fs*tan (pi*lfs/fs/2)/(2*pi)
       lpf = chebyshev1 6 1 (fs*fromIntegral p) lfsa Low
       upL = filtfilt0 lpf up
-   in downsampling (floor (fs*(fromIntegral p))) (floor (fs*(fromIntegral p)/(fromIntegral q))) upL
+   in case q of
+        1 -> up
+        _ -> downsampling (floor (fs*(fromIntegral p))) (floor (fs*(fromIntegral p)/(fromIntegral q))) upL
 
 
 
