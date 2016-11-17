@@ -1,7 +1,9 @@
 
+import Control.Concurrent (forkIO)
 import Data.List.Split
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector.Storable as V
+import Foreign.Matlab
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.IOUtils.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph
@@ -17,8 +19,6 @@ main = do
   (varOpt, varArgs) <- getArgs >>= \optargs -> 
     case getOpt Permute options optargs of
       (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
-  print varOpt
-  print varArgs
   let ch = head varArgs
       fs = read (varArgs !! 1) :: Double
       t0 = read (varArgs !! 2) :: Double
@@ -33,27 +33,29 @@ main = do
                     Nothing -> error "cannot read data."
       outputPart x = case optOutput varOpt of
                        Just "stdout" -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x) 
-                       Just f -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x)
-                       Nothing -> error "cannot output."
+                       Just f -> do let xl = V.toList x
+                                    mxv <- createColVector xl
+                                    matSave f [("data", mxv)]
+                                    mapM_ (\y -> hPutStrLn stdout $ show y) xl
+                       Nothing -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x)
       xplotPart x = case optXPlot varOpt of
                       False -> return x
                       True -> do
                         let title = ch
                             tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
-                        plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
+                        thres <- forkIO $ plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
                         return x 
       plotPart x = case optPlot varOpt of
                      [] -> return x
                      f  -> do 
                        let title = ch
                            tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
-                       plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv 
+                       forkIO $ plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv 
                        return x
   x1 <- xplotPart . resamplePart $ inputPart
   x2 <- plotPart x1
   outputPart x2
 
---  outputPart $ inputPart
 
 getPQ x = let a = take 2 $ map (\y-> read y :: Int) $ splitOn "/" x
            in (head a,a!!1)
