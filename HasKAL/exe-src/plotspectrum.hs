@@ -1,39 +1,79 @@
 
-import Data.List (delete, elemIndex, intersect)
-import Data.Maybe (catMaybes)
-import System.Environment (getArgs)
 
-import HasKAL.DetectorUtils.Detector (Detector(..))
-import HasKAL.FrameUtils.Function (readFrameWaveData')
+import Data.Maybe (fromMaybe)
+import qualified Data.Vector.Storable as V
+import HasKAL.FrameUtils.Function (readFrameV)
+import HasKAL.IOUtils.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SpectrumUtils.Function (mapSpectrum)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData)
-import HasKAL.WaveUtils.Data (WaveData(..))
-import HasKAL.WaveUtils.Function (catWaveData)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV)
+import System.Console.GetOpt
+import System.Environment (getArgs)
+import System.IO.Unsafe (unsafePerformIO)
+
+
 
 main = do
   {-- parameters --}
-  args <- getArgs
-  (ch, fname, oFile) <- case (length args, elemIndex "-o" args) of
-                       (4, Just n) -> do
-                         let arg' = delete "-o" $ delete (args!!(n+1)) args
-                         return (arg'!!0, arg'!!1, args!!(n+1))
-                       (2, Nothing) -> return (args!!0, args!!1, "X11")
-                       (_, _) -> error "Usage: plottimeseries [-o output] channel filename"
+  (varOpt, varArgs) <- getArgs >>= \optargs ->
+    case getOpt Permute options optargs of
+      (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
+  let ch = head varArgs
+      fs = read (varArgs !! 1) :: Double
+      t0 = read (varArgs !! 2) :: Double
+      dt = read (varArgs !! 3) :: Double
 
   {-- read data --}
-  mbWd <- readFrameWaveData' KAGRA ch fname
-  let wd = case mbWd of
-            Nothing -> error "Can't find data."
-            Just x -> x
+  let inputPart = 
+        case optInput varOpt of
+          Just "stdin" -> unsafePerformIO $ stdin2vec
+          Just f -> 
+            let ch = Prelude.head varArgs
+             in fromMaybe (error "cannot read data.") (unsafePerformIO $ readFrameV ch f)
 
   {-- plot parameter --}
-  let dtfft = "1.0"
+  let dtfft = show dt
       title = "#splitline{Spectrum: "++ch++" ("++z++")}{   ("++x++")}"
-        where x = "GPS: "++(show . fst $ startGPSTime wd)++" ~ "++(show . fst $ stopGPSTime wd)
+        where x = "GPS: "++(show t0)++" ~ "++(show (t0+fromIntegral (V.length inputPart-1)/fs))
               z = "dt_{FFT}="++dtfft++"s"
 
-  {-- main --}
-  let snf = mapSpectrum sqrt $ gwOnesidedPSDWaveData (read dtfft) wd
-  plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((0,0),(0,0)) snf
+  {-- plot --}
+  let plotPart x = 
+        case optXplot varOpt of
+          False -> return x
+          True -> do
+            let snf = mapSpectrum sqrt $ gwOnesidedPSDV x (floor (dt*fs)) fs
+            plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title ((0,0),(0,0)) snf
+      plotPart x = 
+        case optPlot varOpt of
+          [] -> return x
+          f  -> do
+            let snf = mapSpectrum sqrt $ gwOnesidedPSDV x (floor (dt*fs)) fs
+            plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((0,0),(0,0)) snf
+
+
+data Options = Options
+ { optXPlot    :: Bool
+ , optPlot     :: FilePath
+ } deriving (Show)
+
+
+defaultOptions = Options
+ { optXPlot    = True
+ , optPlot     = []
+ }
+
+
+options :: [OptDescr (Options -> Options)]
+options =
+  [ Option ['X'] ["Xplot"]
+      ( NoArg (\ opts -> opts {optXPlot = True}))
+      "X plot"
+  , Option ['p'] ["plot"]
+      ( ReqArg (\p opts -> opts {optPlot = p}) "FILE")
+      "plot file"
+  ]
+
+
+
 
