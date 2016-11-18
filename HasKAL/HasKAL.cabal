@@ -1123,3 +1123,13 @@ executable plotspectrum
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
+executable frame2stdout
+  hs-source-dirs: exe-src
+  main-is:        frame2stdout.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,vector
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
