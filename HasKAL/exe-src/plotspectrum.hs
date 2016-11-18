@@ -38,28 +38,36 @@ main = do
               z = "dt_{FFT}="++dtfft++"s"
 
   {-- plot --}
-  let plotPart x = 
-        case optXplot varOpt of
+  let xplotPart x = 
+        case optXPlot varOpt of
           False -> return x
           True -> do
             let snf = mapSpectrum sqrt $ gwOnesidedPSDV x (floor (dt*fs)) fs
-            plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title ((0,0),(0,0)) snf
+            plotXV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title ((0,0),(0,0)) snf
+            return x
       plotPart x = 
         case optPlot varOpt of
           [] -> return x
-          f  -> do
+          oFile  -> do
             let snf = mapSpectrum sqrt $ gwOnesidedPSDV x (floor (dt*fs)) fs
             plotV LogXY Line 1 BLUE ("frequency [Hz]", "[/rHz]") 0.05 title oFile ((0,0),(0,0)) snf
+            return x
+
+  result1 <- xplotPart inputPart
+  plotPart result1
+
 
 
 data Options = Options
- { optXPlot    :: Bool
+ { optInput    :: Maybe FilePath
+ , optXPlot    :: Bool
  , optPlot     :: FilePath
  } deriving (Show)
 
 
 defaultOptions = Options
- { optXPlot    = True
+ { optInput    = Nothing
+ , optXPlot    = True
  , optPlot     = []
  }
 

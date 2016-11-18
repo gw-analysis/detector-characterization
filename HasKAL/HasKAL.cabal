@@ -1111,3 +1111,15 @@ executable resampler
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
+executable plotspectrum
+  hs-source-dirs: exe-src
+  main-is:        plotspectrum.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
