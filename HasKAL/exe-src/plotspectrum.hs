@@ -24,12 +24,7 @@ main = do
       dt = read (varArgs !! 3) :: Double
 
   {-- read data --}
-  let inputPart = 
-        case optInput varOpt of
-          Just "stdin" -> unsafePerformIO $ stdin2vec
-          Just f -> 
-            let ch = Prelude.head varArgs
-             in fromMaybe (error "cannot read data.") (unsafePerformIO $ readFrameV ch f)
+  let inputPart = unsafePerformIO $ stdin2vec
 
   {-- plot parameter --}
   let dtfft = show dt
@@ -59,15 +54,13 @@ main = do
 
 
 data Options = Options
- { optInput    :: Maybe FilePath
- , optXPlot    :: Bool
+ { optXPlot    :: Bool
  , optPlot     :: FilePath
  } deriving (Show)
 
 
 defaultOptions = Options
- { optInput    = Nothing
- , optXPlot    = True
+ { optXPlot    = True
  , optPlot     = []
  }
 

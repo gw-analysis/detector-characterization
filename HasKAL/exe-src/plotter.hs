@@ -21,11 +21,7 @@ main = do
       t0 = read (varArgs !! 2) :: Double
 
 
-  let inputPart = case optInput varOpt of
-                    Just "stdin" -> unsafePerformIO $ stdin2vec
-                    Just f -> let ch = Prelude.head varArgs
-                               in fromMaybe (error "cannot read data.") (unsafePerformIO $ readFrameV ch f)
-                    Nothing -> error "cannot read data."
+  let inputPart = unsafePerformIO $ stdin2vec
       xplotPart x = case optXPlot varOpt of
                       False -> return x
                       True -> do
@@ -46,25 +42,20 @@ main = do
 
 
 data Options = Options
-  { optInput    :: Maybe FilePath
-  , optXPlot    :: Bool
+  { optXPlot    :: Bool
   , optPlot     :: FilePath
   } deriving (Show)
 
 
 defaultOptions  = Options
-  { optInput    = Nothing
-  , optXPlot    = False
+  { optXPlot    = False
   , optPlot     = []
   }
 
 
 options :: [OptDescr (Options -> Options)]
 options = 
-  [ Option ['i'] ["input"]
-      ( OptArg ((\ f opts -> opts {optInput = Just f}) . fromMaybe "stdin") "FILE" )
-      "input FILE"
-  , Option ['X'] ["Xplot"]
+  [ Option ['X'] ["Xplot"]
       ( NoArg (\ opts -> opts {optXPlot = True}))
       "X plot"
   , Option ['p'] ["plot"]
