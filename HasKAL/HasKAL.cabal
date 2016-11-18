@@ -1071,7 +1071,6 @@ executable plottimeseries
    ,split
    ,vector
    ,HDBC-mysql==0.6.6.2
-   ,matlab==0.2.0.0
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 

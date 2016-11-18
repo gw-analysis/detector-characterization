@@ -3,14 +3,14 @@ import Control.Concurrent (forkIO)
 import Data.List.Split
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector.Storable as V
-import Foreign.Matlab
+--import Foreign.Matlab
 import HasKAL.FrameUtils.Function (readFrameV)
 import HasKAL.IOUtils.Function
 import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.SignalProcessingUtils.Resampling (resampleSV)
 import System.Console.GetOpt
 import System.Environment (getArgs)
-import System.IO (stdout, hPutStrLn)
+import System.IO (openFile, stdout, hPutStrLn, hClose,IOMode(..) )
 import System.IO.Unsafe (unsafePerformIO)
 
 
@@ -33,9 +33,10 @@ main = do
                     Nothing -> error "cannot read data."
       outputPart x = case optOutput varOpt of
                        Just "stdout" -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x) 
-                       Just f -> do let xl = V.toList x
-                                    mxv <- createColVector xl
-                                    matSave f [("data", mxv)]
+                       Just f -> do let xl = map show $ V.toList x
+                                    toFile "output.dat" xl
+--                                    mxv <- createColVector xl
+--                                    matSave f [("data", mxv)]
                                     mapM_ (\y -> hPutStrLn stdout $ show y) xl
                        Nothing -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList x)
       xplotPart x = case optXPlot varOpt of
@@ -59,6 +60,13 @@ main = do
 
 getPQ x = let a = take 2 $ map (\y-> read y :: Int) $ splitOn "/" x
            in (head a,a!!1)
+
+
+toFile :: FilePath -> [String] -> IO ()
+toFile filename xs = do
+  handle <- openFile filename WriteMode
+  mapM_ (hPutStrLn handle) xs
+  hClose handle
 
 
 type RSfactor = String
