@@ -7,11 +7,11 @@ flags:
   cgi:
     old-mtl: true
 extra-include-dirs:
-- /home/detchar/tools/include
+- /home/kazu/tools/include
 ghc-options:
   "*": -fPIC -fobject-code
 extra-lib-dirs:
-- /home/detchar/tools/lib
+- /home/kazu/tools/lib
 packages:
 - '.'
 - location:
@@ -44,5 +44,6 @@ extra-deps:
 - relational-query-HDBC-0.1.0.1
 - relational-schemas-0.1.2.0
 - sql-words-0.1.3.1
+- palette-0.1.0.2
 - HasKAL-0.1.0.0
 resolver: lts-2.14

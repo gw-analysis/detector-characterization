@@ -132,6 +132,20 @@ library
     HasKAL.MonitorUtils.SensMon.Function,
     HasKAL.MonitorUtils.SensMon.SensMon,
     HasKAL.MonitorUtils.SensMon.Signature,
+    HasKAL.MonitorUtils.GlitchMon.DBFunction
+    HasKAL.MonitorUtils.GlitchMon.Data
+    HasKAL.MonitorUtils.GlitchMon.DataConditioning
+    HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
+    HasKAL.MonitorUtils.GlitchMon.GlitchMonFile
+    HasKAL.MonitorUtils.GlitchMon.GlitchParam
+    HasKAL.MonitorUtils.GlitchMon.GlitchPlot
+    HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
+    HasKAL.MonitorUtils.GlitchMon.PipelineFunction
+    HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB
+    HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent
+    HasKAL.MonitorUtils.GlitchMon.Signature
+    HasKAL.MonitorUtils.GlitchMon.Table
+
     -- OptimizationUtils --
     HasKAL.OptimizationUtils.PSO.Function,
     -- PlotUtils --
@@ -271,7 +285,9 @@ library
        bytestring,
        conduit-extra,
        conduit-combinators,
-       text-icu
+       text-icu,
+       lifted-base,
+       palette==0.1.0.2
 
 
   -- Directories containing source files.
