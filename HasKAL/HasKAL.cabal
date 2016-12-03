@@ -137,6 +137,7 @@ library
     HasKAL.MonitorUtils.GlitchMon.DataConditioning
     HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
     HasKAL.MonitorUtils.GlitchMon.GlitchMonFile
+    HasKAL.MonitorUtils.GlitchMon.GlitchMonTime
     HasKAL.MonitorUtils.GlitchMon.GlitchParam
     HasKAL.MonitorUtils.GlitchMon.GlitchPlot
     HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
@@ -1147,5 +1148,48 @@ executable frame2stdout
    ,HasKAL
    ,vector
   ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable runGlitchMonGWFfile
+  hs-source-dirs:      exe-src
+  main-is:             runGlitchmonGWFfile.hs
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+  default-language:    Haskell2010
+
+executable runGlitchMonCachefile
+  hs-source-dirs:      exe-src
+  main-is:             runGlitchmonCachefile.hs
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+  default-language:    Haskell2010
+
+
+executable plotGlitchEvent
+  hs-source-dirs:      exe-src
+  main-is:             plotGlitchEvent.hs
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+  default-language:    Haskell2010
+
+
+executable plot2DGlitchParameters
+  hs-source-dirs:      exe-src
+  main-is:             plot2DGlitchParameters.hs
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+  default-language:    Haskell2010
 
 
