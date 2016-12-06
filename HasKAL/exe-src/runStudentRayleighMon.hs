@@ -20,11 +20,11 @@ main = do
    _ -> error "Usage: SRMon yyyy mm dd hh mm ss duration[s] chunklen[s] fftsec[s] dt[s] df[Hz] channel"
 
   {-- parameters --}
-  let gps = read $ time2gps $ year++"-"++month++"-"++day++" "++hour++":"++minute++":"++second++" JST") :: Int
-      duration = read duration' :: Double -- seconds
+  let gps = read (time2gps $ year++"-"++month++"-"++day++" "++hour++":"++minute++":"++second++" JST") :: Int
+      duration = read duration' :: Int -- seconds
       -- for SRMon
       fftLength = read fftsec' :: Double    -- seconds
-      srmLength = read chunk :: Double -- seconds
+      srmLength = read chunk' :: Double -- seconds
       timeShift = read dt :: Double -- seconds
       freqResol = read df :: Double   -- Hz
       quantile  = 0.99 -- 0 < quantile < 1
