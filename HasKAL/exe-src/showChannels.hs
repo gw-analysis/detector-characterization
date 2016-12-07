@@ -13,15 +13,19 @@ main = do
       (_  , _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
         where header = "Usage: showChannels [OPTION...] file or showChannels gps..."
 
-  let gpsstr = head varArgs
 
-  kagraDataGPS (read gpsstr :: Int32) >>= \maybefiles -> case maybefiles of
-    Nothing -> error "no file found."
-    Just files -> do
-      let fname = head files
-      getChannelList fname >>= \maybech -> case maybech of
-        Nothing -> error "no channel at present."
-        Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
+  case optFile varOpt of
+    f -> getChannelList f >>= \maybech -> case maybech of
+           Nothing -> error "no channel at present."
+           Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
+    [] -> do let gpsstr = head varArgs
+             kagraDataGPS (read gpsstr :: Int32) >>= \maybefiles -> case maybefiles of
+               Nothing -> error "no file found."
+               Just files -> do
+                 let fname = head files
+                 getChannelList fname >>= \maybech -> case maybech of
+                   Nothing -> error "no channel at present."
+                   Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
 
 
 data Options = Options
