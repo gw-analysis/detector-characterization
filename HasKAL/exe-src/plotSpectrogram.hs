@@ -39,15 +39,15 @@ main = do
           False -> return x
           True -> do
             let y = mapSpectrogram sqrt $ gwspectrogramV  (floor (ot*fs)) (floor (dt*fs)) fs x
-            histgram2dMX LogYZ COLZ (xlabel, "frequency [Hz]", "[1/rHz]") title ((0,0),(0,0)) y
+            histgram2dMX LogYZ COLZ ("time", "frequency [Hz]", "[1/rHz]") title ((0,0),(0,0)) y
             return x
       plotPart x = 
         case optPlot varOpt of
           [] -> return x
           oFile  -> do
             let y = mapSpectrogram sqrt $ gwspectrogramV  (floor (ot*fs)) (floor (dt*fs)) fs x
-            histgram2dM LogYZ COLZ (xlabel, "frequency [Hz]", "[1/rHz]") title oFile ((0,0),(0,0)) y
-           return x
+            histgram2dM LogYZ COLZ ("time", "frequency [Hz]", "[1/rHz]") title oFile ((0,0),(0,0)) y
+            return x
 
   result1 <- xplotPart inputPart
   plotPart result1
