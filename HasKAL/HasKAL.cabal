@@ -225,7 +225,7 @@ library
     src/HasKAL/SignalProcessingUtils/filterX.c
     src/HasKAL/SignalProcessingUtils/resampling.c
     -- "extern C" しているのでCとして扱っておそらく大丈夫
-  cc-options: -Wall -O2 -fPIC
+  cc-options: -Wall -O2 -std=c99 -fPIC
 
   -- Other library packages from which modules are imported.
   build-depends:
