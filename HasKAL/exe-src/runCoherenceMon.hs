@@ -11,7 +11,7 @@ import HasKAL.WaveUtils.Function (getMaximumChunck, getCoincidentData)
 main = do
   args <- getArgs
   (year, month, day, hour, minute, second, duration', fftsec', ch1, ch2) <- case length args of
-    10 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!7, args!!8, args!!9, args!!10)
+    10 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8, args!!9)
     _ -> error "Usage: CoherenceMon yyyy mm dd hh mm ss duration fftsec ch1 ch2"
 
   {-- parameters --}
