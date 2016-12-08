@@ -16,7 +16,7 @@ import System.Environment (getArgs)
 main = do
  args <- getArgs
  (year, month, day, hour, minute, second, chunklen', duration', ch) <- case length args of
-  8 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8)
+  9 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8)
   _ -> error "Usage: RangeMon yyyy mm dd channel"
  
  let chunkLen = read chunklen' ::Int -- seconds typically 15minutes
