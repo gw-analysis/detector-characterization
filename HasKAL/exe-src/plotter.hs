@@ -27,14 +27,16 @@ main = do
                       True -> do
                         let title = ch
                             tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
-                        forkIO $ plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
+--                        forkIO $ plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
+--                        return x
+                        plotXV Linear Line 1 BLUE ("x", "y") 0.05 title ((0,0),(0,0)) tv
                         return x
       plotPart x = case optPlot varOpt of
                      [] -> return x
                      f  -> do
                        let title = ch
                            tv = (V.fromList [t0,t0+1/fs..t0+(fromIntegral (V.length x-1))/fs], x)
-                       forkIO $ plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv
+                       plotV Linear Line 1 BLUE ("x", "y") 0.05 title f ((0,0),(0,0)) tv
                        return x
   x1 <- xplotPart $ inputPart
   plotPart x1
