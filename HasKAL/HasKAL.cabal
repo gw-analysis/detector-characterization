@@ -290,7 +290,8 @@ library
        conduit-combinators,
        text-icu,
        lifted-base,
-       palette==0.1.0.2
+       palette==0.1.0.2,
+       deepseq==1.3.0.2
 
 
   -- Directories containing source files.
@@ -1266,6 +1267,163 @@ executable runLineTrackMon
 executable runStudentRayleighMon
   hs-source-dirs: exe-src
   main-is:        runStudentRayleighMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable SRMon
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        SRMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable SRMon_reduceMemory
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        SRMon_reduceMemory.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+   ,deepseq==1.3.0.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable LT
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        LT.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL 
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+  extra-libraries: kagali
+
+executable RMSMon
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        RMSMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable RMon
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        RMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable RangeMonBHBH
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        RangeMonBHBH.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable RangeMonNSNS
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        RangeMonNSNS.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable SensMon
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        SensMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable Spectrum
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        Spectrum.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable Spectrogram
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        Spectrogram.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable TimeSeries
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        TimeSeries.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable genDailyCmd
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        genDailyCmd.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable genDailySummayPage
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        genDailySummaryPage.hs
   build-depends:
     base > 4.7
    ,HasKAL
