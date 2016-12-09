@@ -1240,6 +1240,7 @@ executable runRangeMonBHBH
    ,HDBC-mysql==0.6.6.2
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+
 executable runRMSMon
   hs-source-dirs: exe-src
   main-is:        runRMSMon.hs
@@ -1251,9 +1252,35 @@ executable runRMSMon
    ,HDBC-mysql==0.6.6.2
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+
+executable runRMSMonSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runRMSMonSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
 executable runLineTrackMon
   hs-source-dirs: exe-src
   main-is:        runLineTrackMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -optc -fPIC -fobject-code
+  extra-libraries: kagali
+
+
+executable runLineTrackMonSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runLineTrackMonSTDIN.hs
   build-depends:
     base > 4.7
    ,HasKAL
