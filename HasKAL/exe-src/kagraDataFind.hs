@@ -6,10 +6,11 @@ import Data.Int (Int32)
 import System.IO (stdout,  hPutStrLn)
 
 main = do
-  args <- getArgs
-  let gpsstrt = read (head args) :: Int32
-      duration = read (args !! 1) :: Int32
-      chname = args !! 2 :: String
+  (gpsstrt',duration',chname) <- getArgs >>= \args -> case length args of
+    3 -> return (head args, args!!1, args!!2)
+    _ -> error "Usage: kagraDataFind gps_start[s] duration[s] channel"
+  let gpsstrt = read gpsstrt' :: Int32
+      duration = read duration' :: Int32
   statement <- kagraDataFind gpsstrt duration chname
   case statement of
     Nothing -> print "Nothing"

@@ -1303,9 +1303,9 @@ executable runStudentRayleighMon
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable SRMon
+executable dailyStudentRayleighMon
   hs-source-dirs: exe-src/DailyMon
-  main-is:        SRMon.hs
+  main-is:        StudentRayleighMon.hs
   build-depends:
     base > 4.7
    ,HasKAL
@@ -1328,9 +1328,9 @@ executable SRMon_reduceMemory
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable LT
+executable dailyLineTracking
   hs-source-dirs: exe-src/DailyMon
-  main-is:        LT.hs
+  main-is:        LineTracking.hs
   build-depends:
     base > 4.7
    ,HasKAL 
@@ -1340,7 +1340,7 @@ executable LT
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: kagali
 
-executable RMSMon
+executable dailyRMSMon
   hs-source-dirs: exe-src/DailyMon
   main-is:        RMSMon.hs
   build-depends:
@@ -1352,9 +1352,9 @@ executable RMSMon
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable RMon
+executable dailyRayleighMon
   hs-source-dirs: exe-src/DailyMon
-  main-is:        RMon.hs
+  main-is:        RayleighMon.hs
   build-depends:
     base > 4.7
    ,HasKAL
@@ -1364,7 +1364,7 @@ executable RMon
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable RangeMonBHBH
+executable dailyRangeMonBHBH
   hs-source-dirs: exe-src/DailyMon
   main-is:        RangeMonBHBH.hs
   build-depends:
@@ -1376,7 +1376,7 @@ executable RangeMonBHBH
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable RangeMonNSNS
+executable dailyRangeMonNSNS
   hs-source-dirs: exe-src/DailyMon
   main-is:        RangeMonNSNS.hs
   build-depends:
@@ -1388,7 +1388,7 @@ executable RangeMonNSNS
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable SensMon
+executable dailySensMon
   hs-source-dirs: exe-src/DailyMon
   main-is:        SensMon.hs
   build-depends:
@@ -1400,7 +1400,7 @@ executable SensMon
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable Spectrum
+executable dailySpectrum
   hs-source-dirs: exe-src/DailyMon
   main-is:        Spectrum.hs
   build-depends:
@@ -1412,7 +1412,7 @@ executable Spectrum
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable Spectrogram
+executable dailySpectrogram
   hs-source-dirs: exe-src/DailyMon
   main-is:        Spectrogram.hs
   build-depends:
@@ -1424,7 +1424,7 @@ executable Spectrogram
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable TimeSeries
+executable dailyTimeSeries
   hs-source-dirs: exe-src/DailyMon
   main-is:        TimeSeries.hs
   build-depends:
@@ -1470,5 +1470,16 @@ executable showGPSInfo
    ,HDBC-mysql==0.6.6.2
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+
+executable dailyBruco
+  hs-source-dirs: exe-src/DailyMon
+  main-is:        Bruco.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql==0.6.6.2
+  ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
