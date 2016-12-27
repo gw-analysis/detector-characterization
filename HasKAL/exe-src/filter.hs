@@ -15,11 +15,13 @@ import System.IO.Unsafe (unsafePerformIO)
 
 main = do
   {-- parameters --}
-  varArgs <- getArgs 
-  let ch = head varArgs
-      fs = read (varArgs !! 1) :: Double
-      fc = read (varArgs !! 2) :: Double
-      ftype = read (varArgs !! 3) :: FilterType
+  (ch,fs',fc',ftype') <- getArgs >>= \args -> case length args of 
+    4 -> return (head args, args!!1, args!!2, args!!3)
+    _ -> error "filter fs fc ftype stdin"
+
+  let fs = read fs'       :: Double
+      fc = read fc'       :: Double
+      ftype = read ftype' :: FilterType
 
   let inputPart = unsafePerformIO $ stdin2vec
       filterPart v = case ftype of
