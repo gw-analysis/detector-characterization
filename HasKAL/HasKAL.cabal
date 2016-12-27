@@ -1081,9 +1081,9 @@ executable plotHistogram
 -- -threaded -rtsopts -eventlog
 
 
-executable plottimeseries
+executable plotTimeseries
   hs-source-dirs: exe-src
-  main-is:        plottimeseries.hs
+  main-is:        plotTimeseries.hs
   build-depends:
     base > 4.7
    ,HasKAL
