@@ -1131,9 +1131,9 @@ executable resampler
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
-executable plotspectrum
+executable plotSpectrum
   hs-source-dirs: exe-src
-  main-is:        plotspectrum.hs
+  main-is:        plotSpectrum.hs
   build-depends:
     base > 4.7
    ,HasKAL
