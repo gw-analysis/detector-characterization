@@ -18,6 +18,9 @@ main = do
   (varOpt, varArgs) <- getArgs >>= \optargs ->
     case getOpt Permute options optargs of
       (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
+      (_  ,  _, errs) -> ioError(userError (concat errs ++ usageInfo header options))
+        where header = "Usage plotSpectrum [OPTION...] fs t0 dt[s] stdin"
+
   let ch = head varArgs
       fs = read (varArgs !! 1) :: Double
       t0 = read (varArgs !! 2) :: Double
