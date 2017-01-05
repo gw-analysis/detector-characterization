@@ -15,31 +15,32 @@ main = do
 
 
   case optFile varOpt of
-    f -> getChannelList f >>= \maybech -> case maybech of
+    Just f -> getChannelList f >>= \maybech -> case maybech of
            Nothing -> error "no channel at present."
            Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
-    [] -> do let gpsstr = head varArgs
-             kagraDataGPS (read gpsstr :: Int32) >>= \maybefiles -> case maybefiles of
-               Nothing -> error "no file found."
-               Just files -> do
-                 let fname = head files
-                 getChannelList fname >>= \maybech -> case maybech of
-                   Nothing -> error "no channel at present."
-                   Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
-
+    Nothing -> case length varArgs of
+          5 -> do let gpsstr = head varArgs
+                  kagraDataGPS (read gpsstr :: Int32) >>= \maybefiles -> case maybefiles of
+                   Nothing -> error "no file found."
+                   Just files -> do
+                    let fname = head files
+                    getChannelList fname >>= \maybech -> case maybech of
+                     Nothing -> error "no channel at present."
+                     Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
+          _ -> error "Usage: showChannels gps[s]"
 
 data Options = Options
-  { optFile     :: FilePath
+  { optFile     :: Maybe FilePath
   } deriving (Show)
 
 defaultOptions = Options
- { optFile     = []
+ { optFile     = Nothing
  }
 
 options :: [OptDescr (Options -> Options)]
 options =
   [ Option ['f'] ["file"]
-      ( ReqArg (\ f opts -> opts {optFile = f}) "FILE")
+      ( ReqArg (\ f opts -> opts {optFile = Just f}) "FILE")
       "frame file"
   ] 
 
