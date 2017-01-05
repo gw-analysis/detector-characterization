@@ -478,16 +478,18 @@ readFrameV channel_Name framefile_Name = runMaybeT $ MaybeT $ do
 
 
 getChannelList :: String -> IO (Maybe [(String, Double)])
-getChannelList frameFile = do
-    withCString frameFile $ \frameFile' -> do
-      ifile <- c_FrFileINew frameFile'
-      if (ifile == nullPtr)
-        then return Nothing
-        else do
-          fstart <- c_FrFileITStart ifile
-          let (gpsS, gpsN) = formatGPS $ realToFrac fstart
-          c_FrFileIEnd ifile
-          getChannelListCore frameFile' (fromIntegral gpsS)
+getChannelList frameFile = 
+ case frameFile of
+  [] -> error "no file specified."
+  f  -> withCString f $ \frameFile' -> do
+          ifile <- c_FrFileINew frameFile'
+          if (ifile == nullPtr)
+            then return Nothing
+            else do
+              fstart <- c_FrFileITStart ifile
+              let (gpsS, gpsN) = formatGPS $ realToFrac fstart
+              c_FrFileIEnd ifile
+              getChannelListCore frameFile' (fromIntegral gpsS)
 
 
 getChannelListCore :: CString -> CInt -> IO (Maybe [(String, Double)])
