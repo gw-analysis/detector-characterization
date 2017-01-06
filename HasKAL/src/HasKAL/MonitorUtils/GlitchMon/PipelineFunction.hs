@@ -1,4 +1,4 @@
-
+{-# LANGUAGE FlexibleContexts #-}
 
 module HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 ( basePixel5

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module HasKAL.OptimizationUtils.PSO.Function
 ( pso
 --,

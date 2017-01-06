@@ -1,4 +1,4 @@
-
+{-# LANGUAGE FlexibleContexts #-}
 
 
 module HasKAL.MonitorUtils.CoherenceMon.Function (

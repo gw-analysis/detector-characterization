@@ -26,7 +26,7 @@ import Data.List
 import System.IO
 import System.IO.Unsafe
 import Data.Time.Format
-import System.Locale (defaultTimeLocale)
+--import System.Locale (defaultTimeLocale)
 import Data.Maybe
 import System.Time
 --TY import HasKAL.Misc.Environment

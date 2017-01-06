@@ -37,7 +37,6 @@ import System.IO.Unsafe
 import Control.DeepSeq (deepseq, NFData)
 
 
-instance NFData CDouble
 data FilterDirection = Reverse | Forward deriving (Show, Eq, Ord)
 
 

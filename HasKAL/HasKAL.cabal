@@ -291,7 +291,7 @@ library
        text-icu,
        lifted-base,
        palette==0.1.0.2,
-       deepseq==1.3.0.2
+       deepseq
 
 
   -- Directories containing source files.
@@ -645,7 +645,7 @@ executable showKagraData
    ,vector
    ,resourcet==1.1.5
    ,conduit==1.2.4.2
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -686,7 +686,7 @@ executable updateFrameFullDB
    ,vector
    ,resourcet==1.1.5
    ,conduit==1.2.4.2
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -727,7 +727,7 @@ executable updateFrameFullDBfromCache
    ,vector
    ,resourcet==1.1.5
    ,conduit==1.2.4.2
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -766,7 +766,7 @@ executable runDailySummay
    ,time
    ,transformers
    ,vector
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -805,7 +805,7 @@ executable runDailyFileTransfer
    ,time
    ,transformers
    ,vector
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -884,7 +884,7 @@ executable showKagraSpectrum
    ,vector
    ,resourcet==1.1.5
    ,conduit==1.2.4.2
-   ,process==1.2.0.0
+   ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
@@ -1074,7 +1074,7 @@ executable plotHistogram
     ,Chart-cairo==1.5.1
     ,colour==2.3.3
     ,data-default-class==0.0.1
-    ,lens==4.7.0.1
+    ,lens
     ,HasKAL
     ,vector
   ghc-options: -O2 -Wall -fPIC -fobject-code
@@ -1324,7 +1324,7 @@ executable SRMon_reduceMemory
    ,hmatrix
    ,vector
    ,HDBC-mysql==0.6.6.2
-   ,deepseq==1.3.0.2
+   ,deepseq
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 

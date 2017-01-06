@@ -10,7 +10,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
 --{-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE GADTs #-}
-
 module HasKAL.FrameUtils.FrameUtils
 ( writeFrame
 , addChannel
@@ -618,11 +617,7 @@ cs2cdV = V.map fromIntegral
 {-- Storable Type for structure--}
 
 
-instance NFData a => NFData (Ptr a)
-
-instance NFData CDouble
-instance NFData CFloat
-instance NFData CShort
+instance NFData a => NFData (Ptr a) where rnf x = seq x ()
 
 
 instance Storable FrameH_partial where
@@ -699,7 +694,7 @@ instance Storable FrVect_partial where
                               , frvect_dataD    = ptr_dataD }
 
 
-instance NFData (FrVect_partial)
+-- instance NFData (FrVect_partial)
 
 instance Storable FrProcData_partial where
   sizeOf = const #size struct FrProcData
