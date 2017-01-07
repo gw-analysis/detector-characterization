@@ -24,10 +24,10 @@ module HasKAL.PlotUtils.HROOT.PlotGraph3D (
 ) where
 
 import qualified Control.Monad as CM
-import Data.Packed.Vector((@>))
-import qualified Data.Packed.Vector as DPV
-import Data.Packed.Matrix((@@>),(><))
-import qualified Data.Packed.Matrix as DPM
+import Numeric.LinearAlgebra(atIndex)
+import qualified Numeric.LinearAlgebra as DPV
+import Numeric.LinearAlgebra((><))
+import qualified Numeric.LinearAlgebra as DPM
 import qualified Foreign.C.String as FCS
 import qualified Foreign.Storable as FS
 import qualified Foreign.C.Types as FCT
@@ -44,6 +44,10 @@ import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
 import HasKAL.Misc.StrictMapping (forM')
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
+import qualified Data.Vector.Storable as V
+
+
+dim = V.length
 
 data OptBG = NONE | COAST deriving (Eq)
 
@@ -102,7 +106,7 @@ plot3dBase wmap log mark xyzLabel title fname range dats = do
       (xMin, xMax, yMin, yMax) = getDataEdge dats
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
   CM.forM [1..xNum-1] $ \idxX -> CM.forM [1..yNum-1] $ \idxY ->
-    HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ (DPV.fromList $ map trd' dats) @> ((idxY-1) + (idxX-1) * yNum)
+    HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ (DPV.fromList $ map trd' dats) `atIndex` ((idxY-1) + (idxX-1) * yNum)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
   HAF.setRangeTH2D tH2d range
@@ -122,12 +126,12 @@ plot3dBaseM wmap log mark xyzLabel title fname range gps (tV, fV, specM) = do
   HRS.setLog' tCan log
   HAF.setPadMargin 0.15 0.15 1 1
 
-  let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
-      (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
+  let (xNum, yNum) = (dim tV, dim fV)
+      (xMin, xMax, yMin, yMax) = (realToFrac $ tV `atIndex` 0, realToFrac $ tV `atIndex` (xNum-1), realToFrac $ fV `atIndex` 0, realToFrac $ fV `atIndex` (yNum-1))
   tH2d <- HR.newTH2D (str2cstr "Spectrogram") (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
   HAF.setXAxisDateTH2D tH2d gps
   forM' [1..xNum-1] $ \idxX -> forM' [1..yNum-1] $ \idxY ->
-    HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
+    HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM `atIndex` (idxY-1,idxX-1)
   setXYZLabel' tH2d xyzLabel
   HR.setStats tH2d 0
   HAF.setRangeTH2D tH2d range
@@ -153,11 +157,11 @@ unsafePlot3d ((r,rd),(c,cd)) log mark xyzLabels titles fname ranges dats = do
         xyzLabel = xyzLabels !! idxI
         title = titles !! idxI
         range = ranges !! idxI
-    let (xNum, yNum) = (DPV.dim tV, DPV.dim fV)
-        (xMin, xMax, yMin, yMax) = (realToFrac $ tV@>0, realToFrac $ tV@>(xNum-1), realToFrac $ fV@>0, realToFrac $ fV@>(yNum-1))
+    let (xNum, yNum) = (dim tV, dim fV)
+        (xMin, xMax, yMin, yMax) = (realToFrac $ tV `atIndex` 0, realToFrac $ tV `atIndex` (xNum-1), realToFrac $ fV `atIndex` 0, realToFrac $ fV `atIndex` (yNum-1))
     tH2d <- HR.newTH2D (str2cstr ("2dHist"++":"++(show idxI))) (str2cstr title) (toEnum xNum-1) xMin xMax (toEnum yNum-1) yMin yMax
     forM' [1..xNum-1] $ \idxX -> forM' [1..yNum-1] $ \idxY ->
-      HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM @@> (idxY-1,idxX-1)
+      HR.setBinContent2 tH2d (toEnum idxX) (toEnum idxY) $ realToFrac $ specM `atIndex` (idxY-1,idxX-1)
     setXYZLabel' tH2d xyzLabel
     HR.setStats tH2d 0
     HAF.setRangeTH2D tH2d range

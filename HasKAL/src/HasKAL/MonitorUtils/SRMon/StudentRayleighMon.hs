@@ -11,8 +11,8 @@ module HasKAL.MonitorUtils.SRMon.StudentRayleighMon (
 
 import Prelude as P
 import System.IO.Unsafe (unsafePerformIO)
-import qualified Data.Packed.Vector as PV (subVector, fromList, toList, dim)
-import qualified Data.Packed.Matrix as PM (cols, rows, toRows, fromColumns)
+import qualified Numeric.LinearAlgebra as PV (subVector, fromList, toList)
+import qualified Numeric.LinearAlgebra as PM (cols, rows, toRows, fromColumns)
 import Data.Vector.Unboxed as V
 import Data.Matrix.Unboxed as M hiding ((!), convert)
 import qualified Control.Monad as CM (forM)
@@ -25,6 +25,12 @@ import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
 import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDV, gwspectrogramV, gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.WaveUtils.Data (WaveData(..))
+
+import qualified Data.Vector.Storable as VS
+
+dim :: VS.Vector Double -> Int
+dim v = VS.length v
+
 
 {-- Expose Functions --}
 studentRayleighMon :: Double -> Double -> Double -> Double -> Double -> Double -> [Double] -> [Double] -> [(Double, Double, Double)]

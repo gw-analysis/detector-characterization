@@ -16,7 +16,9 @@ import HasKAL.TimeUtils.Signature
 import HasKAL.TimeUtils.Function
 import HasKAL.WaveUtils.Signature
 import Numeric.LinearAlgebra
+import qualified Data.Vector.Storable as V
 
+dim = V.length
 
 data WaveData = WaveData
   { detector :: Detector

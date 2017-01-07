@@ -31,6 +31,11 @@ module HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta
 import Numeric.LinearAlgebra
 import Data.List
 import HasKAL.Constant.MKSA
+import qualified Data.Vector.Storable as V
+
+dim :: V.Vector Double -> Int
+dim = V.length
+
 
  -- 光速の定義[m/s]
 c :: Double

@@ -14,7 +14,7 @@ import Control.Monad ()
 import Control.Monad.ST(ST)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Vector.Storable as V
-import Data.Packed.ST
+import Numeric.LinearAlgebra.Devel
 import Numeric.LinearAlgebra
 import System.FilePath ((</>))
 import System.Directory (doesFileExist)
@@ -30,6 +30,10 @@ import HasKAL.WaveUtils.Data
 import HasKAL.WaveUtils.Signature
 
 
+dim :: V.Vector Double -> Int
+dim = V.length
+
+
 getPolarizations:: SOURCE_TYPE -> GravitationalWave
 getPolarizations srcType = unsafePerformIO $ do
   doesFileExist mdcFilePath  >>= \y ->
@@ -37,7 +41,7 @@ getPolarizations srcType = unsafePerformIO $ do
       True -> do
         let hp' = fromList (map (\x -> read x :: Double) dat)
             hc = fromList (replicate (length dat) (0::Double))
-            hp = scale ((hrss srcType)/(norm2 hp')) hp'
+            hp = scale ((hrss srcType)/(norm_2 hp')) hp'
         return (hp,hc)
       False -> error "not recognized"
       where
@@ -119,7 +123,7 @@ addInjsig n v w = runSTVector $ do
     nw = dim w
 
 addInjsigCore :: STVector s Double -> Vector Double -> Int -> Int -> ST s ()
-addInjsigCore v w i j = modifyVector v i (+w@>j)
+addInjsigCore v w i j = modifyVector v i (+w `atIndex` j)
 
 
 

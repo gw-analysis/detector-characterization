@@ -129,7 +129,7 @@ distRingdownCore msol snr a epsil phi ifo fupp flower df
     | msol <  0 =  error "mass : Why did you insert a minus number?"
     | snr <  0 =  error "SNR : Why did you insert a minus number?"
     | a <  0 =  error "Kerr parameter : Why did you insert a minus number?"
-    | eps <  0 =  error " : Why did you insert a minus number?"
+    | epsil <  0 =  error " : Why did you insert a minus number?"
     | fupp <  0 =  error "upper frequency : Why did you insert a minus number?"
     | flower <  0 =  error "lower frequency : Why did you insert a minus number?"
     | df <  0 =  error "df : Why did you insert a minus number?"
@@ -148,7 +148,7 @@ distRingdown msol snr a epsil phi ifo
     | msol <  0 =  error "mass : Why did you insert a minus number?"
     | snr <  0 =  error "SNR : Why did you insert a minus number?"
     | a <  0 =  error "Kerr parameter : Why did you insert a minus number?"
-    | eps <  0 =  error " : Why did you insert a minus number?"
+    | epsil <  0 =  error " : Why did you insert a minus number?"
     | otherwise =((((10*epsil*m*fqnr)/(q*pi*(1 + 7/(24*(q**2)))))**(1/2))*(snrRingdownPow2 msol a phi ifo fupp flower df)**(1/2))/(pi*q*(snrstand/c))
   where m = (g*msol*(msolar)/(c**(3)))
         q = 2*((1 - a)**(-9/20))

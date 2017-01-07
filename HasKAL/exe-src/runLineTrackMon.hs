@@ -1,7 +1,7 @@
 
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector)
+import Numeric.LinearAlgebra (subVector)
 
 import qualified Data.Vector.Storable as VS
 import Data.List

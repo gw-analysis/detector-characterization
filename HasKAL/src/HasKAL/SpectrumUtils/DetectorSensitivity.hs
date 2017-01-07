@@ -25,6 +25,9 @@ module HasKAL.SpectrumUtils.DetectorSensitivity
 
 import Numeric.LinearAlgebra
 import HasKAL.DetectorUtils.Detector
+import qualified Data.Vector.Storable as V
+
+mapVector = V.map
 
 ifonoisepsd :: Detector -> Vector Double -> Vector Double
 ifonoisepsd ifo fin = case ifo of

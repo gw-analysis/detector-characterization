@@ -23,6 +23,8 @@ speedofLight :: Double
 speedofLight = 299792458 -- meter/s
 
 
+trans = tr
+
 {- exposed functions -}
 fplusfcrossts :: DetectorParam -> Double -> Double -> Double -> (AntennaPattern, Double)
 fplusfcrossts detname phi theta psi = do
@@ -30,9 +32,9 @@ fplusfcrossts detname phi theta psi = do
   let d = calcd (tuple2mat (deta detname)) (tuple2mat (detb detname))
       rr = rz (90+psi) <> ry (90-theta) <> rz (phi)
       dtensor = rr <> d <> trans rr
-      fplus = (dtensor @@> (0, 0) - dtensor @@> (1, 1)) / 2.0
-      fcross= -(dtensor @@> (0, 1) + dtensor @@> (1, 0)) / 2.0
-      tau = (tuple2mat (detr detname) <> (unitVector phi theta) / (scalar speedofLight)) @@> (0, 0)
+      fplus = (dtensor `atIndex` (0, 0) - dtensor `atIndex` (1, 1)) / 2.0
+      fcross= -(dtensor `atIndex` (0, 1) + dtensor `atIndex` (1, 0)) / 2.0
+      tau = (tuple2mat (detr detname) <> (unitVector phi theta) / (scalar speedofLight)) `atIndex` (0, 0)
   ((fplus, fcross), tau)
 
 

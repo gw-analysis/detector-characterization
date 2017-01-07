@@ -103,7 +103,7 @@ snrRingdown msol dmpc a epsil phi ifo fupp flower df
     | msol <  0 =  error "mass : Why did you insert a minus number?"
     | dmpc <  0 =  error "distance : Why did you insert a minus number?"
     | a <  0 =  error "Kerr parameter : Why did you insert a minus number?"
-    | eps <  0 =  error " : Why did you insert a minus number?"
+    | epsil <  0 =  error " : Why did you insert a minus number?"
     | fupp <  0 =  error "upper frequency : Why did you insert a minus number?"
     | flower <  0 =  error "lower frequency : Why did you insert a minus number?"
     | df <  0 =  error "df : Why did you insert a minus number?"

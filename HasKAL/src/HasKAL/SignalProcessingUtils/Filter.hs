@@ -37,12 +37,13 @@ import Foreign.Ptr
 import Foreign.Marshal.Alloc(finalizerFree)
 import Foreign.Marshal.Array
 import HasKAL.Misc.Function (mkChunksV,mkChunksL)
-import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, trans)
+import Numeric.LinearAlgebra (flipud, fromBlocks, fromList, fromColumns, toColumns, fromRows, toRows, ident, scale, toLists, (><), (<\>), dropRows, rows, takeRows, asRow, tr)
 import qualified Numeric.LinearAlgebra.Data as ND
 import System.IO.Unsafe
 -- import Unsafe.Coerce (unsafeCoerce)
 
 
+trans = tr
 
 iir :: ([Double],[Double]) -> VS.Vector Double -> VS.Vector Double
 iir (numCoeff, denomCoeff) inputV = do

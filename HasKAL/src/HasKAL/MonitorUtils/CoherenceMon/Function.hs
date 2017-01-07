@@ -12,13 +12,14 @@ module HasKAL.MonitorUtils.CoherenceMon.Function (
 
 
 import qualified Data.Vector.Storable as V
-import qualified Data.Packed.Matrix as M
+import qualified Numeric.LinearAlgebra.Data as M
+import Numeric.LinearAlgebra as M
 import Data.Complex (Complex(..), magnitude, conjugate)
 import Data.List (sort, foldl1')
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.MathUtils.FFTW (dftRC1d)
-import Numeric.LinearAlgebra.Algorithms (eigSH, inv)
-import Numeric.LinearAlgebra.LAPACK (multiplyR)
+import Numeric.LinearAlgebra (inv)
+import Numeric.LinearAlgebra.HMatrix (eigSH')
 import HasKAL.WaveUtils (WaveData(..))
 
 -- | Bruco like tool
@@ -58,7 +59,7 @@ multiCoherence ny fsy fsxi yt xit = (fvec, multiCoh vSYY vSYi vDmU, coupleCoeff 
         vSYY = apsd vY
         vSYi = M.toRows $ M.fromColumns $ map (acsd vY) vXi
         mSX = csdMat vXi
-        vDmU = map eigSH mSX
+        vDmU = map eigSH' mSX
         fvec = V.fromList $ map ((*df).fromIntegral) [0,1..nmin`div`2] :: V.Vector Double
         df = fsy / (fromIntegral ny)
 

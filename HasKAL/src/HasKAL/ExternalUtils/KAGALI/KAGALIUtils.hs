@@ -13,7 +13,7 @@ import Foreign.Ptr
 import Foreign.Marshal.Array
 import Foreign.C.Types
 import System.IO.Unsafe (unsafePerformIO)
-import Data.Packed.Matrix (toColumns, fromRows)
+import Numeric.LinearAlgebra.Data (toColumns, fromRows)
 
 {- exposed functions -}
 judge :: Double->Double->Double->Int->Bool

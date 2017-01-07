@@ -30,7 +30,6 @@ import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
 import Data.Maybe                 (fromJust, fromMaybe, catMaybes)
-import qualified Data.Packed.Vector as DPV
 import qualified Data.Traversable as DT
 import qualified Data.Vector.Storable as V
 import Database.Relational.Query ( asc

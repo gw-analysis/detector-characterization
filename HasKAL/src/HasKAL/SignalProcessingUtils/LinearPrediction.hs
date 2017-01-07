@@ -17,6 +17,7 @@ import qualified Data.Vector.Generic as G
 import Data.Maybe
 import Foreign.Storable (pokeElemOff)
 import Numeric.LinearAlgebra
+import Numeric.LinearAlgebra.Devel (zipVectorWith)
 import Numeric.GSL.Fourier
 import HasKAL.MathUtils.FFTW (dftRC1d,dftCR1d)
 import HasKAL.SignalProcessingUtils.FilterX(filtfilt0)
@@ -83,7 +84,7 @@ lpefCoeffV p psddat = (out,rho)
   where
     (out,rho) = levinsonV p r
     r = fst.fromComplex.ifft
-      $ toComplex (G.map (fs*) (snd psddat), constant (0::Double) (G.length (snd psddat)))
+      $ toComplex (G.map (fs*) (snd psddat), vector (replicate (G.length (snd psddat)) (0::Double)))
     fs = (G.last.fst) psddat
 
 

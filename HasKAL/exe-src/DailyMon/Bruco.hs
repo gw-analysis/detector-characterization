@@ -2,7 +2,7 @@
 import Control.Monad (zipWithM, forM, liftM)
 import Data.List (sort)
 import Data.Maybe (fromJust)
-import Data.Packed.Matrix (fromColumns, toLists)
+import Numeric.LinearAlgebra (fromColumns, toLists)
 import System.Environment (getArgs)
 
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)

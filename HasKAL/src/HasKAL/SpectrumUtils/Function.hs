@@ -26,14 +26,18 @@ module HasKAL.SpectrumUtils.Function
 
 import Control.Monad (liftM)
 import Control.Monad.ST (ST)
-import Data.Packed.ST
+import Numeric.LinearAlgebra.Devel
 import Numeric.LinearAlgebra
 import HasKAL.SpectrumUtils.Signature
 import Data.List (nub)
 import qualified Data.Vector.Storable as V (map, length)
-import Data.Packed.Vector (zipVectorWith, mapVector)
-import Data.Packed.Matrix (mapMatrix)
+import Numeric.LinearAlgebra.Devel (zipVectorWith)
 import HasKAL.Misc.SMatrixMapping (mapCols1)
+import Data.Vector.Storable (Storable)
+
+
+dim = V.length
+trans = tr
 
 plotFormatedSpectogram :: Spectrogram -> [(Double, Double, Double)]
 plotFormatedSpectogram (tV, freqV, specgram) = do
@@ -99,7 +103,7 @@ normalizeSpectrum (fv, snf) (fV, hf) = (fV, newSpec)
 
 -- mapping
 mapSpectrum :: (Double -> Double) -> Spectrum -> Spectrum
-mapSpectrum f (xv, yv) = (xv, mapVector f yv)
+mapSpectrum f (xv, yv) = (xv, V.map f yv)
 
 mapSpectrogram :: (Double -> Double) -> Spectrogram -> Spectrogram
 mapSpectrogram f (tv, fv, xm) = (tv, fv, mapMatrix f xm)
@@ -162,3 +166,12 @@ str2llst = map (map read.words).lines
 
 llst2str :: [[Double]] -> String
 llst2str = unlines.map (unwords.map show)
+
+--mapMatrix :: (Storable a, Storable b) => (a -> b) -> Matrix a -> Matrix b
+mapMatrix f = liftMatrix (V.map f)
+
+buildMatrix :: Element a => Int -> Int -> ((Int, Int) -> a) -> Matrix a
+buildMatrix rc cc f =
+        fromLists $ map (map f)
+              $ map (\ ri -> map (\ ci -> (ri, ci)) [0 .. (cc - 1)]) [0 .. (rc - 1)]
+

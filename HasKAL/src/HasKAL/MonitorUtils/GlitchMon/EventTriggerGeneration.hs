@@ -10,7 +10,7 @@ module HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
 import Control.Monad.State (StateT, runStateT, execStateT, get, put, liftIO)
 import Data.List (nub,  foldl',  elemIndices,  maximum,  minimum,  lookup, sortBy)
 --import qualified Data.Matrix as M
-import Data.Packed.Matrix (buildMatrix)
+--import Data.Packed.Matrix (buildMatrix)
 import qualified Data.Set as Set
 import qualified Data.Vector.Storable as V
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
@@ -21,6 +21,7 @@ import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedMed
 import HasKAL.TimeUtils.Function (formatGPS,  deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
+import qualified Numeric.LinearAlgebra.HMatrix as NL
 import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import HasKAL.MonitorUtils.GlitchMon.Signature
@@ -30,6 +31,7 @@ import System.IO (hFlush, stdout)
 
 import Control.DeepSeq (deepseq)
 
+trans = NL.tr
 
 part'EventTriggerGeneration :: WaveData
                             -> StateT GP.GlitchParam IO (Spectrogram, [[(Tile,ID)]])
@@ -58,7 +60,7 @@ section'TimeFrequencyExpression whnWaveData = do
           snrMatF = V.map (*(fs/fromIntegral nfreq)) $ V.fromList [0.0, 1.0..fromIntegral nfreq2-1]
           snrMatT = V.map (*(fromIntegral ntimeSlide/fs)) $ V.fromList [0.0, 1.0..fromIntegral ntime -1]
           snrMatT' = V.map (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-          snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
+          snrMatP = NL.fliprl $ trans $ NL.flipud $ 
                       (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
             where 
               calcSpec tindx = V.zipWith (/) 
@@ -90,7 +92,7 @@ section'TimeFrequencyExpression whnWaveData = do
           snrMatF = V.map (*(fs/fromIntegral nfreq)) $ V.fromList [0.0, 1.0..fromIntegral nfreq2-1]
       let snrMatT = V.map (*(fromIntegral ntimeSlide/fs)) $ V.fromList [0.0, 1.0..fromIntegral ntime -1]
           snrMatT' = V.map (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      let snrMatP = NL.fliprl $ NL.trans $ NL.flipud $ 
+      let snrMatP = NL.fliprl $ trans $ NL.flipud $ 
                       (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
             where 
               calcSpec tindx = V.zipWith (/) 
@@ -168,7 +170,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 --  liftIO $ print "---- evaluating survivorwID" >> hFlush stdout
   survivorwID `deepseq` Prelude.return ()
   let zeroMatrix = (rmg><cmg) $ replicate (rmg*cmg) 0.0
-  let survivorValues = map (\x->mg@@>x) survivor
+  let survivorValues = map (\x->mg `atIndex` x) survivor
   let newM = updateSpectrogramSpec snrMat
         $ updateMatrixElement zeroMatrix survivor survivorValues
 --  liftIO $ print "---- evaluating newM" >> hFlush stdout
@@ -196,11 +198,11 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   return (newM, survivorwID)
 
 
-quantizingMatrix :: Int 
-                 -> Int 
-                 -> ((Int,Int)->Double) 
-                 -> Matrix Double
-quantizingMatrix r c fun = buildMatrix r c fun
+-- quantizingMatrix :: Int 
+--                  -> Int 
+--                  -> ((Int,Int)->Double) 
+--               -> Matrix Double
+-- quantizingMatrix r c fun = buildMatrix r c fun
 
 
 vectorInd2MatrixInd_row r c m = (a, b)

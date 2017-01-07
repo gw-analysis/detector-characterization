@@ -121,7 +121,7 @@ calcSS (num, denom) =
       ao = (2 >< 2) [sigma, kappa*omega, -omega/kappa, sigma]
       bo = (2 >< 1) [((realPart (abs num) - alphai)/(p-q))**0.5
                     , (-(realPart (abs num) + alphai)/(p+q))**0.5*sign alphar]
-      co = (1 >< 2) [alphar/bo @@>(0, 0), alphar/bo @@>(1, 0)]
+      co = (1 >< 2) [alphar/bo `atIndex` (0, 0), alphar/bo `atIndex` (1, 0)]
    in (ao, bo, co)
 
 

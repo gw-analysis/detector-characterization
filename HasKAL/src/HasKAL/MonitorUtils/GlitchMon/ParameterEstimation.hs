@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns, FlexibleContexts, TypeFamilies #-}
 
 
 
@@ -14,11 +14,14 @@ import Data.Maybe (fromJust)
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
 import Numeric.LinearAlgebra as NL
+import Numeric.LinearAlgebra (atIndex)
 
 import HasKAL.MonitorUtils.GlitchMon.Data (TrigParam (..))
 import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
 import HasKAL.MonitorUtils.GlitchMon.Signature
 import System.IO (hFlush, stdout)
+
+
 
 part'ParameterEstimation :: (Spectrogram, [[(Tile,ID)]])
                          -> StateT GP.GlitchParam IO (Maybe [(TrigParam,ID)])
@@ -33,8 +36,8 @@ part'ParameterEstimation (m,ids) = do
           mrow = NL.rows trigM
           mcol = NL.cols trigM
           zerom = (mrow >< mcol) (replicate (mrow*mcol) (0::Double))
-          nfreq = floor $ GP.nfrequency param * fs
-          ntime = floor $ GP.ntimeSlide param * fs
+          nfreq = (floor $ GP.nfrequency param * fs) :: Int
+          ntime = (floor $ GP.ntimeSlide param * fs) :: Int
           fs = GP.samplingFrequency param
       case (trigM == zerom) of
         True -> return Nothing
@@ -42,16 +45,16 @@ part'ParameterEstimation (m,ids) = do
           \island-> do
             let (tile,tag) = unzip island
                 nsize = fromIntegral $ length island :: Int32
-                tmin = formatGPS $ trigT @> (minimum . snd . unzip $ tile)
-                tmax' = trigT @> (maximum . snd . unzip $ tile)
+                tmin = formatGPS $ trigT `atIndex` (minimum . snd . unzip $ tile)
+                tmax' = trigT `atIndex` (maximum . snd . unzip $ tile)
                 tmax = formatGPS $ tmax' + fromIntegral nfreq/fs
-                fmin = trigF @> (minimum . fst . unzip $ tile)
-                fmax' = trigF @> (maximum . fst . unzip $ tile)
+                fmin = trigF `atIndex` (minimum . fst . unzip $ tile)
+                fmax' = trigF `atIndex` (maximum . fst . unzip $ tile)
                 fmax = fmax' + fs/fromIntegral nfreq
-                xx = map (\i->trigM @@> i) tile :: [Double]
+                xx = map (\i->trigM `atIndex` i) tile :: [Double]
                 (blackpower,maxid) = maximum' xx :: (Double,Int)
-                blackt = formatGPS $ trigT @> (snd $ tile!!maxid)
-                blackf = trigF @> (fst $ tile!!maxid)
+                blackt = formatGPS $ trigT `atIndex` (snd $ tile!!maxid)
+                blackf = trigF `atIndex` (fst $ tile!!maxid)
                 tfs = fromIntegral $ (floor fs::Int) :: Int32
              in (TrigParam { detector = Just "General"
                            , event_gpsstarts = Just (fromIntegral . fst $ tmin)

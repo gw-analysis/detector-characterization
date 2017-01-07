@@ -1,7 +1,7 @@
 
 import Data.List (find)
 import qualified Data.Vector.Storable as V
-import qualified Data.Packed.Matrix as V
+import qualified Numeric.LinearAlgebra as NL
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC, kagraWaveDataGet0, kagraDataFind)
 import HasKAL.FrameUtils.FrameUtils (safeGetUnitY)
 import HasKAL.MonitorUtils.RangeMon.InspiralRingdownDistanceQuanta (distInspiral)
@@ -42,7 +42,7 @@ main = do
  let hf = map (gwspectrogramWaveData 0 fftLength . downsampleWaveData dsfs) wd
      n0 = nblocks fftLength gps duration wd
      (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
-     x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (V.toColumns specgram))
+     x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (NL.toColumns specgram))
      ir'' = map (10**6*) $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
      ir'  = map infinityTo0 ir'' :: [Double]
      ir   = V.fromList $ zipWith (*) (map (\x->(checkLoking gps chunkLen x)) (V.toList vecT)) ir'

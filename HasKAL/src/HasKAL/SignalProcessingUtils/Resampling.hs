@@ -38,6 +38,8 @@ import Foreign.C.Types
 import Control.DeepSeq (deepseq, NFData)
 
 
+dim = SV.length
+
 
 downsampling :: Int -> Int -> SV.Vector Double -> SV.Vector Double
 downsampling fs newfs inputV = do

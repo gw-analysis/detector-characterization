@@ -27,7 +27,7 @@ import Data.Array.CArray
 import Math.FFT
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Numeric.LinearAlgebra as NL
-import Numeric.LinearAlgebra.Devel (unsafeMatrixToForeignPtr, matrixFromVector, MatrixOrder(..))
+import Numeric.LinearAlgebra.Devel (unsafeMatrixToForeignPtr, matrixFromVector, MatrixOrder(..), mapMatrixWithIndex, mapVectorWithIndex)
 import Foreign.ForeignPtr (withForeignPtr)
 
 
@@ -77,13 +77,13 @@ dct1d vin = do
       arr = unsafePerformIO $ createCArray (0, len-1)
         $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin
       (n,  ptr) = toForeignPtr $ dct2 arr
-   in NL.mapVectorWithIndex (\i v -> scaling i len v) $ VS.unsafeFromForeignPtr0 ptr n
+   in mapVectorWithIndex (\i v -> scaling i len v) $ VS.unsafeFromForeignPtr0 ptr n
 
 
 idct1d :: VS.Vector Double -> VS.Vector Double
 idct1d vin = do
   let len = VS.length vin :: Int
-      vin' = NL.mapVectorWithIndex (\i v -> rescaling i len v) vin
+      vin' = mapVectorWithIndex (\i v -> rescaling i len v) vin
       arr = unsafePerformIO $ createCArray (0, len-1)
         $ \ptr -> VS.zipWithM_ (pokeElemOff ptr) (VS.fromList [0..len-1]) vin'
       (n,  ptr) = toForeignPtr $ dct3 arr
@@ -99,14 +99,14 @@ dct2d m = do
         (n,  ptr) = toForeignPtr $ dct2N [0, 1] arr
         outM = matrixFromVector RowMajor mm mn
           $ VS.map (scaling2d mm mn * ) $ VS.unsafeFromForeignPtr0 ptr n
-     in NL.mapMatrixWithIndex (\(r, c) v -> ar r c v) outM
+     in mapMatrixWithIndex (\(r, c) v -> ar r c v) outM
 
 
 idct2d :: NL.Matrix Double -> NL.Matrix Double
 idct2d m = do
     let mm = NL.rows m :: Int
         mn = NL.cols m :: Int
-        m' = NL.mapMatrixWithIndex (\(r, c) v -> ari r c v) m
+        m' = mapMatrixWithIndex (\(r, c) v -> ari r c v) m
         arr = unsafePerformIO
           $ unsafeForeignPtrToCArray (fst $ unsafeMatrixToForeignPtr m') ((0, 0), (mm-1, mn-1))
         (n, ptr) = toForeignPtr $ dct3N [0, 1] arr

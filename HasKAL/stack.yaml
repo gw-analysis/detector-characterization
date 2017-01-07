@@ -7,14 +7,15 @@ extra-lib-dirs:
 - /home/kazu/tools/lib
 packages:
 - '.'
-- location:
-    git: https://github.com/bos/hdbc-mysql.git
-    commit: d43ea057019ff683f278f36af410f4d3cbc731bc
+#- location:
+#    git: https://github.com/bos/hdbc-mysql.git
+#    commit: d43ea057019ff683f278f36af410f4d3cbc731bc
 extra-deps:
 - Chart-1.5.3
 - Chart-cairo-1.5.1
 - Chart-gtk-1.5.1
 - HDBC-session-0.1.0.0
+- HDBC-mysql-0.6.6.4
 - HROOT-0.8
 - HROOT-core-0.8
 - HROOT-graf-0.8
@@ -30,10 +31,7 @@ extra-deps:
 - fficxx-runtime-0.2.1
 - fft-0.1.8.1
 - gtk-0.13.7
-- hmatrix-0.16.1.5
-- hmatrix-gsl-0.16.0.3
-- hmatrix-gsl-stats-0.4.1.1
-- hmatrix-special-0.3.0.1
+- hmatrix-special-0.4.0.1
 - lens-4.12.3
 - mmorph-1.0.9
 - mono-traversable-0.10.2

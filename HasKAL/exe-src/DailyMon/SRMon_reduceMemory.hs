@@ -3,8 +3,8 @@ import Control.DeepSeq (deepseq)
 import Data.List (foldl1')
 import Data.Maybe (fromJust)
 import System.Environment (getArgs)
-import Data.Packed.Vector (subVector, fromList, dim)
-import Data.Packed.Matrix (fromBlocks, cols, fromLists)
+import Numeric.LinearAlgebra (subVector, fromList)
+import Numeric.LinearAlgebra (fromBlocks, cols, fromLists)
 
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
@@ -15,6 +15,10 @@ import HasKAL.SpectrumUtils.Signature
 import HasKAL.MonitorUtils.SRMon.StudentRayleighMon
 import HasKAL.PlotUtils.HROOT.PlotGraph3D
 
+import qualified Data.Vector.Storable as V
+
+dim :: V.Vector Double -> Int
+dim = V.length
 
 main = do
   args <- getArgs

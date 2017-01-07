@@ -34,7 +34,7 @@ import qualified Foreign.Ptr as FP
 import qualified Foreign.Storable as FS
 import qualified HROOT as HR
 import qualified System.IO.Unsafe as SIOU
-import Data.Packed.Vector
+import Numeric.LinearAlgebra
 import Data.Vector.Storable as V (unsafeToForeignPtr0, minimum, maximum, concat)
 import Foreign.ForeignPtr.Unsafe (unsafeForeignPtrToPtr)
 import Foreign.ForeignPtr (withForeignPtr, ForeignPtr)
@@ -44,6 +44,11 @@ import qualified HasKAL.PlotUtils.HROOT.Supplement as HRS
 import qualified HasKAL.PlotUtils.HROOT.AppendFunctionHROOT as HAF
 import HasKAL.SpectrumUtils.Signature
 import HasKAL.SpectrumUtils.Function
+import qualified Data.Vector.Storable as VS
+
+
+mapVector = VS.map
+dim = VS.length
 
 {-- External Functions --}
 easyPlot :: LogOption -> String -> [(Double, Double)] -> IO ()

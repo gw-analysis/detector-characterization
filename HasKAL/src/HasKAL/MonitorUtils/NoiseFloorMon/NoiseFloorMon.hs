@@ -40,6 +40,11 @@ import HasKAL.TimeUtils.Function
 
 --import HROOT hiding (eval, mean)
 
+import qualified Data.Vector.Storable as VS
+dim :: VS.Vector Double -> Int
+dim = VS.length 
+
+
 data NFMParam = NFMParam{ 
   tsreSF :: Double  
 , whitenFltOrder :: Int

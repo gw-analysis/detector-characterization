@@ -15,7 +15,7 @@ module HasKAL.FrameUtils.Function
 import qualified Control.Monad as CM
 import Control.Monad.Trans.Maybe (runMaybeT, MaybeT(..))
 import Data.Maybe (fromJust, fromMaybe)
-import qualified Data.Packed.Vector as DPV
+import qualified Numeric.LinearAlgebra.Data as DPV
 import qualified Data.Traversable as DT
 
 import qualified HasKAL.DetectorUtils.Detector as HDD
@@ -24,6 +24,11 @@ import qualified HasKAL.FrameUtils.PickUpFileName as HFP
 import qualified HasKAL.SpectrumUtils.Signature as HSS
 import qualified HasKAL.TimeUtils.Function as HTF
 import qualified HasKAL.WaveUtils.Data as HWD
+
+import qualified Data.Vector.Storable as V
+
+dim :: V.Vector Double -> Int
+dim = V.length
 
 -- | read frame data in Vector
 readFrameV :: String -- ^ channel name
@@ -38,7 +43,7 @@ geneTimeVect :: Int -> Double -> DPV.Vector Double
 geneTimeVect ndata fs = DPV.fromList [0, 1/fs..(fromIntegral ndata - 1)/fs]
 
 addTimeVect :: Double -> DPV.Vector Double -> HSS.Spectrum
-addTimeVect fs dat = (geneTimeVect (DPV.dim dat) fs, dat)
+addTimeVect fs dat = (geneTimeVect (dim dat) fs, dat)
 
 readFrameFromGPS :: Integer -- ^ start GPS [sec]
                  -> Integer -- ^ length [sec]

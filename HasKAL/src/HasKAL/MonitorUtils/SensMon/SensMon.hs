@@ -8,7 +8,7 @@ module HasKAL.MonitorUtils.SensMon.SensMon
 ) where
 
 import qualified Data.List as DL
-import qualified Data.Packed.Matrix as M
+import qualified Numeric.LinearAlgebra as M
 import qualified Data.Vector.Algorithms.Intro as I
 import qualified Data.Vector.Storable as VS
 import Numeric.LinearAlgebra
@@ -45,7 +45,7 @@ updateSensMon history new =
       (_, _, newM)     = new
       updatedM = updateMatrixElement historyM mindxs values
       mindxs = [(c, r) | c<-[0..rows historyM-1], r<-[0..cols historyM-1]]
-      values = [historyM @@> (x, y) + newM @@> (x, y) | x<-[0..rows historyM-1], y<-[0..cols historyM-1]]
+      values = [historyM `atIndex` (x, y) + newM `atIndex` (x, y) | x<-[0..rows historyM-1], y<-[0..cols historyM-1]]
    in updateSensMonInternal history updatedM
 
 

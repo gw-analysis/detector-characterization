@@ -46,7 +46,7 @@ import Database.Record.ToSql
 import Data.Int                   (Int32)
 import Data.List                  (isInfixOf)
 import Data.Maybe                 (fromJust, fromMaybe)
-import qualified Data.Packed.Vector as DPV
+import qualified Numeric.LinearAlgebra as DPV
 import qualified Data.Traversable as DT
 
 import HasKAL.DataBaseUtils.KAGRADataSource (connect)

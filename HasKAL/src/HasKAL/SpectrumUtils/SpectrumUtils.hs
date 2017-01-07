@@ -35,7 +35,7 @@ import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 import HasKAL.WaveUtils (WaveData(..))
 
-
+dim = VS.length
 
 psdMethod = Welch
 
@@ -114,7 +114,7 @@ gwpsdWelchV dat nfft fs w = do
     applytoComplex :: [(Vector Double, Vector Double)] -> [Vector (Complex Double)]
     applytoComplex = map toComplex
     applyTuplify2 :: [Vector Double] -> [(Vector Double, Vector Double)]
-    applyTuplify2 = map (tuplify2 (constant 0 nfft))
+    applyTuplify2 = map (tuplify2 (vector (replicate nfft 0)))
     applyWindow :: WindowType -> [Vector Double] -> [Vector Double]
     applyWindow windowtype
       | windowtype==Hann = map (windowed (hanning nfft))
@@ -333,7 +333,7 @@ calcPower dat w = abs . fst . fromComplex $ fftVal * conj fftVal
 
 
 applyRealtoComplex :: Vector Double -> Vector (Complex Double)
-applyRealtoComplex x = toComplex $ tuplify2 (constant 0 nfft) x
+applyRealtoComplex x = toComplex $ tuplify2 (vector (replicate nfft 0)) x
   where nfft = dim x
 
 
@@ -344,7 +344,7 @@ applyWindowFunction windowtype x
   where nfft = dim x
 
 zeros :: Int -> Vector Double
-zeros nzero = constant 0 nzero
+zeros nzero = vector (replicate nzero 0)
 
 tuplify2 :: Vector Double -> Vector Double -> (Vector Double, Vector Double)
 tuplify2 x y = (y, x)

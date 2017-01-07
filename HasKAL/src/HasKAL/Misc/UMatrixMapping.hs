@@ -19,8 +19,8 @@ import Data.Vector.Unboxed
 import Data.Matrix.Unboxed hiding (convert, forM)
 
 {-- Storable type --}
-import qualified Data.Packed.Matrix as M
-
+import qualified Numeric.LinearAlgebra.Data as M
+import qualified Numeric.LinearAlgebra as M
 
 {-- matrix type converter --}
 -- | Convert from Data.Packed.Matrix to Data.Matrix.Unboxed

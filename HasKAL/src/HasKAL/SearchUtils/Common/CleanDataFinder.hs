@@ -7,7 +7,7 @@ module HasKAL.SearchUtils.Common.CleanDataFinder
 --,
 ) where
 
-import Data.Packed.Matrix (toColumns, fromRows)
+import Numeric.LinearAlgebra (toColumns, fromRows)
 import Data.Vector.Algorithms.Heap (select)
 import Data.Vector.Storable ((!))
 import qualified Data.Vector.Storable as V

@@ -251,7 +251,7 @@ library
        gtk ==0.13.7,
        HDBC,
        HDBC-session,
-       HDBC-mysql==0.6.6.2,
+       HDBC-mysql,
 --       hinotify,
        hmatrix,
        hmatrix-special,
@@ -317,10 +317,10 @@ executable kagraDataFind
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
-   ,hmatrix==0.16.1.5
-   ,hmatrix-gsl==0.16.0.3
+   ,hmatrix
+   ,hmatrix-gsl
    ,matrices
    ,vector-algorithms
    ,hmatrix-gsl-stats
@@ -354,7 +354,7 @@ executable kagraDataPoint
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -392,7 +392,7 @@ executable showChannels
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -431,7 +431,7 @@ executable showChannelandSamplingRate
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -470,7 +470,7 @@ executable localtime2gps
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -509,7 +509,7 @@ executable kagraDailyDataFind
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -547,7 +547,7 @@ executable gps2localtime
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -585,7 +585,7 @@ executable getCurrentGPS
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -623,7 +623,7 @@ executable showKagraData
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -664,7 +664,7 @@ executable updateFrameFullDB
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -705,7 +705,7 @@ executable updateFrameFullDBfromCache
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -746,7 +746,7 @@ executable runDailySummay
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -785,7 +785,7 @@ executable runDailyFileTransfer
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -824,7 +824,7 @@ executable db2cache
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -862,7 +862,7 @@ executable showKagraSpectrum
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -903,7 +903,7 @@ executable showCurrentChannels
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -941,7 +941,7 @@ executable existChannel
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -979,7 +979,7 @@ executable existChannelNow
    ,filepath
    ,fft==0.1.8.1
    ,HDBC
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,HDBC-session
    ,hmatrix
    ,hmatrix-gsl
@@ -1037,7 +1037,7 @@ executable runSensMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runSensMonDat
@@ -1090,7 +1090,7 @@ executable plotTimeseries
    ,hmatrix
    ,split
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1102,7 +1102,7 @@ executable plotter
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1114,7 +1114,7 @@ executable filter
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1127,7 +1127,7 @@ executable resampler
    ,hmatrix
    ,vector
    ,split
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1139,7 +1139,7 @@ executable plotSpectrum
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1151,7 +1151,7 @@ executable plotSpectrogram
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1215,7 +1215,7 @@ executable runCoherenceMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runRangeMonNSNS
@@ -1226,7 +1226,7 @@ executable runRangeMonNSNS
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runRangeMonBHBH
@@ -1237,7 +1237,7 @@ executable runRangeMonBHBH
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1249,7 +1249,7 @@ executable runRMSMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1261,7 +1261,7 @@ executable runRMSMonSTDIN
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1273,7 +1273,7 @@ executable runLineTrackMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -optc -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -1286,7 +1286,7 @@ executable runLineTrackMonSTDIN
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -optc -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -1299,7 +1299,7 @@ executable runStudentRayleighMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1311,7 +1311,7 @@ executable dailyStudentRayleighMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1323,7 +1323,7 @@ executable SRMon_reduceMemory
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
    ,deepseq
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
@@ -1336,7 +1336,7 @@ executable dailyLineTracking
    ,HasKAL 
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -1348,7 +1348,7 @@ executable dailyRMSMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1360,7 +1360,7 @@ executable dailyRayleighMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1372,7 +1372,7 @@ executable dailyRangeMonBHBH
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1384,7 +1384,7 @@ executable dailyRangeMonNSNS
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1396,7 +1396,7 @@ executable dailySensMon
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1408,7 +1408,7 @@ executable dailySpectrum
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1420,7 +1420,7 @@ executable dailySpectrogram
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1432,7 +1432,7 @@ executable dailyTimeSeries
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1444,7 +1444,7 @@ executable genDailyCmd
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1456,7 +1456,7 @@ executable genDailySummaryPage
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable showGPSInfo
@@ -1467,7 +1467,7 @@ executable showGPSInfo
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1479,7 +1479,7 @@ executable dailyBruco
    ,HasKAL
    ,hmatrix
    ,vector
-   ,HDBC-mysql==0.6.6.2
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 

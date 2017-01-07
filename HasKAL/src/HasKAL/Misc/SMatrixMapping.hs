@@ -16,9 +16,8 @@ import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Vector.Generic as G
 
 {-- Storable type --}
-import Data.Packed.Matrix
-import Data.Packed.Vector
-
+import Numeric.LinearAlgebra.Data
+import Numeric.LinearAlgebra (Element) 
 {-- Unbox type --}
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Matrix.Unboxed as M
