@@ -1,8 +1,11 @@
 flags: {}
 extra-include-dirs:
 - /home/kazu/tools/include
+rebuild-ghc-options: true
+apply-ghc-options: everything
 ghc-options:
-  '*': -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+  "*": -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+  glib: -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
 extra-lib-dirs:
 - /home/kazu/tools/lib
 packages:
@@ -53,6 +56,5 @@ extra-deps:
 - c2hs-0.27.1
 - H-0.8.0.0
 - syb-0.5.1
-- cryptonite-0.10
 - ihaskell-inline-r-0.1.1.0
 resolver: lts-5.2
