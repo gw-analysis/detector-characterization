@@ -10,7 +10,7 @@ module HasKAL.PlotUtils.PlotOption.PlotOptionHROOT(
        ) where
 
 data PlotTypeOption = Line | Point | LinePoint | PointLine | Dot deriving Eq
-data LogOption = Linear | LogX | LogY | LogZ | LogXY | LogXZ | LogYZ | LogXYZ deriving Eq
+data LogOption = Linear | LogX | LogY | LogZ | LogXY | LogXZ | LogYZ | LogXYZ deriving (Eq, Read, Show)
 data MultiPlot = Over | Divide deriving (Eq)
 
 data PlotTypeOption3D = COLZ | CONTZ | LEGO2Z | AITOFF | MERCATOR deriving (Eq, Show)
