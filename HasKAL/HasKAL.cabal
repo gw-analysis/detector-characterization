@@ -734,9 +734,9 @@ executable updateFrameFullDBfromCache
   extra-libraries: Frame
 
 
-executable runDailySummay
+executable runDailySummary
   hs-source-dirs: exe-src
-  main-is:        runDailySummay.hs
+  main-is:        runDailySummary.hs
   build-depends:
     base > 4.7
    ,HasKAL
@@ -1012,7 +1012,39 @@ executable runRayleighMonSTDIN
     base > 4.7
    ,HasKAL
    ,hmatrix
-   ,split==0.2.2
+   ,split
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet
+   ,vector
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1024,7 +1056,39 @@ executable runRayleighMonDat
     base > 4.7
    ,HasKAL
    ,hmatrix
-   ,split==0.2.2
+   ,split
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet
+   ,vector
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1038,6 +1102,29 @@ executable runSensMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runSensMonDat
@@ -1047,8 +1134,40 @@ executable runSensMonDat
     base > 4.7
    ,HasKAL
    ,hmatrix
-   ,split==0.2.2
+   ,split
    ,vector
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,bytestring
+   ,mtl
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,resourcet
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1059,8 +1178,40 @@ executable runSensMonSTDIN
     base > 4.7
    ,HasKAL
    ,hmatrix
-   ,split==0.2.2
+   ,split
    ,vector
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet
+   ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1077,6 +1228,15 @@ executable plotHistogram
     ,lens
     ,HasKAL
     ,vector
+    ,resourcet
+    ,bytestring
+    ,mtl
+    ,transformers
+    ,conduit
+    ,conduit-extra
+    ,conduit-combinators
+    ,text
+    ,text-icu
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1091,6 +1251,23 @@ executable plotTimeseries
    ,split
    ,vector
    ,HDBC-mysql
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,containers
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,hmatrix-gsl
+   ,deepseq
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1103,6 +1280,22 @@ executable plotter
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1115,6 +1308,18 @@ executable filter
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1128,6 +1333,19 @@ executable resampler
    ,vector
    ,split
    ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
+   ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1140,6 +1358,28 @@ executable plotSpectrum
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1152,6 +1392,29 @@ executable plotSpectrogram
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,conduit-extra
+   ,text
+   ,text-icu
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1162,6 +1425,18 @@ executable frame2stdout
     base > 4.7
    ,HasKAL
    ,vector
+   ,hmatrix
+   ,containers
+   ,resourcet
+   ,split
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,bytestring
+   ,transformers
+   ,mtl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1173,6 +1448,45 @@ executable runGlitchMonGWFfile
   build-depends:       
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
   default-language:    Haskell2010
 
 executable runGlitchMonCachefile
@@ -1183,6 +1497,45 @@ executable runGlitchMonCachefile
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
   default-language:    Haskell2010
 
 
@@ -1194,6 +1547,35 @@ executable plotGlitchEvent
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,palette
+   ,Chart
+   ,Chart-gtk
+   ,Chart-cairo
+   ,colour
+   ,data-default-class
+   ,vector-algorithms
+   ,lens
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
   default-language:    Haskell2010
 
 
@@ -1205,6 +1587,35 @@ executable plot2DGlitchParameters
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,palette
+   ,Chart
+   ,Chart-gtk
+   ,Chart-cairo
+   ,colour
+   ,data-default-class
+   ,vector-algorithms
+   ,lens
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
   default-language:    Haskell2010
 
 executable runCoherenceMon
@@ -1216,6 +1627,29 @@ executable runCoherenceMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runRangeMonNSNS
@@ -1227,6 +1661,29 @@ executable runRangeMonNSNS
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runRangeMonBHBH
@@ -1238,6 +1695,29 @@ executable runRangeMonBHBH
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1250,6 +1730,29 @@ executable runRMSMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1262,6 +1765,37 @@ executable runRMSMonSTDIN
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1274,6 +1808,29 @@ executable runLineTrackMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -optc -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -1287,6 +1844,37 @@ executable runLineTrackMonSTDIN
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet   
   ghc-options: -O2 -Wall -optc -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -1300,6 +1888,29 @@ executable runStudentRayleighMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1312,6 +1923,29 @@ executable dailyStudentRayleighMon
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1325,6 +1959,29 @@ executable SRMon_reduceMemory
    ,vector
    ,HDBC-mysql
    ,deepseq
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1337,6 +1994,29 @@ executable dailyLineTracking
    ,hmatrix
    ,vector
    ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: kagali
 

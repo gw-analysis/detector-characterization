@@ -1,4 +1,5 @@
 
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 
 module HasKAL.PlotUtils.HROOT.AppendFunctionHROOT(

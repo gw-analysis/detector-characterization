@@ -1,4 +1,4 @@
-
+{-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 
 
 module HasKAL.ExternalUtils.GSL.RandomNumberGeneration (

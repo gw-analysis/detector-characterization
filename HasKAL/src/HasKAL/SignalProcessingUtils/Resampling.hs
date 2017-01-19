@@ -1,4 +1,4 @@
-
+{-# LANGUAGE ForeignFunctionInterface #-}
 
 module HasKAL.SignalProcessingUtils.Resampling
 ( downsample

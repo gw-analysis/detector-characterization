@@ -1,4 +1,4 @@
-
+{-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 module HasKAL.ExternalUtils.KAGALI.KAGALIUtils
  (  dKGLIterativeLeastSquare2DNewton
   , butterBandPass

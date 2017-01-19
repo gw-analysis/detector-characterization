@@ -1,10 +1,13 @@
 flags: {}
 extra-include-dirs:
-- /home/kazu/tools/include
+- /home/detchar/tools/include
+- /home/detchar/kagali/include
 ghc-options:
-  ! '*': -fPIC -fobject-code
+  '*': -fPIC -fobject-code
 extra-lib-dirs:
-- /home/kazu/tools/lib
+- /home/detchar/tools/lib
+- /home/detchar/tools/lib/gsl
+- /home/detchar/kagali/lib
 packages:
 - '.'
 #- location:
