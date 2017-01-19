@@ -1618,6 +1618,47 @@ executable plot2DGlitchParameters
    ,old-time
   default-language:    Haskell2010
 
+executable plotGlitchHistogram
+  hs-source-dirs:      exe-src
+  main-is:             plotGlitchHistogram.hs
+  ghc-options:         -O2 
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,palette
+   ,Chart
+   ,Chart-gtk
+   ,Chart-cairo
+   ,colour
+   ,data-default-class
+   ,vector-algorithms
+   ,lens
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+  default-language:    Haskell2010
+
+
+
 executable runCoherenceMon
   hs-source-dirs: exe-src
   main-is:        runCoherenceMon.hs
