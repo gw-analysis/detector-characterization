@@ -41,6 +41,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
     [r| require("ggplot2") |]
     [r| require("scales") |]
     [r| require("plotly") |]
+    [r| require("RColorBrewer") |]
     [r|
       Xv <- tv_hs
       Yv <- y_hs
@@ -64,8 +65,8 @@ main = R.withEmbeddedR R.defaultConfig $ do
       pfin <- pfin2 + scale_y_continuous(label=scientific_10)
       pfina <- pfin2 + scale_y_continuous(label=yformatter)
       pplotly <- ggplotly (pfina)
-      htmlwidgets::saveWidget(as.widget(pplotly), "graph.html")
-      ggsave(file = "gw150914.png", plot = pfin, dpi = 100, width = 10, height = 8)
+      htmlwidgets::saveWidget(as.widget(pplotly), "int_timeseriesGW150914.html")
+      ggsave(file = "timeseriesGW150914.png", plot = pfin, dpi = 100, width = 10, height = 8)
       |]
     let p = 1500
         nfft = floor fs
@@ -89,7 +90,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
                     , axis.text = black.bold.text
                     , axis.ticks.length = unit(.1, "cm")
                     , axis.ticks = element_line(size = 1))
-      ggsave(file = "spectrumgw150914.png", plot = p, dpi = 100, width = 10, height = 8)
+      ggsave(file = "spectrumGW150914.png", plot = p, dpi = 100, width = 10, height = 8)
       |]
     [r|require("fields") |]
     let (sgt',sgf',sgp') = gwspectrogramWaveData 0.1 0.2 x
@@ -100,17 +101,33 @@ main = R.withEmbeddedR R.defaultConfig $ do
         sgp = map sqrt $ concatMap V.toList $ NL.toRows sgp'
         sgpC = map sqrt $ concatMap V.toList $ NL.toColumns sgp'
     [r|
-      l <- lsgt_hs
-      tR <- sgt_hs
-      fR <- sgf_hs
+      lt <- lsgt_hs
+      lf <- lsgf_hs
+      tR0 <- sgt_hs
+      fR0 <- sgf_hs
+      tR <- rep(tR0,lf)
+      fR <- sort(rep(fR0,lt))
       sgpR <- sgp_hs
-      pR <- matrix(sgpR,l)
-      # pRf <- as.data.frame(pRm)
-      par(mar = c(5.5, 6.0, 4.1, 2))
-      png("specgramGW150916.png")
-      image.plot(tR,fR,log(pR),xlab="time[s]",ylab="frequency[Hz]",font.lab=2,font.axis=2,cex.lab=2,cex.axis = 1.5)
-      dev.off()
+      df <- data.frame(T=tR,F=fR,P=log(sgpR))
+      p<-ggplot(df,aes(x=T,y=F,fill=P))+geom_tile()
+      p<-p+scale_fill_gradient(low="white", high="orange")
+      p <- p + labs(title = "GW150914 data", x = "time[s]", y = "frequency[Hz]")
+      pp <-ggplotly(p)
+      htmlwidgets::saveWidget(as.widget(pp), "int_specgramGW150914.html")
+      ggsave(file = "specgramW150914.png", plot = p, dpi = 100, width = 10, height = 8)
       |]
+--    [r|
+--            l <- lsgt_hs
+--      #      tR <- sgt_hs
+--      #      fR <- sgf_hs
+--      #      sgpR <- sgp_hs
+--      #      pR <- matrix(sgpR,l)
+--      #      # pRf <- as.data.frame(pRm)
+--      #      par(mar = c(5.5, 6.0, 4.1, 2))
+--      #      png("specgramGW150916.png")
+--      #      image.plot(tR,fR,log(pR),xlab="time[s]",ylab="frequency[Hz]",font.lab=2,font.axis=2,cex.lab=2,cex.axis = 1.5)
+--      #      dev.off()
+--      #      |]
 
     [r|
       l <- lsgt_hs
@@ -131,7 +148,6 @@ main = R.withEmbeddedR R.defaultConfig $ do
         temp <- data.frame(temp, frame=tR[i], replace=T)
         mkspec.spec <- rbind(mkspec.spec, temp)
       }
-
       p <- plot_ly(mkspec.spec,x=~xX, y=~yY, frame=~frame) %>%
         layout(xaxis=list(type="log")) %>%
         layout(yaxis=list(type="log")) %>%
@@ -148,8 +164,8 @@ main = R.withEmbeddedR R.defaultConfig $ do
 #                    , axis.text = black.bold.text
 #                    , axis.ticks.length = unit(.1, "cm")
 #                    , axis.ticks = element_line(size = 1))
-#      pp <- ggplotly(p) 
-      htmlwidgets::saveWidget(as.widget(p), "graph2.html")
+#      pp <- ggplotly(p)
+      htmlwidgets::saveWidget(as.widget(p), "int_spectrumGW150914.html")
       |]
 
     return ()
