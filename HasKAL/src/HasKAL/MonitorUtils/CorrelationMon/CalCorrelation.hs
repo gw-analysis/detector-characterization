@@ -1,5 +1,6 @@
 module HasKAL.MonitorUtils.CorrelationMon.CalCorrelation
-       ( takeCorrelation
+       ( correlation
+       , takeCorrelation
        , takeCorrelationV
        , alpha2Pvalue
        , significance
@@ -20,6 +21,7 @@ import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
 import HasKAL.MonitorUtils.CorrelationMon.MIC(micU')
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV, downsampleUV)
+import HasKAL.WaveUtils.Data(WaveData(..))
 
 {-- ToDo :
     ・CGIだけのためにデータのサンプリングレートを揃えるLPFをかける関数を用意する
@@ -29,8 +31,23 @@ import HasKAL.SignalProcessingUtils.Resampling (downsampleSV, downsampleUV)
 --}
 
 
-
 {-- Expose Functions --}
+correlation :: CorrelationMethod -- ^ Pearson / MIC
+            -> WaveData          -- ^ data
+            -> WaveData          -- ^ data
+            -> Double            -- ^ jitter of correlation [s]
+            -> [Double]          -- coefficients
+correlation method xw yw dt = S.toList $
+  takeCorrelationCheckSamplingFrequencyV method fsx fsy x y nshift
+ where
+  fsx = samplingFrequency xw
+  x = gwdata xw
+  fsy = samplingFrequency yw
+  y = gwdata yw
+  nshift | fsx >= fsy = floor (fsy * dt)
+         | fsx <  fsy = floor (fsx * dt)
+
+
 takeCorrelation :: CorrelationMethod -- ^ Pearson / MIC
                 -> [Double] -- ^ data list x
                 -> [Double] -- ^ data list y
