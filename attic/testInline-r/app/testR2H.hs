@@ -5,7 +5,6 @@
 
 module Main where
 
-import Data.Complex
 import qualified Language.R as R
 import Language.R (R)
 import Language.R.QQ

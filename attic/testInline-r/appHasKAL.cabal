@@ -15,16 +15,20 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     LibHasKAL
+  exposed-modules:     MIC
   ghc-options: -opta-Wa,-mrelax-relocations=no
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
+   ,inline-r
+   ,vector
+   ,transformers
+   ,hmatrix 
   default-language:    Haskell2010
 
-executable app
+executable testR2H
   hs-source-dirs:      app
-  main-is:      appHasKAL.hs
+  main-is:      testR2H.hs
   ghc-options: -opta-Wa,-mrelax-relocations=no
   build-depends:
     base >= 4.7 && < 5
@@ -36,4 +40,5 @@ executable app
    ,ihaskell-inline-r
    ,vector
    ,transformers
+   ,hmatrix
   default-language:    Haskell2010
