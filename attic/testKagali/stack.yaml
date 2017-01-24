@@ -5,8 +5,8 @@ extra-include-dirs:
 rebuild-ghc-options: true
 apply-ghc-options: everything
 ghc-options:
-  "*": -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
-  glib: -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+  "*": -fPIC -fobject-code
+  glib: -fPIC -fobject-code
 extra-lib-dirs:
 - /home/detchar/tools/lib
 - /home/detchar/tools/lib/gsl
