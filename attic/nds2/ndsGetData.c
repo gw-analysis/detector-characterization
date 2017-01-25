@@ -4,11 +4,11 @@
 //
 // const char* server = "ldas-pcdev1.ligo.caltech.edu";
 //
-// int           port = 31200;  
+// int           port = 31200;
 //
 // const char* channel[4] = {
-//     "H1:DMT-STRAIN", 
-//     "L1:DMT-STRAIN", 
+//     "H1:DMT-STRAIN",
+//     "L1:DMT-STRAIN",
 //     "V1:h16384Hz",
 //     0
 // }
@@ -25,7 +25,7 @@
 #include <stdio.h>
 
 
-int nds_GetData (const char* server, int port, const char* channel[], int start_gps_in, int end_gps_in, int delta_in, float* data, int* length) {
+int nds_GetData (const char* server, int port, const char* channel[], int nch, int start_gps_in, int end_gps_in, int delta_in, float* data, int* length) {
 
 
 //-- Initialize --
@@ -45,7 +45,7 @@ if (rc) {
 
 
 int i;
-for (i=0; i<4; i++) {
+for (i=0; i<nch; i++) {
     rc = daq_request_channel(&daqd, channel+i, 0, 0);
 }
 
@@ -69,11 +69,14 @@ for (t=start_gps; t<end_gps; t+=delta) {
     }
 
     //--  Get data --
-		    chan_req_t* stat = daq_get_channel_status(&daqd, channel[0]);
-		    if (!stat || stat->status <= 0) break;
-				*length = stat->status
-				//int daq_get_scaled_data(daq_t *daq, const char* channel, float* data)
-				int	daq_get_scaled_data(daq_t &daqd, channel[0], data)
+    int ic;
+    for (ic=0;ic<nch;ic++) {
+  		chan_req_t* stat = daq_get_channel_status(&daqd, channel[ic]);
+	  	if (!stat || stat->status <= 0) break;
+	  	*length = stat->status
+		//int daq_get_scaled_data(daq_t *daq, const char* channel, float* data)
+		  int	daq_get_scaled_data(daq_t &daqd, channel[ic], data)
+    }
 }
 //--  Disconnect from server --
 daq_disconnect(&daqd);
@@ -83,7 +86,7 @@ daq_disconnect(&daqd);
 
 /**  \mainpage NDS2 Application Program Interface
   *  This module defines the client interface to both versions of the Network
-  *  Data Server (classic NDS and NDS2). It is based on the "daq_" function 
+  *  Data Server (classic NDS and NDS2). It is based on the "daq_" function
   *  set originally defined by Alex Ivanov for the classic NDS. The C-functions
   *  provide a low level interface to the server. In general, these must be
   *  used to implement the client server protocol defined elsewhere, e.g.
@@ -100,5 +103,3 @@ daq_disconnect(&daqd);
   *  - \ref daq2_internal Internal and obsolete stuff.
   *  \{
   */
-
-
