@@ -115,6 +115,7 @@ library
     HasKAL.MonitorUtils.CoherenceMon.Function,
     HasKAL.MonitorUtils.CorrelationMon.CalCorrelation,
     HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod,
+    HasKAL.MonitorUtils.CorrelationMon.MIC,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon,
     HasKAL.MonitorUtils.RMSMon.RMSMon,
@@ -133,20 +134,20 @@ library
     HasKAL.MonitorUtils.SensMon.Function,
     HasKAL.MonitorUtils.SensMon.SensMon,
     HasKAL.MonitorUtils.SensMon.Signature,
-    HasKAL.MonitorUtils.GlitchMon.DBFunction
-    HasKAL.MonitorUtils.GlitchMon.Data
-    HasKAL.MonitorUtils.GlitchMon.DataConditioning
-    HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
-    HasKAL.MonitorUtils.GlitchMon.GlitchMonFile
-    HasKAL.MonitorUtils.GlitchMon.GlitchMonTime
-    HasKAL.MonitorUtils.GlitchMon.GlitchParam
-    HasKAL.MonitorUtils.GlitchMon.GlitchPlot
-    HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
-    HasKAL.MonitorUtils.GlitchMon.PipelineFunction
-    HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB
-    HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent
-    HasKAL.MonitorUtils.GlitchMon.Signature
-    HasKAL.MonitorUtils.GlitchMon.Table
+    HasKAL.MonitorUtils.GlitchMon.DBFunction,
+    HasKAL.MonitorUtils.GlitchMon.Data,
+    HasKAL.MonitorUtils.GlitchMon.DataConditioning,
+    HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration,
+    HasKAL.MonitorUtils.GlitchMon.GlitchMonFile,
+    HasKAL.MonitorUtils.GlitchMon.GlitchMonTime,
+    HasKAL.MonitorUtils.GlitchMon.GlitchParam,
+    HasKAL.MonitorUtils.GlitchMon.GlitchPlot,
+    HasKAL.MonitorUtils.GlitchMon.ParameterEstimation,
+    HasKAL.MonitorUtils.GlitchMon.PipelineFunction,
+    HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB,
+    HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent,
+    HasKAL.MonitorUtils.GlitchMon.Signature,
+    HasKAL.MonitorUtils.GlitchMon.Table,
 
     -- OptimizationUtils --
     HasKAL.OptimizationUtils.PSO.Function,
@@ -194,7 +195,7 @@ library
     HasKAL.SpectrumUtils.Signature,
     HasKAL.SpectrumUtils.SpectrumUtils,
     -- TimeUtils --
-    HasKAL.TimeUtils
+    HasKAL.TimeUtils,
     HasKAL.TimeUtils.Function,
     HasKAL.TimeUtils.GPSfunction,
     HasKAL.TimeUtils.Signature,
@@ -291,7 +292,8 @@ library
        text-icu,
        lifted-base,
        palette==0.1.0.2,
-       deepseq
+       deepseq,
+       inline-r
 
 
   -- Directories containing source files.
