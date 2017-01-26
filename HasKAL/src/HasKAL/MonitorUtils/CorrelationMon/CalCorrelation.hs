@@ -18,7 +18,7 @@ import qualified Data.Vector.Storable as S
 import qualified Data.Vector.Unboxed as U
 
 import HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod
-import HasKAL.MonitorUtils.CorrelationMon.MIC(micU')
+import HasKAL.StatisticsUtils.Correlation.MIC(micU')
 import HasKAL.ExternalUtils.GSL.RandomNumberDistributions
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV, downsampleUV)
 import HasKAL.WaveUtils.Data(WaveData(..))
