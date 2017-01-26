@@ -13,48 +13,67 @@ import System.IO.Unsafe (unsafePerformIO)
 import Numeric.LinearAlgebra.Data (toColumns, fromRows)
 
 {- exposed functions -}
-dKGLChirplet :: VS.Vector Double    -- ^ Input Vector (frame)
-             -> Double              -- ^ Sampling frequency (fs)
-             -> Double              -- ^ maxLength (alpha)
-             -> Int                 -- ^ # of paths used (ipath)
-             -> ( VS.Vector Double  -- ^ Output Vector (time)
-                , VS.Vector Double) -- ^ Output Vector (freq)
-dKGLChirplet frame fs alpha ipath = do 
+dKGLChirpletMain :: VS.Vector Double    -- ^ Input Vector (frame)
+                 -> Double              -- ^ Sampling frequency (fs)
+                 -> Double              -- ^ maxLength (alpha)
+                 -> Int                 -- ^ # of paths used (ipath)
+                 -> ( VS.Vector Double  -- ^ Output Vector (time)
+                    , VS.Vector Double) -- ^ Output Vector (freq)
+dKGLChirpletMain frame fs alpha ipath = do 
   let frame' = d2cdV frame
       nframe = VS.length frame :: Int
       fs' = realToFrac fs
       alpha' = realToFrac alpha
-  let (out1,out2) = dKGLChirpletCore frame' nframe ipath fs' alpha'
-   in (cd2dV out1, cd2dV out2)
+  let (out1) = dKGLChirpletMainCore frame' nframe ipath fs' alpha'
+   in (cd2dV out1)
+
+
+chirplet_daily_org :: VS.Vector Double->Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double)]
+chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0 = retVal
+  where retVal = zipWith3 (\v w (x) -> ((v+w)/2, x)) tstart tend result
+        tstart = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral) nIdx
+        tend = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral . (+nframe) ) nIdx
+        nIdx = [nstart, nstart + nshift .. nstop]
+        nstop = min (VS.length datV - nframe) nend
+        result =
+          map ( (\frameV -> dKGLChirpletMain frameV fs alpha ipath) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
+
+
+chirplet_daily :: VS.Vector Double->Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double)]
+chirplet_daily datV fs alpha ipath nframe nshift nstart nend t0 = retVal
+  where outV = chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0
+        retVal = [(a,b) | (a,b) <- outV
+                            , null [ e | e <- VS.toList b
+                                       , isNaN e]]
+
 
 {- internal functions -}
-dKGLChirpletCore :: VS.Vector CDouble       -- ^ Input Vector (frame)
-                 -> Int                     -- ^ # of elements in Input Vector (nframe)
-                 -> Int                     -- ^ # of paths used (ipath)
-                 -> CDouble                 -- ^ fs
-                 -> CDouble                 -- ^ alpha (maxLength)
-                 -> ( VS.Vector CDouble     -- ^ Output Vector (time)
-                    , VS.Vector CDouble)    -- ^ Output Vector (freq)
-dKGLChirpletCore frame' nframe ipath fs' alpha'
+dKGLChirpletMainCore :: VS.Vector CDouble       -- ^ Input Vector (frame)
+                     -> Int                     -- ^ # of elements in Input Vector (nframe)
+                     -> Int                     -- ^ # of paths used (ipath)
+                     -> CDouble                 -- ^ fs
+                     -> CDouble                 -- ^ alpha (maxLength)
+                     -> (VS.Vector CDouble)     -- ^ Output Vector (freq)
+dKGLChirpletMainCore frame' nframe ipath fs' alpha'
   = unsafePerformIO $ VS.unsafeWith frame' $ \ptrIn ->
    allocaArray 1 $ \ptrOut1 ->
      allocaArray 1 $ \ptrOut2 ->
      do c_DKGLChirpletMain ptrOut1 ptrOut2 ptrIn fs' alpha' (fromIntegral ipath) (fromIntegral nframe)
         newForeignPtr_ ptrOut1 >>= \foreignptrOutput1 ->
-          newForeignPtr_ ptrOut2 >>= \foreignptrOutput2 ->
-          return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput1 1
-                       , VS.unsafeFromForeignPtr0 foreignptrOutput2 1)
+        return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput1 1)
+
 
 d2cdV :: VS.Vector Double -> VS.Vector CDouble
 d2cdV = VS.map realToFrac
+
 
 cd2dV :: VS.Vector CDouble -> VS.Vector Double
 cd2dV = VS.map realToFrac
 
 
 foreign import ccall "DKGLUtils_new.h DKGLChirpletMain" c_DKGLChirpletMain :: Ptr CDouble -- ^ input pointer (frame)
-                                                    -> Ptr CDouble -- ^ output pointer (time array)
                                                     -> Ptr CDouble -- ^ output pointer (freq array)
+                                                    -> Ptr CDouble -- ^ output pointer (cost value)
                                                     -> CDouble     -- ^ sampling frequency [Hz]
                                                     -> CDouble     -- ^ maxLength (alpha)
                                                     -> CInt        -- ^ # of paths used (ipath)

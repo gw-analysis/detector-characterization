@@ -13,7 +13,7 @@ extra-lib-dirs:
 - /home/detchar/kagali/lib
 packages:
 - '.'
-- /home/detchar/tools/detector-characterization/HasKAL
+- /home/ueno/detector-characterization/HasKAL
 #- location:
 #    git: https://github.com/bos/hdbc-mysql.git
 #    commit: d43ea057019ff683f278f36af410f4d3cbc731bc

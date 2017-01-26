@@ -13,15 +13,17 @@ main = do
          frameList = makeDouble stringList
          frameV = VS.fromList frameList
          fs     = 2048   :: Double
-         nframe = 1024   :: Int
-         nshift = 32     :: Int
+         nframe = 256    :: Int
+         nshift = 128    :: Int
          nstart = 0      :: Int
          nend   = 3000   :: Int
          t0     = 0      :: Double
          alpha  = 5      :: Double
          ipath  = 5      :: Int
          output = KGL2.dKGLChirplet frameV fs alpha ipath
-     print output
+     let (timeV,freqV) = output
+     print $ VS.toList timeV
+     -- mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) $ zip (V.toList vf) (V.toList vasd)
 
 makeDouble :: [String] -> [Double]
 makeDouble = map read

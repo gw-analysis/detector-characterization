@@ -7,7 +7,7 @@ import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL
 main :: IO()
 main = do
 --     cnsig <- getArgs
-     string <- readFile "HasKAL/LineUtils/LineRemoval/LIGOtest.dat"
+     string <- readFile "LIGOtest.dat"
      let stringList = lines string
          frameList = makeDouble stringList
          frameV = VS.fromList frameList

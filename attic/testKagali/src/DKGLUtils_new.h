@@ -1,1 +1,1 @@
-void DKGLChirpletMain(double *timea,double *freqa,double *frame,double fs,double alpha,int ipath,int nframe);
+void DKGLChirpletMain(double *freqa,double *cost,double *frame,double fs,double alpha,int ipath,int nframe);

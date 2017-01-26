@@ -1,16 +1,11 @@
 
 #include <kagali/KGLStdlib.h>
-#include <kagali/KGLBandPassFilter.h>
-#include <kagali/KGLLeastSquareMethod.h>
-#include <kagali/KGLLeastSquareFunc.h>
-#include <kagali/KGLIterativeLeastSquare2DNewton.h>
+#include <kagali/KGLInterpolation.h>
 #include "DKGLUtils_new.h"
-//#include "chirplet_func.c"
-#include <gsl/gsl_sf_bessel.h>
 
 void DKGLChirpletMain( //begin{proto}
-    double *timea,          /**< [out] */
-    double *freqa,          /**< [out] */
+    double *freqa,          /**< [out] Frequency values of length nframe */
+    double *cost,           /**< [out] */
     double *frame,          /**< [in] time-series data */
     double fs,              /**< [in] sampling frequency [Hz] */
     double alpha,           /**< [in] Calculates BP for lengths 1,...,maxLength */
@@ -25,14 +20,14 @@ void DKGLChirpletMain( //begin{proto}
   char *STATTYPE = "BPFORPLOTTING";
   char *INJECTION = "FromText";
   int **paths = NULL;
-  double *cost = NULL;
+  double *costpath = NULL;
   if(strcmp(STATTYPE,"SP") == 0 || strcmp(STATTYPE,"MCTR") == 0){
     KGLCallocMatrixAbortIfError(paths,1,nframe*nframe,int,status);
-    KGLCallocAbortIfError(cost,nframe*nframe,double,status);
+    KGLCallocAbortIfError(costpath,nframe*nframe,double,status);
   }
   if(strcmp(STATTYPE,"BPFORPLOTTING") == 0){
     KGLCallocMatrixAbortIfError(paths,maxLength,maxLength+1,int,status);
-    KGLCallocAbortIfError(cost,maxLength,double,status);
+    KGLCallocAbortIfError(costpath,maxLength,double,status);
   }
   
   double complex *cframe = NULL;
@@ -40,7 +35,7 @@ void DKGLChirpletMain( //begin{proto}
   for(int i = 0; i < nframe; i++){
     cframe[i] = frame[i];
   }
-  KGLChirpletMain(status,paths,cost,cframe,
+  KGLChirpletMain(status,paths,costpath,cframe,
 		  COMPLEX_OR_REAL,XTTYPE,STATTYPE,
 		  INJECTION,(int)fs,alpha,nframe);
   KGLAbortIfError(status);  
@@ -50,7 +45,6 @@ void DKGLChirpletMain( //begin{proto}
   int minfreq = 0; // restricting the chirplet graph to nonnegative frequencies
   int maxfreq = nframe-1;
   int nfreqs = maxfreq-minfreq+1;
-  //int csc = 0;
   int fsc = jframe-1;
   int jend = 0;
   if(strcmp(STATTYPE,"SP") == 0){
@@ -61,6 +55,13 @@ void DKGLChirpletMain( //begin{proto}
   }
   if(strcmp(STATTYPE,"SP") == 0 ||
      strcmp(STATTYPE,"BPFORPLOTTING") == 0){
+      
+    double *timegrid = NULL;
+    double *freqgrid = NULL;
+    double *timea = NULL;
+    KGLCallocAbortIfError(timegrid,jend+1,double,status);
+    KGLCallocAbortIfError(freqgrid,jend+1,double,status);
+    KGLCallocAbortIfError(timea,nframe,double,status);
     
     for (int j = 0; j <= jend; j++){
       if(paths[ipath][j] == 0) break;
@@ -68,9 +69,13 @@ void DKGLChirpletMain( //begin{proto}
       int freq = (p - 1) % nfreqs;
       int time = (p - freq - 1)/(nfreqs/(int)pow(2,jframe-fsc));
       freq *= fs/nframe;
-      timea[j] = time/fs;
-      freqa[j] = freq;
+      timegrid[j] = time/fs;
+      freqgrid[j] = freq;
     }
+    KGLLinearInterpolation(status,freqa,timea,freqgrid,timegrid,nframe,jend+1);
+    KGLAbortIfError(status);
+
+    *cost = costpath[ipath];
   }
   
   KGLDestroyStatus(status);

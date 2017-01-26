@@ -172,6 +172,7 @@ void KGLGetChirpletGraphParam( //begin{proto}
   
   int J = ceil(log2(N)); // dyadic length of signal
   if (pow(2,J) != N){
+    printf("J = %d; N = %d\n",J,N);
     printf("GetChirpletGraphParam: Signal length is not dyadic. Should be of the form N=2^J.");
   }
   if (csc > fsc){
@@ -1041,7 +1042,7 @@ void KGLChirpletAnalysis( //begin{proto}
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // CHIRPLET TRANSFORM
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  printf("Taking chirplet transform...\n");
+  //  printf("Taking chirplet transform...\n");
   
   int J = ceil(log2(N));
   int *graphparam1 = NULL;
@@ -1073,6 +1074,8 @@ void KGLChirpletAnalysis( //begin{proto}
 			   N,csc,fsc,sldf,slopeRange,minfreq,maxfreq,
 			   XTTYPE,degrees);
   
+  printf("step 1\n");
+
   double complex ****cc = NULL;
   KGLCalloc4TensorAbortIfError(cc,J,N,N+1,N,double complex,status);
   
