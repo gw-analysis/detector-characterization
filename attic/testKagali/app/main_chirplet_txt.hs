@@ -3,6 +3,7 @@ import qualified Data.Vector.Storable as VS
 import Data.List
 import Numeric
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL 
+import KAGALIUtils_new as KGL2
 
 main :: IO()
 main = do
@@ -26,10 +27,9 @@ main = do
      case output of 
        Left message -> print message 
        Right frameV_bp -> do
---         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
          let outV = KGL.nha_daily frameV_bp fs nsig nframe nshift nstart nend t0
              outText = concat $ map (toText . shift) outV
-         writeFile "LIGOtest_nha.ana" $ outText
+         writeFile "LIGOtest_chirplet.ana" $ outText
 
 makeDouble :: [String] -> [Double]
 makeDouble = map read
@@ -37,14 +37,6 @@ makeDouble = map read
 
 toText :: [[Double]] -> String
 toText xss = unlines . map (unwords . map (\x -> Numeric.showEFloat (Just 10) x "") ) . transpose $ xss 
-
-{-
-shift :: (Double, Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
-shift (tstart, tend, x, y, z) = [tstart', tend', VS.toList x, VS.toList y, VS.toList z]
-  where tstart' = take num $ repeat tstart
-        tend' = take num $ repeat tend
-        num = VS.length x
--}
 
 shift :: (Double, VS.Vector Double, VS.Vector Double, VS.Vector Double) -> [[Double]]
 shift (time, x, y, z) = [time', VS.toList x, VS.toList y, VS.toList z]

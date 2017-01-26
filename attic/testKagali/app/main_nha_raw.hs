@@ -12,7 +12,7 @@ import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL
 main :: IO()
 main = do
 --     let gps = "1134486016" ::String
-     let gps = "1134572416" ::String
+     let gps = "1144335616" ::String
      let fname = "/data/kagra/raw/full/K-K1_C-"++gps++"-32.gwf" ::String
      let chnamesub = "TRANS_DC" ::String
 --     let chnamesub = "MIXER" ::String
