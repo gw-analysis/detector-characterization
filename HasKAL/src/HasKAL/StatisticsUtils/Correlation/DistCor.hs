@@ -2,6 +2,7 @@
 
 module HasKAL.StatisticsUtils.Correlation.DistCor
 ( distcor
+, distcorWave
 )
 where
 
@@ -12,6 +13,30 @@ import Foreign.C.String
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import System.IO.Unsafe
+-- | for HasKAL functions
+import HasKAL.SignalProcessingUtils.Resampling
+import HasKAL.WaveUtils.Data(WaveData(..))
+
+
+-- | distcor v1 v2
+distcorWave :: WaveData
+            -> WaveData
+            -> Double
+distcorWave w1 w2 =
+  let (v1,v2) = arrangeFsV w1 w2
+      (a,b) = arrangeDataV v1 v2
+   in distcor a b
+
+
+arrangeFsV w1 w2 = do
+  let fs1 = samplingFrequency w1
+      fs2 = samplingFrequency w2
+   in case () of
+        _
+          | fs1 == fs2 -> (gwdata w1, gwdata w2)
+          | fs1 > fs2 -> (downsampleSV fs1 fs2 (gwdata w1), gwdata w2)
+          | fs1 < fs2 -> (gwdata w2, downsampleSV fs2 fs1 (gwdata w2))
+
 
 
 distcor :: V.Vector Double
@@ -46,6 +71,16 @@ arrangeVLen v1 v2
   | V.length v2 > V.length v1  = (V.drop (V.length v2-V.length v1) v1,v2,V.length v1)
   | otherwise = error "somethig wrong"
 
+
+-- | helper Function
+arrangeDataV :: V.Vector Double
+             -> V.Vector Double
+             -> (V.Vector Double,V.Vector Double)
+arrangeDataV v1 v2
+  | V.length v1 == V.length v2 = (v1, v2)
+  | V.length v1 > V.length v2 = (V.slice 0 (V.length v2) v1, v2)
+  | V.length v1 < V.length v2 = (v1, V.slice 0 (V.length v1) v2)
+  | otherwise = error "arrangeData: something wrong."
 
 i2ci :: Int -> CInt
 i2ci = fromIntegral
