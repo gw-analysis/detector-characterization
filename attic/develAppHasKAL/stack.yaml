@@ -1,0 +1,60 @@
+flags: {}
+extra-include-dirs:
+- /home/kazu/tools/include
+rebuild-ghc-options: true
+apply-ghc-options: everything
+ghc-options:
+  "*": -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+  glib: -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+extra-lib-dirs:
+- /home/kazu/tools/lib
+packages:
+- '.'
+- /home/kazu/tools/detector-characterization/HasKAL
+#- location:
+#    git: https://github.com/bos/hdbc-mysql.git
+#    commit: d43ea057019ff683f278f36af410f4d3cbc731bc
+extra-deps:
+- Chart-1.5.3
+- Chart-cairo-1.5.1
+- Chart-gtk-1.5.1
+- HDBC-session-0.1.0.0
+- HDBC-mysql-0.6.6.4
+- HROOT-0.8
+- HROOT-core-0.8
+- HROOT-graf-0.8
+- HROOT-hist-0.8
+- HROOT-io-0.8
+- HROOT-math-0.8
+- base-orphans-0.5.4
+- bindings-gsl-0.2.1
+- cgi-3001.2.2.2
+- chunked-data-0.2.0
+- conduit-1.2.4.2
+- conduit-extra-1.1.15
+- fficxx-runtime-0.2.1
+- fft-0.1.8.1
+- gtk-0.13.7
+- hmatrix-special-0.4.0.1
+- lens-4.12.3
+- mmorph-1.0.9
+- mono-traversable-0.10.2
+- names-th-0.2.0.2
+- persistable-record-0.4.1.0
+- reflection-2
+- relational-query-0.8.3.2
+- relational-query-HDBC-0.6.0.2
+- relational-schemas-0.1.3.1
+- resourcet-1.1.5
+- split-0.2.2
+- sql-words-0.1.4.1
+- streaming-commons-0.1.16
+- syb-0.5.1
+- th-data-compat-0.0.2.2
+- th-reify-compat-0.0.1.1
+- unix-compat-0.4.3.1
+- c2hs-0.27.1
+- H-0.8.0.0
+- syb-0.5.1
+- ihaskell-inline-r-0.1.1.0
+resolver: lts-5.2
