@@ -115,7 +115,6 @@ library
     HasKAL.MonitorUtils.CoherenceMon.Function,
     HasKAL.MonitorUtils.CorrelationMon.CalCorrelation,
     HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod,
-    HasKAL.MonitorUtils.CorrelationMon.MIC,
     HasKAL.MonitorUtils.KleineWelle.EXTKleineWelle,
     HasKAL.MonitorUtils.NoiseFloorMon.NoiseFloorMon,
     HasKAL.MonitorUtils.RMSMon.RMSMon,
@@ -194,6 +193,10 @@ library
     HasKAL.SpectrumUtils.GwPsdMethod,
     HasKAL.SpectrumUtils.Signature,
     HasKAL.SpectrumUtils.SpectrumUtils,
+    -- StatisticsUtils --
+    HasKAL.StatisticsUtils.Correlation.DistCor,
+    HasKAL.StatisticsUtils.Correlation.DistCorR,
+    HasKAL.StatisticsUtils.Correlation.MIC,
     -- TimeUtils --
     HasKAL.TimeUtils,
     HasKAL.TimeUtils.Function,
@@ -221,6 +224,7 @@ library
   C-sources:
     src/HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
     src/HasKAL/LineUtils/LineRemoval/rng_median.c
+    src/HasKAL/StatisticsUtils/Correlation/distcor.c
     src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
     src/HasKAL/SignalProcessingUtils/filterFunctions.c
     src/HasKAL/SignalProcessingUtils/filterX.c
@@ -1445,9 +1449,9 @@ executable frame2stdout
 executable runGlitchMonGWFfile
   hs-source-dirs:      exe-src
   main-is:             runGlitchmonGWFfile.hs
-  ghc-options:         -O2 
+  ghc-options:         -O2
 -- -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       
+  build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
    ,transformers
@@ -1494,7 +1498,7 @@ executable runGlitchMonGWFfile
 executable runGlitchMonCachefile
   hs-source-dirs:      exe-src
   main-is:             runGlitchmonCachefile.hs
-  ghc-options:         -O2 
+  ghc-options:         -O2
 -- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
@@ -1544,7 +1548,7 @@ executable runGlitchMonCachefile
 executable plotGlitchEvent
   hs-source-dirs:      exe-src
   main-is:             plotGlitchEvent.hs
-  ghc-options:         -O2 
+  ghc-options:         -O2
 -- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
@@ -1584,7 +1588,7 @@ executable plotGlitchEvent
 executable plot2DGlitchParameters
   hs-source-dirs:      exe-src
   main-is:             plot2DGlitchParameters.hs
-  ghc-options:         -O2 
+  ghc-options:         -O2
 -- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
@@ -1623,7 +1627,7 @@ executable plot2DGlitchParameters
 executable plotGlitchHistogram
   hs-source-dirs:      exe-src
   main-is:             plotGlitchHistogram.hs
-  ghc-options:         -O2 
+  ghc-options:         -O2
 -- -threaded -rtsopts -with-rtsopts=-N
   build-depends:
     base >= 4.7 && < 5
@@ -1917,7 +1921,7 @@ executable runLineTrackMonSTDIN
    ,conduit
    ,bytestring
    ,mtl
-   ,resourcet   
+   ,resourcet
   ghc-options: -O2 -Wall -optc -fPIC -fobject-code
   extra-libraries: kagali
 
@@ -2033,7 +2037,7 @@ executable dailyLineTracking
   main-is:        LineTracking.hs
   build-depends:
     base > 4.7
-   ,HasKAL 
+   ,HasKAL
    ,hmatrix
    ,vector
    ,HDBC-mysql
@@ -2204,5 +2208,3 @@ executable dailyBruco
    ,vector
    ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
-
-
