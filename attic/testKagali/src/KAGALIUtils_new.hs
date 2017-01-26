@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP,  ForeignFunctionInterface #-}
 module KAGALIUtils_new
- (  dKGLChirplet
+ (  dKGLChirpletMain
  ) where
 
 
@@ -17,20 +17,29 @@ dKGLChirpletMain :: VS.Vector Double    -- ^ Input Vector (frame)
                  -> Double              -- ^ Sampling frequency (fs)
                  -> Double              -- ^ maxLength (alpha)
                  -> Int                 -- ^ # of paths used (ipath)
-                 -> ( VS.Vector Double  -- ^ Output Vector (time)
-                    , VS.Vector Double) -- ^ Output Vector (freq)
-dKGLChirpletMain frame fs alpha ipath = do 
+                 -> ( VS.Vector Double  -- ^ Output Vector (freq)
+                    , VS.Vector Double) -- ^ Output Vector (cost)
+dKGLChirpletMain frame fs alpha ipath = do
   let frame' = d2cdV frame
       nframe = VS.length frame :: Int
       fs' = realToFrac fs
       alpha' = realToFrac alpha
-  let (out1) = dKGLChirpletMainCore frame' nframe ipath fs' alpha'
-   in (cd2dV out1)
+  let (out1, out2) = dKGLChirpletMainCore frame' nframe ipath fs' alpha'
+   in (cd2dV out1, cd2dV out2)
 
 
-chirplet_daily_org :: VS.Vector Double->Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double)]
+chirplet_daily_org :: VS.Vector Double
+                   -> Double
+                   -> Double
+                   -> Int
+                   -> Int
+                   -> Int
+                   -> Int
+                   -> Int
+                   -> Double
+                   -> [(Double, VS.Vector Double, VS.Vector Double)]
 chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0 = retVal
-  where retVal = zipWith3 (\v w (x) -> ((v+w)/2, x)) tstart tend result
+  where retVal = zipWith3 (\v w (x,y) -> ((v+w)/2, x, y)) tstart tend result
         tstart = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral) nIdx
         tend = map ( (/3600.0) . (+t0) . (/fs) . fromIntegral . (+nframe) ) nIdx
         nIdx = [nstart, nstart + nshift .. nstop]
@@ -39,11 +48,20 @@ chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0 = retVal
           map ( (\frameV -> dKGLChirpletMain frameV fs alpha ipath) . (\kstart -> VS.slice kstart nframe datV) ) nIdx
 
 
-chirplet_daily :: VS.Vector Double->Double->Double->Int->Int->Int->Int->Int->Double->[(Double, VS.Vector Double)]
+chirplet_daily :: VS.Vector Double
+               -> Double
+               -> Double
+               -> Int
+               -> Int
+               -> Int
+               -> Int
+               -> Int
+               -> Double
+               -> [(Double, VS.Vector Double, VS.Vector Double)]
 chirplet_daily datV fs alpha ipath nframe nshift nstart nend t0 = retVal
   where outV = chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0
-        retVal = [(a,b) | (a,b) <- outV
-                            , null [ e | e <- VS.toList b
+        retVal = [(a,b,c) | (a,b,c) <- outV
+                            , null [ e | e <- VS.toList c
                                        , isNaN e]]
 
 
@@ -53,14 +71,17 @@ dKGLChirpletMainCore :: VS.Vector CDouble       -- ^ Input Vector (frame)
                      -> Int                     -- ^ # of paths used (ipath)
                      -> CDouble                 -- ^ fs
                      -> CDouble                 -- ^ alpha (maxLength)
-                     -> (VS.Vector CDouble)     -- ^ Output Vector (freq)
+                     -> (VS.Vector CDouble, VS.Vector CDouble) -- ^ (Output Vector (freq), Output Vector (cost))
 dKGLChirpletMainCore frame' nframe ipath fs' alpha'
   = unsafePerformIO $ VS.unsafeWith frame' $ \ptrIn ->
-   allocaArray 1 $ \ptrOut1 ->
-     allocaArray 1 $ \ptrOut2 ->
+   allocaArray ipath $ \ptrOut1 ->
+     allocaArray ipath $ \ptrOut2 ->
      do c_DKGLChirpletMain ptrOut1 ptrOut2 ptrIn fs' alpha' (fromIntegral ipath) (fromIntegral nframe)
         newForeignPtr_ ptrOut1 >>= \foreignptrOutput1 ->
-        return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput1 1)
+          newForeignPtr_ ptrOut2 >>= \foreignptrOutput2 ->
+            return $ ( VS.unsafeFromForeignPtr0 foreignptrOutput1 ipath
+                     , VS.unsafeFromForeignPtr0 foreignptrOutput2 ipath
+                     )
 
 
 d2cdV :: VS.Vector Double -> VS.Vector CDouble
