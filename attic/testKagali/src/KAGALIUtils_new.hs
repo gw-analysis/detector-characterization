@@ -57,10 +57,10 @@ chirplet_daily :: VS.Vector Double
                -> Int
                -> Int
                -> Double
-               -> [(Double, VS.Vector Double, VS.Vector Double)]
+               -> [(Double, VS.Vector Double)]
 chirplet_daily datV fs alpha ipath nframe nshift nstart nend t0 = retVal
   where outV = chirplet_daily_org datV fs alpha ipath nframe nshift nstart nend t0
-        retVal = [(a,b,c) | (a,b,c) <- outV
+        retVal = [(a,b) | (a,b,c) <- outV
                             , null [ e | e <- VS.toList c
                                        , isNaN e]]
 
