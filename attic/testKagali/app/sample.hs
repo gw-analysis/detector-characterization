@@ -21,8 +21,9 @@ main = do
          alpha  = 5      :: Double
          ipath  = 5      :: Int
          output = KGL2.dKGLChirpletMain frameV fs alpha ipath
-     let (timeV,freqV) = output
-     print $ VS.toList timeV
+         timeV = [0,1/fs..(nframe-1)/fs]
+     let (freqV,c) = output
+     print $ take 5 $ VS.toList freqV
      -- mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) $ zip (V.toList vf) (V.toList vasd)
 
 makeDouble :: [String] -> [Double]
