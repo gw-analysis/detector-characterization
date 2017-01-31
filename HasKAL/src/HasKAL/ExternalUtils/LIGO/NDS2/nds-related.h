@@ -1,2 +1,4 @@
 
-void ndsGetData (const char* server, int port, const char* channel[], int start_gps_in, int end_gps_in, int delta_in, float* data, int* length);
+#include "daqc.h"
+void nds_GetData (const char*, int, const char*, int, int, int, int, float*, int*);
+void nds_GetChannels (const char*, int, int, int*, daq_channel_t*);
