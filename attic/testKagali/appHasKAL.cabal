@@ -68,3 +68,19 @@ executable sample
    ,vector
   default-language:    Haskell2010
   extra-libraries: kagali
+
+
+executable testchirplet
+  hs-source-dirs:      app
+  main-is:      testchirplet.hs
+  ghc-options:
+  build-depends:       
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,appHasKAL==0.1.0.0
+   ,vector
+  default-language:    Haskell2010
+  extra-libraries: kagali
+
+
+
