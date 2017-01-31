@@ -75,6 +75,7 @@ library
     HasKAL.ExternalUtils.GSL.RandomNumberGeneration,
     HasKAL.ExternalUtils.KAGALI.KAGALIUtils,
     HasKAL.ExternalUtils.LAL.Lwtprint,
+    HasKAL.ExternalUtils.LIGO.NDS2.Function,
     -- FrameUtils --
     HasKAL.FrameUtils.DiffFileSystem,
     HasKAL.FrameUtils.FileManipulation,
@@ -223,6 +224,7 @@ library
   -- other-modules:
   C-sources:
     src/HasKAL/ExternalUtils/KAGALI/DKGLUtils.c
+    src/HasKAL/ExternalUtils/LIGO/NDS2/nds-related.c
     src/HasKAL/LineUtils/LineRemoval/rng_median.c
     src/HasKAL/StatisticsUtils/Correlation/distcor.c
     src/HasKAL/PlotUtils/HROOT/AppendFunction.cc
