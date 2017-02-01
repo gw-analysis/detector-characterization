@@ -4,6 +4,7 @@
 module HasKAL.ExternalUtils.LIGO.NDS2.Function
 ( ndsGetData
 , ndsGetChannels
+, ndsGetNumberOfChannels
 ) where
 
 import Data.List (foldl')
@@ -177,19 +178,41 @@ ndsGetChannels server port gps =
 
 
 ndsGetChannels' :: CString
-                 -> CInt
-                 -> CInt
-                 -> [Daq_channel_t]
+                -> CInt
+                -> CInt
+                -> [Daq_channel_t]
 ndsGetChannels' c'server c'port c'gps =
+  unsafePerformIO $ do
+    let nchan = fromIntegral $ ndsGetNumberOfChannels' c'server c'port c'gps :: Int
+    allocaArray nchan $ \ptr'nchan -> do
+      allocaArray nchan $ \ptr'dqchant -> do
+        c'ndsGetChannels c'server c'port c'gps ptr'nchan ptr'dqchant
+        peekArray nchan ptr'dqchant
+
+
+ndsGetNumberOfChannels :: String
+                       -> Int
+                       -> Int
+                       -> Int
+ndsGetNumberOfChannels server port gps =
+  unsafePerformIO $ do
+    withCString server $ \c'server -> do
+      let c'port = fromIntegral port :: CInt
+          c'gps = fromIntegral gps :: CInt
+          c'nchan = ndsGetNumberOfChannels' c'server c'port c'gps
+      return $  fromIntegral c'nchan :: IO Int
+
+
+ndsGetNumberOfChannels' :: CString
+                        -> CInt
+                        -> CInt
+                        -> CInt
+ndsGetNumberOfChannels' c'server c'port c'gps =
   unsafePerformIO $
     allocaArray 1 $ \ptr'nchan -> do
-      allocaArray 1 $ \ptr'dqchant -> do
-        c'ndsGetChannels c'server c'port c'gps ptr'nchan ptr'dqchant
-        nchan <- peekArray 1 ptr'nchan
-        allocaArray (fromIntegral (head nchan)) $ \ptr'dqchant2 -> do
-          allocaArray 1 $ \ptr'nchan2 -> do
-          c'ndsGetChannels c'server c'port c'gps ptr'nchan2 ptr'dqchant2
-          peekArray (fromIntegral (head nchan)) ptr'dqchant2
+      c'ndsGetNumberOfChannels c'server c'port c'gps ptr'nchan
+      lnchan <- peekArray 1 ptr'nchan
+      return $ head lnchan
 
 
 foreign import ccall "nds-related.h nds_GetData" c'ndsGetData :: CString
@@ -208,3 +231,9 @@ foreign import ccall "nds-related.h nds_GetChannels" c'ndsGetChannels :: CString
                                                                       -> Ptr CInt
                                                                       -> Ptr Daq_channel_t
                                                                       -> IO ()
+
+foreign import ccall "nds-related.h nds_GetNumberOfChannels" c'ndsGetNumberOfChannels :: CString
+                                                                                      -> CInt
+                                                                                      -> CInt
+                                                                                      -> Ptr CInt
+                                                                                      -> IO ()

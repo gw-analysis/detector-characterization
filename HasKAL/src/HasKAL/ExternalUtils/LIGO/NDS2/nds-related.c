@@ -89,7 +89,7 @@ if (rc) {
 
 //--  Request channel list --
 /*---  Get the number of channels */
-err = daq_recv_channel_list(&daq, channels, 0, &num_alloc, gps, chant);
+err = daq_recv_channel_list(&daq, &channels, 0, &num_alloc, gps, chant);
 if (err) {
    daq_recv_shutdown(&daq);
    print("get_channel_list() failed.");
@@ -112,8 +112,41 @@ if (num_alloc > 0) {
 /*---  Close the connection */
 daq_disconnect(&daq);
 daq_recv_shutdown(&daq);
+}
 
 
+void nds_GetNumberOfChannels (const char* server, int port, int gps, int* num_alloc) {
+/* Local variable declaration */
+//short port = 31200;
+daq_t daq;
+int err;
+daq_channel_t* channels = NULL;
+//num_channels = 0;
+chantype_t chant = cUnknown;
+
+//-- Initialize --
+int rc = daq_startup();
+if (rc) {
+   printf("global initialization failed\n");
+}
+
+//-- Connect to server --
+daq_t daqd;
+rc = daq_connect(&daqd, server, port, nds_v2);
+if (rc) {
+    printf("Connection failed with error: %s\n", daq_strerror(rc));
+}
+
+//--  Request channel list --
+/*---  Get the number of channels */
+err = daq_recv_channel_list(&daq, channels, 0, &num_alloc, gps, chant);
+if (err) {
+   daq_recv_shutdown(&daq);
+   print("get_channel_list() failed.");
+}
+/*---  Close the connection */
+daq_disconnect(&daq);
+daq_recv_shutdown(&daq);
 }
 
 //
