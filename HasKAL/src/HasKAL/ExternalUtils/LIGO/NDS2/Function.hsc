@@ -8,6 +8,7 @@ module HasKAL.ExternalUtils.LIGO.NDS2.Function
 ) where
 
 import Data.List (foldl')
+import qualified Data.Vector.Storable as V
 import Data.Word (Word32)
 import Foreign.C.Types
 import Foreign.C.String
@@ -123,9 +124,8 @@ ndsGetData :: String
            -> Int
            -> Int
            -> Int
-           -> Int
-           -> [Float]
-ndsGetData server port channelList gpsStart gpsEnd delta len =
+           -> [[V.Vector Double]]
+ndsGetData server port channelList gpsStart gpsEnd delta =
  unsafePerformIO $ do
    withCString server $ \c'server -> do
     let c'port = fromIntegral port :: CInt
@@ -133,9 +133,8 @@ ndsGetData server port channelList gpsStart gpsEnd delta len =
         c'gpsStart = fromIntegral gpsStart :: CInt
         c'gpsEnd   = fromIntegral gpsEnd :: CInt
         c'delta    = fromIntegral delta :: CInt
-        c'len      = fromIntegral len :: CInt
-        c'dat      = ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta c'len
-    return $  map realToFrac c'dat :: IO [Float]
+        c'dat      = ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta
+    return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
 
 
 conv (s,d) = unsafePerformIO $ withCString s $ \cs -> do
@@ -149,19 +148,25 @@ ndsGetData' :: CString
             -> CInt
             -> CInt
             -> CInt
-            -> CInt
-            -> [CFloat]
-ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta c'len =
+            -> [[[CFloat]]]
+ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta =
   unsafePerformIO $
     withArray c'channelNames $ \ptr'channelNames -> do
       allocaArray len $ \ptr'dat -> do
-        c'ndsGetData c'server c'port ptr'channelNames c'gpsStart c'gpsEnd c'delta c'len ptr'dat
-        peekArray (fromIntegral c'len) ptr'dat
+        allocaArray 1 $ \ptr'len -> do
+          c'ndsGetData c'server c'port ptr'channelNames c'gpsStart c'gpsEnd c'delta ptr'dat ptr'len
+          c'len <- peekArray 1 ptr'len
+          x <- peekArray (fromIntegral (head c'len)) ptr'dat
+          let xl = mkChunksLCF x len
+          return $ flip map xl $ \y -> sepdata y llen
      where
       (c'channelNames,c'channelRates) = unzip c'channelList
       len = foldl' (+) 0 $ map (((c'gpsEnd' - c'gpsStart') *) . floor . realToFrac) c'channelRates
+      llen = map (((c'gpsEnd' - c'gpsStart') *) . floor . realToFrac) c'channelRates
       c'gpsEnd' = fromIntegral c'gpsEnd :: Int
       c'gpsStart' = fromIntegral c'gpsStart :: Int
+
+sepdata x (l:ls) = take l x : sepdata (drop l x) ls
 
 
 ndsGetChannels :: String
@@ -215,14 +220,22 @@ ndsGetNumberOfChannels' c'server c'port c'gps =
       return $ head lnchan
 
 
+mkChunksLCF :: [CFloat] -> Int -> [[CFloat]]
+mkChunksLCF lIn n = mkChunksLCFCore lIn n (Prelude.length lIn `div` n)
+  where
+    mkChunksLCFCore _ _ 0 = []
+    mkChunksLCFCore lIn n m
+      = Prelude.take n lIn :  mkChunksLCFCore (Prelude.drop n lIn) n (m-1)
+
+
 foreign import ccall "nds-related.h nds_GetData" c'ndsGetData :: CString
                                                               -> CInt
                                                               -> Ptr CString
                                                               -> CInt
                                                               -> CInt
                                                               -> CInt
-                                                              -> CInt
                                                               -> Ptr CFloat
+                                                              -> Ptr CInt
                                                               -> IO ()
 
 foreign import ccall "nds-related.h nds_GetChannels" c'ndsGetChannels :: CString
