@@ -1074,8 +1074,6 @@ void KGLChirpletAnalysis( //begin{proto}
 			   N,csc,fsc,sldf,slopeRange,minfreq,maxfreq,
 			   XTTYPE,degrees);
   
-  printf("step 1\n");
-
   double complex ****cc = NULL;
   KGLCalloc4TensorAbortIfError(cc,J,N,N+1,N,double complex,status);
   
@@ -1085,7 +1083,7 @@ void KGLChirpletAnalysis( //begin{proto}
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // SET UP CHIRPLET NETWORK AND FILL IN CHIRPLET COSTS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  printf("Generating chirplet graph and assigning costs... (this will take a while)\n");
+  // printf("Generating chirplet graph and assigning costs... (this will take a while)\n");
   
   int **icnetwork1 = NULL;
   double **cnetwork1 = NULL;
@@ -1107,9 +1105,8 @@ void KGLChirpletAnalysis( //begin{proto}
 			  graphparam3,graphparam4,graphparam5,graphparam6,
 			  coarsestScale);
     
-    printf("Running optimization routine for graph...\n");  
-    //printf("cnetwork2 = %d\n",cnetwork2);
-    
+    //printf("Running optimization routine for graph...\n");  
+        
     KGLCalculateStatistic(status,costpath,paths,
 			  icnetwork1,cnetwork1,cnetwork2,cnetwork3,
 			  cnetwork4,cnetwork5,STATTYPE,alpha,N,nfreqs);
@@ -1154,7 +1151,7 @@ void KGLChirpletAnalysis( //begin{proto}
       free(cnetwork5);
     }
   }
-  printf("Done!\n");
+  //printf("Done!\n");
   
   if(strcmp(COMPLEX_OR_REAL,"REAL") == 0 
      && strcmp(STATTYPE,"BPFORPLOTTING") == 0){

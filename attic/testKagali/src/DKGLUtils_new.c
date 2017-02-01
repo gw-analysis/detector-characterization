@@ -26,6 +26,8 @@ void DKGLChirpletMain( //begin{proto}
     KGLCallocAbortIfError(costpath,nframe*nframe,double,status);
   }
   if(strcmp(STATTYPE,"BPFORPLOTTING") == 0){
+    KGLAssert(status,(int)alpha > ipath,"alpha must be greater than ipath.\n");
+    KGLEndAssert(status);
     KGLCallocMatrixAbortIfError(paths,maxLength,maxLength+1,int,status);
     KGLCallocAbortIfError(costpath,maxLength,double,status);
   }
@@ -71,7 +73,8 @@ void DKGLChirpletMain( //begin{proto}
       freq *= fs/nframe;
       timegrid[j] = time/fs;
       freqgrid[j] = freq;
-    }
+    } 
+    for (int j = 0; j < nframe; j++) timea[j] = j/fs;
     KGLLinearInterpolation(status,freqa,timea,freqgrid,timegrid,nframe,jend+1);
     KGLAbortIfError(status);
 

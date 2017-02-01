@@ -13,7 +13,8 @@ import KAGALIUtils_new (dKGLChirpletMain)
 
 main :: IO ()
 main = do
-  let v = loadASCIIdataCV "dat/KRD_SFHx_ascii.dat"
+--  let v = loadASCIIdataCV "dat/KRD_SFHx_ascii.dat"
+  let v = loadASCIIdataCV "dat/gwfSc_170r1e10_eq.fs2048.txt"
       tv = [x | (i,x)<-zip [0..] (V.toList $ head v), i `mod` 8 == 0]
       hp = downsampleSV 16384 2048 $ v !! 1
       hc = downsampleSV 16384 2048 $ v !! 2
