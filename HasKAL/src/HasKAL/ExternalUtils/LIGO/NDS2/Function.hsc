@@ -22,7 +22,7 @@ import System.IO.Unsafe (unsafePerformIO)
 #include "daqc.h"
 
 newtype ChanType = ChanType #{type chantype_t}
-  deriving (Storable)
+  deriving (Storable, Show, Eq, Read)
 
 #{enum ChanType, ChanType
  , hs_cUnknown = cUnknown
@@ -36,7 +36,7 @@ newtype ChanType = ChanType #{type chantype_t}
 }
 
 newtype DaqDataType = DaqDataType #{type daq_data_t}
-  deriving (Storable)
+  deriving (Storable, Show, Eq, Read)
 
 #{enum DaqDataType, DaqDataType
  , hs_undefined = _undefined
