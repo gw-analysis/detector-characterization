@@ -291,7 +291,8 @@ library
        text-icu,
        lifted-base,
        palette==0.1.0.2,
-       deepseq
+       deepseq,
+       inline-r
 
 
   -- Directories containing source files.
