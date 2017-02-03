@@ -15,19 +15,17 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     DistCor
+  exposed-modules:     Function
 -- Modules included in this library but not exported.
 -- other-modules:
   ghc-options:
   C-sources:
-    src/distcor.c
+    src/ndsGetData.c
   cc-options: -Wall -O2 -std=c99 -fPIC
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
-   ,inline-r
    ,vector
-   ,transformers
    ,hmatrix
   default-language:    Haskell2010
 
@@ -47,3 +45,17 @@ executable testR2H
    ,transformers
    ,hmatrix
   default-language:    Haskell2010
+
+
+executable testnds
+  hs-source-dirs:      app
+  main-is:      testnds.hs
+  ghc-options: -opta-Wa,-mrelax-relocations=no
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,vector
+  default-language:    Haskell2010
+  extra-libraries: ndsclient
+
+
