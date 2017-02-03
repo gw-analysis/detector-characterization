@@ -130,10 +130,11 @@ ndsGetData server port channelList gpsStart gpsEnd delta =
    withCString server $ \c'server -> do
     let c'port = fromIntegral port :: CInt
         c'channelList = map conv channelList
+        c'nch = fromIntegral (length channelList) :: CInt
         c'gpsStart = fromIntegral gpsStart :: CInt
         c'gpsEnd   = fromIntegral gpsEnd :: CInt
         c'delta    = fromIntegral delta :: CInt
-        c'dat      = ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta
+        c'dat      = ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
     return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
 
 
@@ -148,13 +149,14 @@ ndsGetData' :: CString
             -> CInt
             -> CInt
             -> CInt
+            -> CInt
             -> [[[CFloat]]]
-ndsGetData' c'server c'port c'channelList c'gpsStart c'gpsEnd c'delta =
+ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
   unsafePerformIO $
     withArray c'channelNames $ \ptr'channelNames -> do
       allocaArray len $ \ptr'dat -> do
         allocaArray 1 $ \ptr'len -> do
-          c'ndsGetData c'server c'port ptr'channelNames c'gpsStart c'gpsEnd c'delta ptr'dat ptr'len
+          c'ndsGetData c'server c'port ptr'channelNames c'nch c'gpsStart c'gpsEnd c'delta ptr'dat ptr'len
           c'len <- peekArray 1 ptr'len
           x <- peekArray (fromIntegral (head c'len)) ptr'dat
           let xl = mkChunksLCF x len
@@ -231,6 +233,7 @@ mkChunksLCF lIn n = mkChunksLCFCore lIn n (Prelude.length lIn `div` n)
 foreign import ccall "nds-related.h nds_GetData" c'ndsGetData :: CString
                                                               -> CInt
                                                               -> Ptr CString
+                                                              -> CInt
                                                               -> CInt
                                                               -> CInt
                                                               -> CInt

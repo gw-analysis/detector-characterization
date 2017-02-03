@@ -10,9 +10,17 @@
 //#include "nds-related.h"
 
 #define MAX_HOST_LENGTH 256
+#define NEW_VECT(type,dim) ((type*)malloc(dim*sizeof(type)))
+
+void nds_GetData (const char* server, int port, const char* channel[],
+  int nch, int start_gps_in, int end_gps_in, int delta_in, float* data,
+  int* length) {
 
 
-void nds_GetData (const char* server, int port, const char* channel[], int nch, int start_gps_in, int end_gps_in, int delta_in, float* data, int* length) {
+chantype_t ctype = 0;
+time_t start_gps = start_gps_in;
+time_t end_gps   = end_gps_in;
+time_t delta     = delta_in;
 
 //-- Initialize --
 int rc = daq_startup();
@@ -22,23 +30,52 @@ if (rc) {
 
 //-- Connect to server --
 daq_t daqd;
-rc = daq_connect(&daqd, server, port, nds_v2);
+rc = daq_connect(&daqd, server, port, nds_v1);
 if (rc) {
     printf("Connection failed with error: %s\n", daq_strerror(rc));
 }
 
-int i;
+
+//const char* channels[2] = {
+//   "K1:PEM-TEMPERATURE_RACK_IMC",
+//   0
+// };
+
+int nAlloc = 0;
+int nChans = 0;
+
+daq_channel_t* channel_list;
+rc = daq_recv_channel_list(&daqd, 0, 0, &nAlloc, start_gps_in, ctype);
+channel_list = NEW_VECT(daq_channel_t, (size_t)(nAlloc));
+rc = daq_recv_channel_list(&daqd, channel_list, nAlloc,
+         &nChans, start_gps, ctype);
+if (rc) {
+	 printf("Error reading channel list: %s\n", daq_strerror(rc));
+} else {
+daq_channel_t chan;
+int i,j;
 for (i=0; i<nch; i++) {
-    rc = daq_request_channel(&daqd, channel+i, 0, 0);
+    struct trench_struct tch;
+    trench_init(&tch);
+    trench_parse(&tch, channel[i]);
+    for (j=0; j<nChans; ++j) {
+		  if (!trench_cmp_base(&tch, channel_list[j].name)) {
+			    trench_infer_chan_info(&tch, ctype,
+						   channel_list[j].rate,
+						   channel_list[j].data_type);
+			    daq_init_channel(&chan, tch.str, tch.ctype,
+					     tch.rate, tch.dtype);
+			    break;
+			}
+    }
+    daq_request_channel_from_chanlist(&daqd, &chan);
+    trench_destroy(&tch);
 }
 
 //--  Request data --
-time_t start_gps = start_gps_in;
-time_t end_gps   = end_gps_in;
-time_t delta     = delta_in;
 rc = daq_request_data(&daqd, start_gps, end_gps, delta);
 if (rc) {
-   printf("Data request failed with error: %s\n", daq_strerror(rc));
+   printf("Error in daq_request_data: %s\n", daq_strerror(rc));
 }
 
 //--  Read data blocks --
@@ -47,6 +84,7 @@ for (t=start_gps; t<end_gps; t+=delta) {
     rc = daq_recv_next(&daqd);
     if (rc) {
        printf("Receive data failed with error: %s\n", daq_strerror(rc));
+       return;
     }
 
     //--  Get data --
@@ -62,9 +100,10 @@ for (t=start_gps; t<end_gps; t+=delta) {
 //--  Disconnect from server --
 daq_disconnect(&daqd);
 }
+}
 
-
-void nds_GetChannels (const char* server, int port, int gps, int* num_channels, daq_channel_t* channels) {
+void nds_GetChannels (const char* server,
+  int port, int gps, int* num_channels, daq_channel_t* channels) {
 /* Local variable declaration */
 //short port = 31200;
 daq_t daq;
@@ -89,10 +128,10 @@ if (rc) {
 
 //--  Request channel list --
 /*---  Get the number of channels */
-err = daq_recv_channel_list(&daq, &channels, 0, &num_alloc, gps, chant);
+err = daq_recv_channel_list(&daq, channels, 0, &num_alloc, gps, chant);
 if (err) {
    daq_recv_shutdown(&daq);
-   print("get_channel_list() failed.");
+   printf("get_channel_list() failed.");
 }
 
 /*---  Read in the channel list */
@@ -115,14 +154,16 @@ daq_recv_shutdown(&daq);
 }
 
 
-void nds_GetNumberOfChannels (const char* server, int port, int gps, int* num_alloc) {
+void nds_GetNumberOfChannels (const char* server
+  , int port, int gps, int* num_alloc) {
 /* Local variable declaration */
 //short port = 31200;
 daq_t daq;
 int err;
-daq_channel_t* channels = NULL;
+//daq_channel_t* channels = NULL;
 //num_channels = 0;
 chantype_t chant = cUnknown;
+time_t gpst = gps;
 
 //-- Initialize --
 int rc = daq_startup();
@@ -139,10 +180,12 @@ if (rc) {
 
 //--  Request channel list --
 /*---  Get the number of channels */
-err = daq_recv_channel_list(&daq, channels, 0, &num_alloc, gps, chant);
+//err = daq_recv_channel_list(&daq, channels, 0, num_alloc, gpst, chant);
+err = daq_recv_channel_list(&daqd, 0, 0, num_alloc, gpst, chant);
+
 if (err) {
-   daq_recv_shutdown(&daq);
-   print("get_channel_list() failed.");
+   daq_recv_shutdown(&daqd);
+   printf("get_channel_list() failed.");
 }
 /*---  Close the connection */
 daq_disconnect(&daq);
