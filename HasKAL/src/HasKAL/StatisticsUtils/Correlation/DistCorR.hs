@@ -3,11 +3,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module HasKAL.MonitorUtils.CorrelationMon.MIC
-( micV
-, micU
-, micU'
-, micWave
+module HasKAL.StatisticsUtils.Correlation.DistCorR
+( dcorV
+, dcorU
+, dcorU'
+, dcorWave
 )
 where
 
@@ -26,26 +26,16 @@ import HasKAL.SignalProcessingUtils.Resampling
 import HasKAL.WaveUtils.Data(WaveData(..))
 
 
-type MIC = Double
-type MAS = Double
-type MEV = Double
-type MCN = Double
-type MIC_R2 = Double
-type GMIC = Double
-
-
--- | micV v1 v2
-micWave :: WaveData
-        -> WaveData
-        -> (MIC,MAS,MEV,MCN,MIC_R2,GMIC)
-micWave w1 w2 = unsafePerformIO $ do
+-- | dcor v1 v2
+dcorWave :: WaveData
+         -> WaveData
+         -> Double
+dcorWave w1 w2 = unsafePerformIO $ do
   let (v1,v2) = arrangeFsV w1 w2
   let (a,b) = arrangeDataV v1 v2
   input <- R.withEmbeddedR R.defaultConfig
-    $ R.runRegion $ r_mic a b
-  return $ toMICdata input
-  where
-    toMICdata v = (v!!0,v!!1,v!!2,v!!3,v!!4,v!!5)
+    $ R.runRegion $ r_dcor a b
+  return $ input
 
 
 arrangeFsV w1 w2 = do
@@ -58,50 +48,43 @@ arrangeFsV w1 w2 = do
           | fs1 < fs2 -> (gwdata w2, downsampleSV fs2 fs1 (gwdata w2))
 
 
--- | micV v1 v2
-micV :: V.Vector Double
-     -> V.Vector Double
-     -> (MIC,MAS,MEV,MCN,MIC_R2,GMIC)
-micV v1 v2 = unsafePerformIO $ do
+-- | dcorV v1 v2
+dcorV :: V.Vector Double
+      -> V.Vector Double
+      -> Double
+dcorV v1 v2 = unsafePerformIO $ do
   let (a,b) = arrangeDataV v1 v2
   input <- R.withEmbeddedR R.defaultConfig
-    $ R.runRegion $ r_mic a b
-  return $ toMICdata input
-  where
-    toMICdata v = (v!!0,v!!1,v!!2,v!!3,v!!4,v!!5)
+    $ R.runRegion $ r_dcor a b
+  return input
 
 
--- | micU v1 v2
-micU :: U.Vector Double
-     -> U.Vector Double
-     -> (MIC,MAS,MEV,MCN,MIC_R2,GMIC)
-micU v1 v2 = unsafePerformIO $ do
-  let (a,b) = arrangeDataU v1 v2
-  input <- R.withEmbeddedR R.defaultConfig
-    $ R.runRegion $ r_mic a b
-  return $ toMICdata input
-  where
-    toMICdata v = (v!!0,v!!1,v!!2,v!!3,v!!4,v!!5)
-
-
-micU' :: U.Vector Double
+-- | dcorU v1 v2
+dcorU :: U.Vector Double
       -> U.Vector Double
       -> Double
-micU' v1 v2 = unsafePerformIO $ do
+dcorU v1 v2 = unsafePerformIO $ do
   let (a,b) = arrangeDataU v1 v2
   input <- R.withEmbeddedR R.defaultConfig
-    $ R.runRegion $ r_mic a b
-  return $ toMICdata input
-  where
-    toMICdata v = v!!0
+    $ R.runRegion $ r_dcor a b
+  return input
 
 
--- | load mic from R
-r_mic :: [Double] -> [Double] -> R s [Double]
-r_mic x y = do
-    H.dynSEXP <$> [r| require("minerva")
-                      a <- mine(x_hs,y_hs)
-                      c(a$MIC, a$MAS, a$MEV, a$MCN, a$`MIC-R2`,a$GMIC)
+dcorU' :: U.Vector Double
+       -> U.Vector Double
+       -> Double
+dcorU' v1 v2 = unsafePerformIO $ do
+  let (a,b) = arrangeDataU v1 v2
+  input <- R.withEmbeddedR R.defaultConfig
+    $ R.runRegion $ r_dcor a b
+  return input
+
+
+-- | load dcor from R
+r_dcor :: [Double] -> [Double] -> R s Double
+r_dcor x y = do
+    H.dynSEXP <$> [r| require("energy")
+                      dcor(x_hs,y_hs, index=1.0)
                       |]
 
 

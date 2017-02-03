@@ -4,11 +4,10 @@ import Data.List
 import Numeric
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL 
 
-
 main :: IO()
 main = do
 --     cnsig <- getArgs
-     string <- readFile "../../HasKAL/src/HasKAL/LineUtils/LineRemoval/LIGOtest.dat"
+     string <- readFile "LIGOtest.dat"
      let stringList = lines string
          frameList = makeDouble stringList
          frameV = VS.fromList frameList
@@ -30,7 +29,7 @@ main = do
 --         let outV = KGL.nha frameV_bp fs nsig nframe nshift nstart nend
          let outV = KGL.nha_daily frameV_bp fs nsig nframe nshift nstart nend t0
              outText = concat $ map (toText . shift) outV
-         writeFile "LIGOtest.ana" $ outText
+         writeFile "LIGOtest_nha.ana" $ outText
 
 makeDouble :: [String] -> [Double]
 makeDouble = map read

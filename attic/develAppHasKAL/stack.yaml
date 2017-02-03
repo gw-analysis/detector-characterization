@@ -1,19 +1,16 @@
 flags: {}
 extra-include-dirs:
-- /home/detchar/tools/include
-- /home/detchar/kagali/include
+- /home/kazu/tools/include
 rebuild-ghc-options: true
 apply-ghc-options: everything
 ghc-options:
-  "*": -fPIC -fobject-code
-  glib: -fPIC -fobject-code
+  "*": -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
+  glib: -fPIC -fobject-code -opta-Wa,-mrelax-relocations=no
 extra-lib-dirs:
-- /home/detchar/tools/lib
-- /home/detchar/tools/lib/gsl
-- /home/detchar/kagali/lib
+- /home/kazu/tools/lib
 packages:
 - '.'
-- /home/ueno/detector-characterization/HasKAL
+- /home/kazu/tools/detector-characterization/HasKAL
 #- location:
 #    git: https://github.com/bos/hdbc-mysql.git
 #    commit: d43ea057019ff683f278f36af410f4d3cbc731bc

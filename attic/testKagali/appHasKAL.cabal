@@ -15,12 +15,21 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     LibHasKAL
+  exposed-modules:     
+    LibHasKAL,
+    KAGALIUtils_new
   ghc-options:  
+  C-sources:
+    src/chirplet_func.c
+    src/DKGLUtils_new.c
+  cc-options: -Wall -O2 -std=c99 -fPIC
+
   build-depends:       
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
    ,inline-r
+   ,vector
+   ,hmatrix
   default-language:    Haskell2010
 
 executable main_nha_raw
@@ -46,5 +55,32 @@ executable main_nha_txt
    ,vector
   default-language:    Haskell2010
   extra-libraries: kagali
+
+
+executable sample
+  hs-source-dirs:      app
+  main-is:      sample.hs
+  ghc-options:
+  build-depends:       
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,appHasKAL==0.1.0.0
+   ,vector
+  default-language:    Haskell2010
+  extra-libraries: kagali
+
+
+executable testchirplet
+  hs-source-dirs:      app
+  main-is:      testchirplet.hs
+  ghc-options:
+  build-depends:       
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,appHasKAL==0.1.0.0
+   ,vector
+  default-language:    Haskell2010
+  extra-libraries: kagali
+
 
 

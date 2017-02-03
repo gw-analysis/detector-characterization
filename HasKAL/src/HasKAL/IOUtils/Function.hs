@@ -8,6 +8,14 @@ module HasKAL.IOUtils.Function
       -- output : Conduit
     , stdin2chunkV
     , dat2chunkV
+       -- input : data file
+    , loadASCIIdata
+    , loadASCIIdataM
+    , loadASCIIdataCV
+    , loadASCIIdataRV
+       -- helper function
+    , splitLines
+    , fixLines
     ) where
 
 
@@ -15,10 +23,10 @@ import Control.Monad.Trans.Resource (ResourceT,runResourceT)
 import qualified Data.ByteString.Char8 as BS
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
-import Data.ByteString
+import qualified Data.ByteString as B
 import Data.Conduit
-import Data.Conduit.Binary as CB
-import Data.Conduit.Combinators as CC
+import qualified Data.Conduit.Binary as CB
+import qualified Data.Conduit.Combinators as CC
 import Data.Conduit.Text as CT
 import qualified Data.Text as DT
 import Data.Text.ICU.Convert
@@ -26,6 +34,9 @@ import qualified Data.Text.Lazy.Builder.RealFloat as TB
 import qualified Data.Text.Read as TR
 import qualified Data.Vector.Storable as VS
 import System.IO as SI
+import Numeric.LinearAlgebra
+import Numeric.GSL.LinearAlgebra (fromFile, fileDimensions)
+import System.IO.Unsafe (unsafePerformIO)
 
 
 --dat2chunkV :: Int -> FilePath -> Conduit Double IO (VS.Vector Double)
@@ -65,11 +76,11 @@ dat2vec file = runResourceT $
   where enc = "ASCII"
 
 
-decodeByICU :: MonadIO m => String -> Conduit ByteString m DT.Text
+decodeByICU :: MonadIO m => String -> Conduit B.ByteString m DT.Text
 decodeByICU = convertByICU toUnicode
 
 
-encodeByICU :: MonadIO m => String -> Conduit DT.Text m ByteString
+encodeByICU :: MonadIO m => String -> Conduit DT.Text m B.ByteString
 encodeByICU = convertByICU fromUnicode
 
 
@@ -101,6 +112,53 @@ awaitDouble = do
       (Right (i, "")) -> Just i
       (Right (_, _)) -> Nothing
       (Left _) -> Nothing
+
+
+loadASCIIdata :: FilePath -> [[Double]]
+loadASCIIdata x = unsafePerformIO $ fmap (map (map (\x->read x :: Double).words). splitLines) (readFile x)
+
+
+loadASCIIdataM :: FilePath -> Matrix Double
+loadASCIIdataM x = unsafePerformIO $ do
+  rc <- fileDimensions x
+  fromFile x rc
+
+
+loadASCIIdataCV :: FilePath -> [Vector Double]
+loadASCIIdataCV x = unsafePerformIO $ do
+  rc <- fileDimensions x
+  m <- fromFile x rc
+  return $ toColumns m
+
+
+loadASCIIdataRV :: FilePath -> [Vector Double]
+loadASCIIdataRV x = unsafePerformIO $ do
+  rc <- fileDimensions x
+  m <- fromFile x rc
+  return $ toRows m
+
+
+-- file: ch04/SplitLines.hs
+splitLines :: String -> [String]
+
+
+-- file: ch04/SplitLines.hs
+splitLines [] = []
+splitLines cs =
+    let (pre, suf) = break isLineTerminator cs
+    in  pre : case suf of
+                ('\r':'\n':rest) -> splitLines rest
+                ('\r':rest)      -> splitLines rest
+                ('\n':rest)      -> splitLines rest
+                _                -> []
+
+
+isLineTerminator c = c == '\r' || c == '\n'
+
+
+-- file: ch04/SplitLines.hs
+fixLines :: String -> String
+fixLines input = unlines (splitLines input)
 
 
 lstrip [] = []
