@@ -29,7 +29,7 @@ main = do
                  Just x  -> do 
                    let str_title = "triggered events"
                        str_legend = "events"
-                       plotfname = "glitch_GPS-"++startgps'++"_"++stopgps'++".png"
+                       plotfname = "glitch_snr"++snrlow'++"-"++snrhigh'++"_f"++flow'++"-"++fhigh'++"_GPS-"++startgps'++"_"++stopgps'++".png"
                     in scatterplot'png' str_title str_legend plotfname x 
                  Nothing -> error "no glitch events found"
              "setLocalTime" -> do
@@ -46,8 +46,8 @@ main = do
                  Just x  -> do 
                    let str_title = "triggered events"
                        str_legend = "events"
-                       plotfname = "glitch_GPS-"++show gpsstart++"_"++show gpsstop++".png"
-                    in scatterplot'png' str_title str_legend plotfname x 
+                       plotfname = "glitch_snr"++snrlow'++"-"++snrhigh'++"_f"++flow'++"-"++fhigh'++"_GPS-"++show gpsstart++"_"++show gpsstop++".png"
+                   scatterplot'png' str_title str_legend plotfname x 
                  Nothing -> error "no glitch events found"
  
       _ -> error "Usage: plotGlitchEvent [-l] startGPS[2010-11-11 00:00:00 JST] stopGPS[2010-11-11 00:00:00 JST] SNRlow SNRhigh flow fhigh"

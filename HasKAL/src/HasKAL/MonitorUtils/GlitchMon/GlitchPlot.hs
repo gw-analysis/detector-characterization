@@ -122,14 +122,13 @@ setColor x
 
 setColor' :: Double -> Int
 setColor' x
-  | x < 3 = 0
   | x < 5 = 1
   | x < 8 = 2
-  | x < 10 = 3
-  | x < 15 = 4
-  | x < 20 = 5
-  | x < 25 = 6
-  | x < 30 = 7
-  | x < 50 = 8
+  | x < 15 = 3
+  | x < 30 = 4
+  | x < 45 = 5
+  | x < 60 = 6
+  | x < 75 = 7
+  | x < 90 = 8
   | otherwise = 9
 
