@@ -7,6 +7,7 @@ module HasKAL.SimulationUtils.Injection.Function
 ( injDetectorResponse
 , doInjection
 , doInjection'
+, addInjsig
 ) where
 
 import Control.DeepSeq (deepseq)
@@ -72,8 +73,8 @@ injDetectorResponse detName srcType gps = do
            }
 
 
-doInjection :: WaveData -> WaveData -> WaveData
-doInjection dat injdat = do
+doInjection' :: WaveData -> WaveData -> WaveData
+doInjection' dat injdat = do
   let tdat = fromIntegral (fst (startGPSTime dat))
         + 1E-9 * fromIntegral (snd (startGPSTime dat))::Double
       tinjdat = fromIntegral (fst (startGPSTime injdat))
@@ -96,8 +97,8 @@ doInjection dat injdat = do
   mkWaveData (detector dat) (dataType dat) (samplingFrequency dat) (startGPSTime dat) (stopGPSTime dat) newdat
 
 
-doInjection' :: WaveData -> WaveData -> WaveData
-doInjection' dat injdat
+doInjection :: WaveData -> WaveData -> WaveData
+doInjection dat injdat
   | timeSlide >=0&&timeSlide<=nvdata-nvinjdata
       = unsafePerformIO $ do
           deepseq (addInjsig timeSlide (gwdata dat) vinjdata) return ()
