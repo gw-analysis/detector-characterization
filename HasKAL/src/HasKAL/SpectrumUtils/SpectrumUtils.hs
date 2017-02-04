@@ -31,6 +31,7 @@ import HasKAL.SignalProcessingUtils.WindowFunction
 import HasKAL.SpectrumUtils.Function
 import HasKAL.SpectrumUtils.GwPsdMethod
 import HasKAL.SpectrumUtils.Signature
+import HasKAL.TimeUtils.Function (deformatGPS)
 import Numeric.GSL.Fourier
 import Numeric.LinearAlgebra
 import HasKAL.WaveUtils (WaveData(..))
@@ -261,7 +262,11 @@ gwOnesidedPSDWelchP dat nfft fs w = Par.runPar $ do
 
 
 gwspectrogramWaveData :: Double -> Double -> WaveData -> Spectrogram
-gwspectrogramWaveData overlapSec fftSec w = gwspectrogramV (truncate $ overlapSec * fs) (truncate $ fftSec * fs) fs (gwdata w)
+gwspectrogramWaveData overlapSec fftSec w = do 
+  let (tV', freV, specgram) = 
+        gwspectrogramV (truncate $ overlapSec * fs) (truncate $ fftSec * fs) fs (gwdata w)
+      tV = VS.map (deformatGPS (startGPSTime w)+) tV'
+   in (tV, freV, specgram)
   where fs = samplingFrequency w
 
 
