@@ -64,6 +64,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
       sgp = map sqrt $ concatMap V.toList $ N.toRows sgp'
 
   [r| require("ggplot2") |]
+  [r| require("grid")|]
   [r| require("gridExtra")|]
   [r| require("scales") |]
 --  [r| require("RColorBrewer") |]
@@ -85,11 +86,11 @@ main = R.withEmbeddedR R.defaultConfig $ do
       f <- freqL[((i-1)*lsub+1):(i*lsub)]
       t <- tv[((i-1)*lsub+1):(i*lsub)]
       temp <- mkfd(t,f)
-      temp <- data.frame(temp, color=cost[i], replace=T)
+      temp <- data.frame(temp, cost=cost[i], replace=T)
       mkfd.fd <- rbind(mkfd.fd, temp)
     }
     black.bold.text <- element_text(size=16,face = "bold", color = "black")
-    p2 <- ggplot(mkfd.fd,aes(x=xX, y=yY, color=color)) +
+    p2 <- ggplot(mkfd.fd,aes(x=xX, y=yY, color=cost)) +
       geom_point() +
       geom_line() +
       labs(x = "time[s]", y = "frequency[Hz]") +
@@ -109,7 +110,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
     tsdat <- data.frame(tv,tsll)
     p1 <- ggplot(tsdat,aes(x=tv,y=tsll)) +
       geom_line() +
-      labs(title = "SN_SFHx", x = "time[s]", y = "frequency[Hz]") +
+      labs(title = "SN_SFHx", x = "time[s]", y = "strain") +
       theme( title = black.bold.text
            , axis.title = black.bold.text
            , axis.text = black.bold.text
@@ -135,8 +136,15 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.ticks.length = unit(.1, "cm")
            , axis.ticks = element_line(size = 1)) +
       xlim(0.03,0.35)
-    grid.arrange(p1, p3, p2, ncol=1)
-    g <- arrangeGrob (p1, p3, p2, ncol=1)
+    g1 <- ggplot_gtable(ggplot_build(p1)) 
+    g2 <- ggplot_gtable(ggplot_build(p2))
+    g3 <- ggplot_gtable(ggplot_build(p3))
+    maxWidth <- unit.pmax(g1$widths, g2$widths, g3$widths)
+    g1$widths <- maxWidth
+    g2$widths <- maxWidth
+    g3$widths <- maxWidth
+    grid.arrange(g1, g3, g2, ncol=1)
+    g <- arrangeGrob (g1, g3, g2, ncol=1)
     ggsave( file = "chirplet_SN_SFHx.png"
           , plot = g
           , dpi = 100
