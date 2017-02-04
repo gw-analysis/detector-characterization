@@ -8,12 +8,20 @@
 import           Control.Monad
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Vector.Storable as V
+import HasKAL.DetectorUtils.Detector
 import HasKAL.IOUtils.Function (loadASCIIdataCV)
 import HasKAL.Misc.Function (mkChunksV)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
+import HasKAL.SimulationUtils.Injection.Function (addInjsig)
+import HasKAL.SpectrumUtils.SpectrumUtils(gwspectrogramWaveData)
+import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
+import HasKAL.WaveUtils.Data
+import qualified Numeric.LinearAlgebra as N
+import qualified Numeric.GSL.Statistics as GSL
 
 import KAGALIUtils_new (dKGLChirpletMain)
 
+-- for plotting
 import qualified Foreign.R as R
 import Foreign.R (SEXP, SEXPTYPE)
 import qualified H.Prelude as H
@@ -25,22 +33,39 @@ main :: IO ()
 main = R.withEmbeddedR R.defaultConfig $ do
  R.runRegion $ do
   let v = loadASCIIdataCV "dat/KRD_SFHx_ascii.dat"
+      fs = 2048 :: Double
+      fsorig = 16384 :: Double
 --  let v = loadASCIIdataCV "dat/gwfSc_170r1e10_eq.fs2048.txt"
-      tv = [x | (i,x)<-zip [0..] (V.toList $ head v), i `mod` 8 == 0] :: [Double]
-      hp = downsampleSV 16384 2048 $ v !! 1
-      hc = downsampleSV 16384 2048 $ v !! 2
-  liftIO $ print "check loading data"
-  liftIO $ print $ take 5 $ tv
-  let hpl = mkChunksV hp 128
-      out = flip map hpl $ \v -> dKGLChirpletMain v 2048 5 4
+      tv' = [x | (i,x)<-zip [0..] (V.toList $ head v), i `mod` 8 == 0] :: [Double]
+      htv = head tv'
+      hp = downsampleSV fsorig fs $ v !! 1
+      hc = downsampleSV fsorig fs $ v !! 2
+      tv = [htv,htv+1/fs..(htv+(fromIntegral (V.length hp) -1)/fs)] :: [Double]
+      ts' = N.scale 1E-23 $ N.randomVector 1 N.Gaussian (V.length hp) :: V.Vector Double
+      ts = addInjsig 0 ts' hp
+      tsll = V.toList ts
+  liftIO $ print "signal-to-noise ratio is"
+  liftIO $ print $ (sqrt (2 * fs)) * GSL.stddev hp / GSL.stddev ts'
+  -- ref: (3.2) in https://arxiv.org/abs/gr-qc/9812015
+  let tsl = mkChunksV ts 128
+      out = flip map tsl $ \v -> dKGLChirpletMain v fs 5 4
       (freq,cost) = unzip out
 --  print "costs are"
 --  print cost
       lsub = fromIntegral (V.length (head freq)) :: Double
       l = fromIntegral (length freq) :: Double
       freqL = concatMap V.toList freq ::[Double]
+  let x = mkWaveData General "sim" fs (formatGPS htv) (formatGPS (htv + fromIntegral (V.length ts-1)/fs)) ts
+      (sgt',sgf',sgp') = gwspectrogramWaveData 0.001 0.02 x
+      sgt = V.toList sgt'
+      lsgt = fromIntegral$ length sgt :: Double
+      sgf = V.toList sgf'
+      lsgf = fromIntegral$ length sgf :: Double
+      sgp = map sqrt $ concatMap V.toList $ N.toRows sgp'
+
   [r| require("ggplot2") |]
---  [r| require("scales") |]
+  [r| require("gridExtra")|]
+  [r| require("scales") |]
 --  [r| require("RColorBrewer") |]
   [r|
     lsub <- lsub_hs
@@ -48,6 +73,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
     freqL <- freqL_hs
     tv <- tv_hs
     cost <- cost_hs
+    tsll <- tsll_hs
     mkfd <- function(a,b){
       xX <- a
       yY <- b
@@ -63,8 +89,25 @@ main = R.withEmbeddedR R.defaultConfig $ do
       mkfd.fd <- rbind(mkfd.fd, temp)
     }
     black.bold.text <- element_text(size=16,face = "bold", color = "black")
-    p <- ggplot(mkfd.fd,aes(x=xX, y=yY, color=color)) +
+    p2 <- ggplot(mkfd.fd,aes(x=xX, y=yY, color=color)) +
       geom_point() +
+      geom_line() +
+      labs(x = "time[s]", y = "frequency[Hz]") +
+      theme( title = black.bold.text
+           , axis.title = black.bold.text
+           , axis.text = black.bold.text
+           , axis.ticks.length = unit(.1, "cm")
+           , axis.ticks = element_line(size = 1)) +
+      xlim(0.03,0.35) + ylim(0,1000)
+    scientific_10 <- function(x) {
+      parse(text=gsub("e", " %*% 10^", scientific_format(digits=1)(x)))
+    }
+    yformatter <- function (x) {
+      ind <-floor(log10(x))
+      sprintf('%3.1E',x)
+    }
+    tsdat <- data.frame(tv,tsll)
+    p1 <- ggplot(tsdat,aes(x=tv,y=tsll)) +
       geom_line() +
       labs(title = "SN_SFHx", x = "time[s]", y = "frequency[Hz]") +
       theme( title = black.bold.text
@@ -72,7 +115,32 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.text = black.bold.text
            , axis.ticks.length = unit(.1, "cm")
            , axis.ticks = element_line(size = 1)) +
-      xlim(0.03,0.35) + ylim(0,1000)
-    ggsave(file = "chirplet_SN_SFHx.png", plot = p, dpi = 100, width = 10, height = 8)
+      xlim(0.03,0.35) +
+      scale_y_continuous(label=scientific_10)
+    lt <- lsgt_hs
+    lf <- lsgf_hs
+    tR0 <- sgt_hs
+    fR0 <- sgf_hs
+    tR <- rep(tR0,lf)
+    fR <- sort(rep(fR0,lt))
+    sgpR <- sgp_hs
+    df <- data.frame(T=tR,F=fR,P=log(sgpR))
+    p3 <- ggplot(df,aes(x=T,y=F,fill=P)) +
+      geom_tile() +
+      scale_fill_gradient(low="white", high="orange") +
+      labs(x = "time[s]", y = "frequency[Hz]") +
+      theme( title = black.bold.text
+           , axis.title = black.bold.text
+           , axis.text = black.bold.text
+           , axis.ticks.length = unit(.1, "cm")
+           , axis.ticks = element_line(size = 1)) +
+      xlim(0.03,0.35)
+    grid.arrange(p1, p3, p2, ncol=1)
+    g <- arrangeGrob (p1, p3, p2, ncol=1)
+    ggsave( file = "chirplet_SN_SFHx.png"
+          , plot = g
+          , dpi = 100
+          , width = 10
+          , height = 8)
     |]
   return ()
