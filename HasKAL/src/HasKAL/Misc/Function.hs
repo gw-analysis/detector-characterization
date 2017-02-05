@@ -6,19 +6,17 @@ module HasKAL.Misc.Function
 import Data.Vector.Storable as VS
 
 
-mkChunksV :: VS.Vector Double -> Int -> [VS.Vector Double]
-mkChunksV vIn n = mkChunksVCore vIn n (VS.length vIn `div` n)
+mkChunksV :: VS.Vector Double -> Int -> Int -> [VS.Vector Double]
+mkChunksV vIn on n = mkChunksVCore vIn on n ((VS.length vIn -on) `div` (n-on))
   where
-    mkChunksVCore _ _ 0 = []
-    mkChunksVCore vIn n m 
-      = VS.slice 0 n vIn :  mkChunksVCore (VS.drop n vIn) n (m-1)
+    mkChunksVCore _ _ _ 0 = []
+    mkChunksVCore vIn on n m
+      = VS.slice 0 n vIn :  mkChunksVCore (VS.drop (n-on) vIn) on n (m-1)
 
 
-mkChunksL :: [Double] -> Int -> [[Double]]
-mkChunksL lIn n = mkChunksLCore lIn n (Prelude.length lIn `div` n)
+mkChunksL :: [Double] -> Int -> Int -> [[Double]]
+mkChunksL lIn on n = mkChunksLCore lIn on n ((Prelude.length lIn -on) `div` (n-on))
   where
-    mkChunksLCore _ _ 0 = []
-    mkChunksLCore lIn n m 
-      = Prelude.take n lIn :  mkChunksLCore (Prelude.drop n lIn) n (m-1)
-
-
+    mkChunksLCore _ _ _ 0 = []
+    mkChunksLCore lIn on n m
+      = Prelude.take n lIn :  mkChunksLCore (Prelude.drop (n-on) lIn) on n (m-1)
