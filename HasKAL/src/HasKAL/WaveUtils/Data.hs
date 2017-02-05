@@ -1,6 +1,7 @@
 
 module HasKAL.WaveUtils.Data
-( WaveData (..)
+( module HasKAL.DetectorUtils.Detector
+, WaveData (..)
 , WaveProperty (..)
 , mkWaveData
 , mkLIGOHanfordWaveData
