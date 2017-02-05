@@ -2,10 +2,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module HasKAL.ExternalUtils.LIGO.NDS2.Function
-( ndsGetData
-, ndsGetCurrentData
-, ndsGetChannels
-, ndsGetNumberOfChannels
+( getData
+, getCurrentData
+, getChannels
+, getCurrentChannels
+, getNumberOfChannels
+, getCurrentNumberOfChannels
 ) where
 
 import Data.List (foldl')
@@ -119,13 +121,13 @@ instance Storable Signal_conv_t where
                            }
 
 
-ndsGetCurrentData :: String
-                  -> Int
-                  -> [(String,Double)]
-                  -> Int
-                  -> Int
-                  -> [[V.Vector Double]]
-ndsGetCurrentData server port channelList duration delta =
+getCurrentData :: String
+               -> Int
+               -> [(String,Double)]
+               -> Int
+               -> Int
+               -> [[V.Vector Double]]
+getCurrentData server port channelList duration delta =
  unsafePerformIO $ do
    withCString server $ \c'server -> do
     let c'port = fromIntegral port :: CInt
@@ -134,18 +136,18 @@ ndsGetCurrentData server port channelList duration delta =
         c'gpsStart = fromIntegral 0 :: CInt
         c'gpsEnd   = fromIntegral duration :: CInt
         c'delta    = fromIntegral delta :: CInt
-        c'dat      = ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
+        c'dat      = getData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
     return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
 
 
-ndsGetData :: String
-           -> Int
-           -> [(String,Double)]
-           -> Int
-           -> Int
-           -> Int
-           -> [[V.Vector Double]]
-ndsGetData server port channelList gpsStart gpsEnd delta =
+getData :: String
+        -> Int
+        -> [(String,Double)]
+        -> Int
+        -> Int
+        -> Int
+        -> [[V.Vector Double]]
+getData server port channelList gpsStart gpsEnd delta =
  unsafePerformIO $ do
    withCString server $ \c'server -> do
     let c'port = fromIntegral port :: CInt
@@ -154,7 +156,7 @@ ndsGetData server port channelList gpsStart gpsEnd delta =
         c'gpsStart = fromIntegral gpsStart :: CInt
         c'gpsEnd   = fromIntegral gpsEnd :: CInt
         c'delta    = fromIntegral delta :: CInt
-        c'dat      = ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
+        c'dat      = getData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
     return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
 
 
@@ -163,20 +165,20 @@ conv (s,d) = unsafePerformIO $ withCString s $ \cs -> do
   return (cs,cd)
 
 
-ndsGetData' :: CString
-            -> CInt
-            -> [(CString,CDouble)]
-            -> CInt
-            -> CInt
-            -> CInt
-            -> CInt
-            -> [[[CFloat]]]
-ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
+getData' :: CString
+         -> CInt
+         -> [(CString,CDouble)]
+         -> CInt
+         -> CInt
+         -> CInt
+         -> CInt
+         -> [[[CFloat]]]
+getData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
   unsafePerformIO $
     withArray c'channelNames $ \ptr'channelNames -> do
       allocaArray len $ \ptr'dat -> do
         allocaArray 1 $ \ptr'len -> do
-          c'ndsGetData c'server c'port ptr'channelNames c'nch c'gpsStart c'gpsEnd c'delta ptr'dat ptr'len
+          c'GetData c'server c'port ptr'channelNames c'nch c'gpsStart c'gpsEnd c'delta ptr'dat ptr'len
           c'len <- peekArray 1 ptr'len
           x <- peekArray (fromIntegral (head c'len)) ptr'dat
           let xl = mkChunksLCF x len
@@ -191,53 +193,77 @@ ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
 sepdata x (l:ls) = take l x : sepdata (drop l x) ls
 
 
-ndsGetChannels :: String
-               -> Int
-               -> Int
-               -> [Daq_channel_t]
-ndsGetChannels server port gps =
+getCurrentChannels :: String
+                   -> Int
+                   -> [Daq_channel_t]
+getCurrentChannels server port =
+ unsafePerformIO $ do
+   withCString server $ \c'server -> do
+    let c'port = fromIntegral port :: CInt
+        c'gps = fromIntegral 0 :: CInt
+        c'dat = getChannels' c'server c'port c'gps
+    return $  c'dat :: IO [Daq_channel_t]
+
+
+getChannels :: String
+            -> Int
+            -> Int
+            -> [Daq_channel_t]
+getChannels server port gps =
  unsafePerformIO $ do
    withCString server $ \c'server -> do
     let c'port = fromIntegral port :: CInt
         c'gps = fromIntegral gps :: CInt
-        c'dat = ndsGetChannels' c'server c'port c'gps
+        c'dat = getChannels' c'server c'port c'gps
     return $  c'dat :: IO [Daq_channel_t]
 
 
-ndsGetChannels' :: CString
+getChannels' :: CString
                 -> CInt
                 -> CInt
                 -> [Daq_channel_t]
-ndsGetChannels' c'server c'port c'gps =
+getChannels' c'server c'port c'gps =
   unsafePerformIO $ do
-    let nchan = fromIntegral $ ndsGetNumberOfChannels' c'server c'port c'gps :: Int
+    let nchan = fromIntegral $ getNumberOfChannels' c'server c'port c'gps :: Int
     allocaArray nchan $ \ptr'nchan -> do
       allocaArray nchan $ \ptr'dqchant -> do
-        c'ndsGetChannels c'server c'port c'gps ptr'nchan ptr'dqchant
+        c'GetChannels c'server c'port c'gps ptr'nchan ptr'dqchant
         peekArray nchan ptr'dqchant
 
 
-ndsGetNumberOfChannels :: String
-                       -> Int
-                       -> Int
-                       -> Int
-ndsGetNumberOfChannels server port gps =
+getCurrentNumberOfChannels :: String
+                           -> Int
+                           -> Int
+getCurrentNumberOfChannels server port =
+  unsafePerformIO $ do
+    withCString server $ \c'server -> do
+      let c'port = fromIntegral port :: CInt
+          c'gps = fromIntegral 0 :: CInt
+          c'nchan = getNumberOfChannels' c'server c'port c'gps
+      return $  fromIntegral c'nchan :: IO Int
+
+
+getNumberOfChannels :: String
+                    -> Int
+                    -> Int
+                    -> Int
+getNumberOfChannels server port gps =
   unsafePerformIO $ do
     withCString server $ \c'server -> do
       let c'port = fromIntegral port :: CInt
           c'gps = fromIntegral gps :: CInt
-          c'nchan = ndsGetNumberOfChannels' c'server c'port c'gps
+          c'nchan = getNumberOfChannels' c'server c'port c'gps
       return $  fromIntegral c'nchan :: IO Int
 
 
-ndsGetNumberOfChannels' :: CString
-                        -> CInt
-                        -> CInt
-                        -> CInt
-ndsGetNumberOfChannels' c'server c'port c'gps =
+getNumberOfChannels' :: CString
+                     -> CInt
+                     -> CInt
+                     -> CInt
+getNumberOfChannels' c'server c'port c'gps =
   unsafePerformIO $
     allocaArray 1 $ \ptr'nchan -> do
-      c'ndsGetNumberOfChannels c'server c'port c'gps ptr'nchan
+      c'GetNumberOfChannels c'server c'port c'gps ptr'nchan
       lnchan <- peekArray 1 ptr'nchan
       return $ head lnchan
 
@@ -250,7 +276,7 @@ mkChunksLCF lIn n = mkChunksLCFCore lIn n (Prelude.length lIn `div` n)
       = Prelude.take n lIn :  mkChunksLCFCore (Prelude.drop n lIn) n (m-1)
 
 
-foreign import ccall "nds-related.h nds_GetData" c'ndsGetData :: CString
+foreign import ccall "nds-related.h nds_GetData" c'GetData :: CString
                                                               -> CInt
                                                               -> Ptr CString
                                                               -> CInt
@@ -261,14 +287,14 @@ foreign import ccall "nds-related.h nds_GetData" c'ndsGetData :: CString
                                                               -> Ptr CInt
                                                               -> IO ()
 
-foreign import ccall "nds-related.h nds_GetChannels" c'ndsGetChannels :: CString
+foreign import ccall "nds-related.h nds_GetChannels" c'GetChannels :: CString
                                                                       -> CInt
                                                                       -> CInt
                                                                       -> Ptr CInt
                                                                       -> Ptr Daq_channel_t
                                                                       -> IO ()
 
-foreign import ccall "nds-related.h nds_GetNumberOfChannels" c'ndsGetNumberOfChannels :: CString
+foreign import ccall "nds-related.h nds_GetNumberOfChannels" c'GetNumberOfChannels :: CString
                                                                                       -> CInt
                                                                                       -> CInt
                                                                                       -> Ptr CInt
