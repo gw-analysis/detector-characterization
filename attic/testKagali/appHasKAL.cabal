@@ -81,5 +81,7 @@ executable testchirplet
    ,vector
    ,inline-r
    ,transformers
+   ,hmatrix
+   ,hmatrix-gsl-stats
   default-language:    Haskell2010
   extra-libraries: kagali
