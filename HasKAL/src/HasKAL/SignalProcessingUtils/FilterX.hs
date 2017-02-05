@@ -49,24 +49,24 @@ filtfilt0 (num, denom) inputV = head $ filtfiltM0 (num, denom) [inputV]
 -- | iir (num, denom) z dir inputV
 iir :: ([Double], [Double]) -> [Double] -> FilterDirection -> VS.Vector Double -> (VS.Vector Double,[Double])
 iir (num, denom) z dir inputV = let a = iirM (num, denom) [z] dir [inputV]
-                                       in (head . fst $ a, head . snd $ a)      
+                                       in (head . fst $ a, head . snd $ a)
 
 
 -- | iir0 (num, denom) inputV
 iir0 :: ([Double], [Double]) -> VS.Vector Double -> VS.Vector Double
-iir0 (num, denom) inputV = head . fst $ iirM0 (num, denom) [inputV]     
+iir0 (num, denom) inputV = head . fst $ iirM0 (num, denom) [inputV]
 
 
 -- | fir num z dir inputV
 fir :: [Double] -> [Double] -> FilterDirection -> VS.Vector Double -> (VS.Vector Double,[Double])
 fir num z dir inputV = let a = iirM (num, denom) [z] dir [inputV]
                            denom = 1.0:replicate (length num-1) 0.0
-                         in (head . fst $ a, head . snd $ a)      
+                         in (head . fst $ a, head . snd $ a)
 
 
 -- | fir0 num inputV
 fir0 :: [Double] -> VS.Vector Double -> VS.Vector Double
-fir0 num inputV = head . fst $ iirM0 (num, denom) [inputV]     
+fir0 num inputV = head . fst $ iirM0 (num, denom) [inputV]
   where denom = 1.0:replicate (length num-1) 0.0
 
 
@@ -75,9 +75,9 @@ firfiltfilt0 num inputV = head $ filtfiltM0 (num, denom) [inputV]
   where denom = 1.0:replicate (length num-1) 0.0
 
 
--- | filtfiltM0 (num, denom) inputV 
+-- | filtfiltM0 (num, denom) inputV
 filtfiltM0 :: ([Double], [Double]) -> [VS.Vector Double] -> [VS.Vector Double]
-filtfiltM0 (num, denom) inputV = 
+filtfiltM0 (num, denom) inputV =
   let nb = length num
       na = length denom
       order = max nb na
@@ -105,9 +105,9 @@ filtfiltM0 (num, denom) inputV =
    in fst $ iirM (num, denom) zf Reverse ys
 
 
--- | iirM0 (num, denom) inputV 
+-- | iirM0 (num, denom) inputV
 iirM0 :: ([Double], [Double]) -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
-iirM0 (num, denom) inputV = 
+iirM0 (num, denom) inputV =
   let nb = length num
       na = length denom
       order = max nb na
@@ -146,12 +146,12 @@ iirM (num, denom) z dir inputV = unsafePerformIO $ do
       dir' | dir==Forward = 1 :: Int
            | dir==Reverse = 0 :: Int
   let(vv,zz) = iirMCore num' blen denom' alen z' dir' m n inputV'
-  return $(flip mkChunksV m $ cd2dV vv, flip mkChunksL mz $ cd2d zz)
+  return $(mkChunksV (cd2dV vv) 0 m, mkChunksL (cd2d zz) 0 mz)
 
 
--- | iirM0 (num, denom) inputV 
+-- | iirM0 (num, denom) inputV
 iirVLM0 :: ([Double], [Double]) -> [VS.Vector Double] -> ([[Double]], [[Double]])
-iirVLM0 (num, denom) inputV = 
+iirVLM0 (num, denom) inputV =
   let nb = length num
       na = length denom
       order = max nb na
@@ -190,7 +190,7 @@ iirVLM (num, denom) z dir inputV = unsafePerformIO $ do
       dir' | dir==Forward = 1 :: Int
            | dir==Reverse = 0 :: Int
   let(ll,zz) = iirVLMCore num' blen denom' alen z' dir' m n inputV'
-  return $(flip mkChunksL m $ cd2d ll, flip mkChunksL mz $ cd2d zz)
+  return $(mkChunksL (cd2d ll) 0 m, mkChunksL (cd2d zz) 0 mz)
 
 
 firM0 :: [Double] -> [VS.Vector Double] -> ([VS.Vector Double], [[Double]])
@@ -211,7 +211,7 @@ firfiltfiltM0 num inputV = filtfiltM0 (num, denom) inputV
 iirMCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  Int -> Int -> Int -> VS.Vector CDouble -> (VS.Vector CDouble, [CDouble])
 iirMCore b blen a alen z d m n input
  = unsafePerformIO $ do
-   let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input 
+   let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input
    withForeignPtr fptrInput $ \ptrInput ->
     withArray b $ \ptrb ->
     withArray a $ \ptra ->
@@ -236,7 +236,7 @@ iirMCore b blen a alen z d m n input
 iirVLMCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  Int -> Int -> Int -> VS.Vector CDouble -> ([CDouble], [CDouble])
 iirVLMCore b blen a alen z d m n input
  = unsafePerformIO $ do
-   let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input 
+   let (fptrInput, ilen) = VS.unsafeToForeignPtr0 input
    withForeignPtr fptrInput $ \ptrInput ->
     withArray b $ \ptrb ->
     withArray a $ \ptra ->
@@ -260,7 +260,7 @@ iirVLMCore b blen a alen z d m n input
 
 iirLLMCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  Int -> Int -> Int -> [CDouble] -> ([CDouble], [CDouble])
 iirLLMCore b blen a alen z d m n input
- = unsafePerformIO $ do 
+ = unsafePerformIO $ do
    withArray input $ \ptrInput ->
     withArray b $ \ptrb ->
     withArray a $ \ptra ->
@@ -284,7 +284,7 @@ iirLLMCore b blen a alen z d m n input
 
 iirLVMCore :: [CDouble] ->  Int -> [CDouble] ->  Int -> [CDouble] ->  Int -> Int -> Int -> [CDouble] -> (VS.Vector CDouble, [CDouble])
 iirLVMCore b blen a alen z d m n input
- = unsafePerformIO $ do 
+ = unsafePerformIO $ do
    withArray input $ \ptrInput ->
     withArray b $ \ptrb ->
     withArray a $ \ptra ->
@@ -318,8 +318,8 @@ calcInitCond (num,denom) =
       k''= k' + k0
       y = zip (VS.toList (ND.flatten . trans $ k'')) [0,1..]
       y'= [if i `elem` [(n-1),2*n-1..(n-1)*(n-1)] then -1.0 else x |(x,i)<-y]
-   in concat $ toLists $ trans $(trans $ ((n-1)><(n-1)) y') 
-        <\> ((((n-1)><1) (tail denom)) - scale (head denom) (((n-1)><1) (tail num))) 
+   in concat $ toLists $ trans $(trans $ ((n-1)><(n-1)) y')
+        <\> ((((n-1)><1) (tail denom)) - scale (head denom) (((n-1)><1) (tail num)))
 
 
 d2cd :: [Double] -> [CDouble]
@@ -336,4 +336,3 @@ cd2dV = VS.map realToFrac
 
 
 foreign import ccall "filterX.h filter" c'filter :: Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> CInt -> Ptr CDouble -> CInt -> Ptr CDouble -> CInt -> CInt -> Ptr CDouble -> CInt -> IO()
-
