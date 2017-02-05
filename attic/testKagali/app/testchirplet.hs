@@ -10,7 +10,7 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.Vector.Storable as V
 import HasKAL.DetectorUtils.Detector
 import HasKAL.IOUtils.Function (loadASCIIdataCV)
-import HasKAL.Misc.Function (mkChunksV)
+import HasKAL.Misc.Function (mkChunksV, mkChunksL)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 import HasKAL.SimulationUtils.Injection.Function (addInjsig)
 import HasKAL.SpectrumUtils.SpectrumUtils(gwspectrogramWaveData)
@@ -47,9 +47,10 @@ main = R.withEmbeddedR R.defaultConfig $ do
   liftIO $ print "signal-to-noise ratio is"
   liftIO $ print $ (sqrt (2 * fs)) * GSL.stddev hp / GSL.stddev ts'
   -- ref: (3.2) in https://arxiv.org/abs/gr-qc/9812015
-  let tsl = mkChunksV ts 128
+  let tsl = mkChunksV ts 64 128
       out = flip map tsl $ \v -> dKGLChirpletMain v fs 5 4
       (freq,cost) = unzip out
+      tv2 = concat $ mkChunksL tv 64 128
 --  print "costs are"
 --  print cost
       lsub = fromIntegral (V.length (head freq)) :: Double
@@ -73,6 +74,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
     l <- l_hs
     freqL <- freqL_hs
     tv <- tv_hs
+    tv2 <- tv2_hs
     cost <- cost_hs
     tsll <- tsll_hs
     mkfd <- function(a,b){
@@ -84,7 +86,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
     mkfd.fd <- data.frame()
     for(i in 1:l){
       f <- freqL[((i-1)*lsub+1):(i*lsub)]
-      t <- tv[((i-1)*lsub+1):(i*lsub)]
+      t <- tv2[((i-1)*lsub+1):(i*lsub)]
       temp <- mkfd(t,f)
       temp <- data.frame(temp, cost=cost[i], replace=T)
       mkfd.fd <- rbind(mkfd.fd, temp)
@@ -136,7 +138,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.ticks.length = unit(.1, "cm")
            , axis.ticks = element_line(size = 1)) +
       xlim(0.03,0.35)
-    g1 <- ggplot_gtable(ggplot_build(p1)) 
+    g1 <- ggplot_gtable(ggplot_build(p1))
     g2 <- ggplot_gtable(ggplot_build(p2))
     g3 <- ggplot_gtable(ggplot_build(p3))
     maxWidth <- unit.pmax(g1$widths, g2$widths, g3$widths)
