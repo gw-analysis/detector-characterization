@@ -3,6 +3,7 @@
 
 module HasKAL.ExternalUtils.LIGO.NDS2.Function
 ( ndsGetData
+, ndsGetCurrentData
 , ndsGetChannels
 , ndsGetNumberOfChannels
 ) where
@@ -116,6 +117,25 @@ instance Storable Signal_conv_t where
                            , daq_signal_offset = val_signal_offset
                            , daq_signal_units = val_signal_units
                            }
+
+
+ndsGetCurrentData :: String
+                  -> Int
+                  -> [(String,Double)]
+                  -> Int
+                  -> Int
+                  -> [[V.Vector Double]]
+ndsGetCurrentData server port channelList duration delta =
+ unsafePerformIO $ do
+   withCString server $ \c'server -> do
+    let c'port = fromIntegral port :: CInt
+        c'channelList = map conv channelList
+        c'nch = fromIntegral (length channelList) :: CInt
+        c'gpsStart = fromIntegral 0 :: CInt
+        c'gpsEnd   = fromIntegral duration :: CInt
+        c'delta    = fromIntegral delta :: CInt
+        c'dat      = ndsGetData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
+    return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
 
 
 ndsGetData :: String
