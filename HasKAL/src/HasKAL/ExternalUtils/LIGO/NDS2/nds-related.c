@@ -7,15 +7,16 @@
 #include "trench.h"
 #include <stdio.h>
 #include <stdlib.h>
-//#include "nds-related.h"
 
 #define MAX_HOST_LENGTH 256
 #define NEW_VECT(type,dim) ((type*)malloc(dim*sizeof(type)))
+
 
 void nds_GetData (const char* server, int port, const char* channel[],
   int nch, int start_gps_in, int end_gps_in, int delta_in, float* data,
   int* length) {
 
+daq_t daqd;
 chantype_t ctype = 0;
 time_t start_gps = start_gps_in;
 time_t end_gps   = end_gps_in;
@@ -28,7 +29,6 @@ if (rc) {
 }
 
 //-- Connect to server --
-daq_t daqd;
 rc = daq_connect(&daqd, server, port, nds_v1);
 if (rc) {
     printf("Connection failed with error: %s\n", daq_strerror(rc));
@@ -87,68 +87,87 @@ for (t=start_gps; t<end_gps; t+=delta) {
         daq_get_scaled_data(&daqd, channel[ic], data);
     }
 }
-
 //--  Disconnect from server --
 daq_disconnect(&daqd);
+daq_recv_shutdown(&daqd);
 }
 }
 
 
 void nds_GetChannels (const char* server,
-  int port, int gps, int* num_channels, daq_channel_t* channels) {
+  int port, int gps, char *name[], double *rate,
+  int *tpnum, int *bps, int *chNum, daq_data_t *data_type,
+  float *signal_gain, float *signal_slope,
+  float *signal_offset, char *signal_units[]) {
+
 /* Local variable declaration */
-daq_t daq;
+daq_channel_t *channels;
+daq_t daqd;
 int err;
 int num_alloc    = 0;
-channels = NULL;
+int num_channels;
+//channels = NULL;
 chantype_t chant = cUnknown;
+time_t gpst = gps;
 
 //-- Initialize --
-int rc = daq_startup();
-if (rc) {
+err = daq_startup();
+if (err) {
    printf("global initialization failed\n");
 }
 
 //-- Connect to server --
-daq_t daqd;
-rc = daq_connect(&daqd, server, port, nds_v2);
-if (rc) {
-    printf("Connection failed with error: %s\n", daq_strerror(rc));
+err = daq_connect(&daqd, server, port, nds_v1);
+if (err) {
+    printf("Connection failed with error: %s\n", daq_strerror(err));
 }
 
 //--  Request channel list --
 /*---  Get the number of channels */
-err = daq_recv_channel_list(&daq, channels, 0, &num_alloc, gps, chant);
+err = daq_recv_channel_list(&daqd, NULL, 0, &num_alloc, gpst, chant);
 if (err) {
-   daq_recv_shutdown(&daq);
+   daq_recv_shutdown(&daqd);
    printf("get_channel_list() failed.");
 }
 
 /*---  Read in the channel list */
 if (num_alloc > 0) {
-   channels = calloc(num_alloc, sizeof(daq_channel_t));
+   channels = NEW_VECT(daq_channel_t, (size_t)(num_alloc));
    if (!channels) {
       printf("Channel list calloc() failed.");
     }
-   err = daq_recv_channel_list(&daq, channels, num_alloc, &num_channels, gps, chant);
+   err = daq_recv_channel_list(&daqd, channels, num_alloc,
+            &num_channels, gpst, chant);
    if (err) {
-      printf("get_channel_list() failed.");
+      printf("daq_recv_channel_list() failed.");
    } else if (!num_channels) {
      free(channels);
      channels = NULL;
     }
+for (int i=0; i<num_alloc; i++) {
+  name[i] = channels[i].name;
+  rate[i] = channels[i].rate;
+  tpnum[i] = channels[i].tpnum;
+  bps[i] = channels[i].bps;
+  chNum[i] = channels[i].chNum;
+  data_type[i] = channels[i].data_type;
+  signal_gain[i] = channels[i].s.signal_gain;
+  signal_slope[i] = channels[i].s.signal_slope;
+  signal_offset[i] = channels[i].s.signal_offset;
+  signal_units[i] = channels[i].s.signal_units;
+}
 }
 /*---  Close the connection */
-daq_disconnect(&daq);
-daq_recv_shutdown(&daq);
+daq_disconnect(&daqd);
+daq_recv_shutdown(&daqd);
 }
 
 
 void nds_GetNumberOfChannels (const char* server
   , int port, int gps, int* num_alloc) {
+
 /* Local variable declaration */
-//short port = 31200;
-daq_t daq;
+daq_t daqd;
 int err;
 //daq_channel_t* channels = NULL;
 //num_channels = 0;
@@ -162,8 +181,7 @@ if (rc) {
 }
 
 //-- Connect to server --
-daq_t daqd;
-rc = daq_connect(&daqd, server, port, nds_v2);
+rc = daq_connect(&daqd, server, port, nds_v1);
 if (rc) {
     printf("Connection failed with error: %s\n", daq_strerror(rc));
 }
@@ -176,6 +194,6 @@ if (err) {
    printf("get_channel_list() failed.");
 }
 /*---  Close the connection */
-daq_disconnect(&daq);
-daq_recv_shutdown(&daq);
+daq_disconnect(&daqd);
+daq_recv_shutdown(&daqd);
 }
