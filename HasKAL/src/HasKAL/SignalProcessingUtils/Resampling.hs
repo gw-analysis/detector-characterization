@@ -53,7 +53,7 @@ downsampling fs newfs inputV = do
 downsampleCore :: Int -> Int -> SV.Vector CDouble -> Int -> SV.Vector CDouble
 downsampleCore sfactor ilen input olen
   = unsafePerformIO $ do
-   let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input     
+   let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input
    withForeignPtr fptrInput $ \ptrInput ->
      mallocForeignPtrArray0 olen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
       do c'downsample wsfactor wilen ptrInput wolen ptrOutput
@@ -75,7 +75,7 @@ upsampling fs newfs inputV = do
 upsampleCore :: Int -> Int -> SV.Vector CDouble -> Int -> SV.Vector CDouble
 upsampleCore sfactor ilen input olen
   = unsafePerformIO $ do
-   let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input     
+   let (fptrInput, inputLen) = SV.unsafeToForeignPtr0 input
    withForeignPtr fptrInput $ \ptrInput ->
      mallocForeignPtrArray0 olen >>= \fptrOutput -> withForeignPtr fptrOutput $ \ptrOutput ->
       do c'upsample wsfactor wilen ptrInput wolen ptrOutput
@@ -91,7 +91,7 @@ downsample fs newfs x = y
   where y = toList $ downsampling (floor fs) (floor newfs) x'
         x' = filtfilt0 lpf $ fromList x
         lpf = chebyshev1 6 1 fs newfs2 Low
-        newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
+        newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
 
 
 upsample :: Double -> Double -> [Double] -> [Double]
@@ -131,63 +131,61 @@ resampleonlyWaveData newfs x = y
         stopT = formatGPS $ deformatGPS (startGPSTime x) + 1/newfs*fromIntegral (dim (gwdata x))
 
 downsampleUV :: Double -> Double -> UV.Vector Double -> UV.Vector Double
-downsampleUV fs newfs v = 
-  if (fs/newfs<1) 
+downsampleUV fs newfs v =
+  if (fs/newfs<1)
     then error "new sample rate should be <= original sample rate."
     else
-      UV.create $ do 
+      UV.create $ do
         vs <- new nvs
         let v' =  UV.convert $ filtfilt0 lpf $ UV.convert v
             lpf = chebyshev1 6 1 fs newfs2 Low
-            newfs2 = 2*fs*tan (pi*newfs/2/fs)
+            newfs2 = 2*fs*tan (2*pi*newfs/2/fs)
         loop v' vs 0 nvs
         return vs
-        where 
+        where
           n = UV.length v
           p = truncate $ fs/newfs
           nvs = n `div` p
           loop v vs i j = when (i < j) $ do
             unsafeWrite vs i (v UV.!(i*p))
             loop v vs (i+1) j
-  
+
 
 downsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-downsampleSV fs newfs v = 
-  if (fs/newfs<1) 
+downsampleSV fs newfs v =
+  if (fs/newfs<1)
     then error "new sample rate should be <= original sample rate."
-    else 
+    else
       let v' = filtfilt0 lpf v
           lpf = chebyshev1 6 1 fs newfs2 Low
-          newfs' = newfs/2
-          newfs2 = 2*fs*tan (pi*newfs'/fs/2)/(2*pi)
+          newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'
-       
+
 
 
 sosDownsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-sosDownsampleSV fs newfs v = 
-  if (fs/newfs<1) 
+sosDownsampleSV fs newfs v =
+  if (fs/newfs<1)
     then error "new sample rate should be <= original sample rate."
     else
       let v' = sosfiltfilt cascade v
           initCond = map calcInitCond cascade
           cascade = tf2cascade lpf
           lpf = chebyshev1 6 0.4 fs newfs2 Low
-          newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
+          newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
        in downsampling (floor fs) (floor newfs) v'
 
 
 
 upsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-upsampleSV fs newfs v = 
-  if (fs/newfs>1) 
+upsampleSV fs newfs v =
+  if (fs/newfs>1)
     then error "new sample rate should be >= original sample rate."
-    else 
+    else
       let v' = upsampling (floor fs) (floor newfs) v
           lpf = chebyshev1 6 1 fs lfsa Low
-          lfs = fs/2
-          lfsa = 2*fs*tan (pi*lfs/fs/2)/(2*pi)
-                                         
+          lfsa = 2*fs*tan (2*pi*fs/fs/2)/(2*pi)
+
        in filtfilt0 lpf v'
 
 
@@ -196,9 +194,9 @@ resampleSV :: (Int,Int) -> Double -> SV.Vector Double -> SV.Vector Double
 resampleSV (p,q) fs v =
   let up |p==1 = v
          |otherwise = upsampling (floor fs) (floor (fs*(fromIntegral p))) v
-      lfs |fromIntegral p/fromIntegral q >=1 = fs/2
-          |fromIntegral p/fromIntegral q <1  = (fromIntegral p)/(fromIntegral q)*fs/2
-      lfsa = 2*fs*tan (pi*lfs/fs/2)/(2*pi)
+      lfs |fromIntegral p/fromIntegral q >=1 = fs
+          |fromIntegral p/fromIntegral q <1  = (fromIntegral p)/(fromIntegral q)*fs
+      lfsa = 2*fs*tan (2*pi*lfs/fs/2)/(2*pi)
       lpf = chebyshev1 6 1 (fs*fromIntegral p) lfsa Low
       upL = filtfilt0 lpf up
    in case q of
@@ -208,15 +206,15 @@ resampleSV (p,q) fs v =
 
 
 resampleonlySV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
-resampleonlySV fs newfs v = 
-  if (fs/newfs<1) 
+resampleonlySV fs newfs v =
+  if (fs/newfs<1)
     then error "new sample rate should be <= original sample rate."
     else
-      SV.create $ do 
+      SV.create $ do
         vs <- new nvs
         loop v vs 0 nvs
         return vs
-        where 
+        where
           n = SV.length v
           p = truncate $ fs/newfs
           nvs = n `div` p
@@ -245,4 +243,3 @@ cd2dV = SV.map realToFrac
 foreign import ccall "resampling.h downsample" c'downsample :: CUInt -> CUInt -> Ptr CDouble -> CUInt ->  Ptr CDouble -> IO()
 
 foreign import ccall "resampling.h upsample" c'upsample :: CUInt -> CUInt -> Ptr CDouble -> CUInt ->  Ptr CDouble -> IO()
-
