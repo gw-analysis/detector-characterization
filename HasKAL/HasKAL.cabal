@@ -1246,6 +1246,9 @@ executable plotHistogram
     ,conduit-combinators
     ,text
     ,text-icu
+    ,hmatrix
+    ,hmatrix-gsl
+    ,HROOT
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
@@ -1305,6 +1308,7 @@ executable plotter
    ,HROOT
    ,time
    ,old-time
+   ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1329,6 +1333,7 @@ executable filter
    ,text-icu
    ,text
    ,deepseq
+   ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1446,6 +1451,7 @@ executable frame2stdout
    ,bytestring
    ,transformers
    ,mtl
+   ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
@@ -1585,6 +1591,7 @@ executable plotGlitchEvent
    ,monad-par-extras
    ,time
    ,old-time
+   ,HROOT
   default-language:    Haskell2010
 
 
@@ -1625,6 +1632,7 @@ executable plot2DGlitchParameters
    ,monad-par-extras
    ,time
    ,old-time
+   ,HROOT
   default-language:    Haskell2010
 
 executable plotGlitchHistogram
@@ -1664,6 +1672,7 @@ executable plotGlitchHistogram
    ,monad-par-extras
    ,time
    ,old-time
+   ,HROOT
   default-language:    Haskell2010
 
 
