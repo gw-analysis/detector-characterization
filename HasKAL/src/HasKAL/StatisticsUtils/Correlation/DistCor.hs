@@ -3,10 +3,12 @@
 module HasKAL.StatisticsUtils.Correlation.DistCor
 ( distcor
 , distcorWave
+, distcorU
 )
 where
 
 import qualified Data.Vector.Storable as V
+import qualified Data.Vector.Unboxed as U
 import Foreign.ForeignPtr (ForeignPtr, newForeignPtr_, newForeignPtr)
 import Foreign.C.Types
 import Foreign.C.String
@@ -50,6 +52,14 @@ distcor v1' v2' = do
    in cd2d $ head $ distorC cv1 cv2 clen
 
 
+distcorU :: U.Vector Double
+         -> U.Vector Double
+         -> Double
+distcorU u1' u2' = do
+  let (u1, u2) = arrangeDataU u1' u2'
+   in distcor (U.convert u1) (U.convert u2)
+
+
 distorC :: V.Vector CDouble
         -> V.Vector CDouble
         -> CInt
@@ -80,7 +90,18 @@ arrangeDataV v1 v2
   | V.length v1 == V.length v2 = (v1, v2)
   | V.length v1 > V.length v2 = (V.slice 0 (V.length v2) v1, v2)
   | V.length v1 < V.length v2 = (v1, V.slice 0 (V.length v1) v2)
-  | otherwise = error "arrangeData: something wrong."
+  | otherwise = error "arrangeDataV: something wrong."
+
+
+arrangeDataU :: U.Vector Double
+             -> U.Vector Double
+             -> (U.Vector Double,U.Vector Double)
+arrangeDataU v1 v2
+  | U.length v1 == U.length v2 = (v1, v2)
+  | U.length v1 > U.length v2 = (U.slice 0 (U.length v2) v1, v2)
+  | U.length v1 < U.length v2 = (v1, U.slice 0 (U.length v1) v2)
+  | otherwise = error "arrangeDataU: something wrong."
+
 
 i2ci :: Int -> CInt
 i2ci = fromIntegral
