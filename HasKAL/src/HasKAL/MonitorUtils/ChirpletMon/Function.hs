@@ -1,6 +1,5 @@
 module HasKAL.MonitorUtils.ChirpletMon.Function
-( ChirpletParam
-, ChirpletGram
+( module HasKAL.MonitorUtils.ChirpletMon.Data
 , chirplet
 , chirpletWave
 , chirpletTrainWave
@@ -11,20 +10,9 @@ import Data.List (unzip3)
 import qualified Data.Vector.Storable as V
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils (dKGLChirpletMain)
 import HasKAL.Misc.Function (mkChunksW)
+import HasKAL.MonitorUtils.ChirpletMon.Data
 import HasKAL.TimeUtils.Function (deformatGPS, formatGPS)
 import HasKAL.WaveUtils.Data
-
-
-data ChirpletParam = ChirpletParam
-  { alpha :: Double
-  , ipath :: Int
-  } deriving (Show, Eq, Read)
-
-data ChirpletGram = ChirpletGram
-  { time      :: [Double]
-  , frequency :: [Double]
-  , cost      :: [Double]
-  } deriving (Show, Eq, Read)
 
 
 chirplet :: ChirpletParam
