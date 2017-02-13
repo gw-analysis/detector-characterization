@@ -17,7 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:
     LibHasKAL,
-    KAGALIUtils_new
+    Function
   ghc-options:
   C-sources:
     src/DKGLUtils_new.c

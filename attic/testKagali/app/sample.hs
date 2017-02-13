@@ -3,7 +3,7 @@ import qualified Data.Vector.Storable as VS
 import Data.List
 import Numeric
 import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL
-import KAGALIUtils_new as KGL2
+import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL2
 
 main :: IO()
 main = do
