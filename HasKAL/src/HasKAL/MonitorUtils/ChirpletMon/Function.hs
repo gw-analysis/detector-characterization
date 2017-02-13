@@ -1,4 +1,4 @@
-module HasKAL.Monitorutils.ChirpletMon.Function
+module HasKAL.MonitorUtils.ChirpletMon.Function
 ( ChirpletParam
 , ChirpletGram
 , chirplet

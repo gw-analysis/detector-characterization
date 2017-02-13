@@ -113,6 +113,7 @@ library
     HasKAL.Misc.StrictMapping,
     HasKAL.Misc.UMatrixMapping,
     -- MonitorUtils --
+    HasKAL.MonitorUtils.ChirpletMon.Function,
     HasKAL.MonitorUtils.CoherenceMon.Function,
     HasKAL.MonitorUtils.CorrelationMon.CalCorrelation,
     HasKAL.MonitorUtils.CorrelationMon.CorrelationMethod,
