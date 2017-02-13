@@ -1,6 +1,7 @@
 
 #include <kagali/KGLStdlib.h>
 #include <kagali/KGLInterpolation.h>
+#include "chirplet_func.c"
 #include "DKGLUtils_new.h"
 
 void DKGLChirpletMain( //begin{proto}

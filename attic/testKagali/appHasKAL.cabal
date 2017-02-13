@@ -20,7 +20,6 @@ library
     KAGALIUtils_new
   ghc-options:
   C-sources:
-    src/chirplet_func.c
     src/DKGLUtils_new.c
   cc-options: -Wall -O2 -std=c99 -fPIC
 

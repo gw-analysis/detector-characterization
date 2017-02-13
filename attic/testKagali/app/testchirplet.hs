@@ -20,6 +20,7 @@ import qualified Numeric.LinearAlgebra as N
 import qualified Numeric.GSL.Statistics as GSL
 
 import KAGALIUtils_new (dKGLChirpletMain)
+-- import HasKAL.ExternalUtils.KAGALI.KAGALIUtils as KGL
 
 -- for plotting
 import qualified Foreign.R as R
@@ -49,6 +50,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
   -- ref: (3.2) in https://arxiv.org/abs/gr-qc/9812015
   let tsl = mkChunksV ts 64 128
       out = flip map tsl $ \v -> dKGLChirpletMain v fs 5 4
+--      out = flip map tsl $ \v -> KGL.dKGLChirpletMain v fs 5 4
       (freq,cost) = unzip out
       tv2 = concat $ mkChunksL tv 64 128
 --  print "costs are"
