@@ -33,7 +33,7 @@ import Language.R.QQ
 main :: IO ()
 main = R.withEmbeddedR R.defaultConfig $ do
  R.runRegion $ do
-  let v = loadASCIIdataCV "dat/KRD_SFHx_ascii.dat"
+  let v = loadASCIIdataCV "/home/kazu/attic/testKagali/app/dat/KRD_SFHx_ascii.dat"
       fs = 2048 :: Double
       fsorig = 16384 :: Double
 --  let v = loadASCIIdataCV "dat/gwfSc_170r1e10_eq.fs2048.txt"
@@ -70,7 +70,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
   [r| require("grid")|]
   [r| require("gridExtra")|]
   [r| require("scales") |]
---  [r| require("RColorBrewer") |]
+  [r| require("RColorBrewer") |]
   [r|
     lsub <- lsub_hs
     l <- l_hs
@@ -130,16 +130,19 @@ main = R.withEmbeddedR R.defaultConfig $ do
     fR <- sort(rep(fR0,lt))
     sgpR <- sgp_hs
     df <- data.frame(T=tR,F=fR,P=log(sgpR))
-    p3 <- ggplot(df,aes(x=T,y=F,fill=P)) +
-      geom_tile() +
-      scale_fill_gradient(low="white", high="orange") +
+    p3 <- ggplot() +
+      geom_tile(data=df,aes(x=T,y=F,fill=P)) +
+      scale_fill_gradient(low="white", high="green") +
       labs(x = "time[s]", y = "frequency[Hz]") +
+      geom_point(data=mkfd.fd,aes(x=xX, y=yY, color=cost)) +
+      scale_color_gradientn(colours = c('springgreen4', 'white')) +
       theme( title = black.bold.text
            , axis.title = black.bold.text
            , axis.text = black.bold.text
            , axis.ticks.length = unit(.1, "cm")
            , axis.ticks = element_line(size = 1)) +
-      xlim(0.03,0.35)
+      xlim(0.03,0.35) + ylim(0,1000)
+
     g1 <- ggplot_gtable(ggplot_build(p1))
     g2 <- ggplot_gtable(ggplot_build(p2))
     g3 <- ggplot_gtable(ggplot_build(p3))
@@ -147,8 +150,8 @@ main = R.withEmbeddedR R.defaultConfig $ do
     g1$widths <- maxWidth
     g2$widths <- maxWidth
     g3$widths <- maxWidth
-    grid.arrange(g1, g3, g2, ncol=1)
-    g <- arrangeGrob (g1, g3, g2, ncol=1)
+    grid.arrange(g1, g3, ncol=1)
+    g <- arrangeGrob (g1, g3, ncol=1)
     ggsave( file = "chirplet_SN_SFHx.png"
           , plot = g
           , dpi = 100
