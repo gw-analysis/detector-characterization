@@ -30,8 +30,8 @@ plotChirpletGram cp p fname = R.withEmbeddedR R.defaultConfig $ R.runRegion $ do
   let t = time cp
       f = frequency cp
       c = cost cp
-      lseg = floor $ fromIntegral (length t) / fromIntegral (length c)
-      l = length c
+      lseg = fromIntegral $ floor $ fromIntegral (length t) / fromIntegral (length c) :: Double
+      l = fromIntegral $ length c :: Double
       (xl, xu) = xrange p
       (yl, yu) = yrange p
   [r| require("ggplot2") |]
@@ -43,6 +43,8 @@ plotChirpletGram cp p fname = R.withEmbeddedR R.defaultConfig $ R.runRegion $ do
     time  <- t_hs
     fre   <- f_hs
     cost  <- c_hs
+    lseg  <- lseg_hs
+    l     <- l_hs
     xl    <- xl_hs
     xu    <- xu_hs
     yl    <- yl_hs
@@ -61,7 +63,7 @@ plotChirpletGram cp p fname = R.withEmbeddedR R.defaultConfig $ R.runRegion $ do
       temp <- data.frame(temp, cost=cost[i], replace=T)
       mkfd.fd <- rbind(mkfd.fd, temp)
     }
-    black.bold.text <- element_text(size=16,face = "bold", color = "black")
+    black.bold.text <- element_text(size=16, face ="bold", color="black")
     mkfd <- function(a,b){
       xX <- a
       yY <- b
@@ -78,11 +80,11 @@ plotChirpletGram cp p fname = R.withEmbeddedR R.defaultConfig $ R.runRegion $ do
            , axis.ticks.length = unit(.1, "cm")
            , axis.ticks = element_line(size = 1)) +
       xlim(xl,xu) + ylim(yl,yu)
-   ggsave( file = fname
-         , plot = p
-         , dpi = 100
-         , width = 10
-         , height = 8
-         )
-  |]
+    ggsave( file = fname
+          , plot = p
+          , dpi = 100
+          , width = 10
+          , height = 8
+          )
+    |]
   return ()
