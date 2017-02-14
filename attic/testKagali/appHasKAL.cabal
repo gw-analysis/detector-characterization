@@ -71,7 +71,7 @@ executable sample
 
 executable testchirplet
   hs-source-dirs:      app
-  main-is:      testchirplet.hs
+  main-is:      testchirplet2.hs
   ghc-options:
   build-depends:
     base >= 4.7 && < 5
