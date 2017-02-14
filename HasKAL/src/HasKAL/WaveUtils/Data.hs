@@ -9,6 +9,7 @@ module HasKAL.WaveUtils.Data
 , updateWaveDatagwdata
 , dropWaveData
 , takeWaveData
+, vec2wave
 ) where
 
 
@@ -37,6 +38,11 @@ data WaveProperty = WaveProperty
   , spectrum :: Vector Double -> Double -> [(Double, Double)]
   , spectrogram :: Vector Double -> Double -> [(Double, Double, Double)]
   }
+
+vec2wave :: Double -> Double -> Vector Double -> WaveData
+vec2wave fs t0 v =
+  mkWaveData General "Sim" fs (formatGPS t0) (formatGPS (t0+fromIntegral (V.length v-1))) v
+
 
 mkWaveData :: Detector -> String -> Double -> GPSTIME -> GPSTIME -> TimeSeries -> WaveData
 mkWaveData det datatype fs startGPS stopGPS xs
@@ -87,6 +93,3 @@ takeWaveData n x = do
       newstopGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
       newgwdata = subVector 0 n' (gwdata x)
   mkWaveData (detector x) (dataType x) (samplingFrequency x) (startGPSTime x) newstopGPSTime newgwdata
-
-
-
