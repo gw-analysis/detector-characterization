@@ -11,6 +11,7 @@ module HasKAL.ExternalUtils.LIGO.NDS2.Function
 , getCurrentChannels
 , getNumberOfChannels
 , getCurrentNumberOfChannels
+, getDataStdout
 ) where
 
 import Data.List (foldl')
@@ -175,6 +176,41 @@ instance Storable CSignal_conv_t where
                             , c'daq_signal_offset = val_signal_offset
                             , c'daq_signal_units  = val_signal_units
                             }
+
+
+getDataStdout :: String
+              -> Int
+              -> [(String,Double)]
+              -> Int
+              -> Int
+              -> Int
+              -> IO()
+getDataStdout server port channelList gpsStart gpsEnd delta =
+  withCString server $ \c'server -> do
+    let c'port = fromIntegral port :: CInt
+        c'channelList = map conv channelList
+        c'nch = fromIntegral (length channelList) :: CInt
+        c'gpsStart = fromIntegral gpsStart :: CInt
+        c'gpsEnd   = fromIntegral gpsEnd :: CInt
+        c'delta    = fromIntegral delta :: CInt
+    getDataStdout' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
+
+
+getDataStdout' :: CString
+               -> CInt
+               -> [(CString,CDouble)]
+               -> CInt
+               -> CInt
+               -> CInt
+               -> CInt
+               -> IO()
+getDataStdout' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
+  withArray c'channelNames $ \ptr'channelNames ->
+    c'GetDataStdout c'server c'port ptr'channelNames c'nch c'gpsStart c'gpsEnd c'delta
+   where
+     (c'channelNames,c'channelRates) = unzip c'channelList
+     c'gpsEnd' = fromIntegral c'gpsEnd :: Int
+     c'gpsStart' = fromIntegral c'gpsStart :: Int
 
 
 getCurrentData :: String
@@ -400,4 +436,14 @@ foreign import ccall "nds-related.h nds_GetNumberOfChannels" c'GetNumberOfChanne
   -> CInt
   -> CInt
   -> Ptr CInt
+  -> IO ()
+
+foreign import ccall "nds-related.h nds_GetData_stdout" c'GetDataStdout
+  :: CString
+  -> CInt
+  -> Ptr CString
+  -> CInt
+  -> CInt
+  -> CInt
+  -> CInt
   -> IO ()
