@@ -209,8 +209,6 @@ getDataStdout' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta =
     c'GetDataStdout c'server c'port ptr'channelNames c'nch c'gpsStart c'gpsEnd c'delta
    where
      (c'channelNames,c'channelRates) = unzip c'channelList
-     c'gpsEnd' = fromIntegral c'gpsEnd :: Int
-     c'gpsStart' = fromIntegral c'gpsStart :: Int
 
 
 getCurrentData :: String

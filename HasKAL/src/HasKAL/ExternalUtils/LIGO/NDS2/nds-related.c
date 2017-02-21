@@ -207,7 +207,7 @@ chantype_t ctype = 0;
 time_t start_gps = start_gps_in;
 time_t end_gps   = end_gps_in;
 time_t delta     = delta_in;
-float* data;
+float *data;
 
 //-- Initialize --
 int rc = daq_startup();
@@ -268,34 +268,42 @@ for (t=start_gps; t<end_gps; t+=delta) {
     }
     //--  Get data --
     uint4_type ind;
-    for (ind=0; ind<daqd.num_chan_request; ind++) {
+    for (ind=0; ind<nch; ind++) {
        size_t N;
        daq_data_t dtype;
-       char* chname; 
-	chan_req_t* chan = daqd.chan_req_list + ind;
-	if (chan->status < 0) {
-	    printf("Channel: %s receive error (%i)\n", 
-		   chan->name, -chan->status);	    
-	    continue;
-	}
+       char* chname;
+	     chan_req_t* chan = daqd.chan_req_list + ind;
+     	 if (chan->status < 0) {
+	       printf("Channel: %s receive error (%i)\n",
+	  	   chan->name, -chan->status);
+	       continue;
+	     }
        chname = chan->name;
        dtype = chan->data_type;
        N = (size_t)chan->status / data_type_size(dtype);
+       data =  (float *)malloc(sizeof(float) * N);
+       printf("\n");
+       printf("Channel: %s  type: %s  nWords: %zi\n",
+              chan->name, data_type_name(dtype), N);
        daq_get_scaled_data(&daqd, chname, data);
        /* start stdout */
        printf("\n");
        printf ("%s",chname);
        printf("\n");
        for (k=0;k<N;k++){
+          printf("%g", *(data+k));
           printf(" ");
-          printf("%13.7g", *(data+k));
         }
        printf("\n");
+       free(data);
     }
 }
+//printf("finish data retrieval\n");
 //--  Disconnect from server --
 daq_disconnect(&daqd);
+//printf("daq_disconnect finished\n");
 daq_recv_shutdown(&daqd);
+//printf("daq_recv_shutdown finished\n");
 }
+return;
 }
-
