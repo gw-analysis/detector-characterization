@@ -3,7 +3,7 @@
 import qualified Data.Vector.Storable as V
 import HasKAL.IOUtils.Function(loadASCIIdataCV)
 import HasKAL.MonitorUtils.ChirpletMon.Data
-import HasKAL.MonitorUtils.ChirpletMon.Function (catChirpletGram, chirpletTrainWave)
+import HasKAL.MonitorUtils.ChirpletMon.Function (catChirpletGram, catChirpletGram2png, chirpletTrainWave)
 import HasKAL.MonitorUtils.ChirpletMon.Plot (plotChirpletGram)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 import HasKAL.SimulationUtils.Injection.Function (addInjsig)
@@ -32,4 +32,4 @@ main = do
         { xrange = (0.03, 0.35) :: (Double, Double)
         , yrange = (10, 1000) :: (Double, Double)
         }
-  plotChirpletGram x plotparam "SN_chirplet2.png"
+  plotChirpletGram2png x plotparam "SN_chirplet2.png"
