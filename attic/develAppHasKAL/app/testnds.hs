@@ -16,7 +16,7 @@ main = do
       gpss = read (time2gps "2017-02-01 00:00:00 JST") :: Int
       gpse = read (time2gps "2017-02-01 00:00:10 JST") :: Int
       port = 8088
-      vs = getData ip_nds port ch gpss gpse 10
+      vs = getData ip_nds port ch gpss gpse 1
   print "retrieving data from the KAGRA NDS server"
   print $ take 5 $ V.toList $ head (head vs)
   print "Current number of channels daqed in KAGRA"
@@ -24,3 +24,5 @@ main = do
   print "Current channel list"
   let ch0 = head $ getChannels ip_nds port gpss
   print ch0
+  getDataStdout ip_nds port ch gpss gpse 10
+  print "test finished."
