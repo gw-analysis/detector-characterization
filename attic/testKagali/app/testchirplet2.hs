@@ -3,8 +3,8 @@
 import qualified Data.Vector.Storable as V
 import HasKAL.IOUtils.Function(loadASCIIdataCV)
 import HasKAL.MonitorUtils.ChirpletMon.Data
-import HasKAL.MonitorUtils.ChirpletMon.Function (catChirpletGram, catChirpletGram2png, chirpletTrainWave)
-import HasKAL.MonitorUtils.ChirpletMon.Plot (plotChirpletGram)
+import HasKAL.MonitorUtils.ChirpletMon.Function (catChirpletGram, chirpletTrainWave)
+import HasKAL.MonitorUtils.ChirpletMon.Plot (plotChirpletGram, plotChirpletGram2png)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
 import HasKAL.SimulationUtils.Injection.Function (addInjsig)
 import HasKAL.WaveUtils.Data
