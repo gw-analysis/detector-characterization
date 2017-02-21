@@ -33,7 +33,7 @@ import Language.R.QQ
 main :: IO ()
 main = R.withEmbeddedR R.defaultConfig $ do
  R.runRegion $ do
-  let v = loadASCIIdataCV "/home/kazu/attic/testKagali/app/dat/KRD_SFHx_ascii.dat"
+  let v = loadASCIIdataCV "/home/detchar/attic/testKagali/app/dat/KRD_SFHx_ascii.dat"
       fs = 2048 :: Double
       fsorig = 16384 :: Double
 --  let v = loadASCIIdataCV "dat/gwfSc_170r1e10_eq.fs2048.txt"
@@ -72,6 +72,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
   [r| require("scales") |]
   [r| require("RColorBrewer") |]
   [r|
+    png('testpng.png',width=640,height=480,units="px",bg = "transparent")
     lsub <- lsub_hs
     l <- l_hs
     freqL <- freqL_hs
@@ -102,7 +103,9 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.title = black.bold.text
            , axis.text = black.bold.text
            , axis.ticks.length = unit(.1, "cm")
-           , axis.ticks = element_line(size = 1)) +
+           , axis.ticks = element_line(size = 1)
+           , panel.background = element_rect(fill = "transparent",color = NA)
+           , plot.background = element_rect(fill = "transparent",color = NA)) +
       xlim(0.03,0.35) + ylim(0,1000)
     scientific_10 <- function(x) {
       parse(text=gsub("e", " %*% 10^", scientific_format(digits=1)(x)))
@@ -119,7 +122,9 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.title = black.bold.text
            , axis.text = black.bold.text
            , axis.ticks.length = unit(.1, "cm")
-           , axis.ticks = element_line(size = 1)) +
+           , axis.ticks = element_line(size = 1)
+           , panel.background = element_rect(fill = "transparent",color = NA)
+           , plot.background = element_rect(fill = "transparent",color = NA)) +
       xlim(0.03,0.35) +
       scale_y_continuous(label=scientific_10)
     lt <- lsgt_hs
@@ -140,7 +145,9 @@ main = R.withEmbeddedR R.defaultConfig $ do
            , axis.title = black.bold.text
            , axis.text = black.bold.text
            , axis.ticks.length = unit(.1, "cm")
-           , axis.ticks = element_line(size = 1)) +
+           , axis.ticks = element_line(size = 1)
+           , panel.background = element_rect(fill = "transparent",color = NA)
+           , plot.background = element_rect(fill = "transparent",color = NA)) +
       xlim(0.03,0.35) + ylim(0,1000)
 
     g1 <- ggplot_gtable(ggplot_build(p1))
@@ -152,10 +159,11 @@ main = R.withEmbeddedR R.defaultConfig $ do
     g3$widths <- maxWidth
     grid.arrange(g1, g3, ncol=1)
     g <- arrangeGrob (g1, g3, ncol=1)
-    ggsave( file = "chirplet_SN_SFHx.png"
-          , plot = g
-          , dpi = 100
-          , width = 10
-          , height = 8)
+#    ggsave( file = "chirplet_SN_SFHx.png"
+#          , plot = g
+#          , dpi = 100
+#          , width = 10
+#          , height = 8)
+    dev.off()
     |]
   return ()
