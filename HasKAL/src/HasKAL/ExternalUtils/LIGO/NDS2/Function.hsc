@@ -12,6 +12,8 @@ module HasKAL.ExternalUtils.LIGO.NDS2.Function
 , getNumberOfChannels
 , getCurrentNumberOfChannels
 , getDataStdout
+, daq_channel_t2tuple
+, showChannelInfo
 ) where
 
 import Data.List (foldl')
@@ -23,6 +25,7 @@ import Foreign.Marshal.Array
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
+import System.IO (stdout, hPutStrLn)
 import System.IO.Unsafe (unsafePerformIO)
 --import Foreign.Marshal.Utils (with)
 
@@ -386,6 +389,38 @@ getNumberOfChannels' c'server c'port c'gps =
       lnchan <- peek ptr'nchan
       return lnchan
 
+
+showChannelInfo :: Daq_channel_t
+                -> IO()
+showChannelInfo ch = do
+  hPutStrLn stdout
+    $ "ch_name ch_rate ch_tpnum ch_bps ch_chNum ch_signal_gain ch_signal_slope ch_signal_offset ch_signal_units"
+  hPutStrLn stdout
+    $  ch_name ch ++ " "
+    ++ show ( ch_rate ch) ++ " "
+    ++ show ( ch_tpnum ch) ++ " "
+    ++ show ( ch_bps ch) ++ " "
+    ++ show ( ch_chNum ch) ++ " "
+    ++ show ( ch_signal_gain ch) ++ " "
+    ++ show ( ch_signal_slope ch) ++ " "
+    ++ show ( ch_signal_offset ch) ++ " "
+    ++ show ( ch_signal_units ch)
+
+
+daq_channel_t2tuple :: Daq_channel_t
+                    -> (String, Double, Int, Int, Int, Double, Double, Double, String)
+daq_channel_t2tuple ch = ( ch_name ch
+                         , ch_rate ch
+                         , ch_tpnum ch
+                         , ch_bps ch
+                         , ch_chNum ch
+                         , ch_signal_gain ch
+                         , ch_signal_slope ch
+                         , ch_signal_offset ch
+                         , ch_signal_units ch
+                         )
+
+{- helper function -}
 
 mkChunksLCF :: [CFloat] -> Int -> [[CFloat]]
 mkChunksLCF lIn n = mkChunksLCFCore lIn n (Prelude.length lIn `div` n)
