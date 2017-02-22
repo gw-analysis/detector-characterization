@@ -21,25 +21,30 @@ main = do
       port   = 8088
       gps    = read (head varArgs) :: Int
   selectedCHlist <- case selectKeys varOpt of
-    Just skeys ->
-      do let keys = words skeys
+    Just skey ->
+      do let skeys = words skey
              chlist = getChannels ip_nds port gps
-         return $ filter (\x -> ch_name x `elem` keys) chlist
+         return $ selectKeywords skeys chlist
     Nothing ->
       return $ getChannels ip_nds port gps
   eliminatedCHlist <- case eliminateKeys varOpt of
-    Just ekeys -> do
-      do let keys = words ekeys
-         return $ filter (\x -> ch_name x `notElem` keys) selectedCHlist
+    Just ekey -> do
+      do let ekeys = words ekey
+         return $ eliminateKeywords ekeys selectedCHlist
     Nothing -> return selectedCHlist
   mapM_ showChannelInfo eliminatedCHlist
 
 
---selectKeywords String :: [Daq_channel_t]
---                      -> [Daq_channel_t]
---eliminateKeywords String :: [Daq_channel_t]
---                         -> [Daq_channel_t]
+selectKeywords :: [String]
+               -> [Daq_channel_t]
+               -> [Daq_channel_t]
+selectKeywords as xs = filter (\x-> ch_name x `elem` as) xs
 
+
+eliminateKeywords :: [String]
+                  -> [Daq_channel_t]
+                  -> [Daq_channel_t]
+eliminateKeywords as xs = filter (\x-> ch_name x `notElem` as) xs
 
 
 data Options = Options
