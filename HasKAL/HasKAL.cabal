@@ -2222,3 +2222,13 @@ executable dailyBruco
    ,vector
    ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable ctl_showChannels
+  hs-source-dirs: exe-src
+  main-is:        ctl_showChannels.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+  extra-libraries: ndsclient
