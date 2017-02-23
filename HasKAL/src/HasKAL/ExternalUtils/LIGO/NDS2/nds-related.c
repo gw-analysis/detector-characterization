@@ -7,6 +7,7 @@
 #include "trench.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define MAX_HOST_LENGTH 256
 #define NEW_VECT(type,dim) ((type*)malloc(dim*sizeof(type)))
@@ -16,11 +17,20 @@ void nds_GetData (const char* server, int port, const char* channel[],
   int nch, int start_gps_in, int end_gps_in, int delta_in, float* data,
   int* length) {
 
+int err,err2,err3;
 daq_t daqd;
 chantype_t ctype = 0;
 time_t start_gps = start_gps_in;
 time_t end_gps   = end_gps_in;
 time_t delta     = delta_in;
+
+//-- treatment of the GPS end time
+if (end_gps < start_gps) {
+		end_gps += start_gps;
+}
+if (end_gps < start_gps + delta) {
+		delta = end_gps - start_gps;
+}
 
 //-- Initialize --
 int rc = daq_startup();
@@ -29,9 +39,17 @@ if (rc) {
 }
 
 //-- Connect to server --
-rc = daq_connect(&daqd, server, port, nds_v1);
-if (rc) {
-    printf("Connection failed with error: %s\n", daq_strerror(rc));
+err = daq_connect(&daqd, server, port, nds_v1);
+if (err) {
+    usleep(100000);
+    err2 = daq_connect(&daqd, server, port, nds_v1);
+    if (err2) {
+       usleep(100000);
+       err3 = daq_connect(&daqd, server, port, nds_v1);
+       if (err3) {
+          printf("Connection failed with error: %s\n", daq_strerror(err));
+       }
+    }
 }
 
 int nAlloc = 0;
@@ -71,8 +89,8 @@ if (rc) {
 }
 
 //--  Read data blocks --
-time_t t;
-for (t=start_gps; t<end_gps; t+=delta) {
+time_t t, dt=delta;
+for (t=start_gps; t<end_gps; t+=dt) {
     rc = daq_recv_next(&daqd);
     if (rc) {
        printf("Receive data failed with error: %s\n", daq_strerror(rc));
@@ -86,6 +104,7 @@ for (t=start_gps; t<end_gps; t+=delta) {
         *length = stat->status;
         daq_get_scaled_data(&daqd, channel[ic], data);
     }
+    dt = (time_t) daq_get_block_secs( &daqd );
 }
 //--  Disconnect from server --
 daq_disconnect(&daqd);
@@ -103,7 +122,7 @@ void nds_GetChannels (const char* server,
 /* Local variable declaration */
 daq_channel_t *channels;
 daq_t daqd;
-int err;
+int err,err2,err3;
 int num_alloc    = 0;
 int num_channels;
 //channels = NULL;
@@ -119,7 +138,15 @@ if (err) {
 //-- Connect to server --
 err = daq_connect(&daqd, server, port, nds_v1);
 if (err) {
-    printf("Connection failed with error: %s\n", daq_strerror(err));
+    err2 = daq_connect(&daqd, server, port, nds_v1);
+    usleep(100000);
+    if (err2) {
+       err3 = daq_connect(&daqd, server, port, nds_v1);
+       usleep(100000);
+       if (err3) {
+          printf("Connection failed with error: %s\n", daq_strerror(err));
+       }
+    }
 }
 
 //--  Request channel list --
@@ -144,6 +171,7 @@ if (num_alloc > 0) {
      free(channels);
      channels = NULL;
     }
+printf("\n");
 for (int i=0; i<num_alloc; i++) {
   name[i] = channels[i].name;
   rate[i] = channels[i].rate;
@@ -168,7 +196,7 @@ void nds_GetNumberOfChannels (const char* server
 
 /* Local variable declaration */
 daq_t daqd;
-int err;
+int err,err2,err3;
 //daq_channel_t* channels = NULL;
 //num_channels = 0;
 chantype_t chant = cUnknown;
@@ -181,9 +209,17 @@ if (rc) {
 }
 
 //-- Connect to server --
-rc = daq_connect(&daqd, server, port, nds_v1);
-if (rc) {
-    printf("Connection failed with error: %s\n", daq_strerror(rc));
+err = daq_connect(&daqd, server, port, nds_v1);
+if (err) {
+    usleep(100000);
+    err2 = daq_connect(&daqd, server, port, nds_v1);
+    if (err2) {
+       usleep(100000);
+       err3 = daq_connect(&daqd, server, port, nds_v1);
+       if (err3) {
+          printf("Connection failed with error: %s\n", daq_strerror(err));
+       }
+    }
 }
 
 //--  Request channel list --
@@ -202,12 +238,21 @@ daq_recv_shutdown(&daqd);
 void nds_GetData_stdout (const char* server, int port, const char* channel[],
   int nch, int start_gps_in, int end_gps_in, int delta_in) {
 
+int err,err2,err3;
 daq_t daqd;
 chantype_t ctype = 0;
 time_t start_gps = start_gps_in;
 time_t end_gps   = end_gps_in;
 time_t delta     = delta_in;
 float *data;
+
+//-- treatment of the GPS end time
+if (end_gps < start_gps) {
+		end_gps += start_gps;
+}
+if (end_gps < start_gps + delta) {
+		delta = end_gps - start_gps;
+}
 
 //-- Initialize --
 int rc = daq_startup();
@@ -216,9 +261,17 @@ if (rc) {
 }
 
 //-- Connect to server --
-rc = daq_connect(&daqd, server, port, nds_v1);
-if (rc) {
-    printf("Connection failed with error: %s\n", daq_strerror(rc));
+err = daq_connect(&daqd, server, port, nds_v1);
+if (err) {
+    usleep(100000);
+    err2 = daq_connect(&daqd, server, port, nds_v1);
+    if (err2) {
+       usleep(100000);
+       err3 = daq_connect(&daqd, server, port, nds_v1);
+       if (err3) {
+          printf("Connection failed with error: %s\n", daq_strerror(err));
+       }
+    }
 }
 
 int nAlloc = 0;
@@ -252,20 +305,32 @@ for (i=0; i<nch; i++) {
 }
 
 //--  Request data --
-rc = daq_request_data(&daqd, start_gps, end_gps, delta);
-if (rc) {
-   printf("Error in daq_request_data: %s\n", daq_strerror(rc));
-}
+//rc = daq_request_data(&daqd, start_gps, end_gps, delta);
+//if (rc) {
+//   printf("Error in daq_request_data: %s\n", daq_strerror(rc));
+//}
 
 //--  Read data blocks --
-time_t t;
+time_t t, dt=delta;
 size_t k;
-for (t=start_gps; t<end_gps; t+=delta) {
+for (t=start_gps; t<end_gps; t+=dt) {
+//    rc = daq_recv_next(&daqd);
+//    if (rc) {
+//       printf("Receive data failed with error: %s\n", daq_strerror(rc));
+//       return;
+//    }
+
+    //--  Request data --
+    rc = daq_request_data(&daqd, t, t+dt, dt);
+    if (rc) {
+       printf("Error in daq_request_data: %s\n", daq_strerror(rc));
+    }
     rc = daq_recv_next(&daqd);
     if (rc) {
        printf("Receive data failed with error: %s\n", daq_strerror(rc));
        return;
     }
+
     //--  Get data --
     uint4_type ind;
     for (ind=0; ind<nch; ind++) {
@@ -297,6 +362,7 @@ for (t=start_gps; t<end_gps; t+=delta) {
        printf("\n");
        free(data);
     }
+//    dt = (time_t) daq_get_block_secs( &daqd );
 }
 //printf("finish data retrieval\n");
 //--  Disconnect from server --

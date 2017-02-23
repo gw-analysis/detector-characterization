@@ -9,7 +9,7 @@ import qualified Data.Vector.Storable as V
 
 main :: IO ()
 main = do
-  let chname = "K1:PEM-TEMPERATURE_RACK_IMC"
+  let chname = "K1:PEM-TEMPERATURE_RACK_IOO"
       fs = 16
       ch = [(chname,fs)]
       ip_nds = "10.68.10.122"
@@ -24,5 +24,5 @@ main = do
   print "Current channel list"
   let ch0 = head $ getChannels ip_nds port gpss
   print ch0
-  getDataStdout ip_nds port ch gpss gpse 10
+  getDataStdout ip_nds port ch gpss gpse 5
   print "test finished."

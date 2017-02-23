@@ -393,8 +393,8 @@ getNumberOfChannels' c'server c'port c'gps =
 showChannelInfo :: Daq_channel_t
                 -> IO()
 showChannelInfo ch = do
-  hPutStrLn stdout
-    $ "ch_name ch_rate ch_tpnum ch_bps ch_chNum ch_signal_gain ch_signal_slope ch_signal_offset ch_signal_units"
+--  hPutStrLn stdout
+--    $ "ch_name ch_rate ch_tpnum ch_bps ch_chNum ch_signal_gain ch_signal_slope ch_signal_offset ch_signal_units"
   hPutStrLn stdout
     $  ch_name ch ++ " "
     ++ show ( ch_rate ch) ++ " "
