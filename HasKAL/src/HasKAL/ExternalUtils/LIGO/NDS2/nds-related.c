@@ -11,7 +11,7 @@
 
 #define MAX_HOST_LENGTH 256
 #define NEW_VECT(type,dim) ((type*)malloc(dim*sizeof(type)))
-
+#define SLEEPTIME 100000
 
 void nds_GetData (const char* server, int port, const char* channel[],
   int nch, int start_gps_in, int end_gps_in, int delta_in, float* data,
@@ -39,13 +39,13 @@ if (rc) {
 }
 
 //-- Connect to server --
-err = daq_connect(&daqd, server, port, nds_v1);
+err = daq_connect(&daqd, server, port, nds_try);
 if (err) {
-    usleep(100000);
-    err2 = daq_connect(&daqd, server, port, nds_v1);
+    usleep(SLEEPTIME);
+    err2 = daq_connect(&daqd, server, port, nds_try);
     if (err2) {
-       usleep(100000);
-       err3 = daq_connect(&daqd, server, port, nds_v1);
+       usleep(SLEEPTIME);
+       err3 = daq_connect(&daqd, server, port, nds_try);
        if (err3) {
           printf("Connection failed with error: %s\n", daq_strerror(err));
        }
@@ -136,13 +136,13 @@ if (err) {
 }
 
 //-- Connect to server --
-err = daq_connect(&daqd, server, port, nds_v1);
+err = daq_connect(&daqd, server, port, nds_try);
 if (err) {
-    err2 = daq_connect(&daqd, server, port, nds_v1);
-    usleep(100000);
+    err2 = daq_connect(&daqd, server, port, nds_try);
+    usleep(SLEEPTIME);
     if (err2) {
-       err3 = daq_connect(&daqd, server, port, nds_v1);
-       usleep(100000);
+       err3 = daq_connect(&daqd, server, port, nds_try);
+       usleep(SLEEPTIME);
        if (err3) {
           printf("Connection failed with error: %s\n", daq_strerror(err));
        }
@@ -209,13 +209,13 @@ if (rc) {
 }
 
 //-- Connect to server --
-err = daq_connect(&daqd, server, port, nds_v1);
+err = daq_connect(&daqd, server, port, nds_try);
 if (err) {
-    usleep(100000);
-    err2 = daq_connect(&daqd, server, port, nds_v1);
+    usleep(SLEEPTIME);
+    err2 = daq_connect(&daqd, server, port, nds_try);
     if (err2) {
-       usleep(100000);
-       err3 = daq_connect(&daqd, server, port, nds_v1);
+       usleep(SLEEPTIME);
+       err3 = daq_connect(&daqd, server, port, nds_try);
        if (err3) {
           printf("Connection failed with error: %s\n", daq_strerror(err));
        }
@@ -261,13 +261,13 @@ if (rc) {
 }
 
 //-- Connect to server --
-err = daq_connect(&daqd, server, port, nds_v1);
+err = daq_connect(&daqd, server, port, nds_try);
 if (err) {
-    usleep(100000);
-    err2 = daq_connect(&daqd, server, port, nds_v1);
+    usleep(SLEEPTIME);
+    err2 = daq_connect(&daqd, server, port, nds_try);
     if (err2) {
-       usleep(100000);
-       err3 = daq_connect(&daqd, server, port, nds_v1);
+       usleep(SLEEPTIME);
+       err3 = daq_connect(&daqd, server, port, nds_try);
        if (err3) {
           printf("Connection failed with error: %s\n", daq_strerror(err));
        }
@@ -311,21 +311,16 @@ for (i=0; i<nch; i++) {
 //}
 
 //--  Read data blocks --
-time_t t, dt=delta;
+time_t t;
+//time_t dt=delta;
 size_t k;
-for (t=start_gps; t<end_gps; t+=dt) {
-//    rc = daq_recv_next(&daqd);
-//    if (rc) {
-//       printf("Receive data failed with error: %s\n", daq_strerror(rc));
-//       return;
-//    }
-
-    //--  Request data --
-    rc = daq_request_data(&daqd, t, t+dt, dt);
+for (t=start_gps; t<end_gps; t+=delta) {
+    rc = daq_request_data(&daqd, t, t+delta, delta);
     if (rc) {
        printf("Error in daq_request_data: %s\n", daq_strerror(rc));
     }
-    rc = daq_recv_next(&daqd);
+    rc = daq_recv_block(&daqd);
+    //rc = daq_recv_next(&daqd);
     if (rc) {
        printf("Receive data failed with error: %s\n", daq_strerror(rc));
        return;
