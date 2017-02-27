@@ -32,6 +32,11 @@ if (end_gps < start_gps + delta) {
 		delta = end_gps - start_gps;
 }
 
+
+time_t t;
+//time_t dt=delta;
+for (t=start_gps; t<end_gps; t+=delta) {
+
 //-- Initialize --
 int rc = daq_startup();
 if (rc) {
@@ -55,10 +60,10 @@ if (err) {
 int nAlloc = 0;
 int nChans = 0;
 daq_channel_t* channel_list;
-rc = daq_recv_channel_list(&daqd, 0, 0, &nAlloc, start_gps_in, ctype);
+rc = daq_recv_channel_list(&daqd, 0, 0, &nAlloc, t, ctype);
 channel_list = NEW_VECT(daq_channel_t, (size_t)(nAlloc));
 rc = daq_recv_channel_list(&daqd, channel_list, nAlloc,
-         &nChans, start_gps, ctype);
+         &nChans, t, ctype);
 if (rc) {
 	 printf("Error reading channel list: %s\n", daq_strerror(rc));
 } else {
@@ -83,28 +88,26 @@ for (i=0; i<nch; i++) {
 }
 
 //--  Request data --
-rc = daq_request_data(&daqd, start_gps, end_gps, delta);
+rc = daq_request_data(&daqd, t, t+delta, delta);
 if (rc) {
    printf("Error in daq_request_data: %s\n", daq_strerror(rc));
 }
 
 //--  Read data blocks --
-time_t t, dt=delta;
-for (t=start_gps; t<end_gps; t+=dt) {
-    rc = daq_recv_next(&daqd);
-    if (rc) {
-       printf("Receive data failed with error: %s\n", daq_strerror(rc));
-       return;
-    }
-    //--  Get data --
-    int ic;
-    for (ic=0;ic<nch;ic++) {
-        chan_req_t* stat = daq_get_channel_status(&daqd, channel[ic]);
-        if (!stat || stat->status <= 0) break;
-        *length = stat->status;
-        daq_get_scaled_data(&daqd, channel[ic], data);
-    }
-    dt = (time_t) daq_get_block_secs( &daqd );
+rc = daq_recv_next(&daqd);
+if (rc) {
+   printf("Receive data failed with error: %s\n", daq_strerror(rc));
+   return;
+}
+//--  Get data --
+int ic;
+for (ic=0;ic<nch;ic++) {
+    chan_req_t* stat = daq_get_channel_status(&daqd, channel[ic]);
+    if (!stat || stat->status <= 0) break;
+    *length = stat->status;
+    daq_get_scaled_data(&daqd, channel[ic], data);
+}
+//    dt = (time_t) daq_get_block_secs( &daqd );
 }
 //--  Disconnect from server --
 daq_disconnect(&daqd);
