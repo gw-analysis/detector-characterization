@@ -171,7 +171,7 @@ if (num_alloc > 0) {
      free(channels);
      channels = NULL;
     }
-printf("\n");
+/*printf("\n");*/
 for (int i=0; i<num_alloc; i++) {
   name[i] = channels[i].name;
   rate[i] = channels[i].rate;
@@ -254,6 +254,10 @@ if (end_gps < start_gps + delta) {
 		delta = end_gps - start_gps;
 }
 
+
+time_t t;
+for (t=start_gps; t<end_gps; t+=delta) {
+
 //-- Initialize --
 int rc = daq_startup();
 if (rc) {
@@ -277,94 +281,88 @@ if (err) {
 int nAlloc = 0;
 int nChans = 0;
 daq_channel_t* channel_list;
-rc = daq_recv_channel_list(&daqd, 0, 0, &nAlloc, start_gps_in, ctype);
+rc = daq_recv_channel_list(&daqd, 0, 0, &nAlloc, t, ctype);
 channel_list = NEW_VECT(daq_channel_t, (size_t)(nAlloc));
 rc = daq_recv_channel_list(&daqd, channel_list, nAlloc,
-         &nChans, start_gps, ctype);
+           &nChans, t, ctype);
 if (rc) {
 	 printf("Error reading channel list: %s\n", daq_strerror(rc));
 } else {
-daq_channel_t chan;
-int i,j;
-for (i=0; i<nch; i++) {
-    struct trench_struct tch;
-    trench_init(&tch);
-    trench_parse(&tch, channel[i]);
-    for (j=0; j<nChans; ++j) {
-		  if (!trench_cmp_base(&tch, channel_list[j].name)) {
-			    trench_infer_chan_info(&tch, ctype,
-						   channel_list[j].rate,
-						   channel_list[j].data_type);
-			    daq_init_channel(&chan, tch.str, tch.ctype,
-					     tch.rate, tch.dtype);
-			    break;
-			}
-    }
-    daq_request_channel_from_chanlist(&daqd, &chan);
-    trench_destroy(&tch);
-}
+   daq_channel_t chan;
+   int i,j;
+   for (i=0; i<nch; i++) {
+       struct trench_struct tch;
+       trench_init(&tch);
+       trench_parse(&tch, channel[i]);
+       for (j=0; j<nChans; ++j) {
+	       if (!trench_cmp_base(&tch, channel_list[j].name)) {
+            trench_infer_chan_info(&tch, ctype,
+						       channel_list[j].rate,
+					  channel_list[j].data_type);
+		        daq_init_channel(&chan, tch.str, tch.ctype,
+					         tch.rate, tch.dtype);
+		        break;
+	       }
+       }
+       daq_request_channel_from_chanlist(&daqd, &chan);
+       trench_destroy(&tch);
+   }
 
-//--  Request data --
-//rc = daq_request_data(&daqd, start_gps, end_gps, delta);
-//if (rc) {
-//   printf("Error in daq_request_data: %s\n", daq_strerror(rc));
-//}
+     //--  Request data --
+     rc = daq_request_data(&daqd, t, t+delta, delta);
+     if (rc) {
+        printf("Error in daq_request_data: %s\n", daq_strerror(rc));
+     }
 
-//--  Read data blocks --
-time_t t;
-//time_t dt=delta;
-size_t k;
-for (t=start_gps; t<end_gps; t+=delta) {
-    rc = daq_request_data(&daqd, t, t+delta, delta);
-    if (rc) {
-       printf("Error in daq_request_data: %s\n", daq_strerror(rc));
-    }
-    rc = daq_recv_block(&daqd);
-    //rc = daq_recv_next(&daqd);
-    if (rc) {
-       printf("Receive data failed with error: %s\n", daq_strerror(rc));
-       return;
-    }
+     //--  Read data blocks --
+     //time_t dt=delta;
+     size_t k;
+     rc = daq_recv_next(&daqd);
+     if (rc) {
+        printf("Receive data failed with error: %s\n", daq_strerror(rc));
+        return;
+     }
 
-    //--  Get data --
-    uint4_type ind;
-    for (ind=0; ind<nch; ind++) {
-       size_t N;
-       daq_data_t dtype;
-       char* chname;
-	     chan_req_t* chan = daqd.chan_req_list + ind;
-     	 if (chan->status < 0) {
-	       printf("Channel: %s receive error (%i)\n",
-	  	   chan->name, -chan->status);
-	       continue;
-	     }
-       chname = chan->name;
-       dtype = chan->data_type;
-       N = (size_t)chan->status / data_type_size(dtype);
-       data =  (float *)malloc(sizeof(float) * N);
-       printf("\n");
-       printf("Channel: %s  type: %s  nWords: %zi\n",
-              chan->name, data_type_name(dtype), N);
-       daq_get_scaled_data(&daqd, chname, data);
-       /* start stdout */
-       printf("\n");
-       printf ("%s",chname);
-       printf("\n");
-       for (k=0;k<N;k++){
-          printf("%g", *(data+k));
-          printf(" ");
+     //--  Get data --
+     uint4_type ind;
+     for (ind=0; ind<nch; ind++) {
+        size_t N;
+        daq_data_t dtype;
+        char* chname;
+        chan_req_t* chan = daqd.chan_req_list + ind;
+        if (chan->status < 0) {
+	         printf("Channel: %s receive error (%i)\n",
+           chan->name, -chan->status);
+           continue;
+	      }
+        chname = chan->name;
+        dtype = chan->data_type;
+        N = (size_t)chan->status / data_type_size(dtype);
+        data =  (float *)malloc(sizeof(float) * N);
+        /* printf("\n"); */
+        printf("Channel: %s  type: %s  nWords: %zi\n",
+               chan->name, data_type_name(dtype), N);
+        daq_get_scaled_data(&daqd, chname, data);
+        /* start stdout */
+        /*printf("\n");*/
+        /*pprintf ("%s",chname);*/
+        /*pprintf("\n");*/
+        for (k=0;k<N;k++){
+            printf("%g", *(data+k));
+            printf(" ");
         }
-       printf("\n");
-       free(data);
-    }
-//    dt = (time_t) daq_get_block_secs( &daqd );
+        printf("\n");
+        free(data);
+     }
+
+  //printf("finish data retrieval\n");
+  //--  Disconnect from server --
+  daq_disconnect(&daqd);
+  //printf("daq_disconnect finished\n");
+  daq_recv_shutdown(&daqd);
+  //printf("daq_recv_shutdown finished\n");
 }
-//printf("finish data retrieval\n");
-//--  Disconnect from server --
-daq_disconnect(&daqd);
-//printf("daq_disconnect finished\n");
-daq_recv_shutdown(&daqd);
-//printf("daq_recv_shutdown finished\n");
+//    dt = (time_t) daq_get_block_secs( &daqd );
 }
 return;
 }
