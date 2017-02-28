@@ -2232,3 +2232,24 @@ executable ctl_showChannels
    ,HasKAL
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: ndsclient
+
+
+executable ctl_getData
+  hs-source-dirs: exe-src
+  main-is:        ctl_getData.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,vector
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+  extra-libraries: ndsclient
+
+
+executable ctl_getChannelInfo
+  hs-source-dirs: exe-src
+  main-is:        ctl_getChannelInfo.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+  extra-libraries: ndsclient
