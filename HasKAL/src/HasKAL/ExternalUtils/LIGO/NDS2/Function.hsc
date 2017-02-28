@@ -14,9 +14,12 @@ module HasKAL.ExternalUtils.LIGO.NDS2.Function
 , getDataStdout
 , daq_channel_t2tuple
 , showChannelInfo
+, selectKeywords
+, eliminateKeywords
 ) where
 
-import Data.List (foldl')
+
+import Data.List (foldl', isInfixOf)
 import qualified Data.Vector.Storable as V
 import Data.Word (Word32)
 import Foreign.C.Types
@@ -419,6 +422,23 @@ daq_channel_t2tuple ch = ( ch_name ch
                          , ch_signal_offset ch
                          , ch_signal_units ch
                          )
+
+
+selectKeywords :: [String]
+               -> [Daq_channel_t]
+               -> [Daq_channel_t]
+selectKeywords [] xs = xs
+selectKeywords _ [] = []
+selectKeywords (a:as) xs = selectKeywords as $ filter (\x-> isInfixOf a (ch_name x)) xs
+
+
+eliminateKeywords :: [String]
+                  -> [Daq_channel_t]
+                  -> [Daq_channel_t]
+eliminateKeywords [] xs = xs
+eliminateKeywords _ [] = []
+eliminateKeywords (a:as) xs = eliminateKeywords as $ filter (\x-> not (isInfixOf a (ch_name x))) xs
+
 
 {- helper function -}
 
