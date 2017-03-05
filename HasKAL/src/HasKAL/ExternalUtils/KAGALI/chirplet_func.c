@@ -35,34 +35,6 @@
 #include <kagali/KGLNoisePSD.h>
 #include <kagali/KGLLinearAlgebra.h>
 
-
-#define KGLCalloc4TensorAbortIfError(t,nn1,nn2,nn3,nn4,type,status) do { \
-    size_t n1 = nn1; size_t n2 = nn2; size_t n3 = nn3; size_t n4 = nn4;	\
-    t = (type ****) malloc(n1*sizeof(type***));				\
-    for (int i=0; i<n1; i++) {						\
-      t[i] = (type ***) malloc(n2*sizeof(type**));			\
-      if(t[i]==NULL){							\
-	KGLAddError(status,"fail to alloc 1 \"%s\"",#t);		\
-	KGLAbort(status);						\
-      }									\
-      for (int j=0; j<n2; j++) {					\
-	t[i][j] = (type **) malloc(n3*sizeof(type*));			\
-	if (t[i][j] == NULL){						\
-	  KGLAddError(status,"fail to alloc 2 \"%s\"",#t);		\
-	  KGLAbort(status);						\
-	}								\
-	for (int k=0; k<n3; k++) {					\
-	  t[i][j][k] = (type *) calloc(n4,sizeof(type));		\
-	  if (t[i][j][k] == NULL){					\
-	    KGLAddError(status,"fail to alloc 3 \"%s\"",#t);		\
-	    KGLAbort(status);						\
-	  }								\
-	}								\
-      }									\
-    }									\
-  } while(0)								\
-    
-
 void KGLNormalizeComplexVector( //begin{proto}
      KGLStatus *status, /**< status */
      double complex *x, /**< [out] */
@@ -1075,7 +1047,16 @@ void KGLChirpletAnalysis( //begin{proto}
 			   XTTYPE,degrees);
   
   double complex ****cc = NULL;
-  KGLCalloc4TensorAbortIfError(cc,J,N,N+1,N,double complex,status);
+  double complex ***ptr3 = NULL, **ptr2 = NULL, *array1 = NULL;
+  int n1 = J, n2 = N, n3 = N+1, n4 = N;
+  //KGLCalloc4TensorAbortIfError(cc,J,N,N+1,N,double complex,status);                    
+  array1 = (double complex *)malloc(n1*n2*n3*n4*sizeof(double complex));
+  ptr2 = (double complex **)malloc(n1*n2*n3*sizeof(double complex *));
+  ptr3 = (double complex ***)malloc(n1*n2*sizeof(double complex **));
+  cc = (double complex ****)malloc(n1*sizeof(double complex ***));
+  for(int i = 0; i < n1*n2*n3; i++) ptr2[i] = array1 + i*n4;
+  for(int i = 0; i < n1*n2; i++) ptr3[i] = ptr2 + i*n3;
+  for(int i = 0; i < n1; i++) cc[i] = ptr3 + i*n2;
   
   KGLChirpletTransform(status,cc,data,graphparam1,graphparam2,graphparam3,
                        graphparam4,graphparam5,graphparam6);
@@ -1085,14 +1066,13 @@ void KGLChirpletAnalysis( //begin{proto}
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // printf("Generating chirplet graph and assigning costs... (this will take a while)\n");
   
-  int **icnetwork1 = NULL;
-  double **cnetwork1 = NULL;
-  int cnetwork2;
-  int *cnetwork3 = NULL;
-  int *cnetwork4 = NULL;
-  int *cnetwork5 = NULL;
-  
   if(strcmp(STATTYPE,"MCTR") != 0){
+    int **icnetwork1 = NULL;
+    double **cnetwork1 = NULL;
+    int cnetwork2;
+    int *cnetwork3 = NULL;
+    int *cnetwork4 = NULL;
+    int *cnetwork5 = NULL;
     KGLCallocMatrix(icnetwork1,N*N,N*N,int,status);
     KGLCallocMatrix(cnetwork1,N*N,N*N,double,status);
     KGLCalloc(cnetwork3,maxfreq-minfreq+1,int,status);
@@ -1119,6 +1099,12 @@ void KGLChirpletAnalysis( //begin{proto}
   }else{
     int count = 0;
     for(int coarsestScale = csc; coarsestScale < fsc; coarsestScale++){
+      int **icnetwork1 = NULL;
+      double **cnetwork1 = NULL;
+      int cnetwork2;
+      int *cnetwork3 = NULL;
+      int *cnetwork4 = NULL;
+      int *cnetwork5 = NULL;
       double *cost = NULL;
       KGLCalloc(cost,1,double,status);
       KGLCallocMatrix(icnetwork1,N*N,N*N,int,status);
@@ -1158,7 +1144,7 @@ void KGLChirpletAnalysis( //begin{proto}
     for(int i = 0; i < (int)alpha; i++) costpath[i] *= 2.0;
   }
   
-  free(cc);
+  free(cc); free(ptr3); free(ptr2); free(array1);
   free(graphparam1);
   free(graphparam2);
   free(graphparam3);
