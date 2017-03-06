@@ -20,11 +20,15 @@ main = do
       hc = downsampleSV fsorig fs $ v !! 2
       ts' = N.scale 1E-23 $ N.randomVector 1 N.Gaussian (V.length hp) :: V.Vector Double
       ts = addInjsig 0 ts' hp
-
+      ts2' = N.scale 1E-23 $ N.randomVector 1 N.Gaussian (800*V.length hp) :: V.Vector Double
+      ts2 = downsampleSV fsorig fs ts2'
+      tsll2 = V.toList ts2
       tsll' = V.toList ts'
       tsll = V.toList ts
-  writeFile "SN_sgnal_pls_white_noise.dat" $ unwords $ map show tsll
-  writeFile "SN_white_noise.dat" $ unwords $ map show tsll'
+--  writeFile "SN_sgnal_pls_white_noise.dat" $ unwords $ map show tsll
+--  writeFile "SN_white_noise.dat" $ unwords $ map show tsll'
+  writeFile "SN_white_noise100ds8.dat" $ unwords $ map show tsll2
+
 
   let w = vec2wave fs htv ts
       p = ChirpletParam
