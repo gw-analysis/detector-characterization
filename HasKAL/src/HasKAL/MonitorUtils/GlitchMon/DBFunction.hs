@@ -7,7 +7,6 @@ module HasKAL.MonitorUtils.GlitchMon.DBFunction
 , extractTrigLocation
 , extractTrigSignificance
 , extractTrigSNR
-, extractTrigInfoTFSNRSize
 , extractTrigCentralFrequency
 , extractTrigSize
 , extractTrigEnergy

@@ -44,7 +44,9 @@ main = do
                    str_title = "triggered during iKAGRA"
                    str_legend = "events"
                    plotfname = "glitch_scatter_GPS-"++show startgps++"_"++show stopgps++".png"
-                in scatter_plot_2d_png str_title str_legend 10 plotfname $ zip p1 p2
+               writeFile ("p1"++plotfname) $ unwords $ map show p1
+               writeFile ("p2"++plotfname) $ unwords $ map show p2
+               scatter_plot_2d_png str_title str_legend 10 plotfname $ zip p1 p2
  
       _ -> error "Usage: plot2DGlitchParameter [-l] startGPS[2010-11-11 00:00:00 JST] stopGPS[2010-11-11 00:00:00 JST] param1 param2"
 
