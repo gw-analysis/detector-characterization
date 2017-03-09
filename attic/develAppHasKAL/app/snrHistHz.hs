@@ -37,7 +37,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
       fu = (drop 1 fl) ++ [2000]
       fband = zip fl fu
 
-  maybeout <- liftIO $ 
+  maybeout <- liftIO $
     mapM (\x-> extractTrigInfoTFSNRSize gpsstart gpsstop snrlow snrhigh (fst x) (snd x)) fband
 
   let snr = flip map maybeout $ \x-> case x of
@@ -55,7 +55,8 @@ main = R.withEmbeddedR R.defaultConfig $ do
   liftIO $ print $ take 10 (snr!!0)
   liftIO $ print lbin
   liftIO $ print lsnr
-  liftIO $ print (length snrmap)
+  liftIO $ print (maximum snrmap)
+  liftIO $ print (nimimum snrmap)
 
   [r| require("ggplot2") |]
   [r| require("grid")|]
@@ -73,10 +74,10 @@ main = R.withEmbeddedR R.defaultConfig $ do
     df <- data.frame(T=tR,F=fR,C=log(sgpR))
 
  #   png('testpng.png',width=640,height=480,units="px",bg = "transparent")
-    p <- ggplot(data=df,aes(x=T,y=F)) +
-     geom_tile(aes(fill=C)) +
-     scale_fill_gradient(low="white", high="red") +
-     labs(x = "frequency[Hz]", y = "snr") 
+    p <- ggplot(data=df,aes(x=T,y=F,fill=C))
+     + geom_tile()
+     + scale_fill_gradient(low="grey", high="red")
+     + labs(x = "frequency[Hz]", y = "snr")
 #     + geom_point(data=mkfd.fd,aes(x=xX, y=yY, color=cost)) +
 #     scale_color_gradientn(colours = c('springgreen4', 'white')) +
 #     theme( title = black.bold.text
