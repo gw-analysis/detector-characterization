@@ -78,7 +78,6 @@ histogram1d xmin xmax bins input =
       within u x = x >= fst u && x < snd u
    in (map fst intervals, map ((fromIntegral.length) . (\u -> filter (within u) input)) intervals)
 
-
 setHistParam :: VS.Vector Double -> Int -> Double -> SensParam -> ([VS.Vector Double], SensParam)
 setHistParam  dat nfft fs param =
   let chunks = mkChunks dat nfft
@@ -97,5 +96,3 @@ setHistParam  dat nfft fs param =
       param3 = updateSensParam'binInterval param2 binInterval'
       param4 = updateSensParam'binlist param3 binlist'
    in (vlist, param4)
-
-
