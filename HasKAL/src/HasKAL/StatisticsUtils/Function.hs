@@ -4,6 +4,7 @@ module HasKAL.StatisticsUtils.Function
 ( calculatePeasonCorrelation
 , permutationTestPeasonCorrelation
 , mean
+, histogram1d
 )
 where
 
@@ -37,6 +38,13 @@ mean :: Floating a => [a] -> a
 mean x = fst $ foldl' (\(!m, !n) x -> (m+(x-m)/(n+1), n+1)) (0, 0) x
 
 
+histogram1d :: Double -> Double -> [Double] -> [Double] -> ([Double], [Double])
+histogram1d xmin xmax bins input =
+  let intervals = zipWith (\x y ->(x, y)) (init bins) (tail bins)
+      within u x = x >= fst u && x < snd u
+   in (map fst intervals, map ((fromIntegral.length) . (\u -> filter (within u) input)) intervals)
+
+
 
 {- internal functions -}
 
@@ -57,6 +65,3 @@ permutationTestPeasonCorrelationCore data1 data2 len repeatTimes
 
 foreign import ccall "statisticsUtils.h calculatePeasonCorrelation" c'calculatePeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> IO CDouble
 foreign import ccall "statisticsUtils.h permutationTestPeasonCorrelation" c'permutationTestPeasonCorrelation :: Ptr CDouble -> Ptr CDouble -> CInt -> CInt -> IO CDouble
-
-
-
