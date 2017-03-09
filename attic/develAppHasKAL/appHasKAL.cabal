@@ -41,4 +41,20 @@ executable testnds
   default-language:    Haskell2010
   extra-libraries: ndsclient
 
+executable snrHistHz
+  hs-source-dirs:      app
+  main-is:      snrHistHz.hs
+  ghc-options: 
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,inline-r
+   ,ihaskell
+   ,syb
+   ,ihaskell-inline-r
+   ,vector
+   ,transformers
+   ,hmatrix
+  default-language:    Haskell2010
+
 
