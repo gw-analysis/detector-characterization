@@ -201,6 +201,7 @@ library
     HasKAL.StatisticsUtils.Correlation.DistCor,
     HasKAL.StatisticsUtils.Correlation.DistCorR,
     HasKAL.StatisticsUtils.Correlation.MIC,
+    HasKAL.StatisticsUtils.Function,
     -- TimeUtils --
     HasKAL.TimeUtils,
     HasKAL.TimeUtils.Function,
