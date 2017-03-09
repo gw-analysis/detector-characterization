@@ -1,9 +1,12 @@
 module HasKAL.TimeUtils.Function
-( formatGPS
+( module HasKAL.TimeUtils.Signature
+, formatGPS
 , deformatGPS
 , diffGPS
 , addGPS
 ) where
+
+  
 import HasKAL.TimeUtils.Signature
 
 formatGPS :: Double -> GPSTIME
