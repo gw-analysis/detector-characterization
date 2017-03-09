@@ -7,6 +7,7 @@ module HasKAL.MonitorUtils.GlitchMon.DBFunction
 , extractTrigLocation
 , extractTrigSignificance
 , extractTrigSNR
+, extractTrigInfoTFSNRSize
 , extractTrigCentralFrequency
 , extractTrigSize
 , extractTrigEnergy
@@ -70,12 +71,12 @@ extractTrigInfoTFSNR gpsstart gpsstop snrlow snrhigh = runMaybeT $ MaybeT $ do
     x  -> return (Just x)
 
 
-extractTrigInfoTFSNRSize :: Int 
-                         -> Int 
-                         -> Double 
-                         -> Double 
-                         -> Double 
-                         -> Double 
+extractTrigInfoTFSNRSize :: Int
+                         -> Int
+                         -> Double
+                         -> Double
+                         -> Double
+                         -> Double
                          -> IO (Maybe [(Double, Double, Double, Int)])
 extractTrigInfoTFSNRSize gpsstart gpsstop snrlow snrhigh flow fhigh = runMaybeT $ MaybeT $ do
   let gpsstart' = fromIntegral gpsstart :: Int32
@@ -105,12 +106,12 @@ extractTrigInfoTFSNRCore gpsstart gpsstop snrlow snrhigh =
       return $ (,,) |$| db ! Glitch.eventGpsstarts' |*| db ! Glitch.centralFrequency' |*| db ! Glitch.snr'
 
 
-extractTrigInfoTFSNRSizeCore :: Int32 
-                             -> Int32 
-                             -> Double 
-                             -> Double 
-                             -> Double 
-                             -> Double 
+extractTrigInfoTFSNRSizeCore :: Int32
+                             -> Int32
+                             -> Double
+                             -> Double
+                             -> Double
+                             -> Double
                              -> IO [(Maybe Int32, Maybe Double, Maybe Double, Maybe Int32)]
 extractTrigInfoTFSNRSizeCore gpsstart gpsstop snrlow snrhigh flow fhigh=
   handleSqlError' $ withConnectionIO connect $ \conn ->
@@ -444,15 +445,12 @@ setSqlMode conn = do
 
 --instance ProductConstructor (a -> b -> c -> (a, b, c)) where
 --  productConstructor = (,,)
- 
+
 --instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
 --         => FromSql SqlValue (a, b, c) where
 --  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
- 
+
 --instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
 --         => ToSql SqlValue (a, b, c) where
 --  recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
--- 
-
-
-
+--
