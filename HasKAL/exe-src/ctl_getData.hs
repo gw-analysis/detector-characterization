@@ -29,9 +29,12 @@ main = do
               False -> read (time2gps (varArgs!!1)) :: Int
       chinfo = head $ selectKeywords [channel] $ getChannels ip_nds port gps
       fs = ch_rate chinfo :: Double
-      v' = getData ip_nds port [(channel,fs)] gps (gps+duration) duration
-      v = head (head v')
-  mapM_ (\x -> hPutStrLn stdout $ show x) (V.toList v)
+      maybev = getData ip_nds port [(channel,fs)] gps (gps+duration) duration
+  case maybev of
+    Nothing -> return ()
+    Just v' -> do
+      let v = head (head v')
+      mapM_ (\x -> hPutStrLn stdout $ show x) (V.toList v)
 
 
 

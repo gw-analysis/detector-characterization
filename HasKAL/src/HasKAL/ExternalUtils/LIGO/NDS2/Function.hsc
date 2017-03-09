@@ -242,7 +242,7 @@ getData :: String
         -> Int
         -> Int
         -> Int
-        -> [[V.Vector Double]]
+        -> Maybe [[V.Vector Double]]
 getData server port channelList gpsStart gpsEnd delta =
  unsafePerformIO $ do
    withCString server $ \c'server -> do
@@ -253,7 +253,10 @@ getData server port channelList gpsStart gpsEnd delta =
         c'gpsEnd   = fromIntegral gpsEnd :: CInt
         c'delta    = fromIntegral delta :: CInt
         c'dat      = getData' c'server c'port c'channelList c'nch c'gpsStart c'gpsEnd c'delta
-    return $ flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
+        out = flip map c'dat $ \b-> (flip map b $ \a -> V.fromList (map realToFrac a))
+    case out of
+      [] -> return Nothing
+      _  -> return $ Just out
 
 
 conv (s,d) = unsafePerformIO $ withCString s $ \cs -> do
