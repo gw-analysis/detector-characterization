@@ -30,7 +30,7 @@ main = R.withEmbeddedR R.defaultConfig $ do
   let gpsstart = read (time2gps "2016-04-11 09:00:00 JST") :: Int
       gpsstop =  read (time2gps "2016-04-25 17:00:00 JST") :: Int
       snrlow = 1
-      snrhigh = 10000
+      snrhigh = 4000
       flow = 0
       fhigh = 2000
       fl = [0,100..1900]
@@ -43,41 +43,47 @@ main = R.withEmbeddedR R.defaultConfig $ do
   let snr = flip map maybeout $ \x-> case x of
         Nothing -> []
         Just out -> [snr' | (t,f,snr',nsize)<-out]
-      binInterval = (logBase 10 snrhigh - logBase 10 snrlow)/fromIntegral 100
-      binlist = map (10**) [logBase 10 snrlow, logBase 10 snrlow+binInterval ..logBase 10 snrhigh]
-      histout = unzip $ map (histogram1d snrlow snrhigh binlist) snr
-      snrmap = concatMap V.toList $ M.toRows $ M.fromColumns $ map V.fromList $ snd histout
-      snrlist = head $ fst histout
-      lbin = fromIntegral (length fu) :: Double
+      binInterval = (logBase 10 snrhigh - logBase 10 snrlow)/fromIntegral 20
+      snrbinlist = map (10**) [logBase 10 snrlow, logBase 10 snrlow+binInterval ..logBase 10 snrhigh]
+      snrhistout' = map (histogram1d snrlow snrhigh snrbinlist) snr
+      snrhistout = [V.fromList y | (x,y)<-snrhistout']
+      snrmap = concatMap V.toList (M.toRows . M.fromColumns $ snrhistout)
+      snrlist = fst $ head snrhistout'
+      lfbin = fromIntegral (length fu) :: Double
       lsnr = fromIntegral (length snrlist) :: Double
   liftIO $ print (length snr)
   liftIO $ print (length (snr!!0))
   liftIO $ print $ take 10 (snr!!0)
-  liftIO $ print lbin
-  liftIO $ print lsnr
+  liftIO $ print snrlist
+  liftIO $ print fu
   liftIO $ print (maximum snrmap)
-  liftIO $ print (nimimum snrmap)
+  liftIO $ print (minimum snrmap)
+ 
+  liftIO $ writeFile "triggM.dat" $ unwords $ map show snrmap
+  liftIO $ writeFile "triggSNR.dat" $ unwords $ map show snrlist
+  liftIO $ writeFile "triggFre.dat" $ unwords $ map show fu
 
+  
   [r| require("ggplot2") |]
   [r| require("grid")|]
   [r| require("gridExtra")|]
   [r| require("scales") |]
   [r| require("RColorBrewer") |]
   [r|
-    lt <- lbin_hs
+    lt <- lfbin_hs
     lf <- lsnr_hs
     tR0 <- fu_hs
     fR0 <- snrlist_hs
     tR <- rep(tR0,lf)
     fR <- sort(rep(fR0,lt))
     sgpR <- snrmap_hs
-    df <- data.frame(T=tR,F=fR,C=log(sgpR))
+    df <- data.frame(T=tR,F=fR,C=sgpR)
 
  #   png('testpng.png',width=640,height=480,units="px",bg = "transparent")
-    p <- ggplot(data=df,aes(x=T,y=F,fill=C))
-     + geom_tile()
-     + scale_fill_gradient(low="grey", high="red")
-     + labs(x = "frequency[Hz]", y = "snr")
+    p <- ggplot(data=df,aes(x=T,y=F,fill=C)) +
+      geom_tile() +
+      scale_fill_gradient(low="grey", high="red") +
+      labs(x = "frequency[Hz]", y = "snr")
 #     + geom_point(data=mkfd.fd,aes(x=xX, y=yY, color=cost)) +
 #     scale_color_gradientn(colours = c('springgreen4', 'white')) +
 #     theme( title = black.bold.text
