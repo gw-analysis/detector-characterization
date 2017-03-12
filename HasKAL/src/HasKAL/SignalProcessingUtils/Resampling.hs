@@ -139,7 +139,7 @@ downsampleUV fs newfs v =
         vs <- new nvs
         let v' =  UV.convert $ filtfilt0 lpf $ UV.convert v
             lpf = chebyshev1 6 1 fs newfs2 Low
-            newfs2 = 2*fs*tan (2*pi*newfs/2/fs)
+            newfs2 = 2*fs*tan (2*pi*newfs/2/fs)/(2*pi)
         loop v' vs 0 nvs
         return vs
         where

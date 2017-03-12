@@ -15,7 +15,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 main = do
   {-- parameters --}
-  (ch,fs',fc',ftype') <- getArgs >>= \args -> case length args of 
+  (ch,fs',fc',ftype') <- getArgs >>= \args -> case length args of
     4 -> return (head args, args!!1, args!!2, args!!3)
     _ -> error "filter channel fs fc ftype stdin"
 
@@ -24,12 +24,11 @@ main = do
       ftype = read ftype' :: FilterType
 
   let inputPart = unsafePerformIO $ stdin2vec
-      filterPart v = case ftype of
-                       Low -> let lpf = C.chebyshev1 6 1 fs fc' Low
-                                  fc' = 2*fs*tan (2*pi*fc/fs/2)/(2*pi)
-                               in filtfilt0 lpf v
-                       High -> let hpf = C.chebyshev1 6 1 fs fc' High
-                                   fc' = 2*fs*tan (2*pi*fc/fs/2)/(2*pi)
-                                in filtfilt0 hpf v
+  let filterPart v = case ftype of
+        Low -> let lpf = C.chebyshev1 6 1 fs fcp Low
+                   fcp = 2*fs*tan (2*pi*fc/fs/2)/(2*pi)
+                in filtfilt0 lpf v
+        High -> let hph = C.chebyshev1 6 1 fs fcp High
+                    fcp = 2*fs*tan (2*pi*fc/fs/2)/(2*pi)
+                 in filtfilt0 hph v
   mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList (filterPart inputPart))
-
