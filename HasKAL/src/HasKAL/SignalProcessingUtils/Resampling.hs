@@ -91,7 +91,9 @@ downsample fs newfs x = y
   where y = toList $ downsampling (floor fs) (floor newfs) x'
         x' = filtfilt0 lpf $ fromList x
         lpf = chebyshev1 6 1 fs newfs2 Low
-        newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
+        newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
+          -- 0.8 is to avoid divergence at Nyquist frequency
+          -- see decimate.m in GNU Octave
 
 
 upsample :: Double -> Double -> [Double] -> [Double]
@@ -139,7 +141,9 @@ downsampleUV fs newfs v =
         vs <- new nvs
         let v' =  UV.convert $ filtfilt0 lpf $ UV.convert v
             lpf = chebyshev1 6 1 fs newfs2 Low
-            newfs2 = 2*fs*tan (2*pi*newfs/2/fs)/(2*pi)
+            newfs2 = 2*fs*tan (2*pi*newfs*0.8/2/fs)/(2*pi)
+          -- 0.8 is to avoid divergence at Nyquist frequency
+          -- see decimate.m in GNU Octave
         loop v' vs 0 nvs
         return vs
         where
@@ -153,26 +157,30 @@ downsampleUV fs newfs v =
 
 downsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
 downsampleSV fs newfs v =
-  if (fs/newfs<1)
-    then error "new sample rate should be <= original sample rate."
+  if (fs/newfs<=1)
+    then error "new sample rate should be < original sample rate."
     else
       let v' = filtfilt0 lpf v
           lpf = chebyshev1 6 1 fs newfs2 Low
-          newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
+          newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
+          -- 0.8 is to avoid divergence at Nyquist frequency
+          -- see decimate.m in GNU Octave
        in downsampling (floor fs) (floor newfs) v'
 
 
 
 sosDownsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
 sosDownsampleSV fs newfs v =
-  if (fs/newfs<1)
-    then error "new sample rate should be <= original sample rate."
+  if (fs/newfs<=1)
+    then error "new sample rate should be < original sample rate."
     else
       let v' = sosfiltfilt cascade v
           initCond = map calcInitCond cascade
           cascade = tf2cascade lpf
-          lpf = chebyshev1 6 0.4 fs newfs2 Low
-          newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
+          lpf = chebyshev1 6 1 fs newfs2 Low
+          newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
+          -- 0.8 is to avoid divergence at Nyquist frequency
+          -- see decimate.m in GNU Octave
        in downsampling (floor fs) (floor newfs) v'
 
 
@@ -183,9 +191,10 @@ upsampleSV fs newfs v =
     then error "new sample rate should be >= original sample rate."
     else
       let v' = upsampling (floor fs) (floor newfs) v
-          lpf = chebyshev1 6 1 fs lfsa Low
-          lfsa = 2*fs*tan (2*pi*fs/fs/2)/(2*pi)
-
+          lpf = chebyshev1 6 1 newfs lfsa Low
+          lfsa = 2*fs*tan (2*pi*fs*0.8/newfs/2)/(2*pi)
+          -- 0.8 is to avoid divergence at Nyquist frequency
+          -- see decimate.m in GNU Octave
        in filtfilt0 lpf v'
 
 
@@ -196,7 +205,9 @@ resampleSV (p,q) fs v =
          |otherwise = upsampling (floor fs) (floor (fs*(fromIntegral p))) v
       lfs |fromIntegral p/fromIntegral q >=1 = fs
           |fromIntegral p/fromIntegral q <1  = (fromIntegral p)/(fromIntegral q)*fs
-      lfsa = 2*fs*tan (2*pi*lfs/fs/2)/(2*pi)
+      lfsa = 2*fs*tan (2*pi*lfs*0.8/(fs*fromIntegral p)/2)/(2*pi)
+      -- 0.8 is to avoid divergence at Nyquist frequency
+      -- see decimate.m in GNU Octave
       lpf = chebyshev1 6 1 (fs*fromIntegral p) lfsa Low
       upL = filtfilt0 lpf up
    in case q of
