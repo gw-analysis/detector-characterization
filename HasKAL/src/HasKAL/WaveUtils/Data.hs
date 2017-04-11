@@ -10,6 +10,7 @@ module HasKAL.WaveUtils.Data
 , dropWaveData
 , takeWaveData
 , vec2wave
+, lengthWaveData
 ) where
 
 
@@ -93,3 +94,7 @@ takeWaveData n x = do
       newstopGPSTime = formatGPS $ deformatGPS (startGPSTime x) + t
       newgwdata = subVector 0 n' (gwdata x)
   mkWaveData (detector x) (dataType x) (samplingFrequency x) (startGPSTime x) newstopGPSTime newgwdata
+
+
+lengthWaveData :: WaveData -> Int
+lengthWaveData w = lengthTimeSeries $ gwdata w
