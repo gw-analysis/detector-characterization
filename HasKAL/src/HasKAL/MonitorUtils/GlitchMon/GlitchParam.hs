@@ -48,7 +48,7 @@ data GlitchParam = GlitchParam
 data WhnMethod = TimeDomain | FrequencyDomain deriving (Show)
 
 
-data FlagDebug = DS | WH | TF | ETG | CL | PE | REG deriving (Show, Eq)
+data FlagDebug = DS | DC | WH | TF | ETG | CL | PE | REG deriving (Show, Eq)
 
 
 updateGlitchParam'segmentLength :: GlitchParam -> Int -> GlitchParam
@@ -113,5 +113,3 @@ updateGlitchParam'nNeighbor x param = x {nNeighbor = param}
 
 updateGlitchParam'debugDir :: GlitchParam -> String -> GlitchParam
 updateGlitchParam'debugDir x param = x {debugDir = param}
-
-

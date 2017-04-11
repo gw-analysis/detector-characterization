@@ -22,7 +22,7 @@ import Control.Monad.State ( StateT
 import Data.Conduit ( bracketP
                     , yield
                     , await
-                    , ($$)
+                       , ($$)
                     , Source
                     , Sink
                     , Conduit
@@ -116,36 +116,40 @@ sink param chname = do
                                       let wave' = downsampleWaveData fs wave
                                           dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                      case GP.DS `elem` GP.debugmode param of 
+                                      case GP.DS `elem` GP.debugmode param of
                                          True -> do
+                                           let dir = GP.debugDir param
                                            liftIO $ H3.spectrogramM H3.LogY
                                             H3.COLZ
                                             "mag"
-                                            "whitened data"
-                                            "production/ds_sprcgram.png"
-                                                  ((0, 0), (20, 400))
+                                            "spectrogram of downsampled timeseries"
+                                            (dir++"/ds_sprcgram.png")
+                                            ((0, 0), (0, 0))
                                             $ gwspectrogramWaveData 0.19 0.2 wave'
+
                                            liftIO $ H.plot H.Linear
                                             H.Line
-                                                  1
+                                            1
                                             H.RED
                                             ("time","amplitude")
-                                                  0.05
-                                            "whitened data"
-                                            "production/ds_timeseries.png"
-                                                  ((16.05,16.2),(0,0))
+                                            0.05
+                                            "downsampled data"
+                                            (dir++"/ds_timeseries.png")
+                                            ((0,0),(0,0))
                                             $ zip [0,1/fs..] (NL.toList $ gwdata wave')
+
                                            liftIO $ H.plotV H.LogXY
                                             H.Line
-                                                  1
+                                            1
                                             H.RED
                                             ("frequency [Hz]","ASD [Hz^-1/2]")
-                                                  0.05
-                                            "whitened data spectrum"
-                                            "production/ds_spectrum.png"
-                                                  ((0,0),(0,0))
-                                            $ gwOnesidedPSDWaveData 1 wave'
-                                         _ -> liftIO $ Prelude.return ()
+                                            0.05
+                                            "spectrum of downsampled timeseries"
+                                            (dir++"/ds_spectrum.png")
+                                            ((0,0),(0,0))
+                                            $ gwOnesidedPSDWaveData 1 wave
+                                         False -> liftIO $ Prelude.return ()
+
                                       s <- fileRun wave' param'2
                                       sink s chname
                               else do let dataGps = (s, n)
@@ -170,7 +174,7 @@ glitchMon param w =
     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
-           Just t -> do part'RegisterEventtoDB t 
+           Just t -> do -- part'RegisterEventtoDB t
                         print "finishing glitchmon" >> return s''
            Nothing -> do print "No event from glitchmon"
                          return s''
@@ -250,5 +254,3 @@ gowatch dname f g =  do b <- liftIO $ doesDirectoryExist dname
                                         False -> do liftIO $ threadDelay 1000000
                                                     gowatch dname f g
                           True  -> f
-
-

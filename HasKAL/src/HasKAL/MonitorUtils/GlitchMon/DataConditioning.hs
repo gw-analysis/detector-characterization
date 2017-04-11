@@ -13,6 +13,7 @@ import Data.Maybe (fromJust)
 import qualified Data.Vector.Storable as V
 import HasKAL.SignalProcessingUtils.Cascade
 import HasKAL.SignalProcessingUtils.Chebyshev(chebyshev1)
+import HasKAL.SignalProcessingUtils.ButterWorth(butter)
 import HasKAL.SignalProcessingUtils.FilterX(filtfilt0)
 import HasKAL.SignalProcessingUtils.FilterType
 import HasKAL.SignalProcessingUtils.ButterWorth
@@ -32,30 +33,62 @@ import Control.DeepSeq (deepseq, NFData)
 
 
 --instance NFData WaveData
-
+deg = 2
 
 part'DataConditioning :: WaveData
                      -> StateT GP.GlitchParam IO WaveData
 part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
-  let highpassed = filtfilt0 lpf (gwdata wave)
-      lpf = chebyshev1 4 1 fs newfs2 High
-      newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
+  {- High pass filtering at cutoff frequency in param-}
+  let highpassed = filtfilt0 hpf (gwdata wave)
+      hpf = chebyshev1 deg 0.1 fs newfs2 High
+      --hpf = butter 4 fs newfs2 High
+      newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
   liftIO $ print "-- high-pass filtering" >> hFlush stdout
 --  liftIO $ print $ "["++show (highpassed V.!0)++", "++show (highpassed V.!1)
---    ++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"  
+--    ++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"
   highpassed `deepseq` return ()
-  let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
-      dir = GP.debugDir param  
+  let highpassedw' = fromJust $ updateWaveDatagwdata wave highpassed
+      highpassedw = dropWaveData (4*2*deg)
+                      $ takeWaveData (lengthWaveData highpassedw' - 4*2*deg)
+                      $ highpassedw'
+
+  case GP.DC `elem` GP.debugmode param of
+    True -> do let dir = GP.debugDir param
+               liftIO $ H.plot H.Linear
+                 H.Line
+                 1
+                 H.RED
+                 ("time","amplitude")
+                 0.05
+                 "high-pass filtered data"
+                 (dir++"/highpassed_timeseries.png")
+                 ((0,0),(0,0))
+                 $ zip [0,1/fs..] (NL.toList $ gwdata highpassedw)
+
+               liftIO $ H.plotV H.LogXY
+                  H.Line
+                  1
+                  H.RED
+                  ("frequency [Hz]","ASD [Hz^-1/2]")
+                  0.05
+                  "spectrum of hig-hpass filtered timeseries"
+                  (dir++"/highpassed_spectrum.png")
+                  ((0,0),(0,0))
+                  $ gwOnesidedPSDWaveData 1 highpassedw
+
+    False -> liftIO $ Prelude.return ()
+
+  let dir = GP.debugDir param
   let whtcoeff = GP.whtCoeff param
       wmethod   = GP.whnMethod param
   case (whtcoeff /= []) of
-   -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough. 
+   -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough.
     _     -> case GP.WH `elem` GP.debugmode param of
-               True -> do 
+               True -> do
                  liftIO $ print "-- whitening... "
                  out <- section'Whitening wmethod highpassedw
                  liftIO $ H3.spectrogramM H3.LogY
@@ -63,7 +96,7 @@ part'DataConditioning wave = do
                                           "mag"
                                           "whitened data"
                                           "production/whitened_spectrogram.png"
-                                          ((0, 0), (20, 400))
+                                          ((0, 0), (0, 0))
                                           $ gwspectrogramWaveData 0.1 0.2 out
                  liftIO $ H.plot H.Linear
                                  H.Line
@@ -71,17 +104,17 @@ part'DataConditioning wave = do
                                  H.RED
                                  ("time","amplitude")
                                  0.05
-                                 "whitened data"
+                                 "data"
                                  "production/whitened_timeseries.png"
-                                 ((16.05,16.2),(0,0))
-                                 $ zip [0,1/4096..] (NL.toList $ gwdata out)
+                                 ((0,0),(0,0))
+                                 $ zip [0,1..] (NL.toList $ gwdata out)
                  liftIO $ H.plotV H.LogXY
                                  H.Line
                                  1
                                  H.RED
                                  ("frequency [Hz]","ASD [Hz^-1/2]")
                                  0.05
-                                 "whitened data spectrum"
+                                 "whitened spectrum"
                                  (dir++"/whitened_spectrum.png")
                                  ((0,0),(0,0))
                                  $ gwOnesidedPSDWaveData 0.2 out
@@ -96,11 +129,11 @@ part'DataConditioning wave = do
 section'LineRemoval = id
 
 
-section'Whitening :: GP.WhnMethod 
-                  -> WaveData 
+section'Whitening :: GP.WhnMethod
+                  -> WaveData
                   -> StateT GP.GlitchParam IO WaveData
 section'Whitening opt wave = case opt of
-  GP.TimeDomain 
+  GP.TimeDomain
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
@@ -160,10 +193,10 @@ applyWhitening :: GP.WhnMethod
                -> WaveData
 applyWhitening opt [] wave = wave
 applyWhitening opt (x:xs) wave = case opt of
-  GP.TimeDomain -> 
+  GP.TimeDomain ->
 --    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
     applyWhitening GP.TimeDomain xs $ whiteningWaveData x wave
-  GP.FrequencyDomain -> 
+  GP.FrequencyDomain ->
     applyWhitening GP.FrequencyDomain xs $ whiteningWaveData' x wave
 
 
@@ -183,5 +216,3 @@ var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
 
 std :: (RealFloat a) => [a] -> a
 std x = sqrt $ var x
-
-

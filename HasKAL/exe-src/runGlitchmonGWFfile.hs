@@ -13,7 +13,7 @@ main = do
     2 -> return (head args, args!!1)
     _ -> error "Usage runGlitchMonFile chname fname"
   fsorig <- fmap (fromMaybe (error "fs not found.")) $ getSamplingFrequency fname chname
-  let dfactor = 1
+  let dfactor = 4
   let fs = fromIntegral $ floor (fsorig / dfactor)
   let param = GlitchParam
                { segmentLength = 32
@@ -28,7 +28,7 @@ main = do
              -- * t-f expression
                , nfrequency = 0.2
                , ntimeSlide = 0.03
-             -- * clustering             
+             -- * clustering
                , cutoffFractionTFT = 0.5
                , cutoffFractionTFF = 0.5
                , cutoffFreq = 30
@@ -43,9 +43,9 @@ main = do
                , cgps = Nothing
                , reftime = 0
              -- * for debug
-               , debugmode = []
-               , debugDir = "debug"
-               }                                 
+               , debugmode = [DS, DC, TF, CL]
+               , debugDir = "production"
+               }
       cdfp = CDFParam
               { cdf'samplingFrequency = fs
               , cdf'cutoffFrequencyLow = 10
@@ -59,5 +59,3 @@ main = do
   runGlitchMonFile param (channel param) fname
 --"/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 --  runGlitchMonFile param (channel param) "/data/kagra/raw/full/K-K1_C-1144374208-32.gwf"
-
-

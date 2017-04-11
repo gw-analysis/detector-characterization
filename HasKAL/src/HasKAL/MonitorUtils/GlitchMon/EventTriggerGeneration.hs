@@ -21,7 +21,6 @@ import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedMed
 import HasKAL.TimeUtils.Function (formatGPS,  deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
-import qualified Numeric.LinearAlgebra.HMatrix as NL
 import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import HasKAL.MonitorUtils.GlitchMon.Signature
@@ -48,7 +47,6 @@ section'TimeFrequencyExpression whnWaveData = do
   liftIO $ print "-- start time-frequency expansion" >> hFlush stdout
   param <- get
   let wmethod   = GP.whnMethod param
-      dir = GP.debugDir param
   case wmethod of
     GP.TimeDomain -> do
       let refpsd = GP.refpsd param
@@ -60,30 +58,32 @@ section'TimeFrequencyExpression whnWaveData = do
           snrMatF = V.map (*(fs/fromIntegral nfreq)) $ V.fromList [0.0, 1.0..fromIntegral nfreq2-1]
           snrMatT = V.map (*(fromIntegral ntimeSlide/fs)) $ V.fromList [0.0, 1.0..fromIntegral ntime -1]
           snrMatT' = V.map (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-          snrMatP = NL.fliprl $ trans $ NL.flipud $ 
+          snrMatP = NL.fliprl $ trans $ NL.flipud $
                       (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
-            where 
-              calcSpec tindx = V.zipWith (/) 
+            where
+              calcSpec tindx = V.zipWith (/)
                 (snd $ gwOnesidedPSDV (V.slice (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
           out = (snrMatT', snrMatF, snrMatP)
       liftIO $ out `deepseq` Prelude.return ()
       case GP.TF `elem` GP.debugmode param of
         True -> do
+          let dir = GP.debugDir param
           liftIO $ H3.spectrogramM H3.LogY
                                    H3.COLZ
                                    "mag"
                                    "pixelSNR spectrogram"
                                    (dir++"/pixelSNR_spectrogram_WhnTD.png")
-                                       ((0, 0), (20, 400))
+                                   ((0, 0), (0, 0))
                                    out
-        _ -> liftIO $ Prelude.return () 
+        _ -> liftIO $ Prelude.return ()
       return out
     GP.FrequencyDomain -> do
       --let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
       let fs = samplingFrequency whnWaveData
       let nfreq = floor $ GP.nfrequency param * fs
-      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
+--      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
+      let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs 
       liftIO $ refpsd `deepseq` Prelude.return()
 
       let nfreq2 = nfreq `div` 2
@@ -92,24 +92,26 @@ section'TimeFrequencyExpression whnWaveData = do
           snrMatF = V.map (*(fs/fromIntegral nfreq)) $ V.fromList [0.0, 1.0..fromIntegral nfreq2-1]
       let snrMatT = V.map (*(fromIntegral ntimeSlide/fs)) $ V.fromList [0.0, 1.0..fromIntegral ntime -1]
           snrMatT' = V.map (+deformatGPS (startGPSTime whnWaveData)) snrMatT
-      let snrMatP = NL.fliprl $ trans $ NL.flipud $ 
+      let snrMatP = NL.fliprl $ trans $ NL.flipud $
                       (ntime><nfreq2) $ concatMap (take nfreq2 . toList . calcSpec) [0..ntime-1]
-            where 
-              calcSpec tindx = V.zipWith (/) 
+            where
+              calcSpec tindx = V.zipWith (/)
                 (snd $ gwOnesidedPSDV (V.slice (ntimeSlide*tindx) nfreq (gwdata whnWaveData)) nfreq fs)
                 (snd $ refpsd)
       let out = (snrMatT', snrMatF, snrMatP)
+          out' = (snrMatT, snrMatF, snrMatP)
       liftIO $ out `deepseq` return ()
       case GP.TF `elem` GP.debugmode param of
         True -> do
+          let dir = GP.debugDir param
           liftIO $ H3.spectrogramM H3.LogY
                                    H3.COLZ
                                    "mag"
                                    "pixelSNR spectrogram"
                                    (dir++"/pixelSNR_spectrogram_WhnFD.png")
-                                       ((0, 0), (20, 400))
-                                   out
-        _ -> liftIO $ Prelude.return () 
+                                   ((0, 0), (0, 0))
+                                   out'
+        _ -> liftIO $ Prelude.return ()
       return out
 
 
@@ -132,18 +134,19 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       mc0 = (nrow><cutT) $ replicate (nrow*cutT) 0.0
       mr0 = (cutF><(ncol-cutT)) $ replicate (cutF*(ncol-cutT)) 0.0
       qM = NL.fromBlocks [[NL.fromBlocks [[m1],[mr0]],mc0]]
-  let dcted = NL.mul dcted' qM
+  let dcted = dcted' * qM
 --  liftIO $ print "evaluating dcted"  >> hFlush stdout
+  dcted `deepseq` Prelude.return ()
   let snrMatP = idct2d dcted
 --  liftIO $ print "evaluating snrMatP" >> hFlush stdout
   snrMatP `deepseq` Prelude.return ()
   let thresIndex = V.head $ V.findIndices (>=GP.cutoffFreq param) snrMatF
 --  liftIO $ print "evaluating thresIndex" >> hFlush stdout
---  thresIndex `deepseq` Prelude.return ()
+  thresIndex `deepseq` Prelude.return ()
   let snrMat = ( snrMatT
                , V.fromList (drop (thresIndex+1) (V.toList snrMatF))
                , NL.fromRows (drop (thresIndex+1) (NL.toRows snrMatP))
-                 )
+               )
 --  liftIO $ print "evaluating snrMat" >> hFlush stdout
   snrMat `deepseq` Prelude.return ()
   let (tt,ff,mg) = snrMat
@@ -154,12 +157,12 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
       cmg = cols mg
       rmg = rows mg
   thrsed <- liftIO $ case length thrsed' >= GP.maxNtrigg param of
-    True -> do 
+    True -> do
       print "---- too many islands detected. top maxNtrigg islands will be selected." >> hFlush stdout
-      let ind = snd . unzip . take (GP.maxNtrigg param) . reverse . 
+      let ind = snd . unzip . take (GP.maxNtrigg param) . reverse .
             sortBy (\ x y -> compare (fst x) (fst y)) $ mg'
       return $ map (vectorInd2MatrixInd_row rmg cmg) ind
-    False-> 
+    False->
       return thrsed'
 
   let survivor' = nub' $ excludeOnePixelIsland cfun n thrsed
@@ -178,19 +181,31 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
 
   case GP.CL `elem` GP.debugmode param of
     True -> do
---      liftIO $ print ncol
+      let dir = GP.debugDir param
+  --    liftIO $ print ncol
       liftIO $ H3.spectrogramM H3.LogY
                                H3.COLZ
                                "mag"
                                "clustered PixelSNR spectrogram"
-                               "production/cluster_spectrogram.png"
-                               ((0, 0), (20, 400))
+                               (dir++"/cluster_spectrogram.png")
+                                   ((0, 0), (0, 0))
                                newM
---      liftIO $ print "clustered pixels :"
---      liftIO $ print survivorwID          
-    _ -> liftIO $ Prelude.return () 
+      liftIO $ print "clustered pixels :"
+      liftIO $ print survivorwID
+      let thrsedValues = map (\x->mg `atIndex` x) thrsed
+          thrsedM = updateSpectrogramSpec snrMat
+            $ updateMatrixElement zeroMatrix thrsed thrsedValues
+      liftIO $ H3.spectrogramM H3.LogY
+                               H3.COLZ
+                               "mag"
+                               "thresholded PixelSNR spectrogram"
+                               (dir++"/thresholded_spectrogram.png")
+                                   ((0, 0), (0, 0))
+                               thrsedM
 
-  case length survivorwID of 
+    _ -> liftIO $ Prelude.return ()
+
+  case length survivorwID of
     0 -> do liftIO $ print "# of detected islands is" >> hFlush stdout
             liftIO $ print "0" >> hFlush stdout
     _ -> do liftIO $ print "# of detected islands is" >> hFlush stdout
@@ -198,9 +213,9 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   return (newM, survivorwID)
 
 
--- quantizingMatrix :: Int 
---                  -> Int 
---                  -> ((Int,Int)->Double) 
+-- quantizingMatrix :: Int
+--                  -> Int
+--                  -> ((Int,Int)->Double)
 --               -> Matrix Double
 -- quantizingMatrix r c fun = buildMatrix r c fun
 
@@ -212,7 +227,7 @@ vectorInd2MatrixInd_row r c m = (a, b)
     b | m `mod` c == 0 = c-1
       | otherwise      = m `mod` c - 1
 
--- | O (nlog n) nub 
+-- | O (nlog n) nub
 -- | lent from http://d.hatena.ne.jp/jeneshicc/20090908/1252413541
 nub' :: (Ord a) => [a] -> [a]
 nub' l = nub'' l Set.empty
@@ -237,5 +252,3 @@ var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
 
 std :: (RealFloat a) => [a] -> a
 std x = sqrt $ var x
-
-
