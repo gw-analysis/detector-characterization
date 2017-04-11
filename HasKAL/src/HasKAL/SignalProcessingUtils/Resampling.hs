@@ -39,6 +39,8 @@ import Control.DeepSeq (deepseq, NFData)
 
 
 dim = SV.length
+deg = 4
+
 
 
 downsampling :: Int -> Int -> SV.Vector Double -> SV.Vector Double
@@ -90,7 +92,7 @@ downsample :: Double -> Double -> [Double] -> [Double]
 downsample fs newfs x = y
   where y = toList $ downsampling (floor fs) (floor newfs) x'
         x' = filtfilt0 lpf $ fromList x
-        lpf = chebyshev1 6 1 fs newfs2 Low
+        lpf = chebyshev1 deg 1 fs newfs2 Low
         newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
@@ -140,7 +142,7 @@ downsampleUV fs newfs v =
       UV.create $ do
         vs <- new nvs
         let v' =  UV.convert $ filtfilt0 lpf $ UV.convert v
-            lpf = chebyshev1 6 1 fs newfs2 Low
+            lpf = chebyshev1 deg 1 fs newfs2 Low
             newfs2 = 2*fs*tan (2*pi*newfs*0.8/2/fs)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
@@ -161,7 +163,7 @@ downsampleSV fs newfs v =
     then error "new sample rate should be < original sample rate."
     else
       let v' = filtfilt0 lpf v
-          lpf = chebyshev1 6 1 fs newfs2 Low
+          lpf = chebyshev1 deg 1 fs newfs2 Low
           newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
@@ -177,7 +179,7 @@ sosDownsampleSV fs newfs v =
       let v' = sosfiltfilt cascade v
           initCond = map calcInitCond cascade
           cascade = tf2cascade lpf
-          lpf = chebyshev1 6 1 fs newfs2 Low
+          lpf = chebyshev1 deg 1 fs newfs2 Low
           newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
@@ -191,7 +193,7 @@ upsampleSV fs newfs v =
     then error "new sample rate should be >= original sample rate."
     else
       let v' = upsampling (floor fs) (floor newfs) v
-          lpf = chebyshev1 6 1 newfs lfsa Low
+          lpf = chebyshev1 deg 1 newfs lfsa Low
           lfsa = 2*fs*tan (2*pi*fs*0.8/newfs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
@@ -208,7 +210,7 @@ resampleSV (p,q) fs v =
       lfsa = 2*fs*tan (2*pi*lfs*0.8/(fs*fromIntegral p)/2)/(2*pi)
       -- 0.8 is to avoid divergence at Nyquist frequency
       -- see decimate.m in GNU Octave
-      lpf = chebyshev1 6 1 (fs*fromIntegral p) lfsa Low
+      lpf = chebyshev1 deg 1 (fs*fromIntegral p) lfsa Low
       upL = filtfilt0 lpf up
    in case q of
         1 -> up
