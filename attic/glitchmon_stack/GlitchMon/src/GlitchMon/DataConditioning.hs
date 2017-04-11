@@ -40,22 +40,22 @@ part'DataConditioning wave = do
   liftIO $ print "start data conditioning" >> hFlush stdout
   param <- get
   let highpassed = filtfilt0 lpf (gwdata wave)
-      lpf = chebyshev1 4 1 fs newfs2 High
-      newfs2 = 2*fs*tan (pi*newfs/fs/2)/(2*pi)
+      lpf = chebyshev1 6 1 fs newfs2 High
+      newfs2 = 2*fs*tan (2*pi*newfs/fs/2)/(2*pi)
       newfs = GP.cutoffFreq param
       fs = GP.samplingFrequency param
   liftIO $ print "-- high-pass filtering" >> hFlush stdout
 --  liftIO $ print $ "["++show (highpassed V.!0)++", "++show (highpassed V.!1)
---    ++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"  
+--    ++", "++show (highpassed V.!2)++", "++show (highpassed V.!3)++"...]"
   highpassed `deepseq` return ()
   let highpassedw = fromJust $ updateWaveDatagwdata wave highpassed
-      dir = GP.debugDir param  
+      dir = GP.debugDir param
   let whtcoeff = GP.whtCoeff param
       wmethod   = GP.whnMethod param
   case (whtcoeff /= []) of
-   -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough. 
+   -- | [TODO] at present the condition is not used because the iKAGRA data is not stationary enough.
     _     -> case GP.WH `elem` GP.debugmode param of
-               True -> do 
+               True -> do
                  liftIO $ print "-- whitening... "
                  out <- section'Whitening wmethod highpassedw
                  liftIO $ H3.spectrogramM H3.LogY
@@ -96,11 +96,11 @@ part'DataConditioning wave = do
 section'LineRemoval = id
 
 
-section'Whitening :: GP.WhnMethod 
-                  -> WaveData 
+section'Whitening :: GP.WhnMethod
+                  -> WaveData
                   -> StateT GP.GlitchParam IO WaveData
 section'Whitening opt wave = case opt of
-  GP.TimeDomain 
+  GP.TimeDomain
     -> do param <- get
           (whtCoeffList, rfwave) <- liftIO $ calcWhiteningCoeff param
           put $ GP.updateGlitchParam'whtCoeff param whtCoeffList
@@ -160,10 +160,10 @@ applyWhitening :: GP.WhnMethod
                -> WaveData
 applyWhitening opt [] wave = wave
 applyWhitening opt (x:xs) wave = case opt of
-  GP.TimeDomain -> 
+  GP.TimeDomain ->
 --    applyWhitening TimeDomain xs $ dropWaveData ((*2).length.fst $ x) $ whiteningWaveData x wave
     applyWhitening GP.TimeDomain xs $ whiteningWaveData x wave
-  GP.FrequencyDomain -> 
+  GP.FrequencyDomain ->
     applyWhitening GP.FrequencyDomain xs $ whiteningWaveData' x wave
 
 
@@ -183,5 +183,3 @@ var xs = Prelude.sum (map (\x -> (x - mu)^(2::Int)) xs)  / (n - 1)
 
 std :: (RealFloat a) => [a] -> a
 std x = sqrt $ var x
-
-

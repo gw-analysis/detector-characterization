@@ -32,6 +32,8 @@ data TrigParam = TrigParam { glitch_ID :: Maybe Int
                            , segment_gpsstopn :: Maybe Int32
                            , dq_flag :: Maybe Int32
                            , pipeline :: Maybe String
+                           , injection :: Maybe Int32
+                           , hrss :: Maybe Double
                            }
 
 data PlotOPT = GPS | CentralFrequency | SNR | DQFlag | Significance | Size | Energy | Duration | CentralGPS deriving (Show,Read,Eq)

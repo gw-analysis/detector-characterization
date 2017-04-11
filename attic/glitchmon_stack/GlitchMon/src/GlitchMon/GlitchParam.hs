@@ -39,6 +39,9 @@ data GlitchParam = GlitchParam
   , refpsd :: Spectrum
   , refwave :: WaveData
   , reftime :: Double
+-- * software injection
+  , softwareInjection :: Bool
+  , injectionInfoFile :: FilePath
 -- * for debug
   , debugmode :: [FlagDebug]
   , debugDir :: String
@@ -113,5 +116,3 @@ updateGlitchParam'nNeighbor x param = x {nNeighbor = param}
 
 updateGlitchParam'debugDir :: GlitchParam -> String -> GlitchParam
 updateGlitchParam'debugDir x param = x {debugDir = param}
-
-

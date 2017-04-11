@@ -78,10 +78,10 @@ part'ParameterEstimation (m,ids) = do
                            , segment_gpsstopn = Nothing
                            , dq_flag = Nothing
                            , pipeline = Just "iKAGRA Glitch pipeline"
+--                           , injection = Nothing
+--                           , hrss = Nothing
                            }
                  , head tag)
             where
               maximum' x = let maxx = maximum x :: Double
                             in (maxx, fromJust $ lookup maxx (zip x [0..]))
-
-
