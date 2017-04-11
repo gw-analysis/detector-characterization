@@ -1,69 +1,79 @@
 
+import Data.List.Split
 import qualified Data.Vector.Storable as V
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
-import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData, resampleonlyWaveData)
+import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData,resampleWaveData)
 import HasKAL.TimeUtils.Function (deformatGPS)
+import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.TimeUtils.Signature
 import HasKAL.WaveUtils.Data (WaveData(..))
 import System.Console.GetOpt
 import System.Environment (getArgs)
-import System.IO (stdout, hPutStrLn)
+import System.IO (stdout, hPutStrLn, hFlush)
 
 
 main = do
-  getArgs >>= \args' -> case options args' of
-    Right (ss, args) -> case ss of
-      [] -> do let method = doDownSample
-               go method args
-      _  -> do let method = doReSample
-               go method args
-  where 
-    go method args = case (length args) of
-        4 -> do let (ch, fsfact', gps', duration') = (head args, args!!1, args!!2, args!!3)
-                    gps = read gps' :: Int
-                    duration = read duration' :: Int
-                    fsfact = read fsfact' :: Int
-                kagraWaveDataGetC gps duration ch >>= \judge -> case judge of
-                  Nothing  -> putStrLn "No data found."
-                  Just wav -> do let td = concatMap (timendat . method fsfact) wav
-                                 mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) td
-        _ -> error "Usage: showKagraData [-r(--resampleonly)] chname downsamplefactor gps duration"
+  (varOpt, varArgs) <- getArgs >>= \optargs ->
+    case getOpt Permute options optargs of
+      (opt, args,[]) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
+      (_  , _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
+        where header = "Usage: showKagraData [-r(--resample) P/Q, -l] channel gps[localtime] duration"
+
+  case (length varArgs) of
+    3 -> do let (ch,  gps', duration') = (head varArgs, varArgs!!1, varArgs!!2)
+                duration = read duration' :: Int
+                gps = case optLocaltime varOpt of
+                        False -> read (varArgs!!1) :: Int
+                        True -> read (time2gps (varArgs!!1)) :: Int
+            kagraWaveDataGetC gps duration ch >>= \judge -> case judge of
+              Nothing  -> putStrLn "No data found."
+              Just wav -> do
+                let f = case optResample varOpt of
+                          [] -> timendat
+                          pq -> timendat . (doReSample (p,q))
+                                  where (p,q) = getPQ pq ::(Int,Int)
+                    td = concatMap f wav
+                mapM_ (\(t,x) -> hPutStrLn stdout $ (show t)++" "++show x) td
+    _ -> error "Usage: showKagraData [-r(--resample) P/Q, -l(localtime)] chname gps duration"
 
 
 timendat y = let t = deformatGPS $ startGPSTime y
                  fs = samplingFrequency y
-                 tl = [t+i/fs|i<-[0.0,1.0..fromIntegral (length xl) -1.0]] 
+                 tl = [t+i/fs|i<-[0.0,1.0..fromIntegral (length xl) -1.0]]
                  xl = V.toList $ gwdata y
               in zip tl xl
 
 
-doDownSample fsfact w = do let fs = samplingFrequency w
-                           case fsfact > 1 of
-                             False -> w
-                             True  -> downsampleWaveData (fs/fromIntegral fsfact) w
+doReSample (p,q) w = do let fs = samplingFrequency w
+                        case p == 1 of
+                          True  -> downsampleWaveData (fs/fromIntegral q) w
+                          False -> resampleWaveData (p,q) w
 
 
-doReSample fsfact w = do let fs = samplingFrequency w
-                         case fsfact > 1 of
-                           False -> w
-                           True  -> resampleonlyWaveData (fs/fromIntegral fsfact) w
+getPQ :: String
+      -> (Int, Int)
+getPQ x = let a = take 2 $ map (\y-> read y :: Int) $ splitOn "/" x
+           in (head a,a!!1)
 
 
-data Flag = ResampleOnly deriving Show
+data Options = Options
+  { optResample  :: [Char]
+  , optLocaltime :: Bool
+  } deriving (Show)
 
 
-options :: [String] -> Either String ([Flag],[String])
-options args = case getOpt RequireOrder [Option ['r'] ["resampleonly"] (NoArg ResampleOnly) "resample only"] args of
-  (ss, as, []) -> Right (ss, as)
-  (_, _, es) -> Left $ concat es
+defaultOptions  = Options
+  { optResample = []
+  , optLocaltime = False
+  }
 
 
-
-
-
-
-
-
-
-
-
+options :: [OptDescr (Options -> Options)]
+options =
+  [ Option ['r'] ["resample"]
+      ( ReqArg (\ pq opts -> opts { optResample = pq}) "P/Q" )
+      "resampling factor P/Q"
+  , Option ['l'] ["localtime"]
+      ( NoArg (\ opts -> opts {optLocaltime = True}))
+      "showKagraData -l channel \"2017-01-01 00:00:00 JST\" duration"
+  ]
