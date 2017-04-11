@@ -19,7 +19,7 @@ main = do
            Nothing -> error "no channel at present."
            Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
     Nothing -> case length varArgs of
-          5 -> do let gpsstr = head varArgs
+          1 -> do let gpsstr = head varArgs
                   kagraDataGPS (read gpsstr :: Int32) >>= \maybefiles -> case maybefiles of
                    Nothing -> error "no file found."
                    Just files -> do
@@ -42,5 +42,4 @@ options =
   [ Option ['f'] ["file"]
       ( ReqArg (\ f opts -> opts {optFile = Just f}) "FILE")
       "frame file"
-  ] 
-
+  ]
