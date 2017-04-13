@@ -5,6 +5,7 @@ module HasKAL.SignalProcessingUtils.Resampling
 , downsampleUV
 , downsampleSV
 , upsample
+, upsampleSV
 , resample
 , resampleSV
 , downsampleWaveData
@@ -87,10 +88,13 @@ upsampleCore sfactor ilen input olen
                wolen = itow32 olen
 
 
-
 downsample :: Double -> Double -> [Double] -> [Double]
 downsample fs newfs x = y
-  where y = toList $ downsampling (floor fs) (floor newfs) x'
+  where y = map (\a->a*gain) y'
+        y' = toList $ downsampling (floor fs) (floor newfs) x'
+        gin = sqrt $ 1/fs * (sum $ map (\a->a**2) x)
+        gout = sqrt $ 1/newfs * (sum $ map (\a->a**2) y')
+        gain = gin / gout
         x' = filtfilt0 lpf $ fromList x
         lpf = chebyshev1 deg 1 fs newfs2 Low
         newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
@@ -162,12 +166,16 @@ downsampleSV fs newfs v =
   if (fs/newfs<=1)
     then error "new sample rate should be < original sample rate."
     else
-      let v' = filtfilt0 lpf v
+      let gin =sqrt $ 1/fs * (SV.sum $ SV.map (\a->a**2) v)
+          v' = filtfilt0 lpf v
           lpf = chebyshev1 deg 1 fs newfs2 Low
           newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
-       in downsampling (floor fs) (floor newfs) v'
+          outputV = downsampling (floor fs) (floor newfs) v'
+          gout = sqrt $ 1/newfs * (SV.sum $ SV.map (\a->a**2) outputV)
+          gain = gin / gout
+       in SV.map (\a->a*gain) outputV
 
 
 
@@ -176,15 +184,18 @@ sosDownsampleSV fs newfs v =
   if (fs/newfs<=1)
     then error "new sample rate should be < original sample rate."
     else
-      let v' = sosfiltfilt cascade v
+      let gin = sqrt $ 1/fs * (SV.sum $ SV.map (\a->a**2) v)
+          v' = sosfiltfilt cascade v
           initCond = map calcInitCond cascade
           cascade = tf2cascade lpf
           lpf = chebyshev1 deg 1 fs newfs2 Low
           newfs2 = 2*fs*tan (2*pi*newfs*0.8/fs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
-       in downsampling (floor fs) (floor newfs) v'
-
+          outputV = downsampling (floor fs) (floor newfs) v'
+          gout = sqrt $ 1/newfs * (SV.sum $ SV.map (\a->a**2) outputV)
+          gain = gin / gout
+       in SV.map (\a->a*gain) outputV
 
 
 upsampleSV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
@@ -192,12 +203,16 @@ upsampleSV fs newfs v =
   if (fs/newfs>1)
     then error "new sample rate should be >= original sample rate."
     else
-      let v' = upsampling (floor fs) (floor newfs) v
+      let gin = sqrt $ 1/fs * (SV.sum $ SV.map (\a->a**2) v)
+          v' = upsampling (floor fs) (floor newfs) v
           lpf = chebyshev1 deg 1 newfs lfsa Low
-          lfsa = 2*fs*tan (2*pi*fs*0.8/newfs/2)/(2*pi)
+          lfsa = 2*newfs*tan (2*pi*fs/2*0.8/newfs/2)/(2*pi)
           -- 0.8 is to avoid divergence at Nyquist frequency
           -- see decimate.m in GNU Octave
-       in filtfilt0 lpf v'
+          outputV = filtfilt0 lpf v'
+          gout = sqrt $ 1/newfs * (SV.sum $ SV.map (\a->a**2) outputV)
+          gain = gin / gout
+       in SV.map (\a->a*gain) outputV
 
 
 -- | fs -> p/q x fs
@@ -207,15 +222,18 @@ resampleSV (p,q) fs v =
          |otherwise = upsampling (floor fs) (floor (fs*(fromIntegral p))) v
       lfs |fromIntegral p/fromIntegral q >=1 = fs
           |fromIntegral p/fromIntegral q <1  = (fromIntegral p)/(fromIntegral q)*fs
-      lfsa = 2*fs*tan (2*pi*lfs*0.8/(fs*fromIntegral p)/2)/(2*pi)
+      lfsa = 2*(fs*fromIntegral p)*tan (2*pi*lfs/2*0.8/(fs*fromIntegral p)/2)/(2*pi)
       -- 0.8 is to avoid divergence at Nyquist frequency
       -- see decimate.m in GNU Octave
       lpf = chebyshev1 deg 1 (fs*fromIntegral p) lfsa Low
       upL = filtfilt0 lpf up
    in case q of
-        1 -> up
-        _ -> downsampling (floor (fs*(fromIntegral p))) (floor (fs*(fromIntegral p)/(fromIntegral q))) upL
-
+        1 -> upL
+        _ -> let outputV = downsampling (floor (fs*(fromIntegral p))) (floor (fs*(fromIntegral p)/(fromIntegral q))) upL
+                 gin = sqrt $ 1/fs * (SV.sum $ SV.map (\a->a**2) v)
+                 gout = sqrt $ 1/((fromIntegral p/fromIntegral q)*fs) * (SV.sum $ SV.map (\a->a**2) outputV)
+                 gain = gin / gout
+              in SV.map (\a->a*gain) outputV
 
 
 resampleonlySV :: Double -> Double -> SV.Vector Double -> SV.Vector Double
