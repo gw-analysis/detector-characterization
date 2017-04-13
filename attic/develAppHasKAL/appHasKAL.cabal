@@ -13,10 +13,23 @@ build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
+executable chk_resampling
+  hs-source-dirs:      app
+  main-is:      chk_resampling.hs
+  ghc-options:
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,inline-r
+   ,vector
+   ,transformers
+   ,hmatrix
+  default-language:    Haskell2010
+
 executable testR2H
   hs-source-dirs:      app
   main-is:      testR2H.hs
-  ghc-options: 
+  ghc-options:
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
@@ -44,7 +57,7 @@ executable testnds
 executable snrHistHz
   hs-source-dirs:      app
   main-is:      snrHistHz.hs
-  ghc-options: 
+  ghc-options:
   build-depends:
     base >= 4.7 && < 5
    ,HasKAL==0.1.0.0
@@ -56,5 +69,3 @@ executable snrHistHz
    ,transformers
    ,hmatrix
   default-language:    Haskell2010
-
-
