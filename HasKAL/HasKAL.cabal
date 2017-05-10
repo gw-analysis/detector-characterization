@@ -103,6 +103,7 @@ library
     HasKAL.MathUtils.LinearAlgebra.Function,
     HasKAL.MathUtils.Morphology.Function,
     HasKAL.MathUtils.FFTW,
+    HasKAL.MathUtils.Polynomial.Function,
     -- Misc --
     HasKAL.Misc.BitMask,
     HasKAL.Misc.CoastData,
@@ -1456,6 +1457,7 @@ executable frame2stdout
    ,transformers
    ,mtl
    ,hmatrix-gsl
+   ,filepath
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
 
