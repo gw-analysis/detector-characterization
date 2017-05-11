@@ -5,6 +5,8 @@ module HasKAL.IOUtils.Function
     ( -- output : Vector Storable
       stdin2vec
     , dat2vec
+    , stdin2vecs
+    , dat2vecs
       -- output : Conduit
     , stdin2chunkV
     , dat2chunkV
@@ -19,7 +21,7 @@ module HasKAL.IOUtils.Function
     ) where
 
 
-import Control.Monad.Trans.Resource (ResourceT,runResourceT)
+import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 import qualified Data.ByteString.Char8 as BS
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -76,6 +78,30 @@ dat2vec file = runResourceT $
   where enc = "ASCII"
 
 
+stdin2vecs :: IO [VS.Vector Double]
+stdin2vecs = do lst <- runResourceT $
+                  CB.sourceHandle SI.stdin
+                  $= decodeByICU enc
+                  $= CT.lines
+                  $= awaitDoubles
+                  $$ CC.sinkList
+                let a = matrix (length . head $ lst) $ concat lst
+                return $ toColumns a
+  where enc = "ASCII"
+
+
+dat2vecs :: FilePath -> IO [VS.Vector Double]
+dat2vecs file = do lst <- runResourceT $
+                     CB.sourceFile file
+                       $= decodeByICU enc
+                       $= CT.lines
+                       $= awaitDoubles
+                       $$ CC.sinkList
+                   let a = matrix (length . head $ lst) $ concat lst
+                   return $ toColumns a
+  where enc = "ASCII"
+
+
 decodeByICU :: MonadIO m => String -> Conduit B.ByteString m DT.Text
 decodeByICU = convertByICU toUnicode
 
@@ -101,7 +127,7 @@ awaitDouble = do
   case t' of
     Just t -> go t
     Nothing -> return ()
-  where   
+  where
  --      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
     go t = case DT.unpack t of
              "q" -> return ()
@@ -113,6 +139,30 @@ awaitDouble = do
       (Right (_, _)) -> Nothing
       (Left _) -> Nothing
 
+
+awaitDoubles :: Monad m => Conduit DT.Text m [Double]
+awaitDoubles = do
+  t' <-  await
+  case t' of
+    Just t -> go t
+    Nothing -> return ()
+  where
+ --      go t = case readMaybe (DT.pack . strip . DT.unpack $ t) of
+    go t = case DT.unpack t of
+             "q" -> return ()
+             _   -> case readMaybes t of
+                      Just i -> yield i >> awaitDoubles
+                      Nothing -> return ()
+    readMaybes t = do
+      let t' = words (DT.unpack t)
+          out = flip map t' $ \x ->
+                  case (TR.signed TR.rational) (DT.pack x) of
+                    (Right (i, "")) -> Just i
+                    (Right (_, _))  -> Nothing
+                    (Left _)        -> Nothing
+      case elem Nothing out of
+        True  -> Nothing
+        False -> sequence out
 
 loadASCIIdata :: FilePath -> [[Double]]
 loadASCIIdata x = unsafePerformIO $ fmap (map (map (\x->read x :: Double).words). splitLines) (readFile x)
@@ -170,6 +220,3 @@ rstrip = Prelude.reverse . lstrip . Prelude.reverse
 
 
 strip = lstrip . rstrip
-
-
-
