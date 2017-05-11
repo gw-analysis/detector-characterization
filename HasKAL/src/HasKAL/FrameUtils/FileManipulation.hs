@@ -1,5 +1,6 @@
 module HasKAL.FrameUtils.FileManipulation
 ( getRecursiveFileSystem
+, getFileSystem
 , getCurrentDirectory
 , genFileList
 , extractstartGPStime
@@ -34,6 +35,18 @@ genFileList fileName absDir = do
     contents <- getRecursiveFileSystem absDir
     writeFile fileName $ (unlines . filter (\x -> (last . splitOn ".") x == "gwf")) contents
 
+getFileSystem:: FilePath -> IO [FilePath]
+getFileSystem topdir = do
+    name <- getDirectoryContents topdir
+    let properNames = filter (`notElem` [".", "..", ".DS_Store"]) name
+    paths <- forM properNames $ \tmpname -> do
+      let path = topdir </> tmpname
+      isDirectory <- doesDirectoryExist path
+      if isDirectory
+        then return []
+        else return [path]
+    return $ sort (concat paths)
+
 extractstartGPStime :: String -> Integer
 extractstartGPStime x = read $ (!!2) $ splitOn "-" $ last $ splitOn "/" x :: Integer
 
@@ -45,5 +58,3 @@ extractstartGPStimefromFilename x = read $ (!!2) $ splitOn "-" $ last $ splitOn 
 
 extractDataLengthfromFilename :: String -> Integer
 extractDataLengthfromFilename x = read $ (!!3) $ splitOn "-" $ head $ splitOn "." $ last $ splitOn "/" x :: Integer
-
-
