@@ -2257,3 +2257,13 @@ executable ctl_getChannelInfo
    ,HasKAL
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: ndsclient
+
+
+executable showFileList
+  hs-source-dirs: exe-src
+  main-is:        showFileList.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,filepath
+  ghc-options: -O2 -Wall -fPIC -fobject-code
