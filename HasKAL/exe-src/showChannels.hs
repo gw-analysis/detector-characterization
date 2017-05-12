@@ -11,7 +11,7 @@ main = do
     case getOpt Permute options optargs of
       (opt, args,[]) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
       (_  , _, errs) -> ioError (userError (concat errs ++ usageInfo header options))
-        where header = "Usage: showChannels [OPTION...] file or showChannels gps..."
+        where header = "Usage: showChannels -f file or showChannels gps..."
 
 
   case optFile varOpt of
@@ -27,7 +27,7 @@ main = do
                     getChannelList fname >>= \maybech -> case maybech of
                      Nothing -> error "no channel at present."
                      Just x -> mapM_ (\(y, z)-> hPutStrLn stdout y) x
-          _ -> error "Usage: showChannels gps[s]"
+          _ -> error "Usage: showChannels [-f] gps[file]"
 
 data Options = Options
   { optFile     :: Maybe FilePath
