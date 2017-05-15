@@ -27,7 +27,10 @@ main = do
           t0 = read (varArgs !! 2) :: Double
 
 
-      let inputPart = unsafePerformIO $ stdin2vec
+      inputPart' <- stdin2vecs
+      let inputPart | length inputPart' == 1 = head inputPart'
+                    | length inputPart' >= 2 = inputPart' !! 1
+                    | otherwise = error "unknown input"
           xplotPart x = case optXPlot varOpt of
                           False -> return x
                           True -> do
