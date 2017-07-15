@@ -82,6 +82,8 @@ library
     HasKAL.FrameUtils.FrameUtils,
     HasKAL.FrameUtils.Function,
     HasKAL.FrameUtils.PickUpFileName,
+    -- GIFUtils --
+    HasKAL.GIFUtils.Function,
     -- GUI_Utils --
     HasKAL.GUI_Utils.GUI_AntennaPattern,
     HasKAL.GUI_Utils.GUI_CorrelationMon,
@@ -2277,3 +2279,12 @@ executable generateCacheFile
    ,HasKAL
    ,filepath
  
+
+executable gif_bin2stdout
+  hs-source-dirs: exe-src
+  main-is:        gif_bin2stdout.hs
+  build-depends:
+    base > 4.7,
+    process
+ 
+
