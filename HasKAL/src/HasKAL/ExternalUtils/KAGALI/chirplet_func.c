@@ -253,6 +253,7 @@ void KGLCTPlain( //begin{proto}
   KGLCalloc(t,N,double,status);
   KGLCalloc(ix,N,int,status);
   KGLCallocMatrix(chirppart,N+1,N,double complex,status);
+  KGLCallocMatrix(X,N+1,N,double complex,status);
   KGLCallocMatrix(XF,N+1,N,double complex,status);
   
   for (int s = fsc; s >= csc; s--){ // loop for scale
@@ -277,7 +278,6 @@ void KGLCTPlain( //begin{proto}
       }
       int lenix = count;
 
-      KGLCallocMatrix(X,N+1,N,double complex,status);
       for (int i = 0; i <= (int)pow(2,J-s); i++){ // loop for slope
 	for (int j = 0; j < (int)pow(2,J-s); j++){ // loop for time
 	  X[i][j] = data[ix[j]-1] * chirppart[i][j];
@@ -304,14 +304,23 @@ void KGLCTPlain( //begin{proto}
 	  cc[s][b][i][j] = XF[i][j];
 	}
       }
-      free(X);
     }
   }
   
   free(slopes);
   free(t);
   free(ix);
+  
+  double complex *chirppart_base = chirppart[0];
+  free(chirppart_base);
   free(chirppart);
+  
+  double complex *X_base = X[0];
+  free(X_base);
+  free(X);
+  
+  double complex *XF_base = XF[0];
+  free(XF_base);
   free(XF);
   
   return;
@@ -490,12 +499,25 @@ void KGLGetChirpletNetwork( //begin{proto}
 	}
       }
       free(leftindex);
+      
+      int *rightindex_base = rightindex[0];
+      free(rightindex_base);
       free(rightindex);
     }
     free(dfreq);
+
+    int *endfreqs_base = endfreqs[0];
+    free(endfreqs_base);
     free(endfreqs);
+
+    int *iendfreqs_base = iendfreqs[0];
+    free(iendfreqs_base);
     free(iendfreqs);
+    
+    int *slopeindices_base = slopeindices[0];
+    free(slopeindices_base);
     free(slopeindices);
+
     iapp += (int)pow(2,J-s)+1;
   }
     
@@ -649,7 +671,8 @@ void KGLShortestPathCell( //begin{proto}
   for(int i = 0; i < count; i++){
     paths[0][i] = pathtmp[count-i-1]; // make it in increasing order
   }
-
+  
+  free(ord);
   free(startNodes);
   free(pathtmp);
   free(d);
@@ -793,6 +816,22 @@ void KGLCSPCell( //begin{proto}
     }
   }
   
+  free(A);
+  free(L);
+  
+  double *d_base = d[0];
+  free(d_base);
+  free(d);
+  
+  free(ord);
+  
+  int *pred_base = pred[0];
+  free(pred_base);
+  free(pred); pred = NULL;
+  
+  free(ind);
+  free(costtmp);
+  
   return;
 }
 
@@ -900,8 +939,9 @@ void KGLMinCTRatioCells( //begin{proto}
   }
   int npaths = count;
   printf("npaths = %d\n",npaths);
-    
+  
   free(alpha);
+  free(Scost);
   free(lpaths);
   free(pp);
 
@@ -1069,7 +1109,7 @@ void KGLChirpletAnalysis( //begin{proto}
   if(strcmp(STATTYPE,"MCTR") != 0){
     int **icnetwork1 = NULL;
     double **cnetwork1 = NULL;
-    int cnetwork2;
+    int cnetwork2 = 0;
     int *cnetwork3 = NULL;
     int *cnetwork4 = NULL;
     int *cnetwork5 = NULL;
@@ -1091,8 +1131,14 @@ void KGLChirpletAnalysis( //begin{proto}
 			  icnetwork1,cnetwork1,cnetwork2,cnetwork3,
 			  cnetwork4,cnetwork5,STATTYPE,alpha,N,nfreqs);
     
+    int *icnetwork1_base = icnetwork1[0];
+    free(icnetwork1_base);
     free(icnetwork1);
+
+    double *cnetwork1_base = cnetwork1[0];
+    free(cnetwork1_base);
     free(cnetwork1);
+
     free(cnetwork3);
     free(cnetwork4);
     free(cnetwork5);
@@ -1130,8 +1176,15 @@ void KGLChirpletAnalysis( //begin{proto}
       printf("cost = %f\n",cost[0]);
       count ++;
       free(cost);
+      
+      int *icnetwork1_base = icnetwork1[0];
+      free(icnetwork1_base);
       free(icnetwork1);
+
+      double *cnetwork1_base = cnetwork1[0];
+      free(cnetwork1_base);
       free(cnetwork1);
+      
       free(cnetwork3);
       free(cnetwork4);
       free(cnetwork5);
@@ -1147,7 +1200,11 @@ void KGLChirpletAnalysis( //begin{proto}
   free(cc); free(ptr3); free(ptr2); free(array1);
   free(graphparam1);
   free(graphparam2);
+
+  double *graphparam3_base = graphparam3[0];
+  free(graphparam3_base);
   free(graphparam3);
+  
   free(graphparam4);
   free(graphparam5);
   free(graphparam6);

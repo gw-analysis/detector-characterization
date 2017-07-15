@@ -33,7 +33,8 @@ getRecursiveFileSystem topdir = do
 genFileList :: FilePath -> FilePath -> IO()
 genFileList fileName absDir = do
     contents <- getRecursiveFileSystem absDir
-    writeFile fileName $ (unlines . filter (\x -> (last . splitOn ".") x == "gwf")) contents
+--    writeFile fileName $ (unlines . filter (\x -> (last . splitOn ".") x == "gwf")) contents
+    writeFile fileName $ (unlines) contents
 
 getFileSystem:: FilePath -> IO [FilePath]
 getFileSystem topdir = do
