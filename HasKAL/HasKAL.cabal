@@ -1988,6 +1988,40 @@ executable runRangeMonNSNS
    ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+executable runRangeMonNSNSSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runRangeMonNSNSSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
 executable runRangeMonBHBH
   hs-source-dirs: exe-src
   main-is:        runRangeMonBHBH.hs
@@ -2022,6 +2056,107 @@ executable runRangeMonBHBH
    ,old-time
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+executable runRangeMonBHBHSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runRangeMonBHBHSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable runRangeMonIMBH
+  hs-source-dirs: exe-src
+  main-is:        runRangeMonIMBH.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable runRangeMonIMBHSTDIN
+  hs-source-dirs: exe-src
+  main-is:        runRangeMonIMBHSTDIN.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+  ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable runRMSMon
   hs-source-dirs: exe-src
