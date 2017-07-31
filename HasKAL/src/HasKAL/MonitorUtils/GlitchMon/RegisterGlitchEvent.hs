@@ -1,4 +1,6 @@
 {-# LANGUAGE MonadComprehensions, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 
 module HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent
 ( registGlitchEvent2DB
@@ -36,6 +38,8 @@ import qualified HasKAL.MonitorUtils.GlitchMon.Data as D
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import qualified HasKAL.MonitorUtils.GlitchMon.Table as Glitchdb
 import HasKAL.MonitorUtils.GlitchMon.Table (Glitchtbl(..), insertGlitchtbl)
+import qualified HasKAL.MonitorUtils.GlitchMon.Table as SQLite3 (Glitchtbl(..), insertGlitchtbl)
+
 
 
 registGlitchEvent2DB :: D.TrigParam -> IO()
@@ -71,6 +75,7 @@ registGlitchEvent2DB p = handleSqlError' $ withConnectionIO connect $ \conn -> d
   commit conn
 
 
+
 setSqlMode conn = do
   mode <- quickQuery' conn "SELECT @@SESSION.sql_mode" []
   newmode <- case mode of
@@ -82,5 +87,3 @@ setSqlMode conn = do
       _          ->
           error "failed to get 'sql_mode'"
   runRaw conn $ "SET SESSION sql_mode = '" ++ newmode ++ "'"
-
-

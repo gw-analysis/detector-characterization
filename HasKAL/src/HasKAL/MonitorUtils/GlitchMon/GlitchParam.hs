@@ -9,7 +9,6 @@ import HasKAL.SpectrumUtils.Signature (Spectrum)
 import HasKAL.TimeUtils.Signature (GPSTIME)
 import HasKAL.WaveUtils.Data(WaveData)
 
-
 data GlitchParam = GlitchParam
   { segmentLength :: Int
   , channel :: String
@@ -45,7 +44,7 @@ data GlitchParam = GlitchParam
   }
 
 
-data WhnMethod = TimeDomain | FrequencyDomain deriving (Show)
+data WhnMethod = TimeDomain | FrequencyDomain deriving (Show, Read)
 
 
 data FlagDebug = DS | DC | WH | TF | ETG | CL | PE | REG deriving (Show, Eq)
