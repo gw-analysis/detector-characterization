@@ -1,11 +1,10 @@
 module HasKAL.MonitorUtils.RangeMon.IMBH
--- (
---   calcEta
--- , calcTotalmass
--- , rhoImbh
--- , rhodistImbh
--- , distImbh
--- )
+ ( calcEta
+ , calcTotalmass
+ , rhoImbh
+ , rhodistImbh
+ , distImbh
+ )
 where
 
 
@@ -222,8 +221,3 @@ distImbhCore flow mass1 mass2 spectrumData = do
 
 distImbh :: Double -> Double -> [(Double,  Double)]-> Double
 distImbh = distImbhCore 5
-
-
-
-
-
