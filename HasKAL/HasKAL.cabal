@@ -109,6 +109,7 @@ library
     -- Misc --
     HasKAL.Misc.BitMask,
     HasKAL.Misc.CoastData,
+    HasKAL.Misc.ConfFile,
     HasKAL.Misc.Environment,
     HasKAL.Misc.Flip3param,
     HasKAL.Misc.Function,
@@ -145,6 +146,7 @@ library
     HasKAL.MonitorUtils.GlitchMon.DataConditioning,
     HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration,
     HasKAL.MonitorUtils.GlitchMon.GlitchMonFile,
+    HasKAL.MonitorUtils.GlitchMon.GlitchMonDAT,
     HasKAL.MonitorUtils.GlitchMon.GlitchMonTime,
     HasKAL.MonitorUtils.GlitchMon.GlitchParam,
     HasKAL.MonitorUtils.GlitchMon.GlitchPlot,
@@ -152,9 +154,10 @@ library
     HasKAL.MonitorUtils.GlitchMon.PipelineFunction,
     HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB,
     HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent,
+    HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEventSQLite3,
     HasKAL.MonitorUtils.GlitchMon.Signature,
     HasKAL.MonitorUtils.GlitchMon.Table,
-
+    HasKAL.MonitorUtils.GlitchMon.Env,
     -- OptimizationUtils --
     HasKAL.OptimizationUtils.PSO.Function,
     -- PlotUtils --
@@ -307,7 +310,8 @@ library
        lifted-base,
        palette==0.1.0.2,
        deepseq,
-       inline-r
+       inline-r,
+       HDBC-sqlite3
 
 
   -- Directories containing source files.
@@ -1462,6 +1466,203 @@ executable frame2stdout
    ,filepath
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+executable runGlitchMonSTDIN
+  hs-source-dirs:      exe-src
+  main-is:             runGlitchmonSTDIN.hs
+  ghc-options:         -O2
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
+  default-language:    Haskell2010
+
+
+executable runEventTriggerGenerationSTDIN
+  hs-source-dirs:      exe-src
+  main-is:             runEventTriggerGenerationSTDIN.hs
+  ghc-options:         -O2
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
+  default-language:    Haskell2010
+
+
+executable runDataConditionigSTDIN
+  hs-source-dirs:      exe-src
+  main-is:             runDataConditioningSTDIN.hs
+  ghc-options:         -O2
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
+  default-language:    Haskell2010
+
+executable runGlitchMonDATfile
+  hs-source-dirs:      exe-src
+  main-is:             runGlitchmonDATfile.hs
+  ghc-options:         -O2
+-- -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    base >= 4.7 && < 5
+   ,HasKAL==0.1.0.0
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,persistable-record
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,template-haskell
+   ,containers
+   ,split
+   ,carray
+   ,fft
+   ,matrices
+   ,hmatrix
+   ,resourcet
+   ,conduit
+   ,text
+   ,system-filepath
+   ,directory
+   ,filepath
+   ,fsnotify
+   ,lifted-base
+   ,process
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,bindings-gsl
+   ,array
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,time
+   ,old-time
+   ,mtl
+  default-language:    Haskell2010
 
 executable runGlitchMonGWFfile
   hs-source-dirs:      exe-src
@@ -2278,7 +2479,7 @@ executable generateCacheFile
     base > 4.7
    ,HasKAL
    ,filepath
- 
+
 
 executable gif_bin2stdout
   hs-source-dirs: exe-src
@@ -2286,5 +2487,3 @@ executable gif_bin2stdout
   build-depends:
     base > 4.7,
     process
- 
-
