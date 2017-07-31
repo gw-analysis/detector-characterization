@@ -20,7 +20,7 @@ main = do
     case getOpt Permute options optargs of
       (opt, args, []) -> return (Prelude.foldl (flip id) defaultOptions opt, args)
       (_  ,  _, errs) -> ioError(userError (concat errs ++ usageInfo header options))
-        where header = "Usage plotSpectrogram [OPTION...] fs t0 dt[s] overwrappedTime[s]"
+        where header = "Usage plotSpectrogram [OPTION...] fs t0 dt[s] overwrappedTime[s] STDIN"
 
   let ch = head varArgs
       fs = read (varArgs !! 1) :: Double
