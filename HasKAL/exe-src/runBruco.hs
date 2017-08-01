@@ -2,12 +2,12 @@
 import Control.Monad (zipWithM, forM, liftM)
 import Data.List (sort)
 import Data.Maybe (fromJust)
-import Data.Packed.Matrix (fromColumns, toLists)
+import Numeric.LinearAlgebra (fromColumns, toLists)
 import System.Environment (getArgs)
 
 import HasKAL.DataBaseUtils.FrameFull.Function (kagraWaveDataGetC)
 import HasKAL.MonitorUtils.CoherenceMon.Function (coherenceMonW')
-import HasKAL.PlotUtils.HROOT.PlotGraph 
+import HasKAL.PlotUtils.HROOT.PlotGraph
 import HasKAL.TimeUtils.GPSfunction (time2gps)
 import HasKAL.WebUtils.DailySummaryPage (startHTML, startBODY, addTitle, addStyle, addDate, endHTML)
 import HasKAL.WebUtils.Javascript.Function (expandFont)
@@ -17,7 +17,7 @@ import HasKAL.WaveUtils.Function (getMaximumChunck, getCoincidentData)
 
 main = do
   args <- getArgs
-  (year, month, day, hour, minute, second, dur, fftsec, ch1, chlst) <- 
+  (year, month, day, hour, minute, second, dur, fftsec, ch1, chlst) <-
     case length args of
       10 -> return (args!!0, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8, args!!9)
       _ -> error "Usage: Bruco yyyy mm dd hh min ss duration[s] fftsec[s] mainch ch.lst"
@@ -58,7 +58,7 @@ main = do
    False -> do
      error $ concat $ ("Channels are not active at the same time.\n   "++ch1) : map ("\n   "++) ch2
 
-  
+
 
 {-- Internal Functions --}
 hBrucoPng :: String -> Double -> (WaveData, String) -> [(WaveData , String)] -> IO [(Double, [(Double, String)])]
@@ -76,7 +76,7 @@ hBrucoPng date sec (wd1, ch1) wd2 = do
 (+-+) x y = x ++ "-" ++ y
 (+:+) x y = x ++ ":" ++ y
 
-geneRankTable :: (String,String,String,String,String,String,String) -> String -> [(Double, [(Double, String)])] -> String 
+geneRankTable :: (String,String,String,String,String,String,String) -> String -> [(Double, [(Double, String)])] -> String
 geneRankTable (yyyy,mm,dd,hh,mn,ss,duration) channel1 xs = concat [
   "<h3>Channel: "++channel1++"</h3>",
   expandFont 3 1 "resizable",
@@ -120,5 +120,3 @@ show0 digit number
   | len < digit = (concat $ replicate (digit-len) "0") ++ number
   | otherwise   = number
   where len = length number
-
-
