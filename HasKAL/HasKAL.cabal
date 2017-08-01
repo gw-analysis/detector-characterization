@@ -2646,6 +2646,16 @@ executable dailyBruco
    ,HDBC-mysql
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+executable runBruco
+  hs-source-dirs: exe-src
+  main-is:        runBruco.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+  ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable ctl_showChannels
   hs-source-dirs: exe-src
@@ -2703,3 +2713,38 @@ executable gif_bin2stdout
   build-depends:
     base > 4.7,
     process
+
+
+executable signalInjection
+  hs-source-dirs: exe-src
+  main-is:        signalInjection.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+  ghc-options: -O2 -Wall -fPIC -fobject-code
