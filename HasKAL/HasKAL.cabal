@@ -1347,6 +1347,29 @@ executable filter
    ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
 
+executable window
+  hs-source-dirs: exe-src
+  main-is:        window.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
 
 executable resampler
   hs-source-dirs: exe-src
