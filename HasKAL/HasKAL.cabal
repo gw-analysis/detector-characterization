@@ -2687,6 +2687,17 @@ executable ctl_getChannelInfo
   ghc-options: -O2 -Wall -fPIC -fobject-code
   extra-libraries: ndsclient
 
+executable ctl_runSensMon
+  hs-source-dirs: exe-src
+  main-is:        ctl_runSensMon.hs
+  build-depends:
+    base > 4.7
+   ,hmatrix
+   ,split
+   ,vector
+   ,HasKAL
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+  extra-libraries: ndsclient
 
 executable showFileList
   hs-source-dirs: exe-src
