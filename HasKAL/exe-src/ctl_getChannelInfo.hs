@@ -39,7 +39,7 @@ options :: [OptDescr (Options -> Options)]
 options =
   [ Option ['l'] ["localtime"]
       ( NoArg (\ opts -> opts {setLocaltime = True}))
-      "ctl_getData -l channel \"2017-01-01-00:00:00 JST\" duration"
+      "ctl_getChannelInfo -l \"2017-01-01-00:00:00 JST\" channel"
 --  , Option ['e'] ["eliminatekeys"]
 --      ( ReqArg (\ f opts -> opts {eliminateKeys = Just f}) "ELIMINATEKEYWORD")
 --      "set eliminatekeywords: keyword1 keyword2 ..."

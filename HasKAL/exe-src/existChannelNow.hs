@@ -14,10 +14,9 @@ main = do
   let gpsnum = read gpsstr :: Int32
       gps = gpsnum - 100
   kagraDataGPS gps >>= \maybefiles -> case maybefiles of
-    Nothing -> error "no file found."
-    Just files -> do 
+    Nothing -> error "Usage: existChannelNow channel"
+    Just files -> do
       let fname = head files
       existChannel channel fname >>= \e -> case e of
         [] -> False
         x  -> True
-
