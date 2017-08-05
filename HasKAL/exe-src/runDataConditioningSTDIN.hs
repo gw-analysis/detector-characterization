@@ -19,7 +19,7 @@ main = do
     _ -> error "Usage runDataConditioningSTDIN conffile fs startGPStime STDIN"
   ([sl, ch, sf, tl, wFR, wM], [qs])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
-        "traindatlen", "whnFrequencyResolution", "whnMethod"] [""]
+        "traindatlen", "whnFrequencyResolution", "whnMethod"] []
   let fsorig = read fsorig' :: Double
   let startGPStime = read startGPStime' :: Double
 

@@ -23,7 +23,7 @@ main = do
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod", "nfrequency", "ntimeSlide",
         "cutoffFractionTFT", "cutoffFractionTFF", "cutoffFreq", "clusterThres",
-        "minimumClusterNum", "nNeighbor", "maxNtrigg", "cdfInterval"] [""]
+        "minimumClusterNum", "nNeighbor", "maxNtrigg", "cdfInterval"] []
   let fsorig = read fsorig' :: Double
   let startGPStime = read startGPStime' :: Double
 
