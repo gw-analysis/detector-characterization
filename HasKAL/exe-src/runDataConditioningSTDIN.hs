@@ -17,7 +17,7 @@ main = do
   (conffile, fsorig', startGPStime') <- getArgs >>= \args -> case (length args) of
     3 -> return (head args, args!!1, args!!2)
     _ -> error "Usage runDataConditioningSTDIN conffile fs startGPStime STDIN"
-  ([sl, ch, sf, tl, wFR, wM], [qs])
+  ([sl, ch, sf, tl, wFR, wM], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod"] []
   let fsorig = read fsorig' :: Double

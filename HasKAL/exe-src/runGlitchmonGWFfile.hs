@@ -13,7 +13,7 @@ main = do
   (conffile, gwffile) <- getArgs >>= \args -> case (length args) of
     2 -> return (head args, args!!1)
     _ -> error "Usage runGlitchMonGWFile conffile gwffile"
-  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [qs])
+  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod", "nfrequency", "ntimeSlide",
         "cutoffFractionTFT", "cutoffFractionTFF", "cutoffFreq", "clusterThres",

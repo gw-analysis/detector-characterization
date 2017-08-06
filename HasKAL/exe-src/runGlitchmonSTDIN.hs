@@ -16,7 +16,7 @@ main = do
   (conffile, fsorig', startGPStime') <- getArgs >>= \args -> case (length args) of
     3 -> return (head args, args!!1, args!!2)
     _ -> error "Usage: runGlitchMonSTDIN conffile fs startGPStime STDIN"
-  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [qs])
+  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod", "nfrequency", "ntimeSlide",
         "cutoffFractionTFT", "cutoffFractionTFF", "cutoffFreq", "clusterThres",

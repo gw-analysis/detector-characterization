@@ -15,7 +15,7 @@ main = do
   (conffile, fsorig', startGPStime', datfile) <- getArgs >>= \args -> case (length args) of
     4 -> return (head args, args!!1, args!!2, args!!3)
     _ -> error "Usage runGlitchMonDATFile conffile fs startGPStime datfile"
-  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [qs])
+  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI, cdfcfl, cdfcfh, cdfblck], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod", "nfrequency", "ntimeSlide",
         "cutoffFractionTFT", "cutoffFractionTFF", "cutoffFreq", "clusterThres",
