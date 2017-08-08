@@ -49,8 +49,8 @@ levinson p r = do
 
 
 whitening :: ([Double],Double) -> [Double]-> [Double]
-whitening (whnb,rho) x = 
-  let whnb' = map mysqrt whnb   
+whitening (whnb,rho) x =
+  let whnb' = map mysqrt whnb
    in map (/sqrt rho) $ toList $ filtfilt0 (whnb',(1.0:replicate (length whnb'-1) 0.0)) $ fromList x
 
 
@@ -59,24 +59,41 @@ whitening (whnb,rho) x =
 
 
 whiteningWaveData :: ([Double],Double) -> WaveData -> WaveData
-whiteningWaveData (whnb,rho) x =
-  let whnb' = map mysqrt whnb    
+whiteningWaveData (whnb,rho) x = unsafePerformIO $ do
+  let whnb' = map mysqrt whnb
 --      initcoeff = calcInitCond (whnb',(1.0:replicate (length whnb'-1) 0.0))
 --      y = G.map (/sqrt rho) $ firFiltfiltVInit whnb' initcoeff (gwdata x)
       y = G.map (/sqrt rho) $ filtfilt0 (whnb',(1.0:replicate (length whnb'-1) 0.0)) (gwdata x)
-   in fromJust $ updateWaveDatagwdata x y
+      -- y = gwdata x
+  return $ fromJust $ updateWaveDatagwdata x y
 
 
 whiteningWaveData' :: ([Double],Double) -> WaveData -> WaveData
-whiteningWaveData' (whnb,rho) x = do
+whiteningWaveData' (whnb,rho) x = unsafePerformIO $ do
   let datlen = VS.length $ gwdata x
-      whnb' = whnb ++ replicate (datlen-(length whnb)) 0.0
-      fftwhnb' = dftRC1d $ fromList whnb'
-      absfftwhnb' = sqrt $ (zipVectorWith (*) fftwhnb' (conj fftwhnb'))
+      datlen' = fromIntegral datlen  :: Double
+      n = fromIntegral (length whnb) :: Double
+      fp = [0,1/n..1]
+      fa = [0,1/datlen'..1]
+      whnb' = init $ interpV fp whnb fa Linear
+--  print datlen
+--  print $ length whnb'
+  let fftwhnb' = dftRC1d $ fromList whnb'
+      (fftwhnb'_r, fftwhnb'_i) = fromComplex fftwhnb'
+--  print $ VS.length fftwhnb'_r
+  let absfftwhnb' = sqrt $ (zipVectorWith (*) fftwhnb'_r fftwhnb'_r)
       fftdat = dftRC1d $ gwdata x
-      fftwhndat = dftCR1d $ zipVectorWith (*) absfftwhnb' fftdat
+      (fftdat_r,fftdat_i) = fromComplex fftdat
+--  print $ VS.length fftdat_r
+--  print $ VS.length absfftwhnb'
+  let  zerov = vector (replicate (VS.length absfftwhnb') 0)
+       fftwhndat = dftCR1d $ zipVectorWith (*) (toComplex (absfftwhnb', zerov)) fftdat
+--  print $ VS.length zerov
   let y = G.map (/sqrt rho) fftwhndat
-  fromJust $ updateWaveDatagwdata x y
+--  print $ VS.length y
+  case updateWaveDatagwdata x y of
+    Nothing -> error "data not whitened"
+    Just z -> return z
 
 
 lpefCoeffV :: Int -> (Vector Double, Vector Double) -> ([Double], Double)
@@ -136,8 +153,5 @@ levinsonDC r p = (CA.array (1,p) [ (k, a CA.!(p,k)) | k <- [1..p] ], rho CA.!p)
 
 mysqrt x
   | x < 0 = (-1)*sqrt ((-1)*x)
-  | x >= 0 =  sqrt x 
+  | x >= 0 =  sqrt x
   | otherwise = error "something wrong"
-
-
-

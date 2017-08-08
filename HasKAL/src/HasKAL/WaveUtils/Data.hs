@@ -75,7 +75,12 @@ updateWaveDatagwdata :: WaveData -> TimeSeries -> Maybe WaveData
 updateWaveDatagwdata v w
   | dim (gwdata v)==dim w
     = Just $ mkWaveData (detector v) (dataType v) (samplingFrequency v) (startGPSTime v) (stopGPSTime v) w
-  | otherwise = Nothing
+  | dim (gwdata v)<dim w
+    = let gpsend = addGPS (stopGPSTime v) (0, floor (fromIntegral (dim w - dim (gwdata v))/samplingFrequency v))
+       in Just $ mkWaveData (detector v) (dataType v) (samplingFrequency v) (startGPSTime v) gpsend w
+  | dim (gwdata v)>dim w
+    = let gpsend = addGPS (startGPSTime v) (0, floor (fromIntegral (dim w)/samplingFrequency v))
+       in Just $ mkWaveData (detector v) (dataType v) (samplingFrequency v) (startGPSTime v) gpsend w
 
 
 dropWaveData :: Int -> WaveData -> WaveData

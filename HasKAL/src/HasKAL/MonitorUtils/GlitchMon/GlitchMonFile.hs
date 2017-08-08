@@ -70,6 +70,7 @@ import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import HasKAL.MonitorUtils.GlitchMon.Data (TrigParam (..))
 import HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
+import HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEventSQLite3 (registGlitchEvent2DBSQLite3)
 import HasKAL.MonitorUtils.GlitchMon.Signature
 import HasKAL.MonitorUtils.GlitchMon.DataConditioning
 import HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
@@ -90,24 +91,33 @@ runGlitchMonFile :: GP.GlitchParam
                  -> FilePath
                  -> IO()
 --                 -> IO FilePath
-runGlitchMonFile param chname fname = yield fname $$ sink param chname
+runGlitchMonFile param chname fname = yield fname $$ sink fileRun param chname
 
 
-sink :: GP.GlitchParam
+runGlitchMonFileSQLite3 :: GP.GlitchParam
+                      -> String
+                      -> FilePath
+                      -> IO()
+--                  -> IO FilePath
+runGlitchMonFileSQLite3 param chname fname = yield fname $$ sink fileRunSQLite3 param chname
+
+
+sink :: (WaveData -> GP.GlitchParam -> IO GP.GlitchParam)
+     -> GP.GlitchParam
      -> String
      -> Sink String IO ()
-sink param chname = do
+sink func param chname = do
   c <- await
   case c of
     Nothing -> return ()
     Just fname -> do
       maybegps <- liftIO $ getGPSTime fname
       case maybegps of
-        Nothing -> sink param chname
+        Nothing -> sink func param chname
         Just (s, n, dt') -> do
           maybewave <- liftIO $ readFrameWaveData' General chname fname
           case maybewave of
-            Nothing -> sink param chname
+            Nothing -> sink func param chname
             Just wave -> do let param' = GP.updateGlitchParam'channel param chname
                                 fs = GP.samplingFrequency param'
                                 fsorig = samplingFrequency wave
@@ -150,20 +160,36 @@ sink param chname = do
                                             $ gwOnesidedPSDWaveData 1 wave
                                          False -> liftIO $ Prelude.return ()
 
-                                      s <- fileRun wave' param'2
-                                      sink s chname
+                                      s <- liftIO $ func wave' param'2
+                                      return ()
+--                                      sink func s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
-                                      s <- fileRun wave param'2
-                                      sink s chname
+                                      s <- liftIO $ func wave param'2
+                                      return ()
+--                                      sink func s chname
 
-
+fileRun :: WaveData
+        -> GP.GlitchParam
+        -> IO GP.GlitchParam
 fileRun w param = do
    let dataGps = deformatGPS $ fromJust $ GP.cgps param
        traindatlen = GP.traindatlen param ::Double
        fs = GP.samplingFrequency param ::Double
        param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
    liftIO $ glitchMon param' w
+
+
+fileRunSQLite3 :: WaveData
+               -> GP.GlitchParam
+               -> IO GP.GlitchParam
+        --        -> Sink (Double,VS.Vector Double) IO GP.GlitchParam
+fileRunSQLite3 w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       traindatlen = GP.traindatlen param ::Double
+       fs = GP.samplingFrequency param ::Double
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
+   glitchMonSQLite3 param' w
 
 
 glitchMon :: GP.GlitchParam
@@ -175,6 +201,21 @@ glitchMon param w =
       runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
          case a'' of
            Just t -> do -- part'RegisterEventtoDB t
+                        print "finishing glitchmon" >> return s''
+           Nothing -> do print "No event from glitchmon"
+                         return s''
+
+
+
+glitchMonSQLite3 :: GP.GlitchParam
+                 -> WaveData
+                 -> IO GP.GlitchParam
+glitchMonSQLite3 param w =
+  runStateT (part'DataConditioning w) param >>= \(a, s) ->
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
+         case a'' of
+           Just t -> do part'RegisterEventtoDBSQLite3 t
                         print "finishing glitchmon" >> return s''
            Nothing -> do print "No event from glitchmon"
                          return s''

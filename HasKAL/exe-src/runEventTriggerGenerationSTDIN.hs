@@ -1,25 +1,28 @@
 
 
 import Data.Maybe (fromMaybe)
+import Numeric.LinearAlgebra.Data --(saveMatrix, cols, rows)
+import System.Environment ( getArgs)
+
+import HasKAL.DataBaseUtils.FrameFull.Data
+import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.IOUtils.Function (stdin2vec)
 import HasKAL.MonitorUtils.GlitchMon.GlitchMonDAT
 import HasKAL.MonitorUtils.GlitchMon.GlitchParam
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
-import HasKAL.DataBaseUtils.FrameFull.Data
-import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
 import HasKAL.Misc.ConfFile (readConfFile)
 import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
 import HasKAL.SpectrumUtils.Function (updateMatrixElement,  updateSpectrogramSpec)
 import HasKAL.SpectrumUtils.Signature (Spectrum,  Spectrogram)
-import Numeric.LinearAlgebra.Data --(saveMatrix, cols, rows)
-import System.Environment ( getArgs)
+import qualified HasKAL.WaveUtils.Data as W (WaveData(..), vec2wave)
+
 
 
 main = do
   (conffile, fsorig', startGPStime') <- getArgs >>= \args -> case (length args) of
     3 -> return (head args, args!!1, args!!2)
     _ -> error "Usage runEventTriggerGenerationSTDIN conffile fs startGPStime STDIN"
-  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI], [qs])
+  ([sl, ch, sf, tl, wFR, wM, nf, nTS, cTFT, cTFF, cF, cT, minN, nN, maxN, cdfI], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod", "nfrequency", "ntimeSlide",
         "cutoffFractionTFT", "cutoffFractionTFF", "cutoffFreq", "clusterThres",
@@ -68,17 +71,19 @@ main = do
               }
 
   v <- stdin2vec
-  maybeETG <- runEventTriggerGenerationDAT param (channel param) startGPStime v
+  let w = W.vec2wave fsorig startGPStime v
+  maybeETG <- runEventTriggerGenerationDAT param (channel param) w
   case maybeETG of
     Nothing -> error "Usage runEventTriggerGenerationSTDIN conffile fs startGPStime STDIN"
     Just (etgSpecgram,etgID) -> do
+      let dir = debugDir param
       let (etgT,etgF,etgM) = etgSpecgram
-      saveMatrix "clustered_spectrogram.dat" "%lf" etgM
+      saveMatrix (dir++"/clustered_spectrogram.dat") "%lf" etgM
       H3.spectrogramM H3.LogY
                       H3.COLZ
                       "mag"
                       "clustered PixelSNR spectrogram"
-                      ("clustered_spectrogram.png")
+                      (dir++"/clustered_spectrogram.png")
                       ((0, 0), (0, 0))
                       etgSpecgram
       let retgM = rows etgM
@@ -90,12 +95,12 @@ main = do
       let idM = updateSpectrogramSpec etgSpecgram
             $updateMatrixElement zeroMatrix tileValues idValues
       let (idT,idF,idMM) = idM
-      saveMatrix "island_ID_map.dat" "%lf" idMM
+      saveMatrix (dir++"/island_ID_map.dat") "%lf" idMM
       H3.spectrogramM H3.LogY
                       H3.COLZ
                       "mag"
                       "island ID map"
-                      ("island_ID_map.png")
+                      (dir++"/island_ID_map.png")
                       ((0, 0), (0, 0))
                       idM
 

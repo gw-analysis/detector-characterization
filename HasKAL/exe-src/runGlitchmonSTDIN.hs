@@ -8,7 +8,8 @@ import HasKAL.Misc.ConfFile (readConfFile)
 import HasKAL.MonitorUtils.GlitchMon.GlitchMonDAT
 import HasKAL.MonitorUtils.GlitchMon.GlitchParam
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
-import HasKAL.SignalProcessingUtils.Resampling (downsampleSV)
+import qualified HasKAL.WaveUtils.Data as W (WaveData(..), vec2wave)
+
 import System.Environment ( getArgs)
 
 
@@ -66,9 +67,8 @@ main = do
               }
 
   v <- stdin2vec
-  let newfs = samplingFrequency param
-      v' = downsampleSV fsorig newfs v
+  let w = W.vec2wave fsorig startGPStime v
 
-  runGlitchMonDAT param (channel param) startGPStime v'
+  runGlitchMonDATSQLite3 param (channel param) w
 --"/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
 --  runGlitchMonFile param (channel param) "/data/kagra/raw/full/K-K1_C-1144374208-32.gwf"

@@ -2,6 +2,7 @@
 
 module HasKAL.MonitorUtils.GlitchMon.GlitchMonDAT
 ( runGlitchMonDAT
+, runGlitchMonDATSQLite3
 , runDataConditioningDAT
 , runEventTriggerGenerationDAT
 , eventDisplay
@@ -44,9 +45,21 @@ import HasKAL.DetectorUtils.Detector(Detector(..))
 import HasKAL.FrameUtils.FrameUtils (getGPSTime)
 import HasKAL.FrameUtils.Function (readFrameWaveData')
 import HasKAL.MathUtils.FFTW (dct2d, idct2d)
+import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
+import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
+import HasKAL.MonitorUtils.GlitchMon.Data (TrigParam (..))
+import HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
+import HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEventSQLite3 (registGlitchEvent2DBSQLite3)
+import HasKAL.MonitorUtils.GlitchMon.Signature
+import HasKAL.MonitorUtils.GlitchMon.DataConditioning
+import HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
+import HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
+import HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
+import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
 import HasKAL.SpectrumUtils.Function (updateMatrixElement, updateSpectrogramSpec)
 import HasKAL.SpectrumUtils.Signature (Spectrum, Spectrogram)
-import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV)
+import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV,gwOnesidedPSDWaveData, gwspectrogramWaveData)
 import HasKAL.SignalProcessingUtils.LinearPrediction (lpefCoeffV, whiteningWaveData)
 import HasKAL.SignalProcessingUtils.Resampling (downsampleWaveData)
 import HasKAL.TimeUtils.Function (formatGPS, deformatGPS)
@@ -55,6 +68,7 @@ import HasKAL.TimeUtils.Signature (GPSTIME)
 import qualified HasKAL.WaveUtils.Data as WD
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
+
 import Numeric.LinearAlgebra as NL
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath.Posix (takeExtension, takeFileName)
@@ -69,20 +83,7 @@ import System.IO (hFlush, stdout)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Timeout.Lifted (timeout)
 
-import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
-import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
-import HasKAL.MonitorUtils.GlitchMon.Data (TrigParam (..))
-import HasKAL.MonitorUtils.GlitchMon.RegisterGlitchEvent (registGlitchEvent2DB)
-import HasKAL.MonitorUtils.GlitchMon.Signature
-import HasKAL.MonitorUtils.GlitchMon.DataConditioning
-import HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
-import HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
-import HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB
 
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph3D as H3
-import qualified HasKAL.PlotUtils.HROOT.PlotGraph as H
-import HasKAL.SpectrumUtils.SpectrumUtils (gwOnesidedPSDWaveData, gwspectrogramWaveData)
-import HasKAL.WaveUtils.Data (vec2wave)
 
 {--------------------
 - Main Functions    -
@@ -91,48 +92,53 @@ import HasKAL.WaveUtils.Data (vec2wave)
 
 runGlitchMonDAT  :: GP.GlitchParam
                  -> String
-                 -> Double
-                 -> VS.Vector Double
+                 -> WaveData
                  -> IO()
 --                 -> IO FilePath
-runGlitchMonDAT param chname gps v = yield (gps,v) $$ sink fileRun param chname
+runGlitchMonDAT param chname wave = yield wave $$ sink fileRun param chname
+
+
+runGlitchMonDATSQLite3  :: GP.GlitchParam
+                        -> String
+                        -> WaveData
+                        -> IO()
+--                 -> IO FilePath
+runGlitchMonDATSQLite3 param chname wave = yield wave $$ sink fileRunSQLite3 param chname
 
 
 runDataConditioningDAT  :: GP.GlitchParam
                         -> String
-                        -> Double
-                        -> VS.Vector Double
+                        -> WaveData
                         -> IO (Maybe WaveData)
 --                 -> IO FilePath
-runDataConditioningDAT param chname gps v = yield (gps,v) $$ sinkDC dcRun param chname
+runDataConditioningDAT param chname wave = yield wave $$ sinkDC dcRun param chname
 
 
 runEventTriggerGenerationDAT  :: GP.GlitchParam
                               -> String
-                              -> Double
-                              -> VS.Vector Double
+                              -> WaveData
                               -> IO (Maybe (Spectrogram, [[(Tile,ID)]]))
 --                 -> IO FilePath
-runEventTriggerGenerationDAT param chname gps v = yield (gps,v) $$ sinkETG etgRun param chname
+runEventTriggerGenerationDAT param chname wave = yield wave $$ sinkETG etgRun param chname
 
 
 sink :: (WaveData -> GP.GlitchParam -> IO GP.GlitchParam)
      -> GP.GlitchParam
      -> String
-     -> Sink (Double,VS.Vector Double) IO ()
+     -> Sink WaveData IO ()
 sink func param chname = do
   c <- await
   case c of
     Nothing -> return ()
-    Just (gps',v) -> do
-      let gps = formatGPS gps'
+    Just w -> do
+      let gps = startGPSTime w
       let maybegps = Just (fst gps, snd gps, 0.0)
       case maybegps of
         Nothing -> sink func param chname
         Just (s, n, dt') -> do
           let param' = GP.updateGlitchParam'channel param chname
           let fs = GP.samplingFrequency param'
-          let maybewave = Just (vec2wave fs gps' v)
+          let maybewave = Just w
           case maybewave of
             Nothing -> sink func param chname
             Just wave -> do let fsorig = samplingFrequency wave
@@ -176,30 +182,32 @@ sink func param chname = do
                                          False -> liftIO $ Prelude.return ()
 
                                       s <- liftIO $ func wave' param'2
-                                      sink func s chname
+                                      return ()
+                                      --sink func s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                       s <- liftIO $ func wave param'2
-                                      sink func s chname
+                                      return ()
+                                      --sink func s chname
 
 
 sinkDC :: (WaveData -> GP.GlitchParam -> IO (WaveData, GP.GlitchParam))
        -> GP.GlitchParam
        -> String
-       -> Sink (Double,VS.Vector Double) IO (Maybe WaveData)
+       -> Sink WaveData IO (Maybe WaveData)
 sinkDC func param chname = do
   c <- await
   case c of
     Nothing -> return Nothing
-    Just (gps',v) -> do
-      let gps = formatGPS gps'
+    Just w -> do
+      let gps = startGPSTime w
       let maybegps = Just (fst gps, snd gps, 0.0)
       case maybegps of
         Nothing -> sinkDC func param chname
         Just (s, n, dt') -> do
           let param' = GP.updateGlitchParam'channel param chname
           let fs = GP.samplingFrequency param'
-          let maybewave = Just (vec2wave fs gps' v)
+          let maybewave = Just w
           case maybewave of
             Nothing -> sinkDC func param chname
             Just wave -> do let fsorig = samplingFrequency wave
@@ -244,31 +252,31 @@ sinkDC func param chname = do
 
                                       (a,s) <- liftIO $ func wave' param'2
                                       return (Just a)
-                                      sinkDC func s chname
+--                                      sinkDC func s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                       (a,s) <- liftIO $ func wave param'2
                                       return (Just a)
-                                      sinkDC func s chname
+--                                      sinkDC func s chname
 
 
 sinkETG :: (WaveData -> GP.GlitchParam -> IO ((Spectrogram, [[(Tile,ID)]]), GP.GlitchParam))
         -> GP.GlitchParam
         -> String
-        -> Sink (Double,VS.Vector Double) IO (Maybe (Spectrogram, [[(Tile,ID)]]))
+        -> Sink WaveData IO (Maybe (Spectrogram, [[(Tile,ID)]]))
 sinkETG func param chname = do
   c <- await
   case c of
     Nothing -> return Nothing
-    Just (gps',v) -> do
-      let gps = formatGPS gps'
+    Just w -> do
+      let gps = startGPSTime w
       let maybegps = Just (fst gps, snd gps, 0.0)
       case maybegps of
         Nothing -> sinkETG func param chname
         Just (s, n, dt') -> do
           let param' = GP.updateGlitchParam'channel param chname
           let fs = GP.samplingFrequency param'
-          let maybewave = Just (vec2wave fs gps' v)
+          let maybewave = Just w
           case maybewave of
             Nothing -> sinkETG func param chname
             Just wave -> do let fsorig = samplingFrequency wave
@@ -313,12 +321,12 @@ sinkETG func param chname = do
 
                                       (a,s) <- liftIO $ func wave' param'2
                                       return (Just a)
-                                      sinkETG func s chname
+                                      --sinkETG func s chname
                               else do let dataGps = (s, n)
                                           param'2 = GP.updateGlitchParam'cgps param' (Just dataGps)
                                       (a,s) <- liftIO $ func wave param'2
                                       return (Just a)
-                                      sinkETG func s chname
+                                      --sinkETG func s chname
 
 
 fileRun :: WaveData
@@ -331,6 +339,18 @@ fileRun w param = do
        fs = GP.samplingFrequency param ::Double
        param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
    glitchMon param' w
+
+
+fileRunSQLite3 :: WaveData
+               -> GP.GlitchParam
+               -> IO GP.GlitchParam
+        --        -> Sink (Double,VS.Vector Double) IO GP.GlitchParam
+fileRunSQLite3 w param = do
+   let dataGps = deformatGPS $ fromJust $ GP.cgps param
+       traindatlen = GP.traindatlen param ::Double
+       fs = GP.samplingFrequency param ::Double
+       param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
+   glitchMonSQLite3 param' w
 
 
 dcRun :: WaveData
@@ -370,12 +390,27 @@ glitchMon param w =
                          return s''
 
 
+glitchMonSQLite3 :: GP.GlitchParam
+                 -> WaveData
+                 -> IO GP.GlitchParam
+glitchMonSQLite3 param w =
+  runStateT (part'DataConditioning w) param >>= \(a, s) ->
+    runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
+      runStateT (part'ParameterEstimation a') s' >>= \(a'', s'') ->
+         case a'' of
+           Just t -> do part'RegisterEventtoDBSQLite3 t
+                        print "finishing glitchmon" >> return s''
+           Nothing -> do print "No event from glitchmon"
+                         return s''
+
+
 dataConditioning :: GP.GlitchParam
                  -> WaveData
                  -> IO (WaveData, GP.GlitchParam)
 dataConditioning param w =
-  runStateT (part'DataConditioning w) param >>= \(a, s) ->
-    return (a,s)
+  runStateT (part'DataConditioning' w) param >>= \(a, s) ->
+    do --print $ take 5 $ VS.toList (gwdata a)
+       return (a,s)
 
 
 eventTriggerGeneration :: GP.GlitchParam

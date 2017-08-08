@@ -8,15 +8,16 @@ import HasKAL.MonitorUtils.GlitchMon.GlitchParam
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import HasKAL.DataBaseUtils.FrameFull.Data
 import HasKAL.FrameUtils.FrameUtils (getSamplingFrequency)
-import qualified HasKAL.WaveUtils.Data as W (WaveData(..))
+import qualified HasKAL.WaveUtils.Data as W (WaveData(..), vec2wave)
 import System.Environment ( getArgs)
 import HasKAL.Misc.ConfFile (readConfFile)
 import System.IO (stdout, hPutStrLn)
 
+
 main = do
   (conffile, fsorig', startGPStime') <- getArgs >>= \args -> case (length args) of
     3 -> return (head args, args!!1, args!!2)
-    _ -> error "Usage runDataConditioningSTDIN conffile fs startGPStime STDIN"
+    _ -> error "Usage: runDataConditioningSTDIN conffile fs startGPStime STDIN"
   ([sl, ch, sf, tl, wFR, wM], [])
     <- readConfFile conffile ["segmentLength", "channel", "samplingFrequency",
         "traindatlen", "whnFrequencyResolution", "whnMethod"] []
@@ -51,7 +52,7 @@ main = do
                , cgps = Nothing
                , reftime = 0
              -- * for debug
-               , debugmode = [DS, DC, TF, CL]
+               , debugmode = [DS, DC, WH, TF, CL]
                , debugDir = "production"
                }
       cdfp = CDFParam
@@ -64,9 +65,10 @@ main = do
               }
 
   v <- stdin2vec
-  maybeWaveData <- runDataConditioningDAT param (channel param) startGPStime v
+  let w = W.vec2wave fsorig startGPStime v
+  maybeWaveData <- runDataConditioningDAT param (channel param) w
   case maybeWaveData of
-    Nothing -> error "Usage runDataConditioningSTDIN conffile fs startGPStime STDIN"
+    Nothing -> error "Usage: runDataConditioningSTDIN conffile fs startGPStime STDIN"
     Just w -> mapM_ (\y -> hPutStrLn stdout $ show y) (VS.toList (W.gwdata w))
 
 --"/home/kazu/work/data/gw150914/H-H1_LOSC_4_V1-1126259446-32.gwf"
