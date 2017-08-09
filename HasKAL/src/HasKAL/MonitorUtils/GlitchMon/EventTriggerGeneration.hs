@@ -21,6 +21,7 @@ import HasKAL.SpectrumUtils.SpectrumUtils (gwpsdV, gwOnesidedPSDV, gwOnesidedMed
 import HasKAL.TimeUtils.Function (formatGPS,  deformatGPS)
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import Numeric.LinearAlgebra as NL
+import Numeric.LinearAlgebra.Data --(saveMatrix, cols, rows)
 import qualified HasKAL.MonitorUtils.GlitchMon.GlitchParam as GP
 import HasKAL.MonitorUtils.GlitchMon.PipelineFunction
 import HasKAL.MonitorUtils.GlitchMon.Signature
@@ -83,7 +84,7 @@ section'TimeFrequencyExpression whnWaveData = do
       let fs = samplingFrequency whnWaveData
       let nfreq = floor $ GP.nfrequency param * fs
 --      let refpsd = gwOnesidedPSDV (gwdata whnWaveData) nfreq fs
-      let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs 
+      let refpsd = gwOnesidedMedianAveragedPSDV (gwdata whnWaveData) nfreq fs
       liftIO $ refpsd `deepseq` Prelude.return()
 
       let nfreq2 = nfreq `div` 2
@@ -182,16 +183,35 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
   case GP.CL `elem` GP.debugmode param of
     True -> do
       let dir = GP.debugDir param
-  --    liftIO $ print ncol
-      liftIO $ H3.spectrogramM H3.LogY
-                               H3.COLZ
-                               "mag"
-                               "clustered PixelSNR spectrogram"
-                               (dir++"/cluster_spectrogram.png")
-                                   ((0, 0), (0, 0))
-                               newM
       liftIO $ print "clustered pixels :"
       liftIO $ print survivorwID
+      let (etgT,etgF,etgM) = newM
+      liftIO $ saveMatrix (dir++"/clustered_spectrogram.dat") "%lf" etgM
+      liftIO $ H3.spectrogramM H3.LogY
+                      H3.COLZ
+                      "mag"
+                      "clustered PixelSNR spectrogram"
+                      (dir++"/clustered_spectrogram.png")
+                      ((0, 0), (0, 0))
+                      newM
+      let retgM = rows etgM
+          cetgM = cols etgM
+      let zeroMatrix = (retgM >< cetgM) $ replicate (retgM*cetgM) 0.0
+      let etgID' = concat survivorwID
+      let tileValues = map (\(x,i)->x) etgID'
+      let idValues = map (\(x,i)->fromIntegral i :: Double) etgID'
+      let idM = updateSpectrogramSpec newM
+            $updateMatrixElement zeroMatrix tileValues idValues
+      let (idT,idF,idMM) = idM
+      liftIO $ saveMatrix (dir++"/island_ID_map.dat") "%lf" idMM
+      liftIO $ H3.spectrogramM H3.LogY
+                      H3.COLZ
+                      "mag"
+                      "island ID map"
+                      (dir++"/island_ID_map.png")
+                      ((0, 0), (0, 0))
+                      idM
+
       let thrsedValues = map (\x->mg `atIndex` x) thrsed
           thrsedM = updateSpectrogramSpec snrMat
             $ updateMatrixElement zeroMatrix thrsed thrsedValues
@@ -210,6 +230,7 @@ section'Clustering (snrMatT, snrMatF, snrMatP') = do
             liftIO $ print "0" >> hFlush stdout
     _ -> do liftIO $ print "# of detected islands is" >> hFlush stdout
             liftIO $ print $ (snd . last . last $ survivorwID)
+
   return (newM, survivorwID)
 
 

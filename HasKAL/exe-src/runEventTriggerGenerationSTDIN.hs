@@ -74,7 +74,7 @@ main = do
   let w = W.vec2wave fsorig startGPStime v
   maybeETG <- runEventTriggerGenerationDAT param (channel param) w
   case maybeETG of
-    Nothing -> error "Usage runEventTriggerGenerationSTDIN conffile fs startGPStime STDIN"
+    Nothing -> error "Usage: runEventTriggerGenerationSTDIN conffile fs startGPStime STDIN"
     Just (etgSpecgram,etgID) -> do
       let dir = debugDir param
       let (etgT,etgF,etgM) = etgSpecgram
