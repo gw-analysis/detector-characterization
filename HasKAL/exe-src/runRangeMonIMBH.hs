@@ -29,7 +29,7 @@ main = do
      oFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonNSNS.png"
      dFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonNSNS.dat"
      xlabel = "Time[s] since "++year++"/"++month++"/"++day++":"++hour++":"++minute++":"++second++"JST"
-     title = "100Mo-100Mo IMBH Range [pc]"
+     title = "100Mo-100Mo IMBH Range [Mpc]"
 
  mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
@@ -50,7 +50,7 @@ main = do
      vecT_hr = V.map (1*) vecT
 -- print $ V.toList ir
 -- print $ V.toList vecT_hr
- plotV Linear Line 1 RED (xlabel, "IMBH Range[pc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
+ plotV Linear Line 1 RED (xlabel, "IMBH Range[Mpc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
  let xir = V.toList ir
      xt  = V.toList vecT_hr
  writeFile dFile $ unlines [show x1++" "++show x2|(x1,x2)<-zip xt xir]

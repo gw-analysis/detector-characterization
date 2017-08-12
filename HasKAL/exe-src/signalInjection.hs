@@ -27,16 +27,19 @@ main = do
       t0 = read t0' :: Double
       n  = read n' :: Int
   {-- read data --}
-  let v1 = head $ loadASCIIdataCV sigfile
+  let s1 = head $ loadASCIIdataCV sigfile
       datV  = unsafePerformIO $ stdin2vec
+      lenV = V.length datV
+      lens1 = V.length s1
 
-  let snend = n + V.length v1
-      len = V.length datV
+  let snend = n + V.length s1
+      dn = lenV - snend
 
-  let inj = case snend > len of
-       True -> do let v2  = V.take (len-n) v1
+  let inj = case dn < 0 of
+       True -> do let lens2 = lens1 + dn
+                      v2  = V.take lens2 s1
                    in addInjsig n v2 datV
-       False-> addInjsig n v1 datV
+       False-> addInjsig n s1 datV
 
   case optTime varOpt of
     False -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList inj)

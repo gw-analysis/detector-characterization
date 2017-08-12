@@ -48,21 +48,24 @@ main = do
       detresp = genDetectorResponse pol hpc
 
   let  datV  = unsafePerformIO $ stdin2vec
+       lenV = V.length datV
+       lenDet = V.length detresp
 
-  let snend = ndelay + V.length detresp
-      len = V.length datV
+  let snend = ndelay + lenDet
 
-  let inj = case snend > len of
+  let dn = lenV - snend
+
+  let inj = case dn < 0 of
        True -> case ndelay < 0 of
-                    True ->  let detresp2 =  V.take len $ V.drop (-ndelay) detresp
+                    True ->  let detresp2 =  V.take (lenDet+ndelay+dn) $ V.drop (-ndelay) detresp
                               in addInjsig 0 detresp2 datV
-                    False -> let detresp2 = V.take (len-ndelay) detresp
+                    False -> let detresp2 = V.take (lenDet+dn) detresp
                               in addInjsig ndelay detresp2 datV
        False-> case ndelay < 0 of
-                 True -> let detresp2 =  V.drop (-ndelay) detresp
+                 True -> let detresp2 = V.take (lenDet+ndelay) $ V.drop (-ndelay) detresp
                           in addInjsig 0 detresp datV
                  False -> addInjsig ndelay detresp datV
-                 
+
   case optTime varOpt of
     False -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList inj)
     True  -> mapM_ (\(x,y) -> hPutStrLn stdout $ (show x)++" "++show y)

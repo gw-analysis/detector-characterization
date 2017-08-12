@@ -19,7 +19,7 @@ main = do
  args <- getArgs
  (year, month, day, hour, minute, second, chunklen', duration', ch) <- case length args of
   9 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8)
-  _ -> error "Usage: runRangeMonNSNS yyyy mm dd hh mm ss chunklen duration channel"
+  _ -> error "Usage: runRangeMonNSNS yyyy mm dd hh mm ss fftsec[s] duration[s] channel"
 
  let chunkLen = read chunklen' ::Int -- seconds typically 15minutes
      gps = read (time2gps $ year++"-"++month++"-"++day++" "++hour++":"++minute++":"++second++" JST") :: Int
@@ -50,7 +50,7 @@ main = do
      vecT_hr = V.map (1*) vecT
 -- print $ V.toList ir
 -- print $ V.toList vecT_hr
- plotV Linear Line 1 RED (xlabel, "Inspiral Range[pc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
+ plotV Linear Line 1 RED (xlabel, "Inspiral Range[Mpc]") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
  let xir = V.toList ir
      xt  = V.toList vecT_hr
  writeFile dFile $ unlines [show x1++" "++show x2|(x1,x2)<-zip xt xir]

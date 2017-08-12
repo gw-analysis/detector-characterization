@@ -17,7 +17,7 @@ main = do
  args <- getArgs
  (year, month, day, hour, minute, second, chunklen', duration', ch) <- case length args of
   9 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), show0 2 (args!!3), show0 2 (args!!4), show0 2 (args!!5), args!!6, args!!7, args!!8)
-  _ -> error "Usage: runRangeMonBHBH yyyy mm dd channel"
+  _ -> error "Usage: runRangeMonBHBH yyyy mm dd hh mm ss fftsec[s] duration[s] channel"
 
  let chunkLen = read chunklen' ::Int -- seconds typically 15minutes
      gps = read (time2gps $ year++"-"++month++"-"++day++" "++hour++":"++minute++":"++second++" JST") :: Int

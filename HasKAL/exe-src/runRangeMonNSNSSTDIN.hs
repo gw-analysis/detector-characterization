@@ -26,7 +26,7 @@ main = do
      t0 = read t0' :: Double
      fs = read fs' :: Double
      xlabel = "Time[s] since "++t0'
-     title = "1.4Mo-1.4Mo Inspiral Range [pc]"
+     title = "1.4Mo-1.4Mo Inspiral Range [Mpc]"
  v <- stdin2vec
  let wd = vec2wave fs t0 v
 
@@ -39,7 +39,7 @@ main = do
      vecT_hr = V.map (1*) vecT
 -- print $ V.toList ir
 -- print $ V.toList vecT_hr
- plotXV Linear Line 1 RED (xlabel, "Inspiral Range[pc]") 0.05 title ((0,0),(0,0)) $ (vecT_hr, ir)
+ plotXV Linear Line 1 RED (xlabel, "Inspiral Range[Mpc]") 0.05 title ((0,0),(0,0)) $ (vecT_hr, ir)
 -- let xir = V.toList ir
 --     xt  = V.toList vecT_hr
 -- writeFile dFile $ unlines [show x1++" "++show x2|(x1,x2)<-zip xt xir]
