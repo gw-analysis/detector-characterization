@@ -2852,3 +2852,51 @@ executable amplifier
    ,deepseq
    ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable takeData
+  hs-source-dirs: exe-src
+  main-is:        takeData.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable dropData
+  hs-source-dirs: exe-src
+  main-is:        dropData.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
