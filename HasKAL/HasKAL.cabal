@@ -2925,3 +2925,28 @@ executable genRandomData
    ,deepseq
    ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
+
+
+executable applyTransferFunction
+  hs-source-dirs: exe-src
+  main-is:        applyTransferFunction.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text-icu
+   ,text
+   ,deepseq
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
