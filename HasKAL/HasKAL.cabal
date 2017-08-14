@@ -179,6 +179,7 @@ library
     HasKAL.SignalProcessingUtils.Cascade,
     HasKAL.SignalProcessingUtils.Chebyshev,
     HasKAL.SignalProcessingUtils.Filter,
+    HasKAL.SignalProcessingUtils.FilterDesign,
     HasKAL.SignalProcessingUtils.FilterType,
     HasKAL.SignalProcessingUtils.FilterX,
     HasKAL.SignalProcessingUtils.Interpolation,
