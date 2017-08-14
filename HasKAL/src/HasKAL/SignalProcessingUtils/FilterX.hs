@@ -4,7 +4,7 @@
 module HasKAL.SignalProcessingUtils.FilterX
   ( FilterDirection (..)
   , calcInitCond
-  -- | IIR filter forsingle time-series vector data
+  -- | IIR filter for single time-series vector data
   , iir0
   , iir
   , filtfilt0

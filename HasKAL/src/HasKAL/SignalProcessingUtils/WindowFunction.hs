@@ -45,7 +45,7 @@ kaiser a = makeWindow (kaiser' a)
 -------  internal functions below ----------
 makeWindow :: (Double -> Double -> Double) -> Int -> Vector Double
 makeWindow win m =
-    let md = fromIntegral m
+    let md = fromIntegral m - 1 :: Double
     in fromList $ map (win md . fromIntegral) [(0::Int)..(m-1::Int)]
 
 hanning' :: Double -> Double -> Double
@@ -76,5 +76,3 @@ kaiser' a m n = bessel_J0(pi * a * sqrt(1-(2*x-1)**2))/bessel_J0(pi*a)
 
 mean :: Floating a => [a] -> a
 mean x = fst $ foldl' (\(!m, !n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
-
-
