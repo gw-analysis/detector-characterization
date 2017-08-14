@@ -2950,3 +2950,87 @@ executable applyTransferFunction
    ,deepseq
    ,hmatrix-gsl
   ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable Spectrum2IMRrange
+  hs-source-dirs: exe-src
+  main-is:        Spectrum2IMRrange.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,time
+   ,old-time
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable Spectrum2Ringdownrange
+  hs-source-dirs: exe-src
+  main-is:        Spectrum2Ringdownrange.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,time
+   ,old-time
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+
+executable Spectrum2Inspiralrange
+  hs-source-dirs: exe-src
+  main-is:        Spectrum2Inspiralrange.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,vector
+   ,HDBC-mysql
+   ,containers
+   ,split
+   ,resourcet
+   ,bytestring
+   ,mtl
+   ,transformers
+   ,conduit
+   ,conduit-extra
+   ,conduit-combinators
+   ,text
+   ,text-icu
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,time
+   ,old-time
+   ,hmatrix-gsl
+  ghc-options: -O2 -Wall -fPIC -fobject-code
