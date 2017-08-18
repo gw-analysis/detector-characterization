@@ -21,7 +21,7 @@ main = do
     _ -> error "Usage: applyTransferFunction [-t(--withTime)] ASDfile fs stdin"
 
   v' <- stdin2vec
-  let v = (V.take (floor fs) v') V.++ v' V.++ (V.take (floor fs) v')
+  let v = (V.take (floor fs) v') V.++ v' V.++ (V.take (floor fs) v')  -- TODOTODOTODOTODOTODO
       vs = loadASCIIdataCV asdfile
       fs = read fs' :: Double
       fre = head vs
