@@ -58,13 +58,13 @@ main = do
   let inj = case dn < 0 of
        True -> case ndelay < 0 of
                     True ->  let detresp2 =  V.take (lenDet+ndelay+dn) $ V.drop (-ndelay) detresp
-                              in addInjsig 0 detresp2 datV
+                              in addInjsig 0 datV detresp2
                     False -> let detresp2 = V.take (lenDet+dn) detresp
-                              in addInjsig ndelay detresp2 datV
+                              in addInjsig ndelay datV detresp2
        False-> case ndelay < 0 of
                  True -> let detresp2 = V.take (lenDet+ndelay) $ V.drop (-ndelay) detresp
-                          in addInjsig 0 detresp datV
-                 False -> addInjsig ndelay detresp datV
+                          in addInjsig 0 datV detresp
+                 False -> addInjsig ndelay datV detresp
 
   case optTime varOpt of
     False -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList inj)

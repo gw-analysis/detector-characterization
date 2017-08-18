@@ -38,8 +38,8 @@ main = do
   let inj = case dn < 0 of
        True -> do let lens2 = lens1 + dn
                       v2  = V.take lens2 s1
-                   in addInjsig n v2 datV
-       False-> addInjsig n s1 datV
+                   in addInjsig n datV v2
+       False-> addInjsig n datV s1
 
   case optTime varOpt of
     False -> mapM_ (\y -> hPutStrLn stdout $ show y) (V.toList inj)
