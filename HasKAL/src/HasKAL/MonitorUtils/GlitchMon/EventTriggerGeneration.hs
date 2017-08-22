@@ -3,6 +3,8 @@
 
 module HasKAL.MonitorUtils.GlitchMon.EventTriggerGeneration
 ( part'EventTriggerGeneration
+, section'TimeFrequencyExpression
+, section'Clustering
 ) where
 
 

@@ -5,6 +5,7 @@ module HasKAL.MonitorUtils.GlitchMon.GlitchMonDAT
 , runGlitchMonDATSQLite3
 , runDataConditioningDAT
 , runEventTriggerGenerationDAT
+, runClusteringDAT
 , eventDisplay
 , eventDisplayF
 )
@@ -120,6 +121,13 @@ runEventTriggerGenerationDAT  :: GP.GlitchParam
                               -> IO (Maybe (Spectrogram, [[(Tile,ID)]]))
 --                 -> IO FilePath
 runEventTriggerGenerationDAT param chname wave = yield wave $$ sinkETG etgRun param chname
+
+
+runClusteringDAT  :: GP.GlitchParam
+                  -> NL.Matrix Double
+                  -> IO (Maybe (Spectrogram, [[(Tile,ID)]]))
+--                 -> IO FilePath
+runClusteringDAT param m = yield m $$ sinkCL clusteringRun param
 
 
 sink :: (WaveData -> GP.GlitchParam -> IO GP.GlitchParam)
@@ -329,6 +337,17 @@ sinkETG func param chname = do
                                       --sinkETG func s chname
 
 
+sinkCL :: (NL.Matrix Double -> GP.GlitchParam -> IO ((Spectrogram, [[(Tile,ID)]]), GP.GlitchParam))
+        -> GP.GlitchParam
+        -> Sink (NL.Matrix Double) IO (Maybe (Spectrogram, [[(Tile,ID)]]))
+sinkCL func param = do
+  c <- await
+  case c of
+    Nothing -> return Nothing
+    Just m  -> do (a,s) <- liftIO $ func m param
+                  return (Just a)
+
+
 fileRun :: WaveData
         -> GP.GlitchParam
         -> IO GP.GlitchParam
@@ -374,6 +393,18 @@ etgRun w param = do
        fs = GP.samplingFrequency param ::Double
        param' = GP.updateGlitchParam'refwave param (takeWaveData (floor (traindatlen*fs)) w)
    eventTriggerGeneration param' w
+
+
+clusteringRun :: NL.Matrix Double
+              -> GP.GlitchParam
+              -> IO ((Spectrogram, [[(Tile,ID)]]), GP.GlitchParam)
+clusteringRun m param = do
+  let mcol = fromIntegral (NL.cols m) :: Double
+      mrow = fromIntegral (NL.rows m) :: Double
+      clT = NL.fromList [0..(mcol-1)]
+      clF = NL.fromList [0..(mrow-1)]
+      spe = (clT, clF, m)
+  runStateT (section'Clustering spe) param
 
 
 glitchMon :: GP.GlitchParam
