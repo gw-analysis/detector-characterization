@@ -4,7 +4,9 @@
 
 module HasKAL.SearchUtils.Common.CleanDataFinder
 ( cleanDataFinderCore
---,
+, takeMedian
+, nfEstimate
+, vecSelect
 ) where
 
 import Numeric.LinearAlgebra (toColumns, fromRows)
@@ -26,7 +28,7 @@ cleanDataFinderCore :: Int                        -- ^ block size for noise floo
                     -> Int                        -- ^ chunk size
                     -> (Double, Double)          -- ^ (f_L, f_U)
                     -> Double                     -- ^ sample rate
-                    -> WaveData 
+                    -> WaveData
                     -> [(GPSTIME, Bool)]        -- ^ [(gps,True or Fase)]
 cleanDataFinderCore blcksz nfft chunk flu fs wave = do
   let v = gwdata wave
@@ -110,6 +112,3 @@ mkChunks vIn n = mkChunksCore vIn n (V.length vIn `div` n)
   where
     mkChunksCore _ _ 0 = []
     mkChunksCore vIn n m = V.slice 0 n vIn :  mkChunksCore (V.drop n vIn) n (m-1)
-
-
-
