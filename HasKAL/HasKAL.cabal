@@ -1114,6 +1114,48 @@ executable runRayleighMonDat
   ghc-options: -O2 -Wall -fPIC -fobject-code
 -- -threaded -rtsopts -eventlog
 
+executable runRayleighMon
+  hs-source-dirs: exe-src
+  main-is:        runRayleighMon.hs
+  build-depends:
+    base > 4.7
+   ,HasKAL
+   ,hmatrix
+   ,split
+   ,transformers
+   ,relational-query
+   ,HDBC-session
+   ,relational-query-HDBC
+   ,HDBC
+   ,relational-query
+   ,persistable-record
+   ,template-haskell
+   ,carray
+   ,fft
+   ,matrices
+   ,fficxx-runtime
+   ,HROOT
+   ,vector-algorithms
+   ,hmatrix-gsl-stats
+   ,hmatrix-gsl
+   ,deepseq
+   ,hmatrix-special
+   ,monad-par
+   ,monad-par-extras
+   ,hmatrix-gsl
+   ,time
+   ,old-time
+   ,text
+   ,text-icu
+   ,conduit-combinators
+   ,conduit-extra
+   ,conduit
+   ,bytestring
+   ,mtl
+   ,resourcet
+   ,vector
+  ghc-options: -O2 -Wall -fPIC -fobject-code
+-- -threaded -rtsopts -eventlog
 
 executable runSensMon
   hs-source-dirs: exe-src
