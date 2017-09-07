@@ -1657,7 +1657,7 @@ executable runEventTriggerGenerationSTDIN
   default-language:    Haskell2010
 
 
-executable runDataConditionigSTDIN
+executable runDataConditioningSTDIN
   hs-source-dirs:      exe-src
   main-is:             runDataConditioningSTDIN.hs
   ghc-options:         -O2

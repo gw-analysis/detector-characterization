@@ -24,8 +24,8 @@ main = do
      duration = read duration' ::Int-- seconds
      dsfs = 4096
      fftLength = fromIntegral chunkLen
-     oFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonNSNS.png"
-     dFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonNSNS.dat"
+     oFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonBHBH.png"
+     dFile = ch++"-"++year++"-"++month++"-"++day++":"++hour++":"++minute++":"++second++"JST"++"_RangeMonBHBH.dat"
      xlabel = "Time[s] since "++year++"/"++month++"/"++day++":"++hour++":"++minute++":"++second++"JST"
      title = "30Mo-30Mo Inspiral Range"
 
