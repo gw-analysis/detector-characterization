@@ -20,7 +20,7 @@ main = do
  (year, month, day, ch) <- case length args of
   4 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), args!!3)
   _ -> error "Usage: RangeMonNSNS yyyy mm dd channel"
- 
+
  let chunkLen = 15*60 ::Int -- seconds
      gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
      duration = 86400 -- seconds
@@ -31,19 +31,19 @@ main = do
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = "1.4Mo-1.4Mo Inspiral Range [pc]"
 
- mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch 
+ mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
  let (wd, file) = case (mbWd, mbFiles) of
                    (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                    (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                    (Just x, Just y) -> (x, head y)
  unit <- safeGetUnitY file ch
- 
+
  let hf = map (gwspectrogramWaveData 0 fftLength . downsampleWaveData dsfs) wd
      n0 = nblocks fftLength gps duration wd
-     (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
+     (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf
      x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (NL.toColumns specgram))
-     ir'' = map (10**6*) $ map ((0.44/(sqrt 2) *) . distInspiral 1.4 1.4) x
+     ir'' = map (10**6*) $ map (distInspiral 1.4 1.4) x
      ir'  = map infinityTo0 ir'' :: [Double]
      ir   = V.fromList $ zipWith (*) (map (\x->(checkLoking gps chunkLen x)) (V.toList vecT)) ir'
      vecT_hr = V.map (1/3600*) vecT
@@ -64,15 +64,15 @@ checkLoking gps chunkLen t = unsafePerformIO $ do
  mbWd <- kagraWaveDataGet0 t' chunkLen "K1:GRD-MICH_LOCK_STATE_N"
  let wd = case mbWd of
            Nothing -> error "no valid file."
-           Just x -> x 
-     lockinfo = V.toList $ gwdata wd 
+           Just x -> x
+     lockinfo = V.toList $ gwdata wd
  case (find (\x-> x /= 1000) lockinfo) of
   Just _ -> return (0 :: Double)
   Nothing-> return (1 ::Double)
 
 
-   
- 
+
+
 {-- Internal Functions --}
 show0 :: Int -> String -> String
 show0 digit number
@@ -86,5 +86,3 @@ nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGP
   where ss = (startGPSTime $ head ws, (gps,0))
              : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
              ++ [((gps+duration, 0), stopGPSTime $ last ws)]
-
-

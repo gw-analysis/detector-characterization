@@ -18,7 +18,7 @@ main = do
  (year, month, day, ch) <- case length args of
   4 -> return (head args, show0 2 (args!!1), show0 2 (args!!2), args!!3)
   _ -> error "Usage: RangeMon yyyy mm dd channel"
- 
+
  let gps = read $ time2gps $ year++"-"++month++"-"++day++" 00:00:00 JST"
      duration = 86400 -- seconds
      dsfs = 2048
@@ -27,19 +27,19 @@ main = do
      xlabel = "Time[hours] since "++year++"/"++month++"/"++day++"00:00:00 JST"
      title = "30Mo-30Mo Inspiral Range"
 
- mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch 
+ mbWd <- kagraWaveDataGetC (fromIntegral gps) (fromIntegral duration) ch
  mbFiles <- kagraDataFind (fromIntegral gps) (fromIntegral duration) ch
  let (wd, file) = case (mbWd, mbFiles) of
                    (Nothing, _) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                    (_, Nothing) -> error $ "Can't find file: "++year++"/"++month++"/"++day
                    (Just x, Just y) -> (x, head y)
  unit <- safeGetUnitY file ch
- 
+
  let hf = map (gwspectrogramWaveData 0 fftLength . downsampleWaveData dsfs) wd
      n0 = nblocks fftLength gps duration wd
-     (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf 
+     (vecT,vecF,specgram) = catSpectrogramT0 0 fftLength n0 hf
      x = map (\x-> zip (V.toList vecF) x) (map (map (\x->1/9*10**(-6)*x) . V.toList) $ (NL.toColumns specgram))
-     ir' = map ((10**6*0.44/(sqrt 2) *) . distInspiral 30 30) x
+     ir' = map ((10**6 *) . distInspiral 30 30) x
      ir  = V.fromList $ map infinityTo0 ir'
      vecT_hr = V.map (1/3600*) vecT
  plotV Linear Line 1 RED (xlabel, "Inspiral Range") 0.05 title oFile ((0,0),(0,0)) $ (vecT_hr, ir)
@@ -62,5 +62,3 @@ nblocks dt gps duration ws = map (ceiling . (/dt) . deformatGPS . uncurry diffGP
   where ss = (startGPSTime $ head ws, (gps,0))
              : map (\i -> (startGPSTime $ ws!!i, stopGPSTime $ ws !!(i-1)) ) [1..length ws -1]
              ++ [((gps+duration, 0), stopGPSTime $ last ws)]
-
-
