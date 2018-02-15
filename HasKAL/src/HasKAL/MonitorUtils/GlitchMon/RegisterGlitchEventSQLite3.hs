@@ -1,4 +1,4 @@
-{-# LANGUAGE MonadComprehensions, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE MonadComprehensions, ScopedTypeVariables, MultiParamTypeClasses, FlexibleInstances, DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 

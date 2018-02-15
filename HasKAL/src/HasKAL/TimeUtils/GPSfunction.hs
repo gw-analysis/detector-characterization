@@ -47,7 +47,7 @@ taibase :: AbsoluteTime
 taibase = utcToTAITime theLeapSecondTable utcbase
 
 timegiven :: String -> UTCTime
-timegiven s = fromJust $ parseTime defaultTimeLocale "%F %T %Z" s
+timegiven s = fromJust $ parseTimeM True defaultTimeLocale "%F %T %Z" s
 
 taigiven :: String -> AbsoluteTime
 taigiven s = utcToTAITime theLeapSecondTable (timegiven s)
@@ -70,7 +70,7 @@ name2zone :: String -> (UTCTime -> ZonedTime)
 name2zone s
   | s == "JST" = utcToZonedTime (TimeZone 540 False s)
   | otherwise  = utcToZonedTime (TimeZone 0 False "UTC")
-                 
+
 gps2localTime :: Integer -> String -> String
 gps2localTime g s = formatTime defaultTimeLocale "%F %T %Z" $ name2zone s (utcgiven g)
 
@@ -102,10 +102,10 @@ maketimetuple :: (Integer, Int, Int) -> Int -> Int -> Int ->(Int, Int, Int, Int,
 maketimetuple (yy,mm,dd) h m s = ((fromInteger yy)::Int, mm, dd, h, m, s, "UTC")
 
 gps2timetuple :: Integer -> (Int, Int, Int, Int, Int, Int, String)
-gps2timetuple gg = maketimetuple (gps2Gregorian gg) (gps2Hour gg) (gps2Min gg) (gps2Sec gg) 
+gps2timetuple gg = maketimetuple (gps2Gregorian gg) (gps2Hour gg) (gps2Min gg) (gps2Sec gg)
 
 gps2localTimetuple :: Integer -> String -> (Int, Int, Int, Int, Int, Int, String)
-gps2localTimetuple g s 
+gps2localTimetuple g s
   | s == "JST" = (yr, mon, day, hrs, min, sec, s)
   | otherwise  = (yr, mon, day, hrs, min, sec, zone)
   where (yr, mon, day, hrs, min, sec, zone) = gps2timetuple g'
@@ -179,4 +179,3 @@ Output example : Jun. 24. 2014
 "1079075728"
 
 -}
-

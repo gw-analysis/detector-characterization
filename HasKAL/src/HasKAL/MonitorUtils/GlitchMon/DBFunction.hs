@@ -40,7 +40,7 @@ import Database.HDBC.Session     (withConnectionIO, handleSqlError')
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC as DH
 import Database.HDBC              (quickQuery', runRaw, fromSql, SqlValue)
-import Database.Relational.Query.Pure (ProductConstructor, productConstructor)
+import Database.Relational.Compat (ProductConstructor, productConstructor)
 import Database.Record
 import Database.Record.ToSql
 import Data.Int                   (Int32)

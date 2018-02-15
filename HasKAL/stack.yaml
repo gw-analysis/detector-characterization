@@ -1,23 +1,19 @@
-flags: {}
+flags:
+  semigroupoids:
+    tagged: true
 extra-include-dirs:
-- /home/detchar/tools/include
-- /home/detchar/kagali/include
+- /home/kazu/tools/include
+- /home/kazu/kagali/include
 ghc-options:
-  '*': -fPIC -fobject-code
+  ! '*': -fPIC -fobject-code
 extra-lib-dirs:
-- /home/detchar/tools/lib
-- /home/detchar/tools/lib/gsl
-- /home/detchar/kagali/lib
+- /home/kazu/tools/lib
+- /home/kazu/tools/lib/gsl
+- /home/kazu/kagali/lib
 packages:
 - '.'
-#- location:
-#    git: https://github.com/bos/hdbc-mysql.git
-#    commit: d43ea057019ff683f278f36af410f4d3cbc731bc
 extra-deps:
-- Chart-1.5.3
-- Chart-cairo-1.5.1
-- Chart-gtk-1.5.1
-- HDBC-session-0.1.0.0
+- Chart-gtk-1.6
 - HDBC-mysql-0.6.6.4
 - HROOT-0.8
 - HROOT-core-0.8
@@ -25,31 +21,33 @@ extra-deps:
 - HROOT-hist-0.8
 - HROOT-io-0.8
 - HROOT-math-0.8
-- base-orphans-0.5.4
+- QuickCheck-2.11.3
+- aeson-1.2.4.0
+- base-orphans-0.6
+- bindings-DSL-1.0.24
 - bindings-gsl-0.2.1
-- cgi-3001.2.2.2
-- chunked-data-0.2.0
-- conduit-1.2.4.2
-- conduit-extra-1.1.15
+- carray-0.1.6.8
+- chunked-data-0.3.1
+- conduit-combinators-1.0.8.3
+- conduit-extra-1.2.3.2
+- cpphs-1.20.8
+- fficxx-0.2.1
 - fficxx-runtime-0.2.1
-- fft-0.1.8.1
-- gtk-0.13.7
+- fsnotify-0.2.1.1
 - hmatrix-special-0.4.0.1
-- lens-4.12.3
-- mmorph-1.0.9
-- mono-traversable-0.10.2
-- names-th-0.2.0.2
-- persistable-record-0.4.1.0
-- reflection-2
-- relational-query-0.8.3.2
-- relational-query-HDBC-0.6.0.2
-- relational-schemas-0.1.3.1
-- resourcet-1.1.5
-- split-0.2.2
-- sql-words-0.1.4.1
-- streaming-commons-0.1.16
-- syb-0.5.1
-- th-data-compat-0.0.2.2
-- th-reify-compat-0.0.1.1
-- unix-compat-0.4.3.1
-resolver: lts-5.2
+- mmorph-1.1.0
+- mono-traversable-1.0.8.1
+- persistable-record-0.6.0.0
+- product-isomorphic-0.0.3.1
+- relational-query-0.11.0.0
+- relational-query-HDBC-0.6.6.1
+- relational-schemas-0.1.6.1
+- semigroupoids-5.0.1
+- tagged-0.8.5
+- transformers-compat-0.5.1.4
+- text-1.2.2.2
+- th-abstraction-0.2.6.0
+- typed-process-0.2.1.0
+- unix-compat-0.5.0.1
+- unliftio-core-0.1.1.0
+resolver: lts-6.35

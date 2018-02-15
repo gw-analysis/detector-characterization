@@ -34,7 +34,7 @@ import Data.Maybe                 (fromJust, fromMaybe, catMaybes)
 import qualified Data.Traversable as DT
 import qualified Data.Vector.Storable as V
 import Database.Relational.Query ( asc
-                                 , distinct 
+                                 , distinct
                                  , relationalQuery
                                  , query
                                  , relation
@@ -55,7 +55,7 @@ import Database.HDBC.Session     (withConnectionIO, handleSqlError')
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC as DH
 import Database.HDBC              (quickQuery', runRaw, fromSql, SqlValue)
-import Database.Relational.Query.Pure (ProductConstructor,  productConstructor)
+import Database.Relational.Compat (ProductConstructor,  productConstructor)
 import Database.Record
 import Database.Record.ToSql
 import Foreign.C.Types
@@ -95,11 +95,11 @@ type LOCKEDSAMPLE = Int
 --  case maybedata of
 --    Nothing -> return Nothing
 --    Just wavelist -> return $ checkLock w wavelist
--- 
--- 
+--
+--
 -- checkLockCore :: w
 --               -> WaveData -- ^ lock information, output of kagraDaraGetC
---               -> [(GPSTIME, Duration)] -- ^ 
+--               -> [(GPSTIME, Duration)] -- ^
 -- checkLockCore w wav = evalState $ do
 --  let gps = fst $ startGPSTime wav
 --      fs  = samplingFrequency wav
@@ -117,12 +117,12 @@ getLockGPS :: (LOCK, LOCKEDSAMPLE, Int, (GPSTIME, Duration))
            -> Double
            -> [Double]
            -> [(GPSTIME, Duration)]
-getLockGPS (flg1,flg2,flg3,(flg41,flg42)) gps fs (v:vlist) = 
- if v==1000 && flg1==False then 
+getLockGPS (flg1,flg2,flg3,(flg41,flg42)) gps fs (v:vlist) =
+ if v==1000 && flg1==False then
    getLockGPS (True, 1, flg3+1, (updateGPS gps (fromIntegral flg3/fs), 1/fs)) gps fs vlist
- else if v==1000 && flg1==True then 
+ else if v==1000 && flg1==True then
         getLockGPS (True, flg2+1, flg3+1, (flg41,flg42+1/fs)) gps fs vlist
-      else if v/=1000 && flg2>0 then 
+      else if v/=1000 && flg2>0 then
              (flg41,fromIntegral flg2/fs):getLockGPS (False,0,flg3+1,((0,0),0)) gps fs vlist
            else getLockGPS (False,0,flg3+1,((0,0),0)) gps fs vlist
 
@@ -134,7 +134,7 @@ updateGPS gps dt  = formatGPS (deformatGPS gps + dt)
 dailyFileFinder :: Date -> LocalTime -> IO (Spectrum)
 dailyFileFinder day loc = do
  filelistmaybe <- kagraDailyFileList day loc
- case filelistmaybe of 
+ case filelistmaybe of
    Nothing -> return (NLA.fromList [], NLA.fromList [])
    Just x  -> do
      let filelist = x
@@ -387,7 +387,7 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                             return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) $ head cdata
                     _ -> do let gpsstop = fromIntegral $ gpsstrt + duration
                                 gpsstrt' = fromIntegral gpsstrt
-                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) 
+                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs)
                               $ zeropadding fs cdata
 
 
@@ -590,27 +590,24 @@ setSqlMode conn = do
   runRaw conn $ "SET SESSION sql_mode = '" ++ newmode ++ "'"
 
 
-instance ProductConstructor (a -> b -> c -> (a, b, c)) where
-  productConstructor = (,,)
+--instance ProductConstructor (a -> b -> c -> (a, b, c)) where
+--  productConstructor = (,,)
 
-instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
-         => FromSql SqlValue (a, b, c) where
-  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
+--instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
+--         => FromSql SqlValue (a, b, c) where
+--  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
 
 instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
          => ToSql SqlValue (a, b, c) where
   recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
 
-instance ProductConstructor (a -> b -> c -> d -> (a, b, c, d)) where
-  productConstructor = (,,,)
+--instance ProductConstructor (a -> b -> c -> d -> (a, b, c, d)) where
+--  productConstructor = (,,,)
 
-instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c, FromSql SqlValue d)
-         => FromSql SqlValue (a, b, c, d) where
-  recordFromSql = (,,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql <*> recordFromSql
+--instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c, FromSql SqlValue d)
+--         => FromSql SqlValue (a, b, c, d) where
+--  recordFromSql = (,,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql <*> recordFromSql
 
 instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c, ToSql SqlValue d)
          => ToSql SqlValue (a, b, c, d) where
   recordToSql = createRecordToSql (\(a, b, c, d) -> fromRecord a ++ fromRecord b ++ fromRecord c ++ fromRecord d)
-
-
-

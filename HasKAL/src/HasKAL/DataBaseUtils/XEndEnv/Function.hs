@@ -54,7 +54,7 @@ import Database.HDBC.Session     (withConnectionIO, handleSqlError')
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC as DH
 import Database.HDBC              (quickQuery', runRaw, fromSql, SqlValue)
-import Database.Relational.Query.Pure (ProductConstructor,  productConstructor)
+import Database.Relational.Compat (ProductConstructor,  productConstructor)
 import Database.Record
 import Database.Record.ToSql
 import Foreign.C.Types
@@ -328,7 +328,7 @@ kagraDataGet0 gpsstrt duration chname = runMaybeT $ MaybeT $ do
                             return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) $ head cdata
                     _ -> do let gpsstop = fromIntegral $ gpsstrt + duration
                                 gpsstrt' = fromIntegral gpsstrt
-                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs) 
+                            return $ Just $ (checkStartGPS gpsstrt' fs . checkStopGPS gpsstop fs)
                               $ zeropadding fs cdata
 
 
@@ -531,17 +531,13 @@ setSqlMode conn = do
   runRaw conn $ "SET SESSION sql_mode = '" ++ newmode ++ "'"
 
 
-instance ProductConstructor (a -> b -> c -> (a, b, c)) where
-  productConstructor = (,,)
+--instance ProductConstructor (a -> b -> c -> (a, b, c)) where
+--  productConstructor = (,,)
 
-instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
-         => FromSql SqlValue (a, b, c) where
-  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
+--instance (FromSql SqlValue a, FromSql SqlValue b, FromSql SqlValue c)
+--         => FromSql SqlValue (a, b, c) where
+--  recordFromSql = (,,) <$> recordFromSql <*> recordFromSql <*> recordFromSql
 
 instance (ToSql SqlValue a, ToSql SqlValue b, ToSql SqlValue c)
          => ToSql SqlValue (a, b, c) where
   recordToSql = createRecordToSql (\(a, b, c) -> fromRecord a ++ fromRecord b ++ fromRecord c)
-
-
-
-

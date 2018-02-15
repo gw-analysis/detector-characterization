@@ -1,14 +1,11 @@
 
 
-{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, MultiParamTypeClasses, FlexibleInstances, DeriveGeneric #-}
 
-module HasKAL.DataBaseUtils.XEndEnv.Table 
+module HasKAL.DataBaseUtils.XEndEnv.Table
 where
 
 import HasKAL.DataBaseUtils.KAGRADataSource (defineTable)
 
 
 $(defineTable "xendenv")
-
-
-

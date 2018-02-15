@@ -259,16 +259,16 @@ library
        Chart-gtk >=1.3,
        Chart-cairo >=1.3,
        colour >=2.3,
-       conduit==1.2.4.2,
+       conduit,
        containers,
        data-default-class >=0.0,
        deepseq,
        directory,
        fficxx-runtime,
-       fft==0.1.8.1,
+       fft,
        filepath,
        fsnotify,
-       gtk ==0.13.7,
+       gtk,
        HDBC,
        HDBC-session,
        HDBC-mysql,
@@ -290,7 +290,7 @@ library
        persistable-record,
        process >=1.1,
        random,
-       resourcet==1.1.5,
+       resourcet,
        relational-query,
        relational-query-HDBC,
        regex-compat >=0.95,
@@ -304,13 +304,13 @@ library
        unix-compat,
        vector,
        vector-algorithms,
-       storable-complex==0.2.2,
+       storable-complex,
        bytestring,
        conduit-extra,
        conduit-combinators,
        text-icu,
        lifted-base,
-       palette==0.1.0.2,
+       palette,
        deepseq,
        inline-r,
        HDBC-sqlite3
@@ -337,7 +337,7 @@ executable kagraDataFind
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -374,7 +374,7 @@ executable kagraDataPoint
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -412,7 +412,7 @@ executable showChannels
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -451,7 +451,7 @@ executable showChannelandSamplingRate
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -490,7 +490,7 @@ executable localtime2gps
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -511,7 +511,7 @@ executable localtime2gps
    ,template-haskell
    ,time
    ,transformers
-   ,regex-compat==0.95.1
+   ,regex-compat
    ,vector
 
   ghc-options: -O2  -Wall -fPIC -fobject-code
@@ -529,7 +529,7 @@ executable kagraDailyDataFind
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -567,7 +567,7 @@ executable gps2localtime
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -605,7 +605,7 @@ executable getCurrentGPS
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -643,7 +643,7 @@ executable showKagraData
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -665,8 +665,8 @@ executable showKagraData
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.5
-   ,conduit==1.2.4.2
+   ,resourcet
+   ,conduit
    ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
@@ -684,7 +684,7 @@ executable updateFrameFullDB
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -706,8 +706,8 @@ executable updateFrameFullDB
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.5
-   ,conduit==1.2.4.2
+   ,resourcet
+   ,conduit
    ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
@@ -725,7 +725,7 @@ executable updateFrameFullDBfromCache
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -747,8 +747,8 @@ executable updateFrameFullDBfromCache
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.5
-   ,conduit==1.2.4.2
+   ,resourcet
+   ,conduit
    ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
@@ -766,7 +766,7 @@ executable runDailySummary
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -805,7 +805,7 @@ executable runDailyFileTransfer
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -844,7 +844,7 @@ executable db2cache
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -882,7 +882,7 @@ executable showKagraSpectrum
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -904,8 +904,8 @@ executable showKagraSpectrum
    ,time
    ,transformers
    ,vector
-   ,resourcet==1.1.5
-   ,conduit==1.2.4.2
+   ,resourcet
+   ,conduit
    ,process
 
   ghc-options: -O2 -Wall -fPIC -fobject-code
@@ -923,7 +923,7 @@ executable showCurrentChannels
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -961,7 +961,7 @@ executable existChannel
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -999,7 +999,7 @@ executable existChannelNow
    ,deepseq
    ,directory
    ,filepath
-   ,fft==0.1.8.1
+   ,fft
    ,HDBC
    ,HDBC-mysql
    ,HDBC-session
@@ -1285,10 +1285,10 @@ executable plotHistogram
   main-is:        plotHistogram.hs
   build-depends:
     base > 4.7
-    ,Chart==1.5.3
-    ,Chart-cairo==1.5.1
-    ,colour==2.3.3
-    ,data-default-class==0.0.1
+    ,Chart
+    ,Chart-cairo
+    ,colour
+    ,data-default-class
     ,lens
     ,HasKAL
     ,vector

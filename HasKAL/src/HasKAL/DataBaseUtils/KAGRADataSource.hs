@@ -14,8 +14,8 @@ import Database.HDBC.Schema.Driver (typeMap)
 import Database.HDBC.Schema.MySQL (driverMySQL)
 import Database.HDBC.Schema.SQLite3 (driverSQLite3)
 import Database.HDBC.Sqlite3 (connectSqlite3)
-import Database.Record.TH (derivingShow)
-import Database.Relational.Query.Component (defaultConfig
+--import Database.Record.TH (derivingShow)
+import Database.Relational.Config (defaultConfig
                                            , normalizedTableName)
 import Language.Haskell.TH (Q, Dec, TypeQ)
 
@@ -49,7 +49,7 @@ defineTable tableName =
     (driverMySQL { typeMap = convTypes })
     "KAGRA"
     tableName
-    [derivingShow]
+    [''Show]
 
 
 defineTableforSqlite3 :: String -> String -> Q [Dec]
@@ -60,4 +60,4 @@ defineTableforSqlite3 dbfilename tableName =
     (driverSQLite3 { typeMap = convTypes })
     "main" -- schema name, ignored by SQLite
     tableName
-    [derivingShow]
+    [''Show]
