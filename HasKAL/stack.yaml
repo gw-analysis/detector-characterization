@@ -4,12 +4,15 @@ flags:
 extra-include-dirs:
 - /home/kazu/tools/include
 - /home/kazu/kagali/include
+- /home/shaun/nds2-client/out/usr/local/include
 ghc-options:
   ! '*': -fPIC -fobject-code
 extra-lib-dirs:
 - /home/kazu/tools/lib
 - /home/kazu/tools/lib/gsl
 - /home/kazu/kagali/lib
+- /usr/lib64/mysql
+- /home/shaun/nds2-client/out/usr/local/lib64
 packages:
 - '.'
 extra-deps:
@@ -50,4 +53,7 @@ extra-deps:
 - typed-process-0.2.1.0
 - unix-compat-0.5.0.1
 - unliftio-core-0.1.1.0
+- git: https://github.com/gw-analysis/haskell-nds2.git
+  commit: 85d10d97fa5099a6874caa1e91f22e677365cf7b
 resolver: lts-6.35
+

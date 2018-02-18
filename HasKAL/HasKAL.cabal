@@ -313,7 +313,8 @@ library
        palette,
        deepseq,
        inline-r,
-       HDBC-sqlite3
+       HDBC-sqlite3,
+       nds2
 
 
   -- Directories containing source files.
