@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
-module HasKAL.MonitorUtils.GlitchMon.GlitchMon
-( runGlitchMon
+module HasKAL.MonitorUtils.GlitchMon.GlitchMonRT
+( runGlitchMonRT
 , eventDisplay
 , eventDisplayF
 )
@@ -10,8 +10,9 @@ where
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
+import Control.Lens
 import Control.Monad.Trans.Resource (runResourceT)
-import Control.Monad ((>>=), mapM_)
+import Control.Monad ((>>=), mapM_, void)
 import Control.Monad.State ( StateT
                            , runStateT
                            , execStateT
@@ -28,6 +29,7 @@ import Data.Conduit ( bracketP
                     , Conduit
                     )
 import qualified Data.Conduit.List as CL
+import Data.Default
 import Data.Int (Int32)
 import Data.List (nub, foldl', elemIndices, maximum, minimum, lookup)
 import Data.Maybe (fromJust)
@@ -52,6 +54,8 @@ import HasKAL.TimeUtils.Signature (GPSTIME)
 import qualified HasKAL.WaveUtils.Data as WD
 import HasKAL.WaveUtils.Data hiding (detector, mean)
 import HasKAL.WaveUtils.Signature
+import Network.NDS2 as NDS2 hiding (dataType)
+import Network.NDS2.Conduit (ndsSource)
 import Numeric.LinearAlgebra as NL
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath.Posix (takeExtension, takeFileName)
@@ -77,84 +81,46 @@ import HasKAL.MonitorUtils.GlitchMon.ParameterEstimation
 import HasKAL.MonitorUtils.GlitchMon.RegisterEventtoDB
 
 
+
 {--------------------
 - Main Functions    -
 --------------------}
 
 
-runGlitchMon watchdir param chname = do
-  gps <- liftIO getCurrentGps
-  let cdir = getCurrentDir gps
-  source param chname watchdir cdir
-
-source :: GP.GlitchParam
-       -> String
-       -> FilePath
-       -> FilePath
-       -> IO FilePath
-source param chname topDir watchdir = do
-  gps <- liftIO getCurrentGps
-  let ndir = getNextDir gps
-      ndirabs = getAbsPath topDir ndir
---  liftIO $ putStrLn ("start watching "++watchdir++".") >> hFlush stdout
-  x <- doesDirectoryExist (getAbsPath topDir watchdir)
-  case x of
-    False -> do threadDelay 1000000
-                gps2 <- getCurrentGps
-                let cdir2 = getCurrentDir gps2
-                source param chname topDir cdir2    
-    True -> do !maybeT <- timeout (breakTime 20) $ watchFile topDir watchdir $$ sink param chname
-               case maybeT of
-                Nothing -> do putStrLn ("Watching Timeout: going to next dir "++ndir++" to watch.") >> hFlush stdout
-                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
-                Just _  -> do putStrLn ("going to next dir "++ndir++" to watch.") >> hFlush stdout
-                              gowatch ndirabs (source param chname topDir ndir) (source param chname topDir)
+runGlitchMonRT :: ConnectParams -> GP.GlitchParam -> String -> IO ()
+runGlitchMonRT connParams param chname = do
+  ndsSource connParams (def & channelNames .~ [chname]) $$ sink param chname
 
 
-watchFile :: FilePath
-          -> FilePath
-          -> Source IO FilePath
-watchFile topDir watchdir = do
-  let absPath = getAbsPath topDir watchdir
-      predicate event' = case event' of
-        Added path _ -> chekingFile path
-        _            -> False
-      config = WatchConfig
-                 { confDebounce = NoDebounce
-                 , confPollInterval = 1000000 -- 1seconds
-                 , confUsePolling = True
-                 }
-  gwfname <- liftIO $ withManagerConf config $ \manager -> do
-    fname <- newEmptyMVar
-    watchDir manager absPath predicate
-      $ \event -> case event of
-        Added path _ -> putMVar fname path
-    takeMVar fname
-  yield gwfname >> watchFile topDir watchdir
-
+-- | Convert a NDS2 Buffer to WaveData format.
+nds2BufferToWaveData :: NDS2.Buffer -> WaveData
+nds2BufferToWaveData buf =
+  WaveData { WD.detector       = KAGRA -- TODO: Remove hardcoded detector
+           , dataType          = buf^.channelInfo.name
+           , samplingFrequency = realToFrac $ buf^.channelInfo.sampleRate
+           , startGPSTime      = (buf^.startGpsSecond, buf^.startGpsNanosecond) 
+           , stopGPSTime       = (buf^.stopGpsSecond, buf^.startGpsNanosecond) 
+           , gwdata            = buf^.timeSeries
+           }
 
 sink :: GP.GlitchParam
      -> String
-     -> Sink String IO ()
+     -> Sink [NDS2.Buffer] IO ()
 sink param chname = do
-  c <- await
-  case c of
-    Nothing -> sink param chname
-    Just fname -> do
-      maybegps <- liftIO $ getGPSTime fname
-      case maybegps of
-        Nothing -> sink param chname
-        Just (s, n, dt') -> do
-          maybewave <- liftIO $ readFrameWaveData' General chname fname
-          case maybewave of
-            Nothing -> sink param chname
-            Just wave -> do let param' = GP.updateGlitchParam'channel param chname
-                                fs = GP.samplingFrequency param'
-                                fsorig = samplingFrequency wave
-                            if (fs /= fsorig)
-                              then do let wave' = downsampleWaveData fs wave
-                                      go wave' param'
-                              else go wave param'
+  maybeBuffers <- await
+  case maybeBuffers of
+    Nothing -> return ()
+    Just [buf] -> do
+      let wave = nds2BufferToWaveData $ buf
+          param' = GP.updateGlitchParam'channel param chname
+          fs = GP.samplingFrequency param'
+          fsorig = samplingFrequency wave
+      if (fs /= fsorig)
+        then do let wave' = downsampleWaveData fs wave
+                void $ go wave' param'
+        else do s <- go wave param'
+                sink s chname
+    Just bufs -> error $ (show $ length bufs) ++ " buffers were received instead of 1"
   where 
     go w param' = do
       let maybegps = GP.cgps param'
@@ -163,11 +129,10 @@ sink param chname = do
           currGps' <- liftIO $ getCurrentGps
           let currGps = formatGPS (read currGps')
               param'2 = GP.updateGlitchParam'cgps param' (Just currGps)
-              chunklen = GP.chunklen param'2
+              chunklen = fromIntegral $ GP.segmentLength param'2
               fs = GP.samplingFrequency param'2
               param'3 = GP.updateGlitchParam'refwave param'2 (takeWaveData (floor (chunklen*fs)) w)
-          s <- liftIO $ glitchMon param'3 w
-          sink s chname
+          liftIO $ glitchMon param'3 w
         Just gpsold -> do
           currGps' <- liftIO $ getCurrentGps
           let currGps = formatGPS (read currGps')
@@ -183,15 +148,12 @@ sink param chname = do
                   let cdgps' = fst . last $ [(t,b)|(t,b)<-cdlist,b==True]
                       cdgps = fst cdgps'
                       param'2 = GP.updateGlitchParam'cgps param' (Just cdgps')
-                      chunklen = GP.chunklen param'2
+                      chunklen = fromIntegral $ GP.segmentLength param'2
                       fs = GP.samplingFrequency param'2
-                  maybew <- liftIO $ kagraWaveDataGet cdgps (floor (chunklen*fs)) chname (WD.detector w)
+                  maybew <- liftIO $ kagraWaveDataGet cdgps (floor (chunklen*fs)) chname
                   let param'3 = GP.updateGlitchParam'refwave param'2 (fromJust maybew)
-                  s <- liftIO $ glitchMon param'3 w
-                  sink s chname
-            False -> do
-              s <- liftIO $ glitchMon param' w
-              sink s chname
+                  liftIO $ glitchMon param'3 w
+            False -> liftIO $ glitchMon param' w
 
 
 glitchMon :: GP.GlitchParam
@@ -232,53 +194,3 @@ eventDisplayF param fname chname = do
                     runStateT (part'EventTriggerGeneration a) s >>= \(a', s') ->
                        do (trigparam, param') <- runStateT (part'ParameterEstimation a') s'
                           return (trigparam, param',a')
-
-
-{- internal functions -}
-
-chekingFile path = takeExtension path `elem` [".gwf"] && head (takeFileName path) /= '.'
-
-
-getAbsPath dir1 dir2 = encodeString $ decodeString dir1 </> decodeString dir2
-
-
-breakTime margin = unsafePerformIO $ do
-  dt <- getCurrentGps >>= \gps-> return $ timeToNextDir gps
-  return $ (dt+margin)*1000000
-
-
-getCurrentDir :: String -> String
-getCurrentDir gps = take 5 gps
-
-
-getNextDir :: String -> String
-getNextDir gps =
-  let gpsHead' = take 5 gps
-      gpsHead = read gpsHead' :: Int
-   in take 5 $ show (gpsHead+1)
-
-
-timeToNextDir :: String -> Int
-timeToNextDir gps =
-  let currentGps = read gps :: Int
-      (gpsHead', gpsTail') = (take 5 gps, drop 5 gps)
-      gpsHead = read gpsHead' :: Int
-      gpsTail = replicate (length gpsTail') '0'
-      nextGps = read (show (gpsHead+1) ++ gpsTail) :: Int
-   in nextGps - currentGps
-
-
-gowatch dname f g =  do b <- liftIO $ doesDirectoryExist dname
-                        case b of
-                          False -> do gps <- liftIO getCurrentGps
-                                      let cdir' = getCurrentDir gps
-                                          cdir  = drop (length dname -5) dname
-                                      case cdir' > cdir of
-                                        True -> do let dname' = (take (length dname -5) dname)++cdir'
-                                                   liftIO $ threadDelay 1000000
-                                                   gowatch dname' (g cdir') g
-                                        False -> do liftIO $ threadDelay 1000000
-                                                    gowatch dname f g
-                          True  -> f
-
-

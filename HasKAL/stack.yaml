@@ -54,6 +54,6 @@ extra-deps:
 - unix-compat-0.5.0.1
 - unliftio-core-0.1.1.0
 - git: https://github.com/gw-analysis/haskell-nds2.git
-  commit: 85d10d97fa5099a6874caa1e91f22e677365cf7b
+  commit: 5a96d025b047bd1474a0494bcbfd6bf28f75f374
 resolver: lts-6.35
 
